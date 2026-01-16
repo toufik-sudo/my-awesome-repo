@@ -114,6 +114,8 @@ const LeftNavigationElement = ({
           className="nav-tooltip"
           delayShow={isCollapsed ? 200 : 400}
           delayHide={100}
+          overridePosition={({ left, top }) => ({ left: left + 10, top })}
+          resizeHide={false}
         >
           {isDeclareButton && isDisabled 
             ? formatMessage({ id: `wall.navigation.declare.freemium` })
