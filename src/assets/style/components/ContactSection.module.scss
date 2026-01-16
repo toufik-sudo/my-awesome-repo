@@ -1,0 +1,76 @@
+@import '../imports';
+@import '../utils/constants';
+
+.contactSection {
+  min-height: 100vh;
+  text-align: center;
+  background-size: cover;
+
+  h2 {
+    color: $forth-color;
+  }
+
+  @media all and (-ms-high-contrast: none) {
+    height: 100vh !important;
+  }
+
+  @include mobileLarge {
+    height: auto !important;
+    padding-top: 8rem;
+  }
+}
+
+.formContainer {
+  @include size($max-width: 99.3rem, $width: 100%);
+  position: relative;
+  margin-top: 5rem;
+
+  form {
+    @include display($display: flex, $flex-direction: space-between, $flex-wrap: wrap);
+    padding: 6rem 5rem 0;
+
+    &::before {
+      @include position(absolute, 0, 0, null, null);
+      @include size($width: 100%, $height: calc(100% + 4rem));
+      content: '';
+      background: $default-color;
+      opacity: 0.3;
+      z-index: -1;
+      border-radius: 2rem;
+    }
+
+    & > div:not(.buttonWrapper) {
+      width: calc((100% - 6rem) / 3);
+
+      @include mobileLarge {
+        @include size($width: 100%, $max-width: 25rem);
+        margin: 0 auto;
+      }
+    }
+
+    .buttonWrapper button {
+      background: $gradient;
+      color: $forth-color;
+      border: none;
+      width: 15.5rem;
+      padding: 0.4rem 0;
+    }
+
+    label {
+      @include tabletPortrait {
+        font-size: 1.6rem;
+      }
+    }
+  }
+}
+
+.buttonWrapper {
+  width: 100%;
+  text-align: center;
+
+  button {
+    width: 15rem;
+    padding: 0.4rem 0;
+    margin: 1.8rem auto 0;
+  }
+}

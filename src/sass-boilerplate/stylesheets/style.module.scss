@@ -1,0 +1,63 @@
+// 1. Configuration and helpers
+@import 'abstracts/abstracts-imports';
+
+// 3. Base stuff
+@import 'base/base-import';
+
+// 4. Layout-related sections
+@import 'layout/sections',
+'layout/header.module',
+'layout/footer';
+
+// 5. Components
+@import 'components/button',
+'components/card',
+'components/chip';
+
+
+span[class*="ag-icon-menu"]::before {
+  color: white;
+}
+
+div[class*="ag-header-cell"] {
+  background: #18104d !important;
+  color: white;
+}
+
+.textLimit {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.width {
+  &24rem {
+    width: 24rem;
+  }
+}
+
+.customMultiselect>.singleSelect {
+  overflow-y: hidden !important;
+}
+
+.disabledAll {
+  background: #f1f1f1b3;
+  border-radius: 7px;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.buttonSecondary:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+.buttonSecondary {
+  margin-left: 10px;
+  background: none;
+  border-radius: 10px;
+  padding: 0.3rem 1.4rem;
+  border: 1px solid;
+  cursor: pointer;
+  color: #EC407A;
+}

@@ -1,0 +1,15 @@
+@import '../abstracts/variables';
+.buorg {
+  background-color: $default-color !important;
+}
+
+#buorgul, #buorgpermanent, #buorgig{
+  border-radius: 3rem !important;
+}
+
+#buorgul, #buorgpermanent{
+  background: linear-gradient(90deg, #78bb7bcf
+0%, #78bb7bc1 73%, rgba(178, 219, 124, 0.728)cf 100%) !important;
+}
+
+

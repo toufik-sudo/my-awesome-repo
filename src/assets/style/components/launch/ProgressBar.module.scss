@@ -1,0 +1,84 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.progressBar {
+  @include position(absolute, -1rem, 0, null, null);
+  font-size: 1.5rem;
+  list-style: none;
+  overflow: hidden;
+  box-shadow: $light-shadow;
+
+  &Step {
+    @include prefix(transition, all .2s linear, webkit moz ms o);
+    display: inline-block;
+    position: relative;
+    padding: .7rem 2.5rem .7rem 4rem;
+    background: $forth-color;
+
+    @include tabletPortrait {
+      padding: .7rem 1rem .7rem 2.5rem;
+    }
+
+    @include mobileLarge {
+      font-size: 1.2rem;
+    }
+
+    &:after {
+      @include position(absolute, -2.2rem, 0.3rem, null, null);
+      @include size(0, 0);
+      @include font($font-weight: 600, $font-size: 5.8rem, $font-family: $fontAwesome, $color: $forth-color);
+      text-shadow: 0.1rem 0 rgba(0, 0, 0, 0.3);
+      content: $arrow-right-icon;
+      transition: all 0.3s;
+      z-index: 2;
+    }
+
+    &Active {
+      @include setArrowStyle($disabled-color, $secondary-color);
+    }
+
+    &NotAvailable {
+      @include setArrowStyle($forth-color !important, $border-light !important);
+    }
+
+    &Completed {
+      @include setArrowStyle($primary-color, $forth-color);
+    }
+
+    &:last-of-type {
+      display: none;
+    }
+  }
+
+  &Wrapper {
+    @include display(flex, flex-end);
+    @include tabletLandscape {
+      display: none;
+    }
+  }
+}
+
+.submitButtons {
+  &Container {
+    @include size($width: 100%, $max-width: 85.7rem);
+    position: relative;
+    margin: 0 auto;
+    z-index: 0;
+  }
+
+  &Wrapper {
+    @include position(absolute, null, 0, -11rem, null);
+    @extend .totalCenter;
+    @extend .resetToDirectionColumn;
+    width: 100%;
+
+    svg {
+      font-size: 1.5rem;
+      cursor: pointer;
+      &:hover {
+        color: $secondary-color;
+        cursor: pointer;
+      }
+    }
+  }
+}

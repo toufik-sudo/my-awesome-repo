@@ -1,0 +1,37 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.container {
+  justify-content: center;
+
+  @include desktopSmall {
+    padding: 0 1.5rem 0 17rem;
+  }
+
+  @include mobileLarge {
+    padding-left: 1.5rem;
+  }
+}
+
+.wrapper {
+  width: 100%;
+
+  form {
+    @extend .totalCenter;
+    @extend .resetToDirectionColumn;
+    width: 100%;
+    padding-top: 7%;
+
+    @include mobileLarge {
+      padding-top: 11rem;
+    }
+
+    & > button {
+      margin-bottom: 6rem;
+    }
+  }
+
+  input {
+    border-color: $third-color;
+  }
+}

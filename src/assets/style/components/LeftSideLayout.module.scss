@@ -1,0 +1,497 @@
+@import '../utils/constants';
+@import '../imports';
+
+$sidebarSize: 10rem;
+$sidebarCollapsedSize: 4.5rem;
+
+.leftNav {
+  display: flex;
+  min-height: 100vh;
+  transition: padding-left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  &.collapsed {
+    padding-left: $sidebarCollapsedSize;
+    
+    @include tabletLandscape {
+      padding-left: 0;
+    }
+  }
+}
+
+.basicContainer {
+  padding: 14rem 4rem 0 17rem;
+
+  @include mobileLarge {
+    padding: 10rem 2rem 0 2rem;
+  }
+
+  @include mobileMedium {
+    padding-top: 5rem;
+  }
+}
+
+.centerContainer {
+  form {
+    @extend .totalCenter;
+    @extend .resetToDirectionColumn;
+  }
+}
+
+.navigation {
+  @include tabletLandscape {
+    @include prefix(transition, all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1));
+    @include prefix(transform, translateX(-100%));
+    padding-top: 5rem;
+    text-align: center;
+  }
+
+  @include position(fixed, 0, null, null, 0);
+  @include size($width: $sidebarSize, $height: 100vh);
+  z-index: 20;
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // Enhanced glassmorphism effect
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-right: 1px solid rgba($forth-color, 0.06);
+  box-shadow: 6px 0 32px rgba(0, 0, 0, 0.12),
+  inset -1px 0 0 rgba($forth-color, 0.05);
+
+  .logoImg {
+    @include size($width: 100%, $max-width: 5.5rem, $max-height: 6rem);
+    object-fit: contain;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+
+    &:hover {
+      transform: scale(1.08) rotate(-2deg);
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+    }
+  }
+
+  .logOutBottom {
+    @include position(fixed, null, null, 0, 0);
+    width: 12.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  @include mobileMedium {
+    width: 16%;
+  }
+
+  @include mobileSmall {
+    width: 20%;
+  }
+
+  a {
+    @include tabletLandscape {
+      width: auto;
+      display: inline-block;
+    }
+
+    @extend .totalCenter;
+  }
+
+  @media all and (-ms-high-contrast: none) {
+    height: 100% !important;
+  }
+}
+
+// Collapsed navigation state
+.navigationCollapsed {
+  width: $sidebarCollapsedSize;
+  
+  .logoImg {
+    @include size($max-width: 2.5rem, $max-height: 2.5rem);
+  }
+  
+  .logOutBottom {
+    width: $sidebarCollapsedSize;
+  }
+}
+
+// Hover expanded state (when collapsed but hovered)
+.navigationHoverExpanded {
+  width: $sidebarSize;
+  box-shadow: 
+    8px 0 40px rgba(0, 0, 0, 0.2),
+    inset -1px 0 0 rgba($forth-color, 0.08);
+  
+  .logoImg {
+    @include size($max-width: 5.5rem, $max-height: 6rem);
+  }
+  
+  .logOutBottom {
+    width: $sidebarSize;
+  }
+}
+
+// Hover expanded layout adjustment
+.hoverExpanded {
+  padding-left: $sidebarCollapsedSize;
+  
+  @include tabletLandscape {
+    padding-left: 0;
+  }
+}
+
+.primary {
+  .navigation {
+    @include mobileLarge {
+      @include size($width: 100%, $height: auto);
+      padding: .5rem 1.5rem;
+      text-align: left;
+
+      a {
+        display: inline-block;
+      }
+    }
+
+    background: $third-color;
+  }
+}
+
+.secondary {
+  .navigation {
+    @include mobileLarge {
+      @include size($width: 100%, $height: auto);
+      padding: .5rem 1.5rem;
+      text-align: left;
+
+      a {
+        display: inline-block;
+      }
+    }
+
+    background: $sidebar-menu-gradient;
+  }
+}
+
+.wall {
+  @include tabletLandscape {
+    padding-left: 0;
+  }
+
+  padding-left: $sidebarSize;
+
+  .navigation {
+    background: linear-gradient(155deg,
+        rgba(8, 12, 52, 0.98) 0%,
+        rgba(25, 18, 58, 0.96) 35%,
+        rgba(45, 28, 85, 0.94) 70%,
+        rgba(58, 35, 100, 0.92) 100%);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    // Subtle noise texture overlay
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.015;
+      pointer-events: none;
+    }
+
+    .logoImg {
+      @include tabletLandscape {
+        @include position(absolute, 1.5rem, 1.5rem);
+
+        &Onboarding {
+          top: 6rem;
+          left: 50%;
+          right: unset;
+          transform: translateX(-50%);
+          object-fit: contain;
+        }
+      }
+    }
+  }
+
+  &>div:first-child {
+    overflow: auto;
+    margin-bottom: 4rem;
+    height: 100%;
+
+    @include mobileLarge {
+      padding-bottom: 3rem;
+    }
+  }
+}
+
+.wall-wrapper {
+  @include display($display: flex, $flex-direction: column);
+  width: 100%;
+}
+
+.userWrapper {
+  @include font($color: $forth-color, $font-size: 1.4rem, $font-weight: $bold, $text-align: center);
+  @include prefix(transition, all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1));
+  @include prefix(transform, scale(0), webkit moz ms o);
+  padding: 0 0.5rem;
+  opacity: 0;
+
+  &Loaded {
+    @include prefix(transform, scale(1), webkit moz ms o);
+    opacity: 1;
+  }
+
+  @include mobileMedium {
+    font-size: 1.2rem;
+  }
+}
+
+.icon {
+  @include tabletLandscape {
+    @include size($width: 5rem, $height: 5rem);
+    margin-top: 1.5rem;
+  }
+
+  @include size($width: 4.9rem, $height: 4.9rem);
+  border: 2px solid rgba($forth-color, 0.9);
+  border-radius: 50%;
+  position: relative;
+  margin: 3rem auto 0.7rem;
+  overflow: hidden;
+  box-shadow: $light-shadow,
+  0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow:
+      $light-shadow,
+      0 6px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  &Company {
+    border-radius: 30px;
+    border: none;
+    min-width: 4.9rem;
+    min-height: 4.9rem;
+  }
+
+  img {
+    @include force_center(absolute);
+    width: 100%;
+    min-width: 5rem;
+  }
+}
+
+
+.nav {
+  &Toggle {
+    display: none;
+
+    &Icon {
+      @include tabletLandscape {
+        display: block;
+      }
+
+      @include size($width: 2.75rem, $height: 2.75rem);
+      @include position(fixed, 1.25rem, null, null, 1.25rem);
+      display: none;
+      z-index: 50;
+      cursor: pointer;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba($secondary-color, 0.2), rgba($secondary-color, 0.1));
+      backdrop-filter: blur(12px);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+      &:hover {
+        background: linear-gradient(135deg, rgba($secondary-color, 0.3), rgba($secondary-color, 0.15));
+        transform: scale(1.08);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &Right {
+        top: 2rem;
+        left: auto;
+        right: 1.5rem;
+
+        .navToggleIconBurger {
+          background-color: $forth-color;
+
+          &::after,
+          &::before {
+            background-color: inherit;
+          }
+        }
+      }
+
+      &Burger {
+        @include position(absolute, 50%, null, null, 50%);
+        @include prefix(transform, translate(-50%, -50%), moz webki ms o);
+        @include size($width: 1.2rem, $height: 2px);
+        background-color: $forth-color;
+        border-radius: 4px;
+        transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+        &::after,
+        &::before {
+          @include prefix(transition, all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), webkit moz ms o);
+          @include size($width: 100%, $height: 2px);
+          content: '';
+          position: absolute;
+          border-radius: 4px;
+          background-color: $forth-color;
+        }
+
+        &::after {
+          bottom: -7px;
+          width: 70%;
+        }
+
+        &::before {
+          top: -7px;
+        }
+      }
+    }
+
+    &Overlay {
+      @include position(fixed, 0, 0, 0, 0);
+      @include prefix(transition, all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1));
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.55), rgba(25, 18, 58, 0.65));
+      backdrop-filter: blur(6px);
+      visibility: hidden;
+      opacity: 0;
+      z-index: 10;
+    }
+
+    @include tabletLandscape {
+      &:checked {
+        &~.navigation {
+          @include position(fixed, 0, 0, 0, 0);
+          @include prefix(transform, translateX(0));
+          width: 100%;
+          display: block;
+        }
+
+        &~.navToggleOverlay {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        &~label {
+          .navToggleIconBurger {
+            background-color: transparent;
+
+            &::after,
+            &::before {
+              background: $forth-color;
+            }
+
+            &::after {
+              @include prefix(transform, rotate(-45deg), webkit moz ms o);
+              bottom: 0;
+              width: 100%;
+            }
+
+            &::before {
+              @include prefix(transform, rotate(45deg), webkit moz ms o);
+              top: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  &Opened {
+    overflow: hidden;
+  }
+}
+
+.sidebarMenuIconRight {
+  .navigation {
+    width: 12.5rem;
+  }
+
+  @include mobileLarge {
+    .navigation {
+      @include display(flex, $justify-content: space-between);
+      width: 100%;
+
+      a {
+        display: flex;
+      }
+    }
+
+    .userWrapper {
+      @include display(flex, $align-items: center);
+      display: flex;
+      align-items: center;
+      text-align: left;
+    }
+
+    .icon {
+      @include size($width: 4rem, $height: 4rem);
+      margin: 0;
+    }
+
+    .userInfo {
+      padding-left: 1rem;
+    }
+  }
+}
+
+.onboardingMobileMenu {
+  @include tabletLandscape {
+    display: flex !important;
+  }
+
+  @include position(fixed, 0, 0, null, 0);
+  background-color: $forth-color;
+  height: 7.5rem;
+  z-index: 10;
+  padding: 0 1rem;
+  display: none !important;
+
+  :global .language__dropdown-indicator {
+    @include tabletLandscape {
+      svg {
+        fill: $default-color;
+      }
+    }
+  }
+}
+
+/*Specific style for landing page*/
+.landingNavCollapse {
+  width: calc(100% - 12rem);
+  display: flex;
+  flex-wrap: wrap;
+
+  @include tabletLandscape {
+    @include position(absolute, 100%, 0, null, 0);
+    background-color: $default-color;
+    transform: translateX(-100%);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 100%;
+  }
+
+  @include mobileLarge {
+    max-height: calc(100vh - 8rem);
+    overflow: auto;
+  }
+}
+
+.navToggle:checked~.landingNavCollapse {
+  @include tabletLandscape {
+    transform: translateX(0);
+    z-index: 99;
+  }
+}
+
+/*Specific style for onboarding menu*/
+.navToggleOnboarding {
+  top: 2.75rem;
+}

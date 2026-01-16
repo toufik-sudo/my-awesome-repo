@@ -1,0 +1,79 @@
+@import '../../imports';
+
+
+.media {
+
+  &Container {
+    @include size($min-width: 5rem, $max-width: 29rem);
+    word-wrap: break-word;
+    text-align: center;
+  }
+
+  &Video{
+    @include size( $max-width: 100%);
+    &Container{
+      @include size( $max-width: 80vh);
+    }
+  }
+
+  &File {
+    margin-top: 1rem;
+    &Wrapper {
+      @include respond-to-max('mobile-large') {
+        flex-direction: column-reverse;
+      }
+    }
+
+    &NameSize{
+      @include respond-to-max('mobile-large') {
+        text-align: left;
+        padding-left: .75rem;
+      }
+      text-align: center;
+    }
+
+    @include respond-to-max('mobile-large') {
+      @include display-flex($flex-direction:row);
+    }
+  }
+
+
+  &Modal {
+    @include size($height: auto, $max-width: 90%, $min-width: 35rem, $max-height: 90vh, $width: auto);
+    flex-direction: column;
+    overflow-y: hidden;
+    padding-bottom: 1rem;
+    padding-left: 0;
+    padding-right: 0;
+
+    &Content {
+      @include display-flex($flex-direction: column);
+    }
+
+    img {
+      @include size($max-width: 100%, $max-height: 80vh, $width: auto);
+    }
+
+    button {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    &Lg{
+      max-width: 50rem;
+    }
+  }
+
+  &Video {
+    @include position(relative, null, null, null, null);
+
+    &Play {
+      @include position(absolute, 50%, null, null, 50%);
+      @include font($font-size: 3rem, $color: $gray);
+      @include prefix(transform, translate(-50%, -50%));
+      background: none;
+      border: none;
+    }
+  }
+
+}

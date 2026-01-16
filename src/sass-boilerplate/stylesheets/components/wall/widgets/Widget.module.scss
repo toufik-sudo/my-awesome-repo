@@ -1,0 +1,71 @@
+@import "../../../imports";
+
+.widget {
+  &Title {
+    width: 100%;
+    @include respond-to-max('desktop-medium') {
+      font-size: 1.4rem;
+    }
+  }
+
+  &TextBody {
+    @include respond-to-max('desktop-medium') {
+      font-size: 1.4rem;
+    }
+    @include respond-to-max-height('tablet-portrait-height') {
+      padding-bottom: 0 !important;
+    }
+  }
+
+  &CustomScale {
+    @include respond-to-max-height('custom-resolution-1') {
+      transform: scale(.7);
+    }
+    transform: scale(.8);
+    transform-origin: top;
+  }
+
+  &Image {
+    flex: 0 0 45%;
+    max-width: 40%;
+    object-fit: contain;
+  }
+
+  &Payment {
+    @extend .userBlockBase;
+    height: 27.3vh;
+
+    img {
+      max-height: 10vh;
+      object-fit: contain;
+    }
+  }
+
+  &Contact {
+    @extend .userBlockBase;
+    @include respond-to-max-height('tablet-landscape-height') {
+      // height: 30vh;
+      height: 24.5vh;
+    }
+    @include respond-to-max-height('custom-resolution-2') {
+      height: 28vh;
+    }
+    @include respond-to-max-height('tablet-portrait-height') {
+      height: 31vh;
+    }
+    height: 24.5vh;
+  }
+
+  &Mobile {
+    @include respond-to-max-height('tablet-landscape-height') {
+      height: 28vh;
+    }
+    @include respond-to-max-height('custom-resolution-2') {
+      height: 32vh;
+    }
+    @include respond-to-max-height('custom-resolution-4') {
+      height: 36vh;
+    }
+    height: 24vh;
+  }
+}

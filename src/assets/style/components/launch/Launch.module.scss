@@ -1,0 +1,41 @@
+@import '../../imports';
+
+.launchHeading {
+  &Title {
+    margin-top: 0;
+    margin-bottom: 2rem;
+    @include mobileMedium {
+      font-size: 2rem;
+    }
+  }
+
+  &Subtitle {
+    @include mobileMedium {
+      font-size: 1.6rem;
+      margin-top: 0;
+    }
+
+    &.brandSubtitle {
+      color: $menu-accent;
+    }
+  }
+
+  &IntermediaryTitle {
+    @include mobileLarge {
+      margin-top: 5rem;
+    }
+    @include font($font-size: 2.2rem, $color: $accent-color, $text-align: center);
+    margin-top: 10rem;
+  }
+
+  &ExtraInfo {
+    font-size: 1.4rem;
+    margin-top: 1.5rem;
+  }
+}
+
+.error {
+  @include error();
+  padding-bottom: 2rem;
+  font-size: 1.6rem;
+}

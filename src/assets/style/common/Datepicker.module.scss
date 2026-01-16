@@ -1,0 +1,23 @@
+@import '../imports';
+@import '../utils/constants';
+
+.rangeDatepicker {
+  &Wrapper {
+    @extend .totalCenter;
+    @include size($max-width: 41.8rem, $width: 100%);
+
+    @include mobileLarge {
+      flex-direction: column;
+      max-width: none;
+    }
+  }
+
+  &To {
+    @include font($font-size: 1.4rem, $font-weight: $regular);
+    margin: 0 2rem;
+
+    @include mobileLarge {
+      margin: 2rem;
+    }
+  }
+}

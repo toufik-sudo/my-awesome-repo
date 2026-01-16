@@ -1,0 +1,80 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.validation {
+  &Wrapper {
+    @include mobileLarge {
+      button {
+        margin: 2rem auto;
+      }
+    }
+    @include display(flex, space-between, null, center, row, wrap);
+
+    .validationRadioBlockDisabled:last-of-type {
+      pointer-events: none;
+
+      label {
+        opacity: 0.6;
+      }
+    }
+  }
+
+  &Block {
+    width: calc(50% - 2rem);
+
+    @include mobileLarge {
+      width: 100%;
+
+      & + & {
+        margin-top: 4rem;
+      }
+    }
+  }
+
+  &Label {
+    @include font($font-weight: $bold, $font-size: 1.6rem);
+    margin-bottom: 3.5rem;
+    opacity: 0.8;
+  }
+
+  &RadioBlock {
+    width: 100%;
+
+    &Label {
+      @include font($color: $primary-light-color, $font-size: 1.6rem);
+      padding-left: 0.5rem;
+    }
+  }
+
+  &ExtraInfo {
+    @include font($color: $primary-color, $font-size: 1.2rem);
+    @include size($min-height: 6rem, $width: 100%, $max-width: 48.6rem);
+    opacity: 0.6;
+    margin-top: 1rem;
+
+    @include mobileLarge {
+      min-height: 0;
+      margin: 1rem 0 3rem;
+    }
+  }
+}
+
+.emailNotify .validationRadioWrapper {
+  @include mobileLarge {
+    @include display($display: flex, $justify-content: center);
+
+    .validationRadioBlock {
+      padding: 0 2rem;
+    }
+  }
+}
+
+.manualValidation .validationRadioBlock {
+  @include mobileLarge {
+    @include display($display: flex, $justify-content: center, $flex-direction: row, $align-items: center);
+
+    .validationExtraInfo {
+      margin: 2.5rem 1.5rem;
+    }
+  }
+}

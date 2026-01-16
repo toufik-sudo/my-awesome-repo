@@ -1,0 +1,41 @@
+@import "../../imports";
+
+.programJoin {
+  @include size($width: 80rem, $max-width: 100%);
+  margin: 0 auto;
+
+  &Wrapper {
+    @include respond-to-max('mobile-large'){
+      margin-top: 2.5rem;
+      max-width: 100%;
+    }
+    max-width: 85%;
+    margin: 0 auto;
+    color: $gray-accent-color;
+  }
+
+  &Logo {
+    @include size($width: 8.5rem, $height: 8.5rem);
+    position: relative;
+    overflow: hidden;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+
+    &Wrapper {
+      @extend .flex-center-total;
+    }
+    
+    img {
+      @include force_center(absolute);
+      @include size($width: 100%, $min-width: 5.9rem);
+    }
+  }
+
+  &Step {
+    @include size($width: .7rem, $height: .7rem);
+    background-color: $primary-color;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 .7rem;
+  }
+}

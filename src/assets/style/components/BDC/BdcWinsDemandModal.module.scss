@@ -1,0 +1,19 @@
+// Define styles for the modal container
+.modalContainer {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+// Style for the text to make it bigger
+.modalText {
+  font-size: 1.5rem; // Adjust the size as needed
+  text-align: center; // Center the text
+  margin-bottom: 1rem; // Add some space below the text
+}
+
+// Flexbox styling for the buttons to align them horizontally
+.buttonContainer {
+  display: flex;
+  justify-content: center; // Centers the buttons horizontally
+  gap: 1rem; // Adds some space between the buttons
+}

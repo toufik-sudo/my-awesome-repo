@@ -1,0 +1,273 @@
+@import '../../imports';
+@import '../../utils/constants';
+@import '../../common/checkbox';
+
+.designContent {
+  @include display($display: flex, $flex-wrap: wrap);
+  padding-top: 2rem;
+
+  & > div {
+    @include tabletLandscape {
+      padding-bottom: 3rem;
+      flex: 0 0 100%;
+    }
+    padding-right: 10rem;
+    flex: 1;
+  }
+
+  .colorsInline > div {
+    margin-right: 1rem;
+  }
+}
+
+.deleteImage {
+  .defaultImage, .deleteImageWrapper > img {
+    // @include size($width: 10rem, $height: 10rem);
+    background: $forth-color;
+    border: .1rem solid $default-color;
+    border-radius: 50%;
+  }
+
+  button {
+    @include font($color: $third-color, $font-size: 1.2rem, $font-weight: $bold);
+    border: none;
+    padding: 0;
+    z-index: 11;
+
+    &:hover {
+      color: $danger;
+    }
+  }
+
+  img {
+    @include size($width: 4.9rem, $height: 4.9rem);
+    border: .2rem solid $forth-color;
+    border-radius: 50%;
+    box-shadow: $light-shadow;
+
+    @include mobileLarge {
+      margin: 0 auto;
+    }
+  }
+
+  svg {
+    margin-left: 1.5rem;
+  }
+}
+
+.companyName, .companyColors, .companyFonts, .designIdentificationText {
+  padding-top: 3rem;
+
+  input {
+    padding-left: 0;
+  }
+}
+
+.designTitle {
+  @include font($font-size: 1.4rem, $font-weight: $bold);
+  display: inline-block;
+  padding-bottom: 2rem;
+}
+
+.companyFonts {
+  @include tabletLandscape {
+    width: 100%;
+    padding-right: 0;
+  }
+
+  .designTitle {
+    @include tabletLandscape {
+      left: .5rem;
+    }
+    @include position(relative, 0, 0, 0, -3.5rem);
+  }
+}
+
+.brandTitle {
+  color: $menu-accent;
+}
+
+.designOptimalInformation {
+  @include font($font-size: 1rem, $color: $border-light);
+}
+
+.designAvatarPreview {
+  padding-top: 3rem;
+
+  & > p {
+    padding-bottom: 1rem;
+  }
+}
+
+.designUploadValue {
+  @include mobileLarge {
+    padding: 0 0 1rem;
+  }
+  @include size($max-width: 30rem, $width: 100%);
+  padding: 1rem 0 1rem;
+  font-size: 1.4rem;
+
+  & > span {
+    @include font($font-size: 1rem, $color: $primary-color);
+    width: 12rem;
+    display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  & > button {
+    @include position($bottom: .3rem, $position: relative);
+    @include font($font-size: 1.2rem, $color: $third-color, $font-weight: $bold);
+    margin-left: 2rem;
+    border: none;
+    padding: 0 1.2rem;
+    z-index: 7;
+  }
+}
+
+.designCoverImageWrapper {
+  padding: 1.5rem 0 3rem;
+
+  .designTitle {
+    padding-bottom: 1rem;
+  }
+}
+
+.companyAvatarUpload {
+  &Field {
+    height: auto;
+
+    :global {
+      .fileContainer {
+        width: auto;
+        display: inline-block;
+        border-radius: 3rem;
+        border: .2rem solid $accent-color;
+        padding: 0;
+        cursor: pointer;
+        
+        input {
+          width: .1rem;
+        }
+      }
+    }
+  }
+
+  &Button {
+    margin: 0 !important;
+    padding: .5rem 2rem !important;
+    color: $accent-color !important;
+  }
+
+  &Error {
+    @include position($position: absolute, $left: calc(100% + 2rem), $top: 50%);
+    width: 100%;
+    white-space: nowrap;
+    transform: translateY(-50%);
+    cursor: default;
+  }
+}
+
+.designColors, .designFonts {
+  &Reset {
+    @include font($font-size: 1.2rem, $color: $primary-light-color);
+    padding-top: 1rem;
+    cursor: pointer;
+  }
+
+  &Overlay {
+    @include position(fixed, 0, 0, 0, 0);
+  }
+
+  &Picker {
+    position: relative;
+    z-index: 200;
+
+    :global {
+      .chrome-picker {
+        position: absolute;
+        margin-bottom: 3rem;
+      }
+    }
+  }
+
+  &Title {
+    @include font($font-size: 1.4rem, $color: $accent-color, $font-weight: $bold);
+    padding-top: 1rem;
+    transition: transform .3s;
+  }
+
+  &SampleText {
+    @include tabletLandscape {
+      font-size: 1.2rem;
+    }
+    @include font($font-size: 1.4rem, $color: $primary-light-color);
+    padding-top: 1rem;
+
+    &:last-child {
+      padding-bottom: 2rem;
+    }
+  }
+
+  &Content {
+    @include display($display: inline-flex, $justify-content: flex-start, $align-items: center);
+    margin: 1rem 0;
+  }
+
+  &Input {
+    @include font($text-transform: uppercase, $font-size: 1.2rem, $color: $border-light);
+    padding: .5rem 1rem;
+    border-radius: 1.5rem;
+    border: .1rem solid $border-light;
+    margin-left: 1rem;
+    cursor: pointer;
+    display: block;
+    width: 15rem;
+  }
+
+  &Sample {
+    @include size($width: 2.5rem, $height: 2.5rem);
+    cursor: pointer;
+    display: inline-block;
+    border-radius: 50%;
+    border: 0.1rem solid $grey-light;
+  }
+
+  &Selected:after,
+  &:hover:after {
+    @include tabletLandscape {
+      left: 0.5rem;
+    }
+    @include position($top: 1.3rem, $left: -3rem);
+    @extend .checked;
+  }
+
+  &Item {
+    position: relative;
+    cursor: pointer;
+
+    &:hover {
+      .designFontsTitle {
+        transform: translateX(5px);
+      }
+    }
+
+    &:before {
+      @include tabletLandscape {
+        left: 0;
+      }
+      @include position($top: .8rem, $left: -3.5rem);
+      @extend .radio;
+      cursor: pointer;
+    }
+  }
+}
+
+.designFonts {
+  &Item {
+    @include tabletLandscape {
+      padding-left: 3.5rem;
+    }
+  }
+}

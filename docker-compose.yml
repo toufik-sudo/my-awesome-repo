@@ -1,0 +1,15 @@
+version: '2'
+services:
+  frontend:
+    image: nginx:latest    
+    ports:
+      - 8009:8009
+      - 443:443
+    restart: always
+    volumes:
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www:/var/www/certbot/:ro
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw

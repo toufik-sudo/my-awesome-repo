@@ -1,0 +1,64 @@
+//@import '../utils/mixins';
+//@import '../utils/variables';
+//
+//.btn {
+//  @include font($color: $secondary-color, $font-size: 1.6rem);
+//  @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+//  @extend .totalCenter;
+//  display: flex;
+//  align-items: center;
+//  justify-content: center;
+//  border: 0.1rem solid $secondary-color;
+//  padding: 0.4rem 3.8rem;
+//  border-radius: 3rem;
+//  background: $forth-color;
+//  cursor: pointer;
+//
+//  &.secondary {
+//    background: $third-color;
+//    border-color: $third-color;
+//    color: $forth-color;
+//
+//    &:hover {
+//      background: darken($third-color, 15%);
+//    }
+//  }
+//
+//  &.disabled {
+//    color: $border-light;
+//    pointer-events: none;
+//  }
+//
+//  &.primary {
+//    &:hover {
+//      background: $secondary-color;
+//      color: $forth-color;
+//    }
+//    &.inverted {
+//      background: $gradient;
+//      color: $forth-color;
+//      border-color: $forth-color;
+//
+//      &:hover {
+//        background: $second-gradient;
+//      }
+//    }
+//  }
+//
+//  &.danger {
+//    background: $danger;
+//    color: $forth-color;
+//    border-color: $forth-color;
+//
+//    &:hover {
+//      background: darken($color: $danger, $amount: 15%);
+//    }
+//  }
+//}
+//
+//.disabled, .btn.disabled {
+//  pointer-events: none;
+//  border-color: $border-light;
+//  color: $border-light;
+//  background: $forth-color;
+//}

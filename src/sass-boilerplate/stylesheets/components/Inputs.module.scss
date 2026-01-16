@@ -1,0 +1,54 @@
+@import '../imports';
+
+.toolTip {
+  &Errors {
+    @include position(absolute, null, 0, calc(100% + 1.5rem), 0);
+    background: $default-color;
+    width: 100%;
+    box-shadow: 0 .3rem 1rem rgba($default-text-color, .4);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    color: $grey-light-color;
+    text-align: left;
+
+    &Container{
+      @include respond-to-max(mobile-large){
+        @include size($height: 12.5rem);
+        font-size: 1.2rem;
+        overflow-y: auto;
+        @include respond-to-orientation(mobile-large){
+          @include size($height: 8rem);
+        }
+      }
+    }
+
+    &::before {
+      @include size($width: 2rem, $height: 2rem);
+      @include position(absolute, null, null, -1rem, 50%);
+      content: '';
+      transform: translateX(-50%) rotate(45deg);
+      background: $default-color;
+      border-bottom: .1rem solid $grey-light-color;
+      border-right: .1rem solid $grey-light-color;
+    }
+
+    svg {
+      font-size: 2rem !important;
+      margin-right: .5rem;
+      margin-top: .2rem;
+    }
+  }
+
+  &ErrorMessage {
+    @include display($align-items: start);
+    margin-bottom: .5rem;
+  }
+
+  &Error {
+    color: $danger-color;
+  }
+
+  &Success {
+    color: $primary-color-secondary-accent;
+  }
+}

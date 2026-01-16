@@ -1,0 +1,13 @@
+.chip{
+  padding: 0.5rem 1rem;
+  background-color: $gray-lighter-color;
+  border-radius: 1.5rem;
+  display: inline-block;
+  margin: .5rem;
+
+  .deleteChip{
+    margin-left: .5rem;
+    cursor: pointer;
+  }
+
+}

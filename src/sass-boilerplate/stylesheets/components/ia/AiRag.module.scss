@@ -1,0 +1,356 @@
+// /* Common styles */
+// .aiForm {
+//     max-width: 800px; /* Increase the width to give more space */
+//     margin: 0 auto;
+//     padding: 20px 2000px;
+//   }
+  
+//   .form-group {
+//     margin-bottom: 20px;
+//     display: flex;
+//     align-items: center;
+//     justify-content: space-between; /* Ensure elements take full width */
+//     flex-wrap: nowrap; /* Prevent line breaks */
+//   }
+  
+//   label {
+//     flex: 0 1 250px; /* Fixed width for labels */
+//     margin-right: 10px;
+//     font-size: 18px; /* Increase the font size */
+//     white-space: nowrap; /* Prevent line breaks */
+//     text-align: left; /* Align text to the left */
+//   }
+  
+//   select,
+//   input[type="file"] {
+//     flex: 1; /* Allow input to grow and fill space */
+//     padding: 10px;
+//     font-size: 16px;
+//     border: 1px solid #ccc;
+//     border-radius: 5px;
+//     box-sizing: border-box;
+//     text-align: right; /* Align text to the right */
+//   }
+  
+//   .submit-btn {
+//     color: #fff;
+//     padding: 10px 20px;
+//     font-size: 16px;
+//     border: none;
+//     border-radius: 5px;
+//     cursor: pointer;
+//   }
+  
+  
+//   .ai-description {
+//     font-style: italic;
+//     color: #888;
+//   }
+  
+//   .option-bold {
+//     font-weight: bold;
+//   }
+  
+  
+//   .ai-form {
+//     padding: 0 20px; /* Padding on left and right */
+//   }
+  
+//   .ai-submit-text {
+//     margin: 50px 50px; /* Margin on left and right */
+//     padding: 10px 0;
+//     font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
+//     font-size: larger;
+//   }
+  
+//   .uploaded-files {
+//     display: flex;
+//     align-items: center;
+//     margin-left: 10px; /* Space between input and uploaded file info */
+//   }
+  
+//   .uploaded-file {
+//     display: flex;
+//     align-items: center;
+//     margin-left: 10px; /* Space between multiple uploaded files */
+//   }
+  
+//   .uploaded-file span {
+//     margin-right: 10px;
+//   }
+  
+//   .remove-file-btn {
+//     background: none;
+//     border: none;
+//     color: red;
+//     cursor: pointer;
+//     font-size: 16px;
+//   }
+  
+//   .confirmation {
+//     margin-top: 20px;
+//     text-align: center;
+//   }
+  
+//   .redirect-btn {
+//     background-color: #28a745;
+//     color: #fff;
+//     padding: 10px 20px;
+//     font-size: 16px;
+//     border: none;
+//     border-radius: 5px;
+//     cursor: pointer;
+//     margin-top: 10px;
+//   }
+  
+  
+//   @keyframes shimmer {
+//     0% { background-position: -500% 0; }
+//     100% { background-position: 500% 0; }
+//   }
+  
+//   @keyframes flash {
+//     0%, 50%, 100% { background-color: #00ff00; } /* Green color */
+//     25%, 75% { background-color: #ff69b4; } /* Pink color */
+//   }
+  
+//   .flashy-slogan {
+//     font-size: 28px; /* Adjust size as needed */
+//     font-weight: bold;
+//     background: linear-gradient(to right, #00ff00, #ff69b4, #00ff00); /* Green to pink gradient */
+//     background-size: 200% auto;
+//     -webkit-background-clip: text; /* Clip text to the background */
+//     background-clip: text; /* Clip text to the background */
+//     color: transparent; /* Hide original text color */
+//     animation: shimmer 15s linear infinite, flash 3s infinite; /* Slower shimmer effect and flashing */
+//     text-align: center; /* Center the text */
+//     margin: 20px 0; /* Add some margin for spacing */
+//     transition: transform 0.5s ease; /* Smooth transition for zoom effect */
+//   }
+  
+//   .flashy-slogan:hover {
+//     animation: none; /* Stop the animation on hover */
+//     color: #ff69b4; /* Set text color to pink */
+//   }
+  
+//   .danger-section {
+//     background-color: #f8d7da; /* Light red background */
+//     border: 1px solid #f5c6cb; /* Light red border */
+//     color: #721c24; /* Dark red text */
+//     padding: 10px;
+//     border-radius: 5px;
+//   }
+  
+//   .danger-section .form-group label {
+//     color: #721c24; /* Dark red text for labels */
+//   }
+  
+//   .danger-section .uploaded-file span {
+//     color: #721c24; /* Dark red text for uploaded file names */
+//   }
+  
+//   .danger-section .remove-file-btn {
+//     background-color: #f5c6cb; /* Light red background for remove button */
+//     color: #721c24; /* Dark red text for remove button */
+//   }
+  
+/* Common styles */
+.aiForm {
+  max-width: 800px; /* Increase the width to give more space */
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5; /* Light background color for the form */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Ensure elements take full width */
+  flex-wrap: nowrap; /* Prevent line breaks */
+
+  label {
+      flex: 0 1 250px; /* Fixed width for labels */
+      margin-right: 10px;
+      font-size: 18px; /* Increase the font size */
+      font-weight: bold; /* Make labels bold */
+      white-space: nowrap; /* Prevent line breaks */
+      text-align: left; /* Align text to the left */
+  }
+
+  .fileInputWrapper {
+      flex: 1; /* Allow input to grow and fill space */
+      
+      input[type="file"] {
+          display: block;
+          width: 100%;
+          padding: 10px;
+          font-size: 16px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          box-sizing: border-box;
+          text-align: right; /* Align text to the right */
+          transition: border-color 0.3s ease;
+
+          &:hover {
+              border-color: #999;
+          }
+
+          &:focus {
+              outline: none;
+              border-color: #666;
+          }
+      }
+  }
+
+  .uploadedFile {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background-color: #e6f7ff;
+      border: 1px solid #b3e5ff;
+      border-radius: 4px;
+      margin-left: 10px; /* Space between input and uploaded file info */
+
+      span {
+          font-size: 14px;
+          color: #333;
+          margin-right: 10px;
+      }
+
+      .removeFileBtn {
+          background: none;
+          border: none;
+          color: #ff4d4f;
+          cursor: pointer;
+          font-size: 16px;
+
+          &:hover {
+              color: #ff7875;
+          }
+      }
+  }
+}
+
+.submitBtn {
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.aiDescription {
+  font-style: italic;
+  color: #888;
+}
+
+.optionBold {
+  font-weight: bold;
+}
+
+.aiForm {
+  padding: 0 20px; /* Padding on left and right */
+}
+
+.aiSubmitText {
+  margin: 50px 50px; /* Margin on left and right */
+  padding: 10px 0;
+  font-family: 'Montserrat', sans-serif; /* Apply Montserrat font */
+  font-size: larger;
+}
+
+.uploaded-files {
+  display: flex;
+  align-items: center;
+  margin-left: 10px; /* Space between input and uploaded file info */
+}
+
+.uploaded-file {
+  display: flex;
+  align-items: center;
+  margin-left: 10px; /* Space between multiple uploaded files */
+}
+
+.uploaded-file span {
+  margin-right: 10px;
+}
+
+.remove-file-btn {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.confirmation {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.redirect-btn {
+  background-color: #28a745;
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -500% 0; }
+  100% { background-position: 500% 0; }
+}
+
+@keyframes flash {
+  0%, 50%, 100% { background-color: #00ff00; } /* Green color */
+  25%, 75% { background-color: #ff69b4; } /* Pink color */
+}
+
+.flashy-slogan {
+  font-size: 28px; /* Adjust size as needed */
+  font-weight: bold;
+  background: linear-gradient(to right, #00ff00, #ff69b4, #00ff00); /* Green to pink gradient */
+  background-size: 200% auto;
+  -webkit-background-clip: text; /* Clip text to the background */
+  background-clip: text; /* Clip text to the background */
+  color: transparent; /* Hide original text color */
+  animation: shimmer 15s linear infinite, flash 3s infinite; /* Slower shimmer effect and flashing */
+  text-align: center; /* Center the text */
+  margin: 20px 0; /* Add some margin for spacing */
+  transition: transform 0.5s ease; /* Smooth transition for zoom effect */
+}
+
+.flashy-slogan:hover {
+  animation: none; /* Stop the animation on hover */
+  color: #ff69b4; /* Set text color to pink */
+}
+
+.danger-section {
+  background-color: #f8d7da; /* Light red background */
+  border: 1px solid #f5c6cb; /* Light red border */
+  color: #721c24; /* Dark red text */
+  padding: 10px;
+  border-radius: 5px;
+
+  .form-group label {
+      color: #721c24; /* Dark red text for labels */
+  }
+
+  .uploaded-file span {
+      color: #721c24; /* Dark red text for uploaded file names */
+  }
+
+  .remove-file-btn {
+      background-color: #f5c6cb; /* Light red background for remove button */
+      color: #721c24; /* Dark red text for remove button */
+  }
+}
+
+

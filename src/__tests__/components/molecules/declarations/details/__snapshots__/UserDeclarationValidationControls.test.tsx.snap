@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserDeclarationValidationControls renders a single disabled button with status text for 0 1`] = `ReactWrapper {}`;
+
+exports[`UserDeclarationValidationControls renders a single disabled button with status text for 2 1`] = `ReactWrapper {}`;
+
+exports[`UserDeclarationValidationControls renders a single disabled button with status text for 3 1`] = `ReactWrapper {}`;
+
+exports[`UserDeclarationValidationControls renders a single disabled button with status text for 4 1`] = `ReactWrapper {}`;
+
+exports[`UserDeclarationValidationControls renders without crashing 1`] = `ReactWrapper {}`;

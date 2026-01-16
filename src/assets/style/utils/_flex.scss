@@ -1,0 +1,32 @@
+// Use flex to vertically center the CHILD of element. Useful for elements which only have text node as child
+// (so no centering with line-height would be needed). But it works for any element with a child.
+.verticalCenter {
+  @include display($display: flex, $align-items: center);
+}
+
+// Same as above, plus horizontal centering.
+.totalCenter {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+}
+
+// Only horizontal centering.
+.horizontalCenter {
+  @include display($display: flex, $justify-content: center);
+}
+
+.spaceBetween {
+  @include display($display: flex, $align-items: center, $justify-content: space-between);
+}
+
+.directionColumn {
+  @include display($display: flex, $flex-direction: column);
+}
+
+// Only reset flex-direction
+.resetToDirectionColumn {
+  @include display($flex-direction: column);
+}
+
+.verticalCenterColumn {
+  @include display($display: flex, $flex-direction: column, $align-items: center);
+}

@@ -1,0 +1,55 @@
+@import '../../imports';
+
+.Switch {
+  display: inline-block;
+  margin-top: 2.5rem;
+
+  span {
+    @include size($width: 4.4rem, $height: 2rem);
+    position: relative;
+    float: left;
+  }
+
+  label {
+    line-height: 3.4rem;
+    margin-left: 1.2rem;
+  }
+}
+
+.Slider {
+  @include position(absolute, 0, 0, 0, 0);
+  width: 100%;
+  border: 0;
+  outline: none;
+  background-color: $gray;
+  transition: .4s;
+  border-radius: 3.4rem;
+  cursor: pointer;
+  padding: 0;
+
+  &:before {
+    @include position(absolute, null, null, 0.2rem, 0.2rem);
+    @include size($width: 1.6rem, $height: 1.6rem);
+    content: "";
+    background-color: $default-color;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  &Checked {
+    background: $primary-color;
+    box-shadow: 0 0 0.1rem $default-color;
+
+    &:before {
+      transform: translateX(2.4rem);
+    }
+  }
+}
+
+div[class*="modifyBlockContainer"] div[class*="ButtonSwitch_Switch"]{
+  margin-top: -10px;
+  margin-left: -5px;
+  width: 5%;
+  height: 0;
+}
+

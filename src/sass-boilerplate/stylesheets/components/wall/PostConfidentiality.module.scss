@@ -1,0 +1,51 @@
+@import '../../imports';
+
+.container {
+  @include position($position: relative);
+  @include display($display: flex);
+  @include font($font-size: 1.2rem);
+  margin-bottom: 1.2rem;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    @include position($position: absolute);
+    @include size($width: 0, $height: 0);
+    opacity: 0;
+    cursor: pointer;
+
+    &:checked ~ .checkmark {
+      background-color: $primary-color;
+
+      &:after {
+        @include display($display: block);
+      }
+    }
+  }
+
+  .labelTitle {
+    margin-left: 3rem;
+  }
+
+  .checkmark {
+    @include position($position: absolute, $top: 0, $left: 0);
+    @include size($width: 2rem, $height: 2rem);
+    background-color: $grey-light-color;
+
+    &:after {
+      content: "";
+      @include position($position: absolute);
+      @include display($display: none);
+    }
+  }
+  .checkmark:after {
+    @include position($top: .5rem, $left: .7rem);
+    @include size($width: .5rem, $height: 1rem);
+    @include border($border-color: white, $border-width: 0 .3rem .3rem 0, $border-style: solid);
+    @include prefix(transform, rotate(45deg));
+  }
+
+  :hover input ~ .checkmark {
+    background-color: $default-color;
+  }
+}

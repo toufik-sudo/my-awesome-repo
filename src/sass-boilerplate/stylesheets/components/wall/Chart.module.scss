@@ -1,0 +1,81 @@
+@import "../../imports";
+
+.chart {
+
+  &Container {
+    @include respond-to-max('mobile-large'){
+      padding: 0 .5rem;
+    }
+    @include size($width: 100%, $height: 5rem);
+    display: flex;
+  }
+
+  &Label {
+    @include respond-to-max('mobile-large'){
+      padding-left: .2rem;
+      @include font($font-size: 1.4rem);
+    }
+    @include display-flex($align-items: center);
+    width: 25%;
+    padding-left: 2rem;
+  }
+
+  &Data {
+    @include respond-to-max('mobile-large'){
+      @include font($font-size: 1.4rem);
+    }
+    @include display-flex($align-items: center);
+    width: 60%;
+  }
+
+  &Value {
+    @include respond-to-max('mobile-large'){
+      padding-left: 1rem;
+      width: 25%;
+    }
+    @include display-flex($align-items: center);
+    word-wrap: break-word;
+    font-weight: map_get($font-weights,'bold');
+    padding-left: 2rem;
+    width: 15%;
+  }
+
+  &Color {
+    @include respond-to-max('mobile-large'){
+      padding: 0 1rem;
+    }
+    transition: width 1s ease-in-out;
+    padding: 0 2rem;
+    height: 3rem;
+    width: .1rem;
+
+    &[class*='primary'] {
+      background-color: $primary-color;
+    }
+
+    &[class*='secondary'] {
+      background-color: $secondary-color;
+    }
+
+    &[class*='warning'] {
+      background-color: $label-inactive;
+    }
+
+    &[class*='danger'] {
+      background-color: $danger-color;
+    }
+    &[class*='lightGreen']{
+      background-color: $primary-color-secondary-accent;
+    }
+  }
+
+  &ComingSoon{
+    @include font($color: $gray-light-accent-color);
+    min-width: 10rem;
+  }
+
+  &Euro {
+    padding-left: 1rem;
+  }
+
+}

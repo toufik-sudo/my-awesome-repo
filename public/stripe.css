@@ -1,0 +1,13 @@
+.ProductSummary-productImageContainer {
+    height: 150px !important;
+    max-height: 200px !important;
+    padding: 10px !important;
+}
+
+.ProductImage-image {
+    height: 100px !important;
+    width: auto !important;
+    position: relative !important;
+    top: 7rem !important;
+    object-fit: contain !important;
+}

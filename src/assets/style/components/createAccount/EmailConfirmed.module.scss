@@ -1,0 +1,19 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.emailConfirmed {
+  @extend .totalCenter;
+  @extend .resetToDirectionColumn;
+
+  img {
+    @include size($max-width: 40rem, $max-height: 12rem);
+  }
+}
+
+.emailConfirmedTitle {
+  margin-bottom: 4rem;
+
+  @include mobileMedium {
+    margin-bottom: 2rem;
+  }
+}

@@ -1,0 +1,60 @@
+@import "../../imports";
+
+.settings{
+
+  &TabList{
+    @include display-flex($flex-direction:row,$justify-content: center,$flex-wrap: wrap);
+    border-bottom: .1rem solid $primary-light-color;
+  }
+  &Tab{
+    padding: 1rem 2rem;
+    cursor: pointer;
+  }
+
+  &ActiveTab{
+    border-bottom: .2rem solid $secondary-color;
+    cursor: default;
+    color: $default-text-color;
+  }
+
+  &ChangePassword {
+
+    label {
+      @include font($color: $gray-accent-color !important, $font-size: 1rem);
+    }
+
+    &Title {
+      @include font($color: $secondary-color, $font-size: 2rem, $font-weight: 700);
+      padding: 1rem 0;
+    }
+
+    &Buttons {
+      @include respond-to-max('mobile-large') {
+        display: block;
+      }
+
+      &Strength {
+        @include font($color: $gray-accent-color);
+        @include respond-to-max('mobile-large') {
+          @include font($text-align: center);
+          width: 100%;
+        }
+      }
+
+      &Submit {
+        @include size($height: 4rem);
+        align-items: center;
+        @include respond-to-max('mobile-large') {
+          margin-top: 1rem;
+          max-width: 100% !important;
+        }
+        margin-bottom: -3.2rem;
+      }
+    }
+  }
+  &Btn{
+    position: relative;
+    bottom: 5px;
+  }
+
+}

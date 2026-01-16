@@ -1,0 +1,258 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.modalBaseStyle {
+  @include font($font-family: $default-font, $color: $default-color, $text-align: center, $font-size: 1.3rem);
+  @include size($width: 100%, $max-width: 42rem);
+  @extend .totalCenter;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  background: $forth-color;
+
+  @include mobileLarge {
+    max-width: 90%;
+  }
+
+  .closeBtn {
+    @include position(absolute, 0, 0, null, null);
+    font-size: 3.5rem;
+    cursor: pointer;
+    border: none;
+    z-index: 100;
+    padding: 0;
+    background: none;
+  }
+
+  &Body {
+    @extend .totalCenter;
+    min-height: 25rem;
+  }
+}
+
+.fullMobile {
+  @include mobileLarge {
+    @include size($max-width: 100% !important, $height: 100% !important);
+    @include position('fixed', 0);
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+.modalSuccess {
+  &Transparent {
+    background-color: rgba(62, 164, 117, 0.90);
+  }
+
+  @include font($font-family: $default-font, $color: $forth-color, $text-align: center);
+  @include size($width: 85%, $max-width: 50rem);
+  position: relative;
+  background: $modalSuccessBackground;
+  margin: 0 1.5rem;
+
+  &>div:first-of-type {
+    @include mobileLarge {
+      padding: 0;
+    }
+
+    width: 100%;
+  }
+
+  .subtitle {
+    @include font($color: $forth-color, $font-size: 2.25rem, $font-weight: $bold);
+    padding-bottom: 2rem;
+
+    @include mobileLarge {
+      font-size: 1.4rem;
+    }
+  }
+
+  h2 {
+    color: $forth-color;
+    font-size: 3rem;
+
+    @include mobileLarge {
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+    }
+  }
+
+  .wrapper {
+    @include mobileLarge {
+      padding: 1rem;
+    }
+
+    padding: 2rem 2rem 4rem;
+  }
+
+
+  .submitBtn {
+    @include font($font-size: 1.6rem, $color: $menu-accent, $font-weight: 400);
+    background: $forth-color;
+    border-radius: 2rem;
+    padding: 0.6rem 2rem;
+    outline: none;
+    border: none;
+    margin: 8.6rem auto 0;
+    cursor: pointer;
+  }
+
+  .closeBtn {
+    @include mobileLarge {
+      top: -1rem;
+      right: -1rem;
+    }
+
+    @include position(null, 1rem, 1rem, null, null);
+    color: $forth-color;
+  }
+
+  .modalIcon {
+    font-size: 6.3rem;
+    margin-bottom: 4.2rem;
+  }
+
+  &Reseller {
+    background: $third-color;
+
+    button {
+      color: $third-color !important;
+    }
+  }
+}
+
+.scaleAnimation {
+  @extend .totalCenter;
+  @extend .resetToDirectionColumn;
+  padding: 0 3rem;
+}
+
+.inputsWrapper {
+  position: relative;
+}
+
+.error {
+  @include error(absolute, calc(100% - 2rem), null, null, 0);
+  width: 100%;
+  text-align: center;
+
+  @include mobileLarge {
+    bottom: -1.2rem;
+  }
+}
+
+.modal {
+  .scaleAnimation {
+    width: 100%;
+  }
+
+  :global {
+    .rc-slider {
+
+      &-handle,
+      &-track {
+        border: $accent-color;
+        background: $accent-color;
+      }
+    }
+  }
+}
+
+.mediumModal {
+  max-width: 60rem;
+  padding: 3rem;
+  margin: 0 2rem;
+
+  @include mobileLarge {
+    padding: 4rem;
+  }
+}
+
+.mediumModalStripe {
+  max-width: 60rem;
+  padding: 3rem;
+  margin: 0 2rem;
+
+  @include mobileLarge {
+    padding: 0rem;
+    padding-bottom: 2rem;
+    margin: 1rem;
+  }
+}
+
+.mediumModalStripe>.scaleAnimation {
+  @extend .totalCenter;
+  @extend .resetToDirectionColumn;
+  padding: 0 3rem;
+
+  @include mobileLarge {
+    padding: 0 1rem;
+  }
+}
+
+.largeModal {
+  max-width: 78rem;
+  padding: 3rem;
+  margin: 0 1.5rem;
+}
+
+.smallModal {
+  max-width: 35rem;
+  padding: 1.5rem;
+  margin: 0 2rem;
+}
+
+.designCoverModal {
+  @include mobileLarge {
+    width: 100%;
+  }
+
+  canvas {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+}
+
+.modalDefault {
+  @include mobileLarge {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  @include size($width: calc(100% - 3rem), $max-width: 99.3rem, $height: auto);
+  background-color: $forth-color;
+  padding: 6rem 3rem 3rem 3rem;
+  font-size: 1.6rem;
+  border-radius: 1.5rem;
+  margin: 1.5rem auto !important;
+
+  p {
+    margin-bottom: 1.5rem;
+  }
+
+  &Title {
+    @include font($font-size: 2rem, $color: $default-color);
+    display: block;
+    width: 100%;
+    margin-bottom: 3rem;
+  }
+
+  .closeBtn {
+    top: -4rem;
+  }
+
+  &Overlay {
+    @include mobileLarge {
+      display: block;
+    }
+
+    @include position(fixed, 0, 0, 0, 0);
+    overflow-y: scroll;
+  }
+}
+
+.modalPdf {
+  @include size($width: auto, $max-width: 100%);
+  padding: 3rem 0;
+}

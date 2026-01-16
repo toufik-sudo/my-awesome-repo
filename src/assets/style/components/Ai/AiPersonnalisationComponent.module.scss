@@ -1,0 +1,56 @@
+.ai-personalisation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+
+.gridLeft,
+.gridRight {
+  width: 45%;
+}
+
+.gridLeft {
+  float: left;
+}
+
+.gridRight {
+  float: right;
+}
+
+.aiForm{ 
+  &Group {
+    margin-bottom: 15px;
+  }
+
+  textarea,
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+}
+
+.aiPersonalisationContainer:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.aiDdl{
+    width: 70%;
+    align-items: center;    
+    min-width: 60em;
+    left: 15%;
+    bottom: 2rem;
+    position: relative;
+}

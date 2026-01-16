@@ -1,0 +1,24 @@
+@import '../../imports';
+
+.contactSection {
+  @include isIE11 {
+    height: .1rem;
+  }
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+
+  &Title {
+    margin-bottom: 5rem;
+  }
+}
+
+.buttonWrapper {
+  width: 100%;
+  text-align: center;
+
+  button {
+    width: 15rem;
+    padding: 0.4rem 0;
+    margin: 1.8rem auto 0;
+  }
+}

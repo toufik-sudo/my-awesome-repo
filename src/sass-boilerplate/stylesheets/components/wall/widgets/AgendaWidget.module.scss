@@ -1,0 +1,137 @@
+@import "../../../imports";
+
+.agendaWidget {
+  padding: 1.5rem;
+  min-height: 32.4vh;
+  margin-top: 0;
+
+  [class*="slick-slider"] {
+    @include respond-to-max-height('tablet-portrait-height') {
+      height: 7rem !important;
+    }
+    height: 8.2rem!important;
+    overflow: hidden!important;
+  }
+  &Title {
+    @include font($font-weight: map_get($font-weights, 'bold'), $color: $gray-accent-color);
+  }
+
+  &Link {
+    @include respond-to-max-height('tablet-portrait-height') {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+    padding-top: 2rem;
+    color: $primary-color;
+    cursor: pointer;
+  }
+
+  &DisabledLink {
+    padding-top: 2rem;
+    color: $gray;
+  }
+
+  &Slide {
+    @include display-flex($align-items: center, $justify-content: center);
+    padding: 2rem 4rem;
+    overflow: hidden;
+
+    &.noTasks {
+      .agendaWidgetSlideDayDate {
+        font-size: 4rem;
+      }
+
+      .agendaWidgetSlideText {
+        font-size: 1.6rem;
+      }
+    }
+
+    &DayDate {
+      @include font($color: $primary-color, $font-size: 3rem, $font-weight: map_get($font-weights, 'bold'));
+      padding-right: 1rem;
+    }
+
+    &Text {
+      @include font($color: $gray, $text-align: left, $font-size: 1.4rem);
+    }
+  }
+
+  &Event {
+    &ListInactive {
+      height: 12rem !important;
+      overflow: hidden !important;
+
+      &.hasMoreItems .Item:nth-child(4) {
+        opacity: .4 !important;
+        border-bottom: none;
+      }
+    }
+
+    &List {
+      @include display-flex($flex-direction: column);
+      transition: all .3s ease-in-out;
+      overflow: auto;
+      padding-right: 1rem;
+
+      &:not(&Inactive) {
+        height: 24rem !important;
+
+        .agendaWidgetEventItem {
+          opacity: 1 !important;
+        }
+      }
+
+      &Hidden {
+        padding-bottom: 11rem;
+      }
+    }
+
+    &Item {
+      @include display-flex($justify-content: space-between);
+      @include font($color: $gray, $font-size: 1.4rem, $text-align: right);
+      border-bottom: .1rem solid $gray;
+      padding: .5rem 0;
+
+      &:nth-child(4) {
+        opacity: 1;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &Name {
+        padding-left: 1rem;
+        max-width: 15rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+  }
+
+  :global {
+    .slick-arrow {
+      z-index: 9;
+
+      &:before {
+        color: $gray;
+      }
+
+      &.slick-next {
+        right: 0;
+      }
+
+      &.slick-prev {
+        left: 0;
+        z-index: 9999;
+      }
+    }
+  }
+}
+
+.noTasks {
+  &.agendaWidgetLink {
+    padding-top: 0;
+  }
+}

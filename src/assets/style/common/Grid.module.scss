@@ -1,0 +1,33 @@
+@import '../imports';
+@import '../utils/constants';
+
+.col12 {
+  @include display($flex: 1 1 100%, $display: flex, $justify-content: space-between, $flex-wrap: wrap);
+}
+
+.col7 {
+  @include display($flex: 0 0 58.33333333%);
+}
+
+.col6 {
+  @include display($flex: 0 0 50%);
+}
+
+.col4 {
+  @include display($flex: 0 0 25%);
+}
+
+.containerLarge {
+  @include size($max-width: 140rem);
+  margin-bottom: 4rem;
+}
+
+.col7,
+.col4 {
+  @include mobileLarge {
+    flex: 0 0 100%;
+  }
+}
+[class*='ag-header-cell-comp-wrapper']{
+  white-space: pre-line !important;
+}

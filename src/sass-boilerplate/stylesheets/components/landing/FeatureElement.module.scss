@@ -1,0 +1,100 @@
+@import '../../imports';
+
+%svg {
+  @include font($font-size: 5rem, $color: $primary-color-accent);
+  @include respond-to-max('mobile-large') {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.customCard {
+  @include respond-to-max('mobile-large') {
+    width: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  position: relative;
+  padding: 2rem 4rem;
+  cursor: pointer;
+  margin-bottom: 3rem;
+  width: 85%;
+  z-index: 2;
+
+  &:not(&Active):hover {
+    @include respond-to-up('mobile-large') {
+      width: 86%;
+      box-shadow: 0 0 2rem .6rem $primary-color-accent;
+    }
+  }
+
+  &Active {
+    @include respond-to-up('mobile-large') {
+      width: 100%;
+      border-width: .5rem;
+      border-style: solid;
+    }
+
+    .customCardTitle {
+      @include font($color: $primary-color-accent, $text-align: center);
+    }
+
+    .cardIcon {
+      @include respond-to-up('mobile-large') {
+        @extend .flex-center-total;
+        flex: 0 0 13rem;
+      }
+
+      svg {
+        @extend %svg;
+      }
+    }
+  }
+
+  &Title {
+    @include respond-to-max('mobile-large') {
+      @include font($text-align: center, $color: $primary-color-accent);
+      width: 100%;
+    }
+    @include font($color: $default-text-color, $text-align: left);
+    @include prefix(transition, all .2s ease);
+    min-width: 13rem;
+    display: inline-block;
+  }
+}
+
+.card {
+  &Content {
+    @include respond-to-up('mobile-large') {
+      display: flex;
+    }
+  }
+
+  &Icon {
+    @include respond-to-up('mobile-large') {
+      display: none;
+    }
+    @include respond-to-max('mobile-large') {
+      text-align: center;
+    }
+
+    svg {
+      @extend %svg;
+    }
+  }
+}
+
+.image {
+  @include position(absolute, 0, 0, 0, 0);
+  @include size($width: 100%, $min-height: 100vh, $height: 100%);
+  object-fit: cover;
+  display: none;
+  z-index: -1;
+
+  &Active {
+    display: block;
+  }
+}
+.designVisible{
+  display: block;
+}

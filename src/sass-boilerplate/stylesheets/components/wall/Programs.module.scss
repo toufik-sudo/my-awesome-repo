@@ -1,0 +1,154 @@
+@import '../../imports';
+
+.sectionPrograms {
+  padding-top: 9rem;
+
+  &Scroll {
+    height: calc(100vh - 128px) !important;
+
+    @include respond-to-max('mobile-large') {
+      height: auto !important;
+      overflow: unset !important;
+
+      &>div {
+        position: relative !important;
+        overflow: unset !important;
+        margin: 0 !important;
+      }
+    }
+  }
+
+  &HorizontalTrack {
+    display: none;
+  }
+
+  &Col {
+    @include respond-to-max('mobile-large') {
+      padding: 0;
+    }
+
+    padding: 0 5rem 0 1.5rem;
+  }
+}
+
+.programBlockItem {
+  justify-content: space-between;
+  min-height: 17rem;
+}
+
+.superPlatformBg {
+  background-image: url("../../../../assets/images/superplatform.png");
+}
+
+.platformBg {
+  background-image: url("../../../../assets/images/platform.png");
+}
+
+.programBg {
+  background-image: url("../../../../assets/images/createProgram.png") !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+.superPlatformBg,
+.platformBg,
+.programBg {
+  @include respond-to-max-height('custom-resolution-3') {
+    padding-top: 70% !important;
+  }
+
+  @include respond-to-max-height('custom-resolution-8') {
+    padding-top: 68% !important;
+  }
+
+  @include respond-to-max-height('custom-resolution-4') {
+    padding-top: 58% !important;
+  }
+
+  padding-top: 71% !important;
+}
+
+.platform {
+  &Icon {
+    @include position(absolute, 2rem, 3rem);
+  }
+
+  &Super {
+    &CTA {
+      background: $secondary-color !important;
+    }
+  }
+
+  &Sub {
+    &CTA {
+      background: $third-color !important;
+    }
+  }
+
+  &Program {
+    &CTA {
+      background: $primary-color !important;
+    }
+  }
+
+  &DveloppeBtn {
+    margin-bottom: 0 !important;
+  }
+}
+
+.program {
+  &Button {
+    background: $primary-color !important;
+  }
+
+
+}
+
+.pendingCTA {
+  background: $primary-color;
+  cursor: default;
+}
+
+.programsPageContainer {
+  [class*="ProgramsSlider_programSliderContainer"] {
+    margin-left: 0;
+    margin-bottom: 1rem;
+  }
+}
+
+.separator {
+  border-bottom: .1rem solid $programs-separator-color;
+}
+
+.blocksWrapper {
+  @include respond-to-max('desktop-small') {
+    padding-right: 1.5rem;
+  }
+
+  @include respond-to-max('desktop-medium') {
+    padding-right: 5rem;
+  }
+
+  padding-right: 15rem;
+  padding-bottom: 3rem;
+}
+
+.customHeight {
+  @include respond-to-max-height('tablet-landscape-height') {
+    height: 71rem !important;
+  }
+
+  @include respond-to-max-height('custom-resolution-8') {
+    height: 69rem !important;
+  }
+
+  @include respond-to-max-height('custom-resolution-2') {
+    height: 55rem !important;
+  }
+
+  @include respond-to-max-height('custom-resolution-4') {
+    height: 48rem !important;
+  }
+
+  height: calc(100vh - 75px) !important;
+}

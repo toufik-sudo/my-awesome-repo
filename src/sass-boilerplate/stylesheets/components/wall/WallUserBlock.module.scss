@@ -1,0 +1,58 @@
+@import "../../imports";
+
+.userBlock {
+  text-align: center;
+  box-shadow: $shadow-tight-1;
+  position: relative;
+  overflow: hidden;
+
+  &Title{
+    @include font($font-weight: map_get($font-weights, 'bold'),$color: $gray-accent-color);
+    width: 98%;
+  }
+
+  &Count{
+    @include respond-to-max-height('tablet-portrait-height') {
+      font-size: 3.5rem;
+    }
+    @include font($font-weight: map_get($font-weights, 'bold'), $font-size: 4.5rem, $color: $secondary-color, $line-height: 1);
+    width: 100%;
+  }
+
+  &Link{
+    color: $primary-color;
+  }
+
+  &Matrix {
+    @extend .userBlockBase;
+    @include respond-to-max-height('custom-resolution-2') {
+      height: 27.3vh !important;
+    }
+    height: 27.4vh !important;
+    .userBlockCount {
+      width: 100%;
+    }
+  }
+
+  &Ranking {
+    .userBlockCount {
+      padding: 1.5rem 0;
+    }
+  }
+
+  &Numbers {
+    @extend .userBlockBase;
+    @include respond-to-max-height('tablet-landscape-height') {
+      height: 21.4vh;
+    }
+    @include respond-to-max-height('custom-resolution-4') {
+      height: 25.4vh;
+    }
+
+    height: 23.4vh;
+  }
+}
+.userBlockNumbers div[class*="postMediaContainer"] {
+  height: 70% !important;
+}
+

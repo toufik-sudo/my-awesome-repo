@@ -1,0 +1,76 @@
+@mixin respond-to-max($breakpoint) {
+  // If the key exists in the map
+  @if map-has-key($breakpoints-max, $breakpoint) {
+    // Prints a media query based on the value
+    @media (max-width: map-get($breakpoints-max, $breakpoint)) {
+      @content;
+    }
+  }
+
+  // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-max)}.";
+  }
+}
+
+@mixin respond-to-max-height($breakpoint) {
+  // If the key exists in the map
+  @if map-has-key($breakpoints-max-height, $breakpoint) {
+    // Prints a media query based on the value
+    @media (max-height: map-get($breakpoints-max-height, $breakpoint)) {
+      @content;
+    }
+  }
+
+    // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-max-height)}.";
+  }
+}
+
+@mixin respond-to-up($breakpoint) {
+  // If the key exists in the map
+  @if map-has-key($breakpoints-min, $breakpoint) {
+    // Prints a media query based on the value
+    @media (min-width: map-get($breakpoints-min, $breakpoint)) {
+      @content;
+    }
+  }
+
+    // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-min)}.";
+  }
+}
+
+@mixin respond-to-orientation($breakpoint) {
+  // If the key exists in the map
+  @if map-has-key($orientation, $breakpoint) {
+    // Prints a media query based on the value
+    @media (orientation: map-get($orientation, $breakpoint)) {
+      @content;
+    }
+  }
+
+    // If the key doesn't exist in the map
+  @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-min)}.";
+  }
+}
+
+@mixin safariOnly() {
+  @media not all and (min-resolution:.001dpcm)
+  { @supports (-webkit-appearance:none) {
+    @content;
+  }}
+}
+
+@mixin isIE11 {
+  @media screen and (-ms-high-contrast: active), screen and (-ms-high-contrast: none) {
+    @content;
+  }
+}

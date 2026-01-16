@@ -1,0 +1,132 @@
+@import "../../imports";
+
+.userDeclaration {
+  &ListHeader {
+    @include isIE11 {
+      height: 11rem;
+    }
+    @include respond-to-max('mobile-large') {
+      padding-top: 1.5rem;
+    }
+    @include display-flex($justify-content: space-between);
+    padding: 0 5rem;
+    min-height: 12rem;
+  }
+
+  &Menu {
+    .programSlider {
+      position: relative;
+      &Container {
+        @include font($color: $default-color !important);
+      }
+    }
+
+    &ProgramLabel {
+      @include position($position: absolute, $left: 0, $right: 0, $top: -.7rem);
+      z-index: 2;
+      margin: 1rem auto 0;
+    }
+  }
+
+  &Header {
+    @include font($font-size: 1.4rem, $color: $gray-accent-color, $font-weight: map_get($font-weights, 'bold'));
+    @extend .flex-space-between;
+    @extend .flex-start;
+    background-color: $default-color;
+    width: 100%;
+    padding: 2rem;
+
+    &Element {
+      display: flex;
+      @include size($max-width: 12rem, $min-width: 12rem);
+    }
+
+    &Sort {
+      width: 1.25rem;
+    }
+  }
+
+  p {
+    flex: 1;
+  }
+
+  &Row {
+    @include font($font-size: 1.3rem, $color: $gray-accent-color);
+    @extend .flex-space-between;
+    background-color: $default-color;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    transition: .2s ease-in-out;
+    border-bottom: .1rem solid $gray-light-accent-color;
+    position: relative;
+
+    &Element {
+      &Index {
+        @include position(absolute, null, null, null, 0);
+      }
+
+      display: flex;
+      @include size($max-width: 12rem, $min-width: 12rem);
+    }
+
+    svg {
+      transition: .2s ease-in-out;
+      font-size: 1.3rem;
+    }
+
+    &:hover {
+      box-shadow: $shadow-full-element;
+    }
+  }
+
+  &Modal {
+    &Controls {
+      @include display(flex, $flex-direction: column);
+      @extend .flex-space-between;
+      @extend .flex-center-total;
+
+      button {
+        margin: 1rem;
+        width: 100%;
+      }
+    }
+  }
+
+}
+
+.declarationRowStatus {
+  &Validated {
+    color: rgb(77, 15, 113);
+  }
+
+  &Pending {
+    color: $label-inactive;
+  }
+
+  &Declined {
+    color: $primary-color;
+  }
+  
+  &Allocated {
+    color: rgb(85, 125, 24);
+  }
+}
+
+.payoutTooltip {
+  @include position(absolute, calc(100% + .5rem), $left: 50%);
+  @include font($color: $default-color, $font-size: 1.2rem);
+  background: $primary-color;
+  text-align: center;
+  padding: 0 .5rem;
+  display: inline-block;
+  border-radius: .5rem;
+  transform: translateX(-50%);
+
+  &::before {
+    @include position(absolute, -.1rem, $left: 50%);
+    @include size(.5rem, .5rem);
+    content: '';
+    transform: rotate(45deg) translateX(-50%);
+    background: $primary-color;
+  }
+}

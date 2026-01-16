@@ -1,0 +1,57 @@
+@import "../../imports";
+
+.generalBlock{
+  @include respond-to-max('desktop-medium') {
+    margin: 1rem 0;
+    padding: 1.5rem;
+  }
+
+  display: block;
+  width: 100%;
+  padding: 3rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: $default-color;
+  
+  &.borderRadius{
+    border-radius: 1rem;
+  }
+  
+  &.shadow{
+    box-shadow: $shadow-tight-1;
+  }
+}
+// Style for images in pub blocks
+.generalBlock div[class*="postMediaContainer"] {
+  height: 70%;
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.generalBlock div[class*="postMediaContainer"] img {
+  height: 100%;
+  width: 100% !important;
+  object-fit: contain;
+  max-height: 100%;
+}
+.userImgContainer{
+  height: 65% !important
+}
+.declarImgContainer{
+  height: 75% !important
+}
+.disabledBlock{
+  color: #cdcdcd;
+  background: #ffffff;
+  border: none;
+  /* border: 0.1rem solid #cdcdcd; */
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  opacity: 0.6;
+}
+.disabledPlatform{
+  color: #cdcdcd;
+  border: 0.1rem solid #cdcdcd;
+  cursor: not-allowed !important;
+  /* pointer-events: none !important;*/
+  opacity: 0.4;
+}

@@ -1,0 +1,159 @@
+@import './breakpoints';
+@import './mediaQueries';
+@import './variables';
+@import '../utils/constants';
+
+a {
+  color: inherit;
+  text-decoration: none;
+
+  @include on_event {
+    text-decoration: none;
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+section {
+
+  &#landing {
+    @media all and (-ms-high-contrast: none) {
+      height: 100vh !important;
+    }
+  }
+}
+
+h1 {
+  @include font($font-size: 9rem, $line-height: 10rem, $font-weight: $bold);
+  max-width: 73.3rem;
+
+  @include mobileLarge {
+    @include font($font-size: 6rem, $line-height: 7rem);
+    max-width: 46.3rem;
+  }
+
+  @include mobileMedium {
+    @include font($font-size: 4.2rem, $line-height: 5.2rem);
+    max-width: 46.3rem;
+  }
+}
+
+h2 {
+  @include font(
+    $color: $default-color,
+    $font-size: 4.6rem,
+    $line-height: 5.6rem,
+    $font-family: $default-font,
+    $font-weight: $bold
+  );
+  width: 100%;
+
+  @include mobileLarge {
+    @include font($font-size: 3.6rem, $line-height: 4rem);
+  }
+
+  @include mobileMedium {
+    @include font($font-size: 3rem, $line-height: 3.4rem);
+  }
+}
+
+h3 {
+  @include font($color: $default-color, $font-size: 3.7rem, $font-family: $default-font, $font-weight: $bold);
+  width: 100%;
+
+  @include mobileLarge {
+    @include font($font-size: 3.2rem, $line-height: 3.2rem);
+  }
+
+  @include mobileMedium {
+    @include font($font-size: 2.4rem, $line-height: 2.8rem);
+  }
+}
+
+h5 {
+  @include font($font-size: 3rem, $font-family: $default-font, $font-weight: $bold);
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.primary {
+  color: $default-color;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.container-small {
+  @include size($width: 100%, $max-width: 108rem);
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 auto;
+}
+
+.container {
+  @include size($width: 100%, $max-width: 164rem);
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 auto;
+}
+
+.alignCenter {
+  text-align: center;
+}
+
+.ReactModal__Overlay {
+  z-index: 19900;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+
+.ReactModal__Overlay--after-open {
+  opacity: 1;
+}
+
+.ReactModal__Overlay--before-close {
+  opacity: 0;
+}
+
+:global {
+  .strength-weak::-webkit-progress-value {
+    background-color: #f25f5c;
+  }
+  .strength-Fair::-webkit-progress-value {
+    background-color: #ffe066;
+  }
+  .strength-Good::-webkit-progress-value {
+    background-color: #247ba0;
+  }
+  .strength-Strong::-webkit-progress-value {
+    background-color: #70c1b3;
+  }
+}
+
+
+.bold {
+  font-weight: $bold;
+}
+
+.accent {
+  color: $secondary-color;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance:textfield;
+}

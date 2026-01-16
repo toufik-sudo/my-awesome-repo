@@ -1,0 +1,677 @@
+// -----------------------------------------------------------------------------
+// This file contains CSS helper classes.
+// -----------------------------------------------------------------------------
+
+/**
+ * Hide text while making it readable for screen readers
+ * 1. Needed in WebKit-based browsers because of an implementation bug;
+ *    See: https://code.google.com/p/chromium/issues/detail?id=457146
+ */
+.hide-text {
+  overflow: hidden;
+  padding: 0;
+  /* 1 */
+  text-indent: 101%;
+  white-space: nowrap;
+}
+
+/**
+ * Hide element while making it readable for screen readers
+ * Shamelessly borrowed from HTML5Boilerplate:
+ * https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css#L119-L133
+ */
+.visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+//Hide an element
+.hidden {
+  display: none;
+}
+
+//Position
+
+.relative {
+  position: relative;
+}
+
+//Center the child content of an element using flex
+.contentCentered {
+  @extend .flex-center-total;
+}
+
+//Center middle both, horizontally and vertically a section
+// content
+.containerVerticallyCentered {
+  @extend .flex-direction-column;
+  justify-content: center;
+}
+
+//center a column in the middle, both horizontally and vertically most of the time
+//this should be used with a row class
+.colMiddle {
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+//Helper class for text align
+.text {
+  &Center {
+    text-align: center;
+
+    &Mobile {
+      @include respond-to-max('mobile-large') {
+        text-align: center;
+      }
+    }
+  }
+
+  &Left {
+    text-align: left;
+  }
+
+  &Right {
+    text-align: right;
+  }
+}
+
+//Scroll
+
+.scrollableY {
+  overflow-y: auto;
+}
+
+//Containers
+
+.scrollXContainer {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+//Size
+
+.tableLg {
+  min-width: 135rem;
+}
+
+//Helper classes used for spacing
+//Info: m stand for margin and p for padding
+// t stand for top and b for bottom
+//the values are in rem, 1rem = 10px
+//if you need for example a margin top of 35px that will be .mt35
+// the values for integers are 1, 2, 3, 4, 5 etc, that is equal to 10px, 20px, 30px, 40px, etc
+// the values for floats are 15, 25, 35, 45, 55, etc, that is equal to 15px, 25px, 35px, 45px, etc
+//Usage example: .mt10
+@import "helpers/spacing";
+
+
+//Vertical aligns
+.valignMiddle {
+  vertical-align: middle;
+}
+
+//Cursor
+.pointer {
+  cursor: pointer;
+}
+
+.cursor {
+  &Default {
+    cursor: default;
+  }
+}
+
+//Position
+.position {
+  &Relative {
+    position: relative !important;
+  }
+}
+
+//Helper class used for image to be responsive
+.imgFluid {
+  @include size($width: 100%, $max-width: 100%);
+}
+
+.max {
+  &Width {
+    &3Quarters {
+      max-width: 75%;
+    }
+  }
+}
+
+.with {
+
+  //Helper classes for colors
+  &PrimaryColor {
+    color: $primary-color !important;
+
+    &Hover {
+      &:hover {
+        color: $primary-color;
+      }
+    }
+
+    &Accent {
+      color: $primary-color-accent;
+    }
+
+    &SecondaryAccent {
+      color: $primary-color-secondary-accent;
+    }
+  }
+
+  &Width {
+    &Full {
+      width: 100% !important;
+    }
+  }
+
+  &DangerColor {
+    color: $danger-color !important;
+  }
+
+  &AlertColor {
+    color: $alert-color !important;
+  }
+
+  &SecondaryColor {
+    color: $secondary-color !important;
+
+    &Accent {
+      color: $secondary-color-accent;
+    }
+  }
+
+  &ThirdColor {
+    color: $third-color !important;
+
+    &Accent {
+      color: $third-color-accent;
+    }
+  }
+
+  &DefaultTextColor {
+    color: $default-text-color;
+  }
+
+  &DefaultColor {
+    color: $default-color !important;
+  }
+
+  &GrayColor {
+    color: $gray;
+  }
+
+  &GrayAccentColor {
+    color: $gray-accent-color;
+  }
+
+  &WarningColor {
+    color: $label-inactive;
+  }
+
+  &Uderline>a {
+    text-decoration: underline !important;
+  }
+
+  //Helper classes for font weights
+  &RegularFont {
+    font-weight: map_get($font-weights, 'regular');
+  }
+
+  &ThinFont {
+    font-weight: map_get($font-weights, 'thin');
+  }
+
+  &BoldFont {
+    font-weight: map_get($font-weights, 'bold');
+  }
+
+  &LightFont {
+    font-weight: map_get($font-weights, 'light');
+  }
+
+  &GrayColor {
+    color: $gray;
+  }
+
+  &GrayAccentColor {
+    color: $gray-accent-color;
+  }
+
+  &GrayLightAccentColor {
+    color: $gray-light-accent-color;
+  }
+
+  //Helper classes for backgrounds
+  &BackgroundGradient {
+    background: $gradient;
+  }
+
+  &BackgroundDefault {
+    background: $default-color;
+  }
+
+  &BackgroundGray {
+    background-color: $gray;
+
+    &Light {
+      background-color: $gray-lighter-color;
+    }
+
+    &LightAccent {
+      background-color: $gray-light-accent-color;
+    }
+
+    &Ligher {
+      background-color: $gray-lighter-color;
+    }
+  }
+
+  &Background {
+    &Primary {
+      background-color: $primary-color;
+    }
+  }
+
+  &BackgroundImage {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+  }
+
+  &DefaultTextColorBackground {
+    background-color: $default-text-color;
+  }
+
+  &BackgroundDefault {
+    background-color: $default-color !important;
+  }
+
+  &BackgroundGray {
+    background-color: $gray;
+  }
+
+  //Helper classes for border colors
+  &BorderPrimary {
+    border-color: $primary-color;
+
+    &Accent {
+      border-color: $primary-color-accent;
+    }
+
+    &SecondaryAccent {
+      border-color: $primary-color-secondary-accent;
+    }
+  }
+
+  &BorderDefaultColor {
+    border-color: $default-color !important;
+  }
+
+  &BorderSecondary {
+    border-color: $secondary-color;
+
+    &Accent {
+      border-color: $secondary-color-accent;
+    }
+  }
+
+  &Font {
+    &Base {
+      font-size: 1rem;
+    }
+
+    &Small {
+      font-size: 1.2rem;
+    }
+
+    &Medium {
+      font-size: 1.4rem;
+    }
+
+    &Large {
+      font-size: 1.8rem;
+    }
+
+    &XLarge {
+      font-size: 2.2rem;
+    }
+
+    &Title {
+      font-size: 3rem;
+    }
+  }
+
+  &Shadow {
+    box-shadow: $shadow;
+
+    &Light {
+      box-shadow: $shadow-light;
+    }
+
+    &Full {
+      box-shadow: $shadow-full;
+
+      &Element {
+        box-shadow: $shadow-full-element;
+      }
+    }
+
+    &Tight {
+      box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.16);
+    }
+  }
+}
+
+.display {
+  &Flex {
+    display: flex;
+  }
+
+  &InlineFlex {
+    display: inline-flex;
+  }
+
+  &Block {
+    display: block;
+  }
+
+  &InlineBlock {
+    display: inline-block;
+  }
+
+  &None {
+    display: none;
+  }
+}
+
+.patternTop {
+  @include position(absolute, -.1rem, 0, null, 0);
+  max-width: 100%;
+}
+
+.italic {
+  font-style: italic;
+}
+
+//Size
+.mw45 {
+  max-width: 45rem !important;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w90 {
+  width: 90%;
+}
+
+.w100 {
+  width: 100%;
+}
+
+.h100 {
+  height: 100%;
+}
+
+.h90vh {
+  height: 80vh;
+}
+
+.h70vh {
+  height: 70vh;
+}
+
+.mh80vh {
+  max-height: 80vh;
+}
+
+//Close button
+.closeModalButton {
+  position: absolute;
+  top: -1.5rem !important;
+
+  svg {
+    font-size: 2.25rem;
+  }
+
+  &Right {
+    right: 1.5rem;
+  }
+
+  &Left {
+    left: 1.5rem;
+  }
+}
+
+.borderRadius {
+  &Full {
+    border-radius: 50%;
+  }
+
+  @for $i from 1 through 10 {
+    &#{$i} {
+      border-radius: #{$i}rem !important;
+    }
+  }
+}
+
+
+.transition {
+  &Ease {
+    transition: ease;
+  }
+
+  &EaseIn {
+    transition: ease-in;
+  }
+
+  &EaseOut {
+    transition: ease-out;
+  }
+
+  &Duration {
+    &200 {
+      transition-duration: 200ms;
+    }
+
+    &300 {
+      transition-duration: 300ms;
+    }
+  }
+}
+
+.transform {
+  &TranslateYMinus50 {
+    transform: translateY(-50%);
+  }
+
+  &TranslateXMinus50 {
+    transform: translateX(-50%);
+  }
+
+  &TranslateMinus50 {
+    transform: translate(-50%, -50%);
+  }
+}
+
+.overflow {
+  &Hidden {
+    overflow: hidden;
+  }
+
+  &Xscroll {
+    overflow-x: scroll;
+  }
+
+  &Yscroll {
+    overflow-y: scroll;
+  }
+
+  &Xauto {
+    overflow-x: auto;
+  }
+
+  &Yauto {
+    overflow-y: auto;
+  }
+}
+
+.opacity {
+  &1 {
+    opacity: 1;
+  }
+
+  &0 {
+    opacity: 0;
+  }
+
+  &04 {
+    opacity: .4;
+  }
+
+  &09 {
+    opacity: .9;
+  }
+
+  &08 {
+    opacity: .8;
+  }
+
+  &07 {
+    opacity: .7;
+  }
+}
+
+.mh40 {
+  max-height: 40rem;
+}
+
+.hoverDisplayChild {
+  .childToBeDisplayed {
+    opacity: 0 !important;
+    transition: opacity .2s ease;
+  }
+
+  &:hover {
+    .childToBeDisplayed {
+      opacity: 1 !important;
+    }
+  }
+}
+
+.overlayBefore::before {
+  @include position(absolute, 0, 0, 0, 0);
+  content: '';
+  background: rgba($default-text-color, .15);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.overlayBeforeWhite {
+  @extend .overlayBefore;
+
+  &:before {
+    background: rgba($default-color, .75);
+    pointer-events: all;
+  }
+}
+
+.zIndex {
+  @for $i from 1 through 10 {
+    &#{$i} {
+      z-index: $i !important;
+    }
+  }
+}
+
+.hiddenOnMobile {
+  @include respond-to-max('mobile-large') {
+    display: none !important;
+  }
+}
+
+.hiddenOnTabletLandScape {
+  @include respond-to-max('tablet-landscape') {
+    display: none !important
+  }
+}
+
+
+.marquee {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+
+  &Inner {
+    display: inline-block;
+    padding-left: 100%;
+    animation: marquee 10s linear infinite;
+    padding-bottom: .5rem;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(-100%, 0);
+  }
+}
+
+/* The emerging W3C standard
+   that is currently Firefox-only */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: $secondary-color $gray-light-accent-color;
+}
+
+/* Works on Chrome/Edge/Safari */
+*::-webkit-scrollbar {
+  width: .8rem;
+}
+
+*::-webkit-scrollbar-track {
+  background: $gray-light-accent-color;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: $secondary-color;
+  border-radius: 2rem;
+  border: .3rem solid $secondary-color;
+}
+
+.switchWrapper {
+  @include respond-to-max-height('custom-resolution') {
+    min-height: 8.9rem;
+  }
+
+  min-height: 8rem;
+  padding-bottom: .1rem;
+}
+
+.wordBreakNormal {
+  word-break: normal !important;
+}
+
+.bfVisibility {
+  &Hidden {
+    backface-visibility: hidden;
+  }
+}

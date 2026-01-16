@@ -1,0 +1,21 @@
+@import '../imports';
+@import '../utils/constants';
+
+.radio {
+  @include size($width: 1.9rem, $height: 1.9rem);
+  @include position(absolute, 0.3rem, null, null, 0);
+  z-index: 1;
+  box-shadow: $light-shadow;
+  content: '';
+  border: 0.1rem solid $grey-light;
+  border-radius: 1rem;
+}
+
+.checked {
+  @include size($width: 0.9rem, $height: 0.9rem);
+  @include position(absolute, 0.8rem, null, null, 0.5rem);
+  z-index: 2;
+  content: '';
+  background: $menu-accent;
+  border-radius: 0.8rem;
+}

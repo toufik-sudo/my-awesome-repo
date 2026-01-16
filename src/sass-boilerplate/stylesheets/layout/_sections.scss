@@ -1,0 +1,17 @@
+.section {
+  position: relative;
+  min-height: 100vh;
+  height: auto;
+
+  &HalfHeight {
+    min-height: 50vh;
+  }
+}
+
+.customContainer {
+  @include size($width: 100%, $max-width: 164rem, $min-height: 100vh);
+  padding-right: 1.5rem;
+  padding-left: 1.5rem;
+  margin-right: auto;
+  margin-left: auto;
+}

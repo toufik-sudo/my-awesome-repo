@@ -1,0 +1,15 @@
+@import '../../imports';
+
+.addBracket {
+  @include display-flex($align-items: center);
+  cursor: pointer;
+
+  &Icon {
+    font-size: 2.4rem;
+    margin-right: 1rem;
+  }
+
+  &Text {
+    font-size: 1.6rem;
+  }
+}

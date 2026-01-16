@@ -1,0 +1,19 @@
+//Add button modify pubs container to manage it position 
+.modifyBlockContainer{
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    /* align-content: flex-start; */
+    align-items: flex-start;
+  }
+.modifyBlockImg{
+    width: 2%;
+  }
+.paymentBlockImg{
+  height: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  cursor: pointer !important;
+  border: 1px solid white;
+  border-radius: 10px;
+}

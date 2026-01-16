@@ -1,0 +1,66 @@
+@import '../../imports';
+
+.sectionFeatures {
+  @include respond-to-max('tablet-portrait') {
+    padding-top: 3rem;
+  }
+
+  .customRow {
+    min-height: inherit;
+  }
+
+  &Title {
+    margin-top: -8.5rem;
+
+    @include respond-to-max('desktop-small') {
+      margin-top: -5rem;
+    }
+
+    @include respond-to-max('tablet-portrait') {
+      margin-top: 0;
+    }
+
+    @include respond-to-max('tablet-portrait') {
+      @include font($color: $default-color, $text-align: center);
+    }
+  }
+}
+
+.innerContent {
+  @extend .flex-end;
+  @include size($max-width: 108rem, $height: 100%);
+  @include respond-to-max('mobile-large') {
+    padding-left: 0;
+    padding-bottom: 0;
+  }
+  flex-wrap: wrap;
+  padding-left: 5rem;
+  padding-bottom: 19.7rem;
+}
+
+.featuresFooter {
+  @include respond-to-max('desktop-small') {
+    height: 10rem;
+  }
+  @include position(absolute, null, 0, 0, 0);
+  @include size($width: 100%, $height: 17rem);
+  background: $gradient;
+}
+
+.cardWrapper {
+  min-height: inherit;
+  padding-top: 6rem;
+  @include respond-to-max('tablet-portrait') {
+    position: static;
+    padding-top: 5rem;
+  }
+}
+
+.featuresSubTabSection {
+  @include position(absolute, null, 0, -3rem, 0);
+  @include size($max-width: 108rem, $width: calc(100% - 3rem));
+  @include respond-to-max('mobile-large') {
+    position: relative;
+  }
+}
+

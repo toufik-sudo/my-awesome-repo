@@ -1,0 +1,18 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.logOutModal {
+  @include mobileLarge {
+    height: auto;
+    border-radius: 1.5rem;
+  }
+
+  padding: 4rem 0 3rem 0;
+
+  button {
+    margin: 1rem;
+  }
+}
+.title{
+  font-size: 1.5rem;
+}

@@ -1,0 +1,177 @@
+// -----------------------------------------------------------------------------
+// This file contains all styles related to the header of the site/application.
+// -----------------------------------------------------------------------------
+@import '../imports';
+
+.nav {
+  @include respond-to-max('mobile-large') {
+    padding: 0 1.5rem;
+  }
+  @include size($width: 100%, $max-width: 100%);
+  position: fixed;
+  padding: 1.5rem 7rem;
+  z-index: 11;
+  transition: all .3s;
+  background: transparent;
+
+  &Toggle {
+    display: none;
+
+    &Icon {
+      @include respond-to-up('tablet-landscape'){
+        display: none;
+      }
+      @include position(absolute, 2rem, 1.5rem, null, null);
+      @include size($width: 3rem, $height: .3rem);
+      background-color: $default-color;
+
+      &::after, &::before {
+        @include prefix(transition, all .2s ease-in, webkit moz ms o);
+        @include size($width: 100%, $height: .3rem);
+        position: absolute;
+        content: '';
+        background-color: $default-color;
+      }
+
+      &::after {
+        bottom: -.8rem;
+      }
+
+      &::before {
+        top: -.8rem;
+      }
+    }
+
+    &:checked {
+      & ~ .navCollapseItems {
+        @include prefix(transform, scale(1), webkit moz ms o);
+        opacity: 1;
+      }
+
+      & ~ label {
+        background-color: transparent;
+
+        &::after {
+          @include prefix(transform, rotate(-45deg), webkit moz ms o);
+          bottom: 0;
+        }
+
+        &::before {
+          @include prefix(transform, rotate(45deg), webkit moz ms o);
+          top: 0;
+        }
+      }
+    }
+  }
+
+  &Collapse {
+    @extend .flex-space-between;
+    position: relative;
+
+    &Items {
+      @extend .flex-space-between;
+      @include respond-to-max('tablet-landscape') {
+        @include position(absolute, 100%, -1rem, null, -1rem);
+        @include prefix(transition, all .2s ease-in, webkit moz ms o);
+        @include prefix(transform, scale(0), webkit moz ms o);
+        background: $default-text-color;
+        transform-origin: top right;
+        opacity: 0;
+        padding: 1.5rem 1rem;
+        justify-content: center;
+      }
+      flex-wrap: wrap;
+    }
+  }
+
+  a {
+    @include prefix(transition, all 0s ease, webkit mos ms o);
+    cursor: pointer;
+  }
+
+  &Scrolled {
+    background: $default-text-color;
+  }
+}
+
+.logo {
+  @include size($max-height: 4.5rem, $width: auto);
+}
+
+.menu {
+  @include font($color: $default-color, $font-size: 1.8rem, $font-weight: map_get($font-weights, 'regular'));
+  @include prefix(transition, all .5s linear, webkit mos ms o);
+  @include display($align-items: center);
+  margin-top: .3rem;
+
+  @include respond-to-max('tablet-landscape') {
+    @include font($text-align: center, $font-size: 1.8rem);
+    display: block;
+    margin-top: .5rem;
+  }
+
+  li {
+    @include respond-to-max('tablet-landscape')  {
+      padding: 0 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    padding: 0 2.5rem;
+  }
+
+  a {
+    &::after {
+      @include size($width: 0, $height: .3rem);
+      @include prefix(transition, all 0.2s linear, webkit moz ms o);
+      background: $gradient;
+      display: block;
+      content: '';
+      margin-top: .4rem;
+    }
+
+    &.active::after {
+      width: 100%;
+    }
+  }
+}
+
+.userActions {
+  @include display($align-items: center);
+  @include font($color: $default-color, $font-size: 1.6rem, $font-weight: 'regular');
+  @include respond-to-max('tablet-landscape')  {
+    @include display($flex-wrap: wrap, $justify-content: center);
+    font-size: 1.4rem;
+  }
+
+  &LanguageSwitecher {
+    @include respond-to-max('tablet-landscape') {
+      @include display($align-items: center, $justify-content: center);
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+  }
+}
+
+.signUp {
+  @include respond-to-max('mobile-large') {
+    margin-left: 1.5rem;
+  }
+  margin-left: 2.5rem;
+}
+
+.lswitch {
+  svg {
+    fill: $primary-color;
+  }
+
+  & > div:first-of-type {
+    text-align: right;
+  }
+
+  & > div {
+    cursor: pointer;
+  }
+}
+
+.video {
+  display: none;
+}

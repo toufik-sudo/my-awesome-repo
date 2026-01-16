@@ -1,0 +1,16 @@
+@import '../../imports';
+
+.sectionHowItWork {
+  padding-top: 10rem;
+
+  @include respond-to-max('mobile-large') {
+    padding-top: 5rem;
+  }
+
+  &Title {
+    @include respond-to-max('desktop-small') {
+      margin-bottom: 5rem;
+    }
+    margin-bottom: 11rem;
+  }
+}

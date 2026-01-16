@@ -1,0 +1,17 @@
+/**
+* Mixin used on progress bar item
+*/
+@mixin setArrowStyle($background: null, $color: null) {
+  background: $background;
+  color: $color;
+
+  &:after {
+    color: $background;
+  }
+}
+
+@mixin buttonStyle($color: null, $background: null, $border: none) {
+  color: $color;
+  background: $background;
+  border: $border;
+}

@@ -1,0 +1,60 @@
+@import '../../imports';
+
+.sectionCta {
+  @include respond-to-max('mobile-large') {
+    padding-top: 4rem;
+  }
+  padding-top: 10rem;
+}
+
+.cardsWrapper {
+  @extend .flex-wrap;
+}
+
+.cardCta {
+  @extend .flex-wrap;
+  @include size($max-width: 26.5rem, $min-height: 44.5rem, $width: 100%);
+  @include border(.2rem, solid);
+  @include respond-to-max('mobile-large') {
+    min-height: unset;
+  }
+  flex-direction: column;
+  box-shadow: .1rem .8rem .8rem .1rem rgba(0,0,0,.21);
+  padding: 8rem 2rem 5rem;
+  margin-bottom: 1.5rem;
+  z-index: 10;
+
+  & + & {
+    @include respond-to-max('desktop-small') {
+      margin-left: 3rem;
+    }
+
+    @include respond-to-max('mobile-large') {
+      margin-left: 0;
+    }
+
+    margin-left: 7rem;
+  }
+
+  &Title {
+    @include respond-to-max('mobile-large') {
+      margin-bottom: 3rem;
+    }
+    margin-bottom: 7rem;
+  }
+
+  &Btn {
+    margin-top: auto;
+  }
+}
+
+.sectionTitleCustomSpacing {
+  @include respond-to-max('mobile-large') {
+    margin-bottom: 3rem;
+  }
+  margin-bottom: 6rem;
+}
+
+.contactSendButton {
+  min-width: 15rem;
+}

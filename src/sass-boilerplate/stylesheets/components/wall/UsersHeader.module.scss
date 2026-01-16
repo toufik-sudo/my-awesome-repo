@@ -1,0 +1,135 @@
+@import '../../imports';
+
+.users {
+  &RankingHeader {
+    @include respond-to-max('mobile-large') {
+      flex-direction: column;
+      margin-top: 8rem;
+    }
+    @include display-flex($align-items:center, $justify-content: center);
+
+    &Button {
+      @include respond-to-max('mobile-large') {
+        position: static;
+      }
+      position: absolute;
+      right: 5rem;
+
+      button {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+      }
+    }
+  }
+
+  &Header {
+    @include respond-to-max('mobile-medium') {
+      padding: 1.5rem 5rem;
+    }
+    @extend .flex-center-total;
+    @extend .usersHeaderDefaults;
+  }
+
+  &HeaderDefaults {
+    @include size($min-height: 12rem, $width: 100%);
+    @include font($font-weight: map_get($font-weights, 'bold'), $color: $default-color);
+    background: $table-header-background;
+    border-radius: 1rem 1rem 0 0;
+    padding: 2rem 5rem 1rem;
+    position: relative;
+  }
+
+  &Invitation {
+    &Icon {
+      @include respond-to-max('mobile-large') {
+        display: inline-block !important;
+        margin-right: 0 !important;
+      }
+      @include size($width: 2.4rem, $height: 2.4rem);
+      @extend .flex-center-total;
+      background: $default-color;
+      border-radius: 1.5rem;
+      margin-right: 0.5rem;
+
+      svg {
+        @include font($font-size: 1.4rem, $color: $primary-color-secondary-accent);
+      }
+    }
+
+    &Cta {
+      @include respond-to-max('desktop-medium') {
+        left: 1.5rem;
+        font-size: 1.3rem;
+      }
+      @include respond-to-max('desktop-small') {
+        padding-top: 0;
+      }
+      @include respond-to-up('mobile-large') {
+        @include position(absolute, $left: 5rem);
+      }
+      @extend .flex-center-total;
+      font-size: 1.4rem;
+
+      &Back {
+        @include respond-to-max('mobile-large') {
+          p {
+            display: none;
+          }
+        }
+        font-weight: map_get($font-weights, 'regular');
+        flex-direction: row;
+        text-align: center;
+      }
+    }
+
+    &Label {
+      @include respond-to-max('mobile-large') {
+        margin-bottom: 1.5rem;
+      }
+      font-weight: normal;
+    }
+  }
+
+  &ProgramBlock {
+    @include respond-to-max('mobile-medium') {
+      font-size: 1.7rem;
+    }
+    @extend .flex-center-total;
+    @extend .flex-direction-column;
+    font-size: 2.2rem;
+    max-width: 21rem;
+    word-break: break-word;
+    text-align: center;
+
+    &Label {
+      font-size: 1.2rem;
+    }
+  }
+
+  &Avatar {
+    @include size($width: 4.8rem, $height: 4.8rem);
+    border: .2rem solid $default-color;
+    border-radius: 4rem;
+    margin-right: .5rem;
+    position: relative;
+    overflow: hidden;
+
+    &Wrapper {
+      @extend .flex-center-total;
+    }
+
+    img {
+      @include force_center(absolute);
+      @include size($width: 100%, $min-width: 4.9rem);
+    }
+
+  }
+
+  &Info {
+    @extend .flex-center-total;
+
+    &Element {
+      padding: 0 .2rem;
+    }
+  }
+}

@@ -1,0 +1,79 @@
+@import '../imports';
+
+.wrapper {
+  @include size($height: 100vh, $width: 100%);
+}
+
+.logoSuccess {
+  padding-bottom: 5rem;
+
+  span {
+    &:first-child {
+      @include position(relative, -1.3rem, 1rem);
+    }
+
+    &:last-child {
+      @include position(relative, -1.3rem, null, null, 1rem);
+    }
+
+    @include font($font-size: 3rem, $font-weight: map_get($font-weights, 'bold'));
+  }
+
+  img {
+    width: 16rem;
+    object-fit: contain;
+  }
+  &h1{
+    display: inline;
+    position: relative;
+    bottom: 70px;
+    color: white;
+  }
+}
+.logoContainer{
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  color: white !important;
+
+  h1{
+    color: white !important;
+  }
+  img{
+    width: 16rem;
+    object-fit: contain;
+  }
+}
+
+.baseIntermediary {
+  @include display-flex($flex-direction: column, $align-items: center, $justify-content: center);
+
+  button {
+    margin-top: 5rem;
+  }
+}
+
+.successIntermediary {
+  @extend .baseIntermediary;
+  background: $logo-gradient;
+  color: $default-color;
+}
+
+.canceledIntermediary {
+  font-size: 1.8rem;
+  @extend .baseIntermediary;
+  background: $gray-light-accent-color;
+  color: $default-text-color;
+
+  p:first-child {
+    @include font($font-size: 2.2rem, $font-weight: map_get($font-weights, 'bold'))
+  }
+  p:last-child {
+    padding-top: 3rem;
+  }
+}
+
+.intermediaryBody {
+  text-align: center;
+  padding: 0 3rem;
+}

@@ -1,0 +1,73 @@
+@import "../../imports";
+
+.userDeclarationsDetail {
+  @include size($width: 100rem, $max-width: 100%);
+  margin: 0 auto;
+
+  &Back {
+    max-width: 15rem;
+  }
+
+  &Wrapper {
+    max-width: 85%;
+    margin: 0 auto;
+    @include respond-to-max('mobile-large') {
+      margin-top: 2.5rem;
+    }
+  }
+
+  &Row {
+    @include respond-to-max('tablet-portrait') {
+      @include size($width: 30rem, $max-width: 100%);
+    }
+    @include size($width: 45rem, $max-width: 100%);
+    @include display-flex($align-items: baseline);
+    margin: 0 auto;
+
+    [class*="Input_defaultInputStyle"] {
+      background-color: $gray-light-accent-color !important;
+      border-radius: 1.2rem;
+    }
+
+    label {
+      flex: 1;
+      text-align: left;
+      color: $gray-accent-color;
+    }
+  }
+
+  &Link {
+    flex: 2;
+    margin-top: 2rem;
+    color: $secondary-color;
+    text-align: left;
+  }
+
+  &BigInputWrapper {
+    &.userDeclarationsDetailRow {
+      @include respond-to-max('tablet-portrait') {
+        @include size($width: 30rem, $max-width: 100%);
+      }
+      @include size($width: 60rem);
+    }
+  }
+
+  &NoteList {
+    max-height: 15rem;
+    overflow: auto;
+    color: $gray-accent-color;
+  }
+
+  &InputWrapper {
+    flex: 2;
+    padding-bottom: 1rem;
+  }
+
+  &Controls {
+    @include display-flex($flex-direction: column);
+    @extend .flex-space-between;
+    @extend .flex-center-total;
+    margin-top: 2rem;
+  }
+
+}

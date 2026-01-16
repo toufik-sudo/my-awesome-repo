@@ -1,0 +1,111 @@
+@import '../../imports';
+@import '../../utils/constants';
+
+.footer {
+  background: $default-color;
+  color: $forth-color;
+  display: flex;
+  width: 100%;
+}
+
+.container {
+  @include size($width: 100%, $max-width: 172.8rem);
+  padding: 0 1.5rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+
+  @include desktopSmall {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.link {
+  cursor: pointer;
+}
+
+.links {
+  @include font($font-size: 1.4rem, $line-height: 2.4rem);
+  @include display(flex, $flex-wrap: wrap);
+  margin-top: 3rem;
+  padding-bottom: 3rem;
+
+  ul {
+    margin: 1rem 3rem;
+
+    &:first-of-type {
+      margin-left: 0;
+    }
+
+    @include mobileLarge {
+      width: 50%;
+      margin: 0 0 2rem;
+    }
+  }
+
+  .title {
+    font-weight: $bold;
+  }
+
+  li:not(.title) a {
+    cursor: pointer;
+  }
+}
+
+.logoGroup {
+  @include display(flex, $flex-direction: column-reverse);
+  @include desktopSmall {
+    padding-top: 1.5rem;
+  }
+
+  ul {
+    padding: 5.6rem 0 3.6rem;
+    display: flex;
+
+    @include desktopSmall {
+      display: none;
+    }
+  }
+
+  li {
+    @include size($width: 5.9rem, $height: 5.9rem);
+    background: $default-color;
+    margin-left: 2rem;
+
+    &:first-of-type {
+      margin-left: 0;
+    }
+
+    @include mobileLarge {
+      @include size($width: 3.9rem, $height: 3.9rem);
+    }
+  }
+}
+
+.bottomLogo {
+  @include font($font-size: 1rem, $text-align: right);
+  margin-bottom: 2.6rem;
+  
+  @include desktopSmall {
+    text-align: center;
+  }
+}
+
+.socialGroup {
+  display: flex;
+  align-items: center;
+
+  li {
+    font-size: 1.4rem;
+    padding-left: 1.2rem;
+
+    &:first-of-type {
+      padding-left: 0;
+    }
+  }
+
+  @include desktopSmall {
+    margin-top: 3rem;
+  }
+}

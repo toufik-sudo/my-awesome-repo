@@ -1,0 +1,195 @@
+@import '../../imports';
+
+.communication {
+  @include respond-to-max('tablet-landscape') {
+    margin-top: 10rem;
+  }
+  @include respond-to-max(desktop-small){
+    display: block;
+  }
+
+  [class*='CreateCampaignList_createListRadioElement'] {
+    &:before {
+      top: 1.2rem;
+      left: -3rem;
+    }
+  }
+  [class*='WallSettingsBlock_settingsTabList'] {
+    border: none !important;
+  }
+}
+
+.campaign {
+  @include respond-to-max-height('custom-resolution-1') {
+    min-height: 60vh;
+  }
+  @include respond-to-max-height('custom-resolution-3') {
+    min-height: 52vh;
+  }
+  @include respond-to-max-height('tablet-portrait-height') {
+    min-height: 44vh;
+  }
+  @include respond-to-max-height('custom-resolution-4') {
+    min-height: 40vh;
+  }
+  margin-left: auto;
+  padding-right: 2rem;
+  min-height: 60vh;
+
+  &InfineteContainer {
+    max-height: 50vh;
+  }
+
+  &Table {
+    word-break: normal !important;
+  }
+
+  &Container {
+    max-height: 47vh;
+    margin: 0 auto;
+    overflow-y: auto;
+  }
+
+  &Filter {
+    width: 10rem;
+  }
+
+  &NotFound {
+    @include display-flex($justify-content: center, $align-items: center);
+    @include font($color: $danger-color, $font-size: 1.8rem);
+    @include respond-to-max-height('custom-resolution-3') {
+      margin-top: 11rem;
+    }
+    @include respond-to-max-height('custom-resolution-4') {
+      margin-top: 5rem;
+    }
+    margin-top: 18rem;
+  }
+
+  &Header {
+    &Item {
+      @include display-flex();
+      padding-right: 1.2rem;
+    }
+
+    &Element {
+      justify-content: start;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  &Row {
+    &Element {
+      @include font($font-size: 1.3rem, $color: $gray-accent-color);
+      padding: 1rem 0;
+      width: 100%;
+      transition: .2s ease-in-out;
+      border-bottom: .1rem solid $gray-light-accent-color;
+      position: relative;
+
+      &Container {
+        @extend .flex-center-horizontal;
+        justify-content: start;
+      }
+    }
+
+    &Name {
+      @include font(1.6rem, $font-weight: map_get($font-weights, 'bold'));
+      word-wrap: break-word;
+    }
+
+    &ItemHeight {
+      min-width: 12rem;
+      min-height: 5.8rem;
+    }
+
+    &DefaultElement {
+      @include font(1.6rem, $font-weight: map_get($font-weights, 'bold'));
+      width: 25%;
+
+    }
+
+    &Label {
+      color: $gray-accent-color;
+    }
+  }
+
+  &Finished {
+    color: $secondary-color;
+  }
+
+  &Failed {
+    color: $danger-color;
+  }
+
+  &Progress, &Pending {
+    color: $label-inactive;
+  }
+
+  &Subtitle {
+    color: $gray;
+  }
+}
+
+.list {
+  &Row {
+    &Default {
+      &Element {
+        min-width: 25%;
+        padding-right: 1rem;
+      }
+    }
+  }
+
+  &Header {
+    &Item {
+      @include display-flex();
+      min-width: 25%;
+    }
+  }
+
+  &Actions {
+    &Group {
+      @include display-flex();
+      position: absolute;
+      right: 2rem;
+      width: 3rem;
+
+      svg {
+        cursor: pointer;
+        margin-right: 2rem;
+
+        &:first-of-type {
+          color: $secondary-color;
+        }
+      }
+    }
+  }
+}
+
+.customCol {
+  @include respond-to-max('desktop-small') {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding-top: 2rem;
+  }
+  flex: 0 0 23.5%;
+}
+
+.customSpacing {
+  @include respond-to-max('desktop-small') {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding-top: 1.5rem;
+    margin-top: 0;
+  }
+  @include respond-to-max-height('custom-resolution-3') {
+    padding-top: 9.4rem;
+  }
+  @include respond-to-max-height('tablet-portrait-height') {
+    padding-top: 10rem;
+  }
+  padding-top: 10.7rem;
+  padding-left: 2rem;
+}

@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PersonalInformationFormAdditional renders without crashing and no child is render is pricing data is empty 1`] = `ShallowWrapper {}`;
+
+exports[`PersonalInformationFormAdditional renders without crashing and the children is rendered accordingly 1`] = `ShallowWrapper {}`;

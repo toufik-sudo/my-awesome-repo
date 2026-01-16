@@ -1,0 +1,65 @@
+@import '../imports';
+@import '../utils/constants';
+
+.full {
+  @include size($width: 100vw, $height: 100vh);
+  @extend .totalCenter;
+  background: transparent;
+
+  svg {
+    @include font($font-size: 4rem, $color: $forth-color);
+  }
+}
+
+.page {
+  @extend .full;
+  @include size($width: calc(100vw - 13rem), $height: 100vh);
+
+  svg {
+    color: $default-color;
+  }
+}
+
+.intermediary {
+  @extend .page;
+  @include size($width: 100vw, $height: 100vh);
+}
+
+.local {
+  @include size($width: 100%, $height: auto);
+  @include font($font-size: 3rem, $text-align: center, $color: $forth-color);
+  padding-top: 3rem;
+}
+
+.dropzone {
+  @extend .local;
+  color: $menu-accent;
+  padding-top: 0;
+}
+
+.category {
+  @extend .full;
+  @include size($width: 100vw, $height: 35vh);
+
+  svg {
+    color: $forth-color;
+  }
+}
+
+.fullPage {
+  @extend .totalCenter;
+  @include position(fixed, 0, 0, 0, 0);
+  z-index: 99;
+  background: $forth-color;
+
+  svg {
+    @include font($font-size: 4rem, $color: $default-color);
+  }
+}
+
+.communicationList {
+  @extend .totalCenter;
+  @include size($width: 100%, $height: auto);
+  @include font($font-size: 3rem, $text-align: center, $color: $menu-accent);
+  min-height: 25rem;
+}

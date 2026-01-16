@@ -1,0 +1,238 @@
+@import "../../imports";
+
+.table {
+  @include size($width: 100%, $max-width: 100%);
+  &Page {
+    @include respond-to-max('tablet-landscape') {
+      margin-top: 8rem;
+    }
+  }
+
+  &BackButton {
+    position: absolute;
+    left: 4rem;
+  }
+
+  &Break {
+    word-break: break-word;
+  }
+
+  &Simple {
+    &Header {
+      background-color: $primary-color;
+      border-top-right-radius: 1.2rem;
+      border-top-left-radius: 1.2rem;
+      padding: 1.5rem 0;
+
+      .tableSimpleRow {
+        border-bottom: none;
+      }
+    }
+
+    &Row {
+      display: flex;
+      padding: .75rem 1.5rem;
+      border-bottom: .1rem solid $grey-light-color;
+    }
+
+    &SmallCell {
+      flex: 0 0 15%;
+    }
+
+    &Cell {
+      flex: 0 0 85%;
+    }
+  }
+
+  &Header {
+    @extend .flex-center-total;
+    position: relative;
+    background-color: $table-header-background;
+    border-top-right-radius: 1.2rem;
+    border-top-left-radius: 1.2rem;
+
+    &ResponsiveMobile {
+      @extend .tableHeader;
+      background-color: transparent;
+      @include respond-to-max('mobile-large') {
+        display: block !important;
+        text-align: center !important;
+        .tableHeaderElem {
+          display: block !important;
+          width: 100%;
+          max-width: 35rem;
+          padding-top: .5rem;
+          margin: 0 auto !important;
+        }
+      }
+    }
+
+    &Elem {
+      @include respond-to-max('mobile-large') {
+        padding: 1rem 0;
+      }
+      position: relative;
+      padding: .75rem 0;
+    }
+  }
+
+  &Scrollable {
+    min-width: 100%;
+    overflow-x: auto;
+  }
+
+  &Xl {
+    @include size($min-width: 150rem);
+
+    &Size1 {
+      min-width: 13rem;
+      flex: 1;
+    }
+
+    &Size1 {
+      min-width: 20rem;
+      flex: 2;
+    }
+  }
+
+  &XSl {
+    @include size($min-width: 110rem);
+    word-break: break-word;
+
+    &Size {
+      &1 {
+        min-width: 10rem;
+        max-width: 10rem;
+        flex: 1;
+      }
+
+      &2 {
+        min-width: 17.5rem;
+        max-width: 17.5rem;
+
+        flex: 2;
+      }
+
+      &3 {
+        min-width: 30rem;
+        max-width: 30rem;
+        flex: 3;
+      }
+    }
+  }
+
+  &Lg {
+    @include size($min-width: 80rem);
+    word-break: break-word;
+
+    &Size {
+      &1 {
+        min-width: 7rem;
+        max-width: 7rem;
+        flex: 1;
+      }
+
+      &2 {
+        min-width: 12rem;
+        max-width: 12rem;
+
+        flex: 2;
+      }
+
+      &3 {
+        min-width: 20rem;
+        max-width: 20rem;
+        flex: 3;
+      }
+    }
+  }
+
+  &Md {
+    @include size($min-width: 50rem);
+
+    &Size {
+      &1 {
+        min-width: 5rem;
+        flex: 1;
+      }
+
+      &2 {
+        min-width: 10rem;
+
+        flex: 2;
+      }
+
+      &3 {
+        min-width: 15rem;
+        flex: 3;
+      }
+    }
+  }
+
+  &Sm {
+    @include size($min-width: 38rem);
+  }
+}
+
+.table {
+  &RowHoverUser {
+    td {
+      padding: 1rem 2rem;
+      background-color: unset !important;
+      vertical-align: middle;
+    }
+    tr {
+      transition: all .3s ease;
+    }
+    thead td {
+      padding: 2rem;
+    }
+
+    tbody tr:hover {
+      box-shadow: $shadow-full-element;
+
+      a {
+        color: $gray;
+      }
+    }
+  }
+
+  &Users {
+    @include respond-to-max('desktop-medium') {
+      table-layout: auto;
+    }
+    table-layout: fixed;
+    thead {
+      @include font($font-size: 1.4rem, $color: $gray-accent-color, $font-weight: map_get($font-weights, 'bold'));
+    }
+    tbody {
+      @include font($font-size: 1.3rem, $color: $gray);
+    }
+  }
+}
+
+.tableTextFix a {
+  @include respond-to-max('tablet-landscape') {
+    word-break: normal;
+  }
+  word-break: break-word;
+}
+
+.tableCustomHeight {
+  @include respond-to-max-height('custom-resolution') {
+    height: 60vh !important;
+  }
+  @include respond-to-max-height('custom-resolution-3') {
+    height: 53vh !important;
+  }
+  @include respond-to-max-height('custom-resolution-4') {
+    height: 50vh !important;
+  }
+  height: 70vh !important;
+}
+
+.linkBackFloatLeft{
+  left: 1rem;
+  position: absolute;
+}
+

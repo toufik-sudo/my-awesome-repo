@@ -1,0 +1,11 @@
+@import '../../imports';
+
+.heroButtonSpacing {
+  margin-top: 3rem;
+}
+
+.animatedLandingTitle {
+  @include respond-to-max('mobile-large') {
+    margin-bottom: -4rem;
+  }
+}

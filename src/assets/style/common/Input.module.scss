@@ -1,0 +1,485 @@
+@import '../imports';
+@import '../utils/constants';
+
+.container {
+  width: 100%;
+  position: relative;
+  padding-bottom: 2.5rem;
+  display: flex;
+  text-align: left;
+
+  &.budgetWrapper {
+    padding-bottom: 1rem;
+
+    &:after {
+      @include font($font-size: 1.4rem, $color: $menu-accent);
+      @include position(absolute, null, 0, 2.5rem, null);
+      content: 'EURO';
+    }
+
+    input {
+      background: none;
+      padding-right: 4rem;
+      padding-left: 0;
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+  }
+
+  &.isDisabled {
+    input {
+      background: none;
+    }
+  }
+
+  & input {
+    @include font($font-size: 1.8rem, $color: $primary-color, $font-weight: $light, $font-family: $default-font);
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+    border: none;
+    border-bottom: .1rem solid $border-dark;
+    background: url('#{$imgPath}/pen.png') no-repeat center right $forth-color;
+
+    @include mobileLarge {
+      padding: .8rem 1.6rem;
+    }
+  }
+
+  label {
+    @include font($font-size: 1.8rem, $color: $secondary-color, $font-weight: $light, $font-family: $default-font);
+  }
+
+  &:not(.floating) {
+    flex-direction: column-reverse;
+  }
+}
+
+.error {
+  @include error(absolute, null, null, .8rem, 0, $text-align: center, $width: 100%);
+
+  @include mobileLarge {
+    bottom: 0;
+  }
+}
+
+.errorRelative {
+  @include error(relative, null, null, .8rem, 0, $text-align: center, $width: 100%);
+
+  @include mobileLarge {
+    bottom: 0;
+  }
+
+  padding-top: 1rem;
+}
+
+.globalErrorWrapper {
+  @include font($font-size: 1.2rem, $color: $danger, $text-align: center);
+  @include position(absolute, null, null, null, 0);
+  width: 100%;
+}
+
+.globalError {
+  @include size($width: 100%, $max-width: 36.6rem);
+  margin: 0 auto;
+}
+
+.floating {
+  max-width: 36.6rem !important;
+
+  input:focus+label {
+    @include font($font-size: 1.3rem, $color: $secondary-color, $font-weight: $bold);
+    top: -0.8rem;
+  }
+
+  label {
+    @include position(absolute, 1rem, null, null, 1.3rem);
+    @include prefix(transition, all 0.2s linear, webkit moz ms o);
+    pointer-events: none;
+    top: -0.8rem;
+  }
+
+  &.hasValue {
+    label {
+      @include font($font-size: 1.3rem, $color: $secondary-color, $font-weight: $bold);
+      top: -0.8rem;
+    }
+  }
+}
+
+.isSmaller {
+  input {
+    @include font($font-size: 1.4rem);
+  }
+}
+
+.option {
+  @extend .horizontalCenter;
+
+  &>div {
+    @include display($display: flex, $flex-direction: row, $align-items: center);
+    @include size($width: 7.5rem, $height: 5rem);
+    text-align: center;
+    padding: 1rem;
+
+    input {
+      background: none;
+      width: auto;
+      margin-right: 1rem;
+    }
+  }
+
+  label,
+  input {
+    cursor: pointer;
+  }
+}
+
+.datepicker {
+  @include size($max-width: 46.8rem, $width: 100%);
+  padding: 1rem 0;
+  margin: 2rem auto 4rem !important;
+  position: relative;
+
+  [class*='Input_error'] {
+    bottom: -1.2rem;
+  }
+
+  @include mobileLarge {
+    max-width: none;
+  }
+
+  input {
+    padding: 1rem;
+    border-radius: 3rem;
+    border: 0.1rem solid $border-light;
+    text-align: center;
+    cursor: pointer;
+    width: 18.5rem;
+  }
+
+  label {
+    @extend .verticalCenter;
+    @extend .resetToDirectionColumn;
+    @include font($font-size: 1.8rem, $color: $secondary-color, $font-weight: $regular, $font-family: $default-font);
+    margin-bottom: 1rem;
+  }
+
+  &>div {
+    @include mobileMedium {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+}
+
+.isCentered {
+  text-align: center;
+}
+
+.isRegular {
+  flex-direction: column !important;
+
+  .container {
+    padding-bottom: 0;
+  }
+}
+
+.isDisabled {
+  color: $danger;
+  pointer-events: none;
+}
+
+
+.civility {
+  padding-bottom: 0 !important;
+  padding-left: 1.5rem;
+
+  p {
+    display: none;
+  }
+}
+
+.groupLabel {
+  font-size: inherit;
+}
+
+
+.fieldIsInline {
+  .container {
+    flex-direction: row-reverse;
+    align-items: center;
+
+    @include mobileMedium {
+      flex-direction: column-reverse;
+    }
+  }
+
+  &>label {
+    padding-right: 3rem;
+
+    @include mobileMedium {
+      padding-right: 0;
+    }
+  }
+
+  .option {
+    margin-right: auto;
+
+  }
+}
+
+.complexDatepicker {
+  @extend .directionColumn;
+  flex-wrap: wrap;
+  margin: 4rem 0 2rem;
+  align-items: center;
+
+  &>button:not(.submitBtn) {
+    @include size($width: 100%, $max-width: 19rem);
+    background: $third-color;
+    color: $forth-color;
+    margin-top: 3rem;
+    border: none;
+    padding: 0.8rem 2rem;
+  }
+
+  &>div>button {
+    padding: 0.7rem 1.5rem;
+    margin-left: 1rem;
+
+    @include mobileMedium {
+      margin-top: 1rem;
+      display: flex;
+    }
+  }
+
+  label {
+    margin-bottom: 3rem;
+    font-weight: $light;
+  }
+
+  :global {
+    .react-datepicker-wrapper {
+      width: 16rem;
+      margin: 0 auto;
+
+      input {
+        width: 100%;
+      }
+
+      @include mobileMedium {
+        margin-right: 0.5rem;
+        width: 100%;
+      }
+    }
+
+    @include mobileMedium {
+      .react-datepicker-popper {
+        left: -6rem !important;
+      }
+
+      .react-datepicker__triangle {
+        left: 9rem;
+      }
+    }
+  }
+}
+
+.changeDatepicker {
+  @include font($font-weight: $regular, $font-size: 1.6rem, $text-align: center);
+  @include size($width: 100%, $max-width: 16rem);
+  margin: 1rem 0;
+
+  @include mobileMedium {
+    max-width: 14rem;
+  }
+}
+
+.tailoredInput {
+  form {
+    &>.container:not(.floating) {
+      margin-bottom: 5rem;
+      max-width: 46.8rem;
+
+      label {
+        font-weight: $light;
+        align-items: flex-start;
+      }
+
+      .title {
+        margin: 0;
+      }
+    }
+
+    &>button {
+      margin: 4rem 0;
+    }
+  }
+
+  .floating {
+    padding-bottom: 2rem;
+    max-width: 46.8rem !important;
+
+    .error {
+      bottom: 0.2rem;
+    }
+  }
+}
+
+.submitBtn {
+  @extend .verticalCenter;
+  color: $primary-color !important;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  background: none !important;
+  padding: 0;
+  border: none;
+  margin-top: 3rem;
+
+  span {
+    @include prefix(transition, all 0.1s linear, webkit moz ms o);
+    @include size($width: 3rem, $height: 3rem);
+    @extend .totalCenter;
+    color: $forth-color;
+    background: $third-color;
+    border-radius: 2rem;
+    margin-right: 1.2rem;
+  }
+
+  &:hover {
+    span {
+      background: darken($third-color, 9%);
+    }
+  }
+
+  svg {
+    font-size: 1.2rem;
+  }
+}
+
+.inputIsHidden input {
+  display: none;
+}
+
+.roundedInput {
+  align-items: flex-start;
+
+  input {
+    border-radius: 2rem;
+    background: $forth-color;
+    padding: .6rem 1.5rem;
+    border: .1rem solid $border-light;
+  }
+
+  label {
+    @include font($font-size: 2rem, $font-weight: 600, $color: $forth-color);
+    margin-bottom: 1rem;
+  }
+}
+
+.roundedDropdown {
+  @include display($flex-direction: column, $align-items: flex-start);
+  position: relative;
+  margin: 0 auto;
+
+  @include mobileLarge {
+    padding-bottom: 2.5rem;
+  }
+
+  &>div:not(.error) {
+    background: $forth-color;
+    border-radius: 2rem;
+    width: 100%;
+
+    &>div {
+      @include font($text-align: left, $font-size: 1.8rem, $font-weight: 100);
+      width: auto;
+      padding-left: 1rem;
+
+      &+div {
+        cursor: pointer;
+      }
+    }
+  }
+
+  svg {
+    color: $primary-color;
+  }
+
+  label {
+    @include font($font-size: 2rem, $font-weight: 600, $color: $forth-color);
+    margin-bottom: 1rem;
+  }
+}
+
+.inputIsHidden input {
+  display: none;
+}
+
+.noIcon {
+  input {
+    background-image: none !important;
+  }
+}
+
+.defaultInputStyle {
+  input {
+    background: none;
+    border-bottom: none;
+    padding-left: 0;
+
+    @include mobileMedium {
+      font-size: 1.2rem;
+    }
+
+    @include mobileSmall {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.hiddenLabel {
+  .option>div:first-child {
+    padding-left: 0;
+  }
+
+  .container>label {
+    display: none;
+  }
+}
+
+.textareaUserDeclaration {
+  height: 10rem;
+  padding: .5rem;
+  color: $primary-color;
+  border: none;
+  border-bottom: 0.1rem solid $border-dark;
+  resize: none;
+}
+
+.radioTitleGroup {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  align-content: center;
+  gap: 2rem;
+  /* flex: 0.2 1; */
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+}
+
+.radioTitleGroup>label,
+.radioTitleGroup label {
+  width: max-content;
+  align-items: center;
+  margin: 0;
+}

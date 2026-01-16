@@ -1,0 +1,17 @@
+name: tg-frontend
+namespace: tg-qa1
+label: frontend
+
+app:
+  image: registry.pitechplus.com/tooogether/tg-fe/app:latest
+  name: frontend
+  label: frontend
+  host: tg-qa1.dev.pitechplus.com
+  port: 80
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
