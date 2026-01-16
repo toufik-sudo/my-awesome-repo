@@ -7,8 +7,8 @@ import { useWallSelection } from 'hooks/wall/useWallSelection';
 import style from 'assets/style/components/wall/WallRightSidebar.module.scss';
 
 /**
- * Molecule component used to render right sidebar with top controls and company logo
- * Similar to left sidebar but without background
+ * Molecule component used to render right sidebar with company logo and controls
+ * Organized with logo at top and controls at bottom
  *
  * @constructor
  */
@@ -22,7 +22,13 @@ const WallRightSidebar = () => {
   return (
     <div className={style.rightSidebar}>
       <div className={style.rightSidebarContent}>
-        {companyLogoUrl && <CompanyLogo companyLogo={companyLogoUrl} />}
+        {companyLogoUrl && (
+          <div className={style.companyLogoWrapper}>
+            <CompanyLogo companyLogo={companyLogoUrl} />
+          </div>
+        )}
+      </div>
+      <div className={style.rightSidebarControls}>
         <TopControlsList />
       </div>
     </div>
