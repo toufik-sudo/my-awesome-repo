@@ -1911,5 +1911,7 @@
   "ai.linkInput.placeholder": "Lien à indexer",
   "ai.tab.indexation": "Enrichir son IA",
   "ai.tab.style": "Style des IA",
-  "launch.wysiwig.max.length": "{maxLength} caractères maximum"
+  "launch.wysiwig.max.length": "{maxLength} caractères maximum",
+  "wall.intro.start": "Commence le",
+  "wall.intro.end": "Se termine le"
 }
