@@ -62,56 +62,123 @@
 
   &Tooltip {
     background-color: $white;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    min-width: 280px;
-    max-width: 350px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 0.75rem;
+    padding: 0;
+    min-width: 320px;
+    max-width: 380px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
     color: $default-color;
+    overflow: hidden;
+
+    &Image {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+    }
+
+    &Body {
+      padding: 1.25rem;
+    }
 
     &Header {
-      @include display-flex($justify-content: space-between, $align-items: center);
-      border-bottom: 1px solid $light-gray;
-      padding-bottom: 1rem;
-      margin-bottom: 1rem;
+      @include display-flex($justify-content: flex-start, $align-items: center);
+      margin-bottom: 0.75rem;
+    }
+
+    &Welcome {
+      @include font($color: $gray, $font-weight: map_get($font-weights, 'regular'));
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 0.25rem 0;
     }
 
     &Title {
       @include font($color: $primary-color, $font-weight: map_get($font-weights, 'bold'));
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       margin: 0;
+      line-height: 1.3;
     }
 
     &Content {
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: 0.875rem;
+      line-height: 1.6;
       color: $gray;
       margin-bottom: 1rem;
+
+      p {
+        margin: 0;
+      }
     }
 
     &Dates {
-      @include display-flex($justify-content: space-between);
-      background-color: $light-gray;
-      border-radius: 0.25rem;
-      padding: 0.75rem;
+      @include display-flex($justify-content: flex-start);
+      gap: 1.5rem;
+      background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.04) 100%);
+      border-radius: 0.5rem;
+      padding: 0.875rem 1rem;
       margin-bottom: 1rem;
-      font-size: 0.85rem;
     }
 
     &DateItem {
-      text-align: center;
+      text-align: left;
+
+      &Label {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: $gray;
+        margin-bottom: 0.25rem;
+      }
 
       span {
         display: block;
         font-weight: map_get($font-weights, 'bold');
         color: $primary-color;
+        font-size: 0.9rem;
+      }
+    }
+
+    &Social {
+      @include display-flex($align-items: center);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-top: 0.5rem;
+    }
+
+    &SocialLink {
+      @include display-flex($align-items: center, $justify-content: center);
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background-color: $light-gray;
+      color: $gray;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: $primary-color;
+        color: $white;
+        transform: translateY(-2px);
       }
     }
 
     &Footer {
       border-top: 1px solid $light-gray;
-      padding-top: 1rem;
-      font-size: 0.85rem;
+      padding-top: 0.875rem;
+      margin-top: 0.5rem;
+
+      a {
+        font-size: 0.8rem;
+        color: $primary-color;
+        text-decoration: none;
+        font-weight: map_get($font-weights, 'medium');
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
     }
   }
 }
