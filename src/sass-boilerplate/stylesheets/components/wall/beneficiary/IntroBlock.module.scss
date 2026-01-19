@@ -59,18 +59,80 @@
     text-align: center;
     user-select: none;
   }
+
+  &Tooltip {
+    background-color: $white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    min-width: 280px;
+    max-width: 350px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    color: $default-color;
+
+    &Header {
+      @include display-flex($justify-content: space-between, $align-items: center);
+      border-bottom: 1px solid $light-gray;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    &Title {
+      @include font($color: $primary-color, $font-weight: map_get($font-weights, 'bold'));
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    &Content {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: $gray;
+      margin-bottom: 1rem;
+    }
+
+    &Dates {
+      @include display-flex($justify-content: space-between);
+      background-color: $light-gray;
+      border-radius: 0.25rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+    }
+
+    &DateItem {
+      text-align: center;
+
+      span {
+        display: block;
+        font-weight: map_get($font-weights, 'bold');
+        color: $primary-color;
+      }
+    }
+
+    &Footer {
+      border-top: 1px solid $light-gray;
+      padding-top: 1rem;
+      font-size: 0.85rem;
+    }
+  }
 }
 
 .socialAccount {
-  font-size: 3rem;
-  margin-right: 1.5rem;
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
   &Title {
     @include font($color: $gray, $font-weight: map_get($font-weights, 'bold'));
-    padding: 2.5rem 0 1rem;
+    padding: 1rem 0 0.5rem;
+    font-size: 0.9rem;
   }
 
   img {
-    width: 2.5rem;
+    width: 1.5rem;
   }
 }
 

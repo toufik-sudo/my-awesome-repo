@@ -57,6 +57,7 @@ const CompanyLogo = ({ companyLogo }) => {
             termsAndConditionsUrl={termsAndConditionsUrl}
             isBodyOpen={true}
             setBody={setBody}
+            isTooltip={true}
           />
         )}
       />
