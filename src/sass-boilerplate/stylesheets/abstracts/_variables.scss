@@ -65,7 +65,8 @@ $hyperAdmin: #3e216b;
 $container-width: 1370px !default;
 
 //Fonts
-$primary-font : 'Roboto', Arial !default;
+$primary-font : 'Roboto',
+Arial !default;
 
 //Icon Font
 $font-awesome: 'Font Awesome 5 Free';
@@ -75,8 +76,10 @@ $font-weights: (
   'thin': 100,
   'light': 300,
   'regular': 400,
-  'bold': 700
-) !default;
+  'bold': 700) !default;
+
+$white: #ffffff;
+$light-gray: #f0f0f0;
 
 //Icons
 $flag-icon: '\f024';
@@ -96,7 +99,8 @@ $left-arrow-icon: '\02FF';
 $left-arrow-icon-unicode: '\279C';
 
 //Shadows
-$shadow: 0.1rem 0.4rem 1rem 0.1rem rgba(0, 0, 0, 0.21);
+$shadow: 0.1rem 0.4rem 1rem 0.1rem rgba(0, 0, 0, 0.21
+);
 $shadow-light: 0.1rem 0.25rem 1.5rem 0.2rem rgba(0, 0, 0, 0.12);
 $shadow-comment: -0.1rem 0.15rem 0.5rem 0.4rem rgba(0, 0, 0, 0.14);
 $shadow-full: 0.1rem 0.4rem 1rem 0.1rem rgba(0, 0, 0, 0.21);
@@ -116,8 +120,7 @@ $breakpoints-max: (
   'tablet-portrait': 991px,
   'mobile-large': 767px,
   'mobile-medium': 425px,
-  'mobile-small': 320px
-) !default;
+  'mobile-small': 320px) !default;
 
 $breakpoints-max-sizes: (
   'dMedium': 1499px,
@@ -127,8 +130,7 @@ $breakpoints-max-sizes: (
   'tPortrait': 991px,
   'mLarge': 767px,
   'mMedium': 425px,
-  'mSmall': 320px
-) !default;
+  'mSmall': 320px) !default;
 
 $breakpoints-min: (
   'desktop-medium': 1500px,
@@ -137,8 +139,7 @@ $breakpoints-min: (
   'tablet-portrait': 992px,
   'mobile-large': 768px,
   'mobile-medium': 426px,
-  'mobile-small': 320px
-) !default;
+  'mobile-small': 320px) !default;
 
 $breakpoints-max-height: (
   'tablet-portrait-height': 768px,
@@ -157,7 +158,7 @@ $breakpoints-max-height: (
 $orientation: (
   'landscape': landscape,
   'portrait': portrait,
-) !default;
+  ) !default;
 
 //Spacing map used for generate margin and padding helper classes
 $spacings: (
@@ -254,4 +255,3 @@ $secondary-gradient: linear-gradient(133deg, $third-color 0%, $third-color 35%, 
 $logo-gradient: linear-gradient(133deg, #0e0439 0%, #0e0439 35%, #170e40 73%, #201746 100%);
 
 $editPen: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAANCAYAAACgu+4kAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAFPSURBVHjadNI9S1xBFMbx3yi6NmkiFqYIRItYxUJFMU00+hnWFFskfoIU1nYW9haChWgrFlrkQhJBUBBJDJo6dUiw1l1f9qY5A5cLGRhmmDPz/M8856Rmq2igjJlHiRT7HnQwhY/YxDEauEvNVtGPXnTjQaoIJNxiFqcRv8c8TjCQmq2iLyhlRSCvbcxgFOt4FrE7PMffqkA9/Q4m8A0FPuAIY/iDV/8TyOTX2McXLGEXW1gLL76jkQV6K+R2kE9xiEU8Ccg23gdoAN1sYs6gjUl8DcI4nkbsN5bxCRnazRn04QYv8Rk/MBdkFTMvo3z5q48p+uAeL+LCTVwYivUab3GV066U+DE1W0VPHO5gGAsVQzt4g7MKuawLwCDOsRLlWcUDpnER5Hq3JpRZYAS/4iudMPUdDoKcao+zQDcLDGEjzLzCHn6iv9ZgdYH0bwAxe2HJN8L4CAAAAABJRU5ErkJggg==';
-
