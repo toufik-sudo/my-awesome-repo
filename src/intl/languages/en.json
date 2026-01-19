@@ -1911,5 +1911,7 @@
   "wall.userDeclarations.detail.label.sponsorshipPhoneNumber:": "Referral phone number",
   "wall.userDeclarations.detail.label.sponsorshipTitle": "Referral civility",
   "wall.userDeclarations.detail.label.sponsorshipZipCode": "Referral postal code",
-  "launch.wysiwig.max.length": "{maxLength} maximum characters"
+  "launch.wysiwig.max.length": "{maxLength} maximum characters",
+  "wall.intro.start": "Starts on",
+  "wall.intro.end": "Ends on"
 }
