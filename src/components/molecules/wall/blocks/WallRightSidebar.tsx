@@ -37,7 +37,7 @@ const WallRightSidebar = () => {
 
   return (
     <div className={`${style.rightSidebar} ${hideSidebar ? style.hideSidebar : ''}`}
-    >
+      onMouseLeave={showRightSidebar} >
       <div className={style.rightSidebarContent}>
         {companyLogoUrl && (
           <div className={style.companyLogoWrapper}>

@@ -47,7 +47,7 @@ const CompanyLogo = ({ companyLogo }) => {
         effect={TOOLTIP_FIELDS.EFFECT_SOLID}
         className="nav-tooltip-company"
         delayShow={300}
-        delayHide={900000}
+        delayHide={300}
         getContent={() => (
           <IntroductionBody
             content={content}
