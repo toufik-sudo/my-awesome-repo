@@ -8,10 +8,10 @@ $sidebarCollapsedSize: 4.5rem;
   display: flex;
   min-height: 100vh;
   transition: padding-left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
+
   &.collapsed {
     padding-left: $sidebarCollapsedSize;
-    
+
     @include tabletLandscape {
       padding-left: 0;
     }
@@ -102,11 +102,11 @@ $sidebarCollapsedSize: 4.5rem;
 // Collapsed navigation state
 .navigationCollapsed {
   width: $sidebarCollapsedSize;
-  
+
   .logoImg {
     @include size($max-width: 2.5rem, $max-height: 2.5rem);
   }
-  
+
   .logOutBottom {
     width: $sidebarCollapsedSize;
   }
@@ -115,14 +115,14 @@ $sidebarCollapsedSize: 4.5rem;
 // Hover expanded state (when collapsed but hovered)
 .navigationHoverExpanded {
   width: $sidebarSize;
-  box-shadow: 
+  box-shadow:
     8px 0 40px rgba(0, 0, 0, 0.2),
     inset -1px 0 0 rgba($forth-color, 0.08);
-  
+
   .logoImg {
     @include size($max-width: 5.5rem, $max-height: 6rem);
   }
-  
+
   .logOutBottom {
     width: $sidebarSize;
   }
@@ -131,7 +131,7 @@ $sidebarCollapsedSize: 4.5rem;
 // Hover expanded layout adjustment
 .hoverExpanded {
   padding-left: $sidebarCollapsedSize;
-  
+
   @include tabletLandscape {
     padding-left: 0;
   }

@@ -39,7 +39,7 @@ const TopControlsList = () => {
 
   return (
     <div className={style.topControls}>
-      <div 
+      <div
         data-tip={controls[0].tooltipText}
         data-for="tooltip-language"
         className={style.controlItem}
@@ -54,8 +54,8 @@ const TopControlsList = () => {
           delayHide={100}
         />
       </div>
-      
-      <div 
+
+      <div
         data-tip={controls[1].tooltipText}
         data-for="tooltip-notifications"
         className={style.controlItem}
@@ -70,8 +70,8 @@ const TopControlsList = () => {
           delayHide={100}
         />
       </div>
-      
-      <div 
+
+      <div
         data-tip={controls[2].tooltipText}
         data-for="tooltip-settings"
         className={style.controlItem}

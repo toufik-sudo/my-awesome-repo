@@ -15,16 +15,39 @@ import style from 'assets/style/components/Navbar.module.scss';
  * @param customClass
  * @constructor
  */
-const LanguageSwitcher = ({ selectedLanguage, handleLanguageChange, isOnboardingFlow = false, customClass = '' }) => (
-  <Select
-    isSearchable={true}
-    value={selectedLanguage}
-    onChange={language => handleLanguageChange(language as ILanguageOption)}
-    options={LANGUAGE_OPTIONS}
-    styles={isOnboardingFlow ? onboardingCustomStyles : customStyles}
-    classNamePrefix="language"
-    className={`${style.lswitch} ${customClass}`}
-  />
-);
+const LanguageSwitcher = ({ selectedLanguage, handleLanguageChange, isOnboardingFlow = false, customClass = '' }) => {
+  console.log('selectedLanguage', selectedLanguage);
+  if (selectedLanguage && !isOnboardingFlow) {
+    selectedLanguage.shortLabel = selectedLanguage.value == 'en' ? 'EN' : 'FR';
+  }
+  const formatOptionLabel = (option, { context }) => {
+    if (context === 'menu') {
+      // Ce qui s'affiche dans le dropdown
+      return (
+        <div>
+          <strong>{option.label}</strong>
+          <div style={{ fontSize: '12px', color: '#999' }}>
+            {option.description}
+          </div>
+        </div>
+      );
+    }
+    // Ce qui s'affiche dans l'input une fois sélectionné
+    return option.shortLabel || option.label;
+  };
+  return (
+    <Select
+      isSearchable={true}
+      value={selectedLanguage}
+      onChange={language => handleLanguageChange(language as ILanguageOption)}
+      options={LANGUAGE_OPTIONS}
+      styles={isOnboardingFlow ? onboardingCustomStyles : customStyles}
+      classNamePrefix="language"
+      className={`${style.lswitch} ${customClass}`}
+      formatOptionLabel={formatOptionLabel}
+    />
+  );
+
+}
 
 export default LanguageSwitcher;

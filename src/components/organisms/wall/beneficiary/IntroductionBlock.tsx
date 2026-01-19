@@ -31,7 +31,7 @@ const IntroductionBlock = () => {
   return (
     <div>
       <IntroductionBanner {...{ image: pictureUrl, title: bannerTitle }} />
-      <IntroductionBody
+      {/* <IntroductionBody
         {...{
           content,
           date: { startDate, endDate },
@@ -41,7 +41,7 @@ const IntroductionBlock = () => {
           isBodyOpen,
           setBody
         }}
-      />
+      /> */}
       {type !== PROGRAM_TYPES[FREEMIUM] && <RewardsMechanismBlock {...{ programDetails, isPeopleManager }} />}
     </div>
   );

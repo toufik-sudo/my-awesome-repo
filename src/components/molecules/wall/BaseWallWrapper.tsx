@@ -13,7 +13,7 @@ import style from 'assets/style/components/LeftSideLayout.module.scss';
 const BaseWallWrapper = ({ theme, outputChildren }) => {
   return (
     <div className={style[`${theme}-wrapper`]}>
-      {<WallTopNavigation />}
+      {/* {<WallTopNavigation />} */}
       {outputChildren}
     </div>
   );

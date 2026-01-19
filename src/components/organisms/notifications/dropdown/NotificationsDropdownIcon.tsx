@@ -27,14 +27,14 @@ const NotificationsDropdownIcon = ({ icon }) => {
 
   return (
     <div className={notificationsDropdownWrapper}>
-      <div className={notificationsDropdownIcon} onClick={openNotifications}>
+      <div className={notificationsDropdownIcon} onClick={openNotifications} >
         {icon}
         {!!notificationsCount && <span className={`${badge} ${dropdownIcon}`}>{notificationsCount}</span>}
       </div>
       {isOpen && (
-        <div onClick={closeNotifications}>
+        <div onClick={closeNotifications} >
           <div className={notificationsDropdownBackdrop} />
-          <NotificationsDropdown {...{ notifications, isLoading, lastNotificationsCount }} />
+          <NotificationsDropdown {...{ notifications, isLoading, lastNotificationsCount, closeNotifications }} />
         </div>
       )}
     </div>

@@ -61,21 +61,25 @@ const WallRouter = () => {
         path={`${routerMatch.path}/${CREATE_DECLARATION}`}
         component={CreateBeneficiaryDeclarationPage}
       />
-      <Route exact path={`${routerMatch.path}${SETTINGS}/:tab`} component={SettingsMainBlock} />
-      <Route exact path={`${routerMatch.path}${ECARD_CONVERSION}`} component={EcardPage} />
+      <Route exact path={`${routerMatch.path}${SETTINGS}/:tab`} 
+        component={SettingsMainBlock} />
+      <Route exact path={`${routerMatch.path}${ECARD_CONVERSION}`} 
+        component={EcardPage} />
       <Redirect
         exact
         from={`${routerMatch.path}${SETTINGS}`}
         to={`${routerMatch.path}${SETTINGS}/${FIRST_SETTINGS_TAB}`}
       />
-      <AuthorizedRoute exact path={`${routerMatch.path}${NOTIFICATIONS_ROUTE}`} component={NotificationsList} />
+      <AuthorizedRoute exact path={`${routerMatch.path}${NOTIFICATIONS_ROUTE}`} 
+        component={NotificationsList} />
       <AuthorizedRoute
         authorizedRoles={ALL_ROLES_EXCEPT_BENEFICIARY}
         exact
         path={`${routerMatch.path}/${DASHBOARD_WALL}`}
         component={WallDashboardMainBlock}
       />
-      <AuthorizedRoute exact path={`${routerMatch.path}${UPGRADE_PLAN}`} component={DashboardUpgradePlan} />
+      <AuthorizedRoute exact path={`${routerMatch.path}${UPGRADE_PLAN}`} 
+        component={DashboardUpgradePlan} />
       <AuthorizedRoute exact path={routerMatch.path} component={WallBaseBlock} />
       <Redirect from={ALL_ROUTES} to={PAGE_NOT_FOUND} />
     </Switch>

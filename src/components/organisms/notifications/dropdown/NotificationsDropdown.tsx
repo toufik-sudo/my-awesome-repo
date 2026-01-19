@@ -12,13 +12,14 @@ import { useDispatch } from 'react-redux';
 
 import componentStyle from 'sass-boilerplate/stylesheets/components/notifications/NotificationDropdown.module.scss';
 import coreStyle from 'sass-boilerplate/stylesheets/style.module.scss';
+import { emptyFn } from '../../../../utils/general';
 
 /**
  * Organism component used to render notifications dropdown
  * @constructor
  */
 
-const NotificationsDropdown = ({ notifications, isLoading, lastNotificationsCount }) => {
+const NotificationsDropdown = ({ notifications, isLoading, lastNotificationsCount, closeNotifications = emptyFn }) => {
   const { notificationsDropdownElement, notificationsDropdownElementContent } = componentStyle;
   const { textCenter, withSecondaryColor, displayBlock, mt3, withDangerColor } = coreStyle;
   const history = useHistory();
@@ -27,7 +28,7 @@ const NotificationsDropdown = ({ notifications, isLoading, lastNotificationsCoun
 
   return (
     <>
-      <div className={notificationsDropdownElement}>
+      <div className={notificationsDropdownElement} onMouseLeave={closeNotifications}>
         <div className={notificationsDropdownElementContent}>
           <DynamicFormattedMessage
             id="notifications.cta.see.all"

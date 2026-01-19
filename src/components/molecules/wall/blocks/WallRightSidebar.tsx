@@ -14,13 +14,30 @@ import style from 'assets/style/components/wall/WallRightSidebar.module.scss';
  */
 const WallRightSidebar = () => {
   const { programs, selectedProgramIndex } = useWallSelection();
-  
+
   const currentProgram = programs[selectedProgramIndex];
   const design = currentProgram && currentProgram.design;
   const companyLogoUrl = design && design.companyLogoUrl;
+  const [hideSidebar, setHideSidebar] = React.useState(true);
+  const showRightSidebar = () => {
+    setTimeout(() => {
+      setHideSidebar(!hideSidebar);
+    }, 500);
+  };
+
+  if (hideSidebar) {
+    return (
+      <div className={`${!hideSidebar ? style.hideSidebar : ''}`} style={{ border: 'none' }} >
+        <button className={style.toggleBtn} onClick={showRightSidebar} >
+          ☰
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className={style.rightSidebar}>
+    <div className={`${style.rightSidebar} ${hideSidebar ? style.hideSidebar : ''}`}
+    >
       <div className={style.rightSidebarContent}>
         {companyLogoUrl && (
           <div className={style.companyLogoWrapper}>

@@ -147,6 +147,7 @@
     "ag-grid-react": "^27.3.0",
     "axios-mock-adapter": "^1.22.0",
     "buffer": "^6.0.3",
+    "craco": "0.0.3",
     "dotenv-webpack": "^8.1.0",
     "draft-js": "^0.10.5",
     "env-cmd": "^10.1.0",
