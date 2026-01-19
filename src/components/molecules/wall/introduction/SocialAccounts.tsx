@@ -17,12 +17,19 @@ import style from 'sass-boilerplate/stylesheets/components/wall/beneficiary/Intr
 const SocialAccounts = ({ socialMedia }) => {
   const hasSocialAccounts = Object.keys(socialMedia).filter(key => !!socialMedia[key]).length;
   const { socialAccount, socialAccountTitle } = style;
+  const getCustomIcon = () => {
+    try {
+      return require('assets/images/socials/social_icon_custom.png').default;
+    } catch (e) {
+      return require('assets/images/socials/social_icon_custom.png');
+    }
+  };
 
   if (!hasSocialAccounts) return null;
 
   return (
-    <div>
-      <DynamicFormattedMessage tag={HTML_TAGS.P} id="wall.socialAccounts.title" className={socialAccountTitle} />
+    <div className={style.introBlockTooltipSocial}>
+
       {Object.keys(socialMedia).map(key => {
         if (socialMedia[key]) {
           let finalUrl = socialMedia[key];
@@ -37,9 +44,9 @@ const SocialAccounts = ({ socialMedia }) => {
               title={key}
             >
               {key !== SOCIAL.CUSTOM ? (
-                <FontAwesomeIcon icon={['fab', key] as any} />
+                <FontAwesomeIcon icon={['fab', key === 'instagram' ? 'instagram' : key] as any} />
               ) : (
-                <img src={require(`assets/images/socials/social_icon_${key}.svg`)} alt={key} />
+                <img src={getCustomIcon()} alt={key} />
               )}
             </a>
           );

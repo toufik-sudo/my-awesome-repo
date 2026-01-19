@@ -1,5 +1,7 @@
 {
   "landing.nav.services": "Découverte",
+  "welcome.date.noStart": "Aucune date de début",
+  "welcome.date.noEnd": "Aucune date de fin",
   "sidebar.collapse": "Réduire",
   "page.title.RewardzAi": "RewardzAi",
   "landing.nav.whyChooseUs": "Social Up",
@@ -1006,7 +1008,7 @@
   "wall.posts.getUsers.error": "Echec d'affichage de la liste des membres",
   "wall.posts.confidentiality.noUsers": "Aucun membre disponible",
   "wall.socialAccounts.title": "Suivez-nous sur :",
-  "wall.intro.welcome": "Bienvenue",
+  "wall.intro.welcome": "Bienvenue au programme",
   "wall.intro.date.info": "Après la fin du programme, vous aurez 14 jours pour terminer de déclarer vos résultats.",
   "wall.intro.terms": "Règlements / CGU CGV",
   "wall.faq.title": "How tooo dooo ?",

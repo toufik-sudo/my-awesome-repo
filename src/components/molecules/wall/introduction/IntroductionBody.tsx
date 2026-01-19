@@ -10,6 +10,7 @@ import style from 'sass-boilerplate/stylesheets/components/wall/beneficiary/Intr
 import coreStyle from 'sass-boilerplate/stylesheets/style.module.scss';
 import { LINK_TARGET } from 'constants/ui';
 import { useSelectedProgramDesign } from 'hooks/wall/ui/useSelectedProgramColors';
+import { useIntl } from 'react-intl';
 
 /**
  * Parse Draft.js content to plain text
@@ -63,6 +64,7 @@ const IntroductionBody = ({
 }) => {
   const { colorTitle } = useSelectedProgramDesign();
   const { w100, mb2, textCenter, withBoldFont, withFontSmall } = coreStyle;
+  const { formatMessage } = useIntl();
 
   // Parse content if it's Draft.js format
   const parsedContent = useMemo(() => {
@@ -92,61 +94,59 @@ const IntroductionBody = ({
     return (
       <div className={style.introBlockTooltip}>
         {pictureUrl && (
-          <img 
-            src={pictureUrl} 
-            alt={bannerTitle || title || 'Program'} 
+          <img
+            src={pictureUrl}
+            alt={bannerTitle || title || 'Program'}
             className={style.introBlockTooltipImage}
           />
         )}
         <div className={style.introBlockTooltipBody}>
           <div className={style.introBlockTooltipHeader}>
-            <div>
-              <DynamicFormattedMessage
-                tag={HTML_TAGS.P}
-                id="wall.intro.welcome"
-                className={style.introBlockTooltipWelcome}
-              />
-              {(bannerTitle || title) && (
-                <h4 className={style.introBlockTooltipTitle} style={{ color: colorTitle }}>
-                  {bannerTitle || title}
-                </h4>
-              )}
-            </div>
+            {/* <DynamicFormattedMessage
+              tag={HTML_TAGS.P}
+              id="wall.intro.welcome"
+              className={style.introBlockTooltipWelcome}
+            /> */}
+            {(title || bannerTitle) && (
+              <h4 className={style.introBlockTooltipTitle} style={{ color: colorTitle }}>
+                {title || bannerTitle}
+              </h4>
+            )}
           </div>
-          
+
           {parsedContent && (
             <div className={style.introBlockTooltipContent}>
               <p>{parsedContent}</p>
             </div>
           )}
-          
+
           {(formattedStartDate || formattedEndDate) && (
             <div className={style.introBlockTooltipDates}>
-              {formattedStartDate && (
+              
                 <div className={style.introBlockTooltipDateItem}>
                   <span className={style.introBlockTooltipDateItemLabel}>
                     <DynamicFormattedMessage tag={HTML_TAGS.SPAN} id="wall.intro.start" defaultMessage="Début" />
                   </span>
-                  <span style={{ color: colorTitle }}>{formattedStartDate}</span>
+                <span style={{ color: colorTitle }}>{formattedStartDate || formatMessage({id:'welcome.date.noStart'})}</span>
                 </div>
-              )}
-              {formattedEndDate && (
+              
                 <div className={style.introBlockTooltipDateItem}>
                   <span className={style.introBlockTooltipDateItemLabel}>
                     <DynamicFormattedMessage tag={HTML_TAGS.SPAN} id="wall.intro.end" defaultMessage="Fin" />
                   </span>
-                  <span style={{ color: colorTitle }}>{formattedEndDate}</span>
+                <span style={{ color: colorTitle }}>{formattedEndDate || formatMessage({ id: 'welcome.date.noEnd' })}</span>
                 </div>
-              )}
+              
             </div>
           )}
-          
+
           {hasSocialMedia && (
-            <div className={style.introBlockTooltipSocial}>
+            <div className={style.introBlockTooltipSocialBlock}>
+              <DynamicFormattedMessage tag={HTML_TAGS.P} id="wall.socialAccounts.title" className={style.socialAccountTitle} />
               <SocialAccounts socialMedia={socialMedia} />
             </div>
           )}
-          
+
           {termsAndConditionsUrl && (
             <div className={style.introBlockTooltipFooter}>
               <DynamicFormattedMessage

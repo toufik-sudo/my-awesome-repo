@@ -1,5 +1,7 @@
 {
   "landing.nav.services": "Services",
+  "welcome.date.noStart": "No start date",
+  "welcome.date.noEnd": "No end date",
   "sidebar.collapse": "Reduce",
   "page.title.RewardzAi": "RewardzAi",
   "landing.nav.whyChooseUs": "Social Up",
@@ -968,7 +970,7 @@
   "wall.posts.getUsers.error": "User list could not be retrieved",
   "wall.posts.confidentiality.noUsers": "No members available.",
   "wall.socialAccounts.title": "Follow us on:",
-  "wall.intro.welcome": "Welcome",
+  "wall.intro.welcome": "Welcome to program",
   "wall.intro.date.info": "After the end date, you will have 14 days to declare your last results.",
   "wall.intro.terms": "Terms and conditions",
   "wall.faq.title": "rewardzai?",
