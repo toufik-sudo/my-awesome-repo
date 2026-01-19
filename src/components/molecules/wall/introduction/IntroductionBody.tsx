@@ -25,11 +25,65 @@ const IntroductionBody = ({
   socialMedia,
   isBodyOpen,
   setBody,
-  termsAndConditionsUrl
+  termsAndConditionsUrl,
+  isTooltip = false
 }) => {
   const { colorTitle } = useSelectedProgramDesign();
   const { w100, mb2, textCenter, withBoldFont, withFontSmall } = coreStyle;
 
+  // Tooltip-specific layout
+  if (isTooltip) {
+    return (
+      <div className={style.introBlockTooltip}>
+        <div className={style.introBlockTooltipHeader}>
+          <DynamicFormattedMessage
+            tag={HTML_TAGS.P}
+            id="wall.intro.welcome"
+            className={style.introBlockTooltipTitle}
+            style={{ color: colorTitle }}
+          />
+        </div>
+        {title && (
+          <h4 className={style.introBlockTooltipTitle} style={{ color: colorTitle, marginBottom: '0.5rem' }}>
+            {title}
+          </h4>
+        )}
+        {content && (
+          <div className={style.introBlockTooltipContent} dangerouslySetInnerHTML={{ __html: content }} />
+        )}
+        {(startDate || endDate) && (
+          <div className={style.introBlockTooltipDates}>
+            {startDate && (
+              <div className={style.introBlockTooltipDateItem}>
+                <span>{startDate}</span>
+                Start
+              </div>
+            )}
+            {endDate && (
+              <div className={style.introBlockTooltipDateItem}>
+                <span>{endDate}</span>
+                End
+              </div>
+            )}
+          </div>
+        )}
+        <SocialAccounts {...{ socialMedia }} />
+        {termsAndConditionsUrl && (
+          <div className={style.introBlockTooltipFooter}>
+            <DynamicFormattedMessage
+              tag={HTML_TAGS.ANCHOR}
+              id="wall.intro.terms"
+              target={LINK_TARGET.BLANK}
+              href={termsAndConditionsUrl}
+              className={withFontSmall}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Original layout for non-tooltip usage
   let contentOutput = (
     <DynamicFormattedMessage
       tag={HTML_TAGS.P}
