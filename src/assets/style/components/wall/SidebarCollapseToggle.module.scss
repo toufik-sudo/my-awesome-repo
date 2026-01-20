@@ -1,51 +1,83 @@
 @import '../../imports';
 @import '../../utils/constants';
 
+.toggleRight {
+  display: flex;
+  justify-content: center;
+
+  img {
+    width: 6.5rem;
+    height: 5.5rem;
+  }
+
+  &Collapsed {
+    img {
+      width: 5.5rem;
+      height: 4.5rem;
+    }
+  }
+}
+
 .collapseToggle {
   position: absolute;
   bottom: 1.5rem;
-  right: -0.85rem;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba($primary-color, 0.9), rgba($accent-color, 0.85));
-  border: 2px solid rgba($forth-color, 0.15);
-  color: $forth-color;
+  left: 1.5rem;
+  right: 1.5rem;
+  width: auto;
+  height: 2.5rem;
+
+  // Forme de demi-cercle allongé
+  border-radius: 1.5rem 0 0 1.5rem;
+
+  // Style outline avec belle bordure bleue
+  background: transparent;
+  border: 2px solid #ffffff;
+  border-right: none;
+
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  transition: all 0.3s ease;
   z-index: 30;
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.25),
-    0 0 0 3px rgba($forth-color, 0.05);
-  
+
   @include tabletLandscape {
     display: none;
   }
-  
+
   &:hover {
-    transform: scale(1.15);
-    box-shadow: 
-      0 6px 18px rgba(0, 0, 0, 0.35),
-      0 0 0 4px rgba($primary-color, 0.15);
-    background: linear-gradient(135deg, rgba($primary-color, 1), rgba($accent-color, 0.95));
+    border-color: #1976D2;
+    color: #1976D2;
+    background: rgba(33, 150, 243, 0.05);
+    transform: translateX(-2px);
+    box-shadow: inset 0 0 20px rgba(33, 150, 243, 0.1);
   }
-  
+
   &:active {
-    transform: scale(0.95);
+    transform: translateX(0) scale(0.98);
+    background: rgba(33, 150, 243, 0.1);
   }
-  
+
   svg {
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.3s ease;
   }
-  
+
   &.collapsed {
-    right: -0.85rem;
-    
+    // Flip horizontal pour l'état collapsé
+    left: -1rem;
+    right: auto;
+    border-radius: 0 3rem 3rem 0;
+    border-right: 2px solid #2196F3;
+    border-left: none;
+
+    &:hover {
+      transform: translateX(2px);
+    }
+
     svg {
-      transform: translateX(1px);
+      transform: rotate(180deg);
     }
   }
 }

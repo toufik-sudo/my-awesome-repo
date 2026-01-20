@@ -115,7 +115,7 @@ const LeftSideLayout = ({ children, hasUserIcon = false, theme = PRIMARY, option
             <LogoutButton isCollapsed={isVisuallyCollapsed} />
           </div>
         )}
-        {isWallType && <SidebarCollapseToggle isCollapsed={isCollapsed} onToggle={toggleCollapse} />}
+        {isWallType && <SidebarCollapseToggle isCollapsed={isCollapsed} onToggle={toggleCollapse} isHoverExpanded={isHoverExpanded} />}
       </div>
       {outputChildren}
     </div>

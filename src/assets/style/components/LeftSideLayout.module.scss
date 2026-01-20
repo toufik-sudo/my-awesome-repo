@@ -49,7 +49,7 @@ $sidebarCollapsedSize: 6rem;
   @include size($width: $sidebarSize, $height: 100vh);
   z-index: 20;
   padding-top: 1.5rem;
-  padding-bottom: 3rem;
+  padding-bottom: 0.5rem;
   transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   // Enhanced glassmorphism effect
@@ -104,7 +104,9 @@ $sidebarCollapsedSize: 6rem;
   width: $sidebarCollapsedSize;
 
   .logoImg {
-    @include size($max-width: 2.5rem, $max-height: 2.5rem);
+    @include size($max-width: 5.5rem, $max-height: 5.5rem);
+    margin-bottom: 4rem;
+    border-radius: 50%;
   }
 
   .logOutBottom {
@@ -120,7 +122,8 @@ $sidebarCollapsedSize: 6rem;
     inset -1px 0 0 rgba($forth-color, 0.08);
 
   .logoImg {
-    @include size($max-width: 5.5rem, $max-height: 6rem);
+    @include size($max-width: 6rem, $max-height: 6rem);
+    border-radius: 50%;
   }
 
   .logOutBottom {
@@ -185,6 +188,8 @@ $sidebarCollapsedSize: 6rem;
     overflow: visible;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
     // Subtle noise texture overlay
     &::before {

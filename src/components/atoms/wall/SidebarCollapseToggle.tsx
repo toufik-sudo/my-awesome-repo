@@ -5,6 +5,7 @@ import { useIntl } from 'react-intl';
 import { TOOLTIP_FIELDS } from 'constants/tootltip';
 
 import style from 'assets/style/components/wall/SidebarCollapseToggle.module.scss';
+import toggleRightImg from 'assets/images/icones/toggle_right.png';
 
 interface SidebarCollapseToggleProps {
   isCollapsed: boolean;
@@ -14,26 +15,32 @@ interface SidebarCollapseToggleProps {
 /**
  * Toggle button to collapse/expand sidebar
  */
-const SidebarCollapseToggle: React.FC<SidebarCollapseToggleProps> = ({ isCollapsed, onToggle }) => {
+const SidebarCollapseToggle: React.FC<SidebarCollapseToggleProps> = ({ isCollapsed, onToggle, isHoverExpanded }) => {
   const { formatMessage } = useIntl();
-  const tooltipText = isCollapsed 
+  const tooltipText = isCollapsed
     ? formatMessage({ id: 'sidebar.expand', defaultMessage: 'Expand sidebar' })
     : formatMessage({ id: 'sidebar.collapse', defaultMessage: 'Collapse sidebar' });
 
   return (
     <>
       <button
-        className={`${style.collapseToggle} ${isCollapsed ? style.collapsed : ''}`}
+        className={(isCollapsed && !isHoverExpanded) ? style.toggleRightCollapsed : style.toggleRight}
+        style={{ background: 'none', border: 'none' }}
         onClick={onToggle}
         data-tip={tooltipText}
         data-for="sidebar-toggle-tooltip"
         aria-label={tooltipText}
       >
-        {isCollapsed ? (
+        {(isCollapsed && !isHoverExpanded) ? (
+          <img src={toggleRightImg} alt={tooltipText} />
+        ) : (
+          <img src={toggleRightImg} alt={tooltipText} />
+        )}
+        {/* {isCollapsed ? (
           <PanelLeftOpen size={16} strokeWidth={2} />
         ) : (
           <PanelLeftClose size={16} strokeWidth={2} />
-        )}
+        )} */}
       </button>
       <ReactTooltip
         id="sidebar-toggle-tooltip"
