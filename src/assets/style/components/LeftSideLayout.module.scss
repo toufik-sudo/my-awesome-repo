@@ -178,6 +178,23 @@ $sidebarCollapsedSize: 6rem;
   }
 
   padding-left: $sidebarSize;
+  transition: padding-left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &.collapsed {
+    padding-left: $sidebarCollapsedSize;
+
+    @include tabletLandscape {
+      padding-left: 0;
+    }
+  }
+
+  &.hoverExpanded {
+    padding-left: $sidebarCollapsedSize;
+
+    @include tabletLandscape {
+      padding-left: 0;
+    }
+  }
 
   .navigation {
     background: linear-gradient(155deg,
