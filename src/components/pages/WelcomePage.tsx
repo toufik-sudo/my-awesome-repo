@@ -8,7 +8,7 @@ import { IMAGES_ALT } from 'constants/general';
 import { DynamicFormattedMessage } from 'components/atoms/ui/DynamicFormattedMessage';
 import { BUTTON_MAIN_VARIANT } from 'constants/ui';
 
-import logo from 'assets/images/logo/logoWhite.png';
+import logo from 'assets/images/logo/logo_ia.png';
 import style from 'assets/style/components/WelcomePage.module.scss';
 
 /**

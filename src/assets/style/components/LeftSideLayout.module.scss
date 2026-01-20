@@ -1,8 +1,8 @@
 @import '../utils/constants';
 @import '../imports';
 
-$sidebarSize: 10rem;
-$sidebarCollapsedSize: 4.5rem;
+$sidebarSize: 12rem;
+$sidebarCollapsedSize: 6rem;
 
 .leftNav {
   display: flex;
@@ -185,6 +185,7 @@ $sidebarCollapsedSize: 4.5rem;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 
     // Subtle noise texture overlay
     &::before {
