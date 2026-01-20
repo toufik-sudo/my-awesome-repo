@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import importedLogo from 'assets/images/logo/logoWhite.png';
+import importedLogo from 'assets/images/logo/logo_ia.png';
 import { CLOUD_REWARDS_LOGO_ALT } from 'constants/general';
 import { ROOT } from 'constants/routes';
 import { useDispatch } from 'react-redux';
