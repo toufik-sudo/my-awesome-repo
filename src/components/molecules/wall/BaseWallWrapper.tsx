@@ -8,11 +8,14 @@ import style from 'assets/style/components/LeftSideLayout.module.scss';
  *
  * @param theme
  * @param outputChildren
+ * @param isCollapsed
  * @constructor
  */
-const BaseWallWrapper = ({ theme, outputChildren }) => {
+const BaseWallWrapper = ({ theme, outputChildren, isCollapsed = false }) => {
+  const wrapperClasses = `${style[`${theme}-wrapper`]} ${isCollapsed ? style.wrapperCollapsed : ''}`;
+  
   return (
-    <div className={style[`${theme}-wrapper`]}>
+    <div className={wrapperClasses}>
       {/* {<WallTopNavigation />} */}
       {outputChildren}
     </div>
