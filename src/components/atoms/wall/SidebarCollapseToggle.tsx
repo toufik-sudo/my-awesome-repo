@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import ReactTooltip from 'react-tooltip';
 import { useIntl } from 'react-intl';
 import { TOOLTIP_FIELDS } from 'constants/tootltip';
@@ -30,9 +30,9 @@ const SidebarCollapseToggle: React.FC<SidebarCollapseToggleProps> = ({ isCollaps
         aria-label={tooltipText}
       >
         {isCollapsed ? (
-          <ChevronRight size={18} strokeWidth={2.5} />
+          <PanelLeftOpen size={16} strokeWidth={2} />
         ) : (
-          <ChevronLeft size={18} strokeWidth={2.5} />
+          <PanelLeftClose size={16} strokeWidth={2} />
         )}
       </button>
       <ReactTooltip
