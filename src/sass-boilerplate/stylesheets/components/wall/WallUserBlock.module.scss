@@ -2,25 +2,84 @@
 
 .userBlock {
   text-align: center;
-  box-shadow: $shadow-tight-1;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
+  border-radius: 1.25rem;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(248, 250, 252, 1) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &Title{
-    @include font($font-weight: map_get($font-weights, 'bold'),$color: $gray-accent-color);
-    width: 98%;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.06);
   }
 
-  &Count{
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $secondary-color, lighten($secondary-color, 15%));
+    z-index: 1;
+  }
+
+  &Title {
+    @include font($font-weight: map_get($font-weights, 'bold'), $color: $gray-accent-color);
+    width: 98%;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-top: 0.5rem;
+  }
+
+  &Count {
     @include respond-to-max-height('tablet-portrait-height') {
       font-size: 3.5rem;
     }
     @include font($font-weight: map_get($font-weights, 'bold'), $font-size: 4.5rem, $color: $secondary-color, $line-height: 1);
     width: 100%;
+    background: linear-gradient(135deg, $secondary-color 0%, lighten($secondary-color, 10%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3rem;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, $secondary-color, transparent);
+      border-radius: 2px;
+      opacity: 0.5;
+    }
   }
 
-  &Link{
+  &Link {
     color: $primary-color;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+    
+    &:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
   }
 
   &Matrix {
@@ -29,14 +88,52 @@
       height: 27.3vh !important;
     }
     height: 27.4vh !important;
+    
     .userBlockCount {
       width: 100%;
     }
   }
 
   &Ranking {
+    position: relative;
+    
+    &::before {
+      background: linear-gradient(90deg, $primary-color, lighten($primary-color, 15%));
+    }
+    
     .userBlockCount {
       padding: 1.5rem 0;
+      position: relative;
+      
+      // Decorative ranking badge effect
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4rem;
+        height: 4rem;
+        background: radial-gradient(
+          circle,
+          rgba($primary-color, 0.1) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        z-index: 0;
+      }
+    }
+    
+    // Ranking list items styling
+    [class*="userRowElement"] {
+      padding: 0.75rem 1rem;
+      margin: 0.25rem 0;
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: rgba($primary-color, 0.04);
+      }
     }
   }
 
@@ -52,7 +149,74 @@
     height: 23.4vh;
   }
 }
+
 .userBlockNumbers div[class*="postMediaContainer"] {
   height: 70% !important;
+}
+
+// Enhanced ranking list header
+.rankingHeader {
+  background: linear-gradient(
+    135deg,
+    rgba($primary-color, 0.06) 0%,
+    rgba($primary-color, 0.02) 100%
+  );
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
+  
+  > div {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    color: darken($gray, 10%);
+  }
+}
+
+// Ranking row styling
+.rankingRow {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  margin: 0.375rem 0;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  
+  &:hover {
+    background: rgba($primary-color, 0.04);
+    border-color: rgba($primary-color, 0.1);
+  }
+  
+  &:nth-child(1) {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 215, 0, 0.02) 100%);
+    border-color: rgba(255, 215, 0, 0.2);
+  }
+  
+  &:nth-child(2) {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.08) 0%, rgba(192, 192, 192, 0.02) 100%);
+    border-color: rgba(192, 192, 192, 0.2);
+  }
+  
+  &:nth-child(3) {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.08) 0%, rgba(205, 127, 50, 0.02) 100%);
+    border-color: rgba(205, 127, 50, 0.2);
+  }
+}
+
+// Rank number styling
+.rankNumber {
+  font-weight: 700;
+  font-size: 1.25rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 10%) 100%);
+  color: white;
+  border-radius: 50%;
+  margin-right: 1rem;
 }
 
