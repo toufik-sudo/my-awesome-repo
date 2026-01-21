@@ -1,6 +1,9 @@
 @import "../../imports";
+@import "../shared/UnifiedCard.module.scss";
 
 .userBlock {
+  @extend .unifiedCard;
+  @extend .unifiedCard--secondary;
   text-align: center;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.08),
