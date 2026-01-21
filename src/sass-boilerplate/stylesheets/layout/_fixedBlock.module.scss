@@ -2,44 +2,57 @@
   @include respond-to-max-height('tablet-landscape-height') {
     top: 8.9rem;
   }
+
   @include respond-to-max-height('custom-resolution-3') {
     top: 4.9rem;
     transform: scale(.9);
   }
+
   @include respond-to-max-height('tablet-portrait-height') {
     top: 3.2rem;
     transform: scale(.8);
   }
 
-  @include respond-to-max(desktop-small){
-    @include size($width:100%,$max-width:100%);
+  @include respond-to-max(desktop-small) {
+    @include size($width: 100%, $max-width: 100%);
     @include position($position: relative, $top: 0, $left: 0 !important);
-    padding:0;
+    padding: 0;
     margin: 0;
-    @include display-flex($align-items:flex-start);
+    @include display-flex($align-items: flex-start);
   }
-  @include respond-to-max(mobile-large){
+
+  @include respond-to-max(mobile-large) {
     @include display-flex($flex-direction: column);
-    [class*='ProgramsSlider_programSliderContainer']{
+
+    [class*='ProgramsSlider_programSliderContainer'] {
       margin: .5rem auto;
       text-align: center;
     }
   }
-  @include position(fixed, 9.50rem);
-  @include size($width:calc((100% - 15rem) / 4.1), $max-width:calc((100% - 15rem) / 4.1));
+
+  // @include position(fixed, 9.50rem);
+  // @include size($width: calc((100% - 15rem) / 4.1), $max-width: calc((100% - 15rem) / 4.1));
   padding: 0 2rem;
 
   &Left {
-    left: 12.5rem;
+    // left: 12.5rem;
     padding-left: 4.5rem;
+    position: relative;
+    width: 97%;
+    max-width: 100%;
   }
 
   &Right {
     @include respond-to-max-height('tablet-portrait-height') {
       top: 2.7rem;
     }
+
+    position: relative;
+    width: 100%;
+    max-width: 100%;
     right: 0;
     padding-right: 4.5rem;
+    top: 4.9rem;
   }
 }
 

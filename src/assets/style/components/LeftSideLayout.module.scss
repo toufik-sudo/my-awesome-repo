@@ -56,11 +56,10 @@ $sidebarCollapsedSize: 6rem;
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-right: 1px solid rgba($forth-color, 0.1);
-  box-shadow: 
-    4px 0 8px rgba(0, 0, 0, 0.15),
-    8px 0 24px rgba(0, 0, 0, 0.1),
-    16px 0 48px rgba(0, 0, 0, 0.05),
-    inset -1px 0 0 rgba($forth-color, 0.08);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.15),
+  8px 0 24px rgba(0, 0, 0, 0.1),
+  16px 0 48px rgba(0, 0, 0, 0.05),
+  inset -1px 0 0 rgba($forth-color, 0.08);
 
   .logoImg {
     @include size($width: 100%, $max-width: 5.5rem, $max-height: 6rem);
@@ -257,7 +256,7 @@ $sidebarCollapsedSize: 6rem;
 
 // Collapsed state for wrapper - content expands to fill available space
 .wrapperCollapsed {
-  width: calc(100% + #{$sidebarSize - $sidebarCollapsedSize});
+  width: calc(100% - #{$sidebarSize - $sidebarCollapsedSize});
 }
 
 .userWrapper {
