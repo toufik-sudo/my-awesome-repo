@@ -1,7 +1,13 @@
 @import "../../../imports";
+@import "../../shared/UnifiedCard.module.scss";
 
 .introBlock {
   position: relative;
+  
+  // Use unified card banner for the banner section
+  &Banner {
+    @extend .unifiedCardBanner;
+  }
   
   &Banner {
     @include display-flex($justify-content: center, $align-items: center);
