@@ -1,7 +1,7 @@
 import React from 'react';
 
-import PlatformSlider from './PlatformSlider';
-import ProgramSlider from './ProgramSlider';
+import PlatformDropdown from './PlatformDropdown';
+import ProgramDropdown from './ProgramDropdown';
 import { DynamicFormattedMessage } from 'components/atoms/ui/DynamicFormattedMessage';
 import { HTML_TAGS } from 'constants/general';
 import { useWallSelection } from 'hooks/wall/useWallSelection';
@@ -10,7 +10,7 @@ import { useProgramRouteModifier } from 'hooks/general/useProgramRouteModifier';
 import coreStyle from 'sass-boilerplate/stylesheets/style.module.scss';
 
 /**
- * Molecule component used to render platform & program slider
+ * Molecule component used to render platform & program dropdown selectors
  * @constructor
  */
 const GlobalSlider = ({
@@ -30,7 +30,7 @@ const GlobalSlider = ({
   return (
     <div className={`${positionRelative} ${switchWrapper}`}>
       {!isOnUserDeclarations && platforms.length > 1 && (
-        <PlatformSlider
+        <PlatformDropdown
           selectedPlatform={selectedPlatform}
           isProgramSelectionLocked={isProgramSelectionLocked}
           globalClass={`${className} ${platformSliderClass}`}
@@ -46,7 +46,7 @@ const GlobalSlider = ({
               id="wall.userDeclarations.programs"
             />
           )}
-          <ProgramSlider globalClass={`${className} ${relative}`} programs={programs} />
+          <ProgramDropdown globalClass={`${className} ${relative}`} programs={programs} />
         </>
       )}
     </div>

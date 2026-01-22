@@ -1,13 +1,12 @@
 import React from 'react';
 import { useHistory } from 'react-router';
 
-import ProgramBlockSelect from 'components/molecules/programs/ProgramBlockSelect';
 import ProgramsList from 'components/molecules/programs/ProgramsList';
 import ProgramCreate from 'components/molecules/programs/ProgramCreate';
+import ProgramsFilters from 'components/molecules/programs/ProgramsFilters';
 import ConfirmationModal from 'components/organisms/modals/ConfirmationModal';
 import useProgramsList from 'hooks/programs/useProgramsList';
 import useDeclineProgramInvitation from 'hooks/programs/useDeclineProgramInvitation';
-import PlatformSlider from 'components/molecules/wall/globalSlider/PlatformSlider';
 import { HTML_TAGS } from 'constants/general';
 import { DynamicFormattedMessage } from 'components/atoms/ui/DynamicFormattedMessage';
 import { BUTTON_MAIN_TYPE } from 'constants/ui';
@@ -16,12 +15,10 @@ import { LAUNCH_FIRST } from 'constants/routes';
 
 import grid from 'sass-boilerplate/stylesheets/vendors/bootstrap-grid.module.scss';
 import coreStyle from 'sass-boilerplate/stylesheets/style.module.scss';
-import programSlider from 'sass-boilerplate/stylesheets/components/wall/ProgramsSlider.module.scss';
 import programStyle from 'sass-boilerplate/stylesheets/components/wall/Programs.module.scss';
 import { useSelector } from 'react-redux';
 import { IStore } from '../../../interfaces/store/IStore';
 import { FREEMIUM, PROGRAM_TYPES } from '../../../constants/wall/launch';
-import { SSL_OP_NO_TLSv1_1 } from 'constants'
 
 /**
  * Handles the rendering of program blocks in order to design the components easier
@@ -32,13 +29,24 @@ const ProgramsPage = () => {
   const history = useHistory();
   const {
     programs,
-    onFilter,
     userRole,
     platforms,
     onChangePlatform,
     selectedPlatform,
     triggerReloadPrograms,
-    isLoading
+    isLoading,
+    // Hierarchical filter data
+    superPlatforms,
+    filteredPlatforms,
+    availablePrograms,
+    selectedSuperPlatformFilter,
+    selectedPlatformFilter,
+    selectedProgramFilter,
+    selectedProgramType,
+    handleSuperPlatformChange,
+    handlePlatformFilterChange,
+    handleProgramFilterChange,
+    handleProgramTypeChange
   } = useProgramsList();
   const {
     data: { program }
@@ -51,7 +59,7 @@ const ProgramsPage = () => {
   if (
     program &&
     program.programId &&
-    programs.find(({ id }) => id === program.programId).programType === PROGRAM_TYPES[FREEMIUM]
+    programs.find(({ id }) => id === program.programId)?.programType === PROGRAM_TYPES[FREEMIUM]
   ) {
     modalQuestion = 'program.invitation.decline.confirm.freemium';
   }
@@ -59,66 +67,154 @@ const ProgramsPage = () => {
   const hasntJoinedAnyPrograms = userRole.isBeneficiary && !isLoading && !programs.length;
   const hasntJoinedAnyProgramsAdmin = (userRole.isAdmin || userRole.isManager || userRole.isSuperAdmin || userRole.isSuperManager) && !isLoading && !programs.length;
 
-  const { withDefaultColor, pl45, mLargePTop8, mLargePl15 } = coreStyle;
+  // Show super platform filter only for hyper admin or hyper manager
+  const showSuperPlatformFilter = userRole.isHyperAdmin || userRole.isHyperManager;
+
+  const { pl45, mLargePTop8, mLargePl15 } = coreStyle;
+
+  const pageContainerStyle: React.CSSProperties = {
+    backgroundColor: '#f8fafc',
+    minHeight: '100vh',
+    paddingTop: '1.5rem',
+    paddingBottom: '2rem'
+  };
+
+  const headerStyle: React.CSSProperties = {
+    marginBottom: '1.25rem'
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    color: '#1e293b',
+    marginBottom: '0.25rem',
+    letterSpacing: '-0.01em'
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    fontSize: '0.875rem',
+    color: '#64748b',
+    fontWeight: 400
+  };
+
+  const contentContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '1.5rem',
+    alignItems: 'flex-start'
+  };
+
+  const sidebarStyle: React.CSSProperties = {
+    flex: '0 0 auto',
+    width: '220px'
+  };
+
+  const mainContentStyle: React.CSSProperties = {
+    flex: '1 1 auto',
+    minWidth: 0
+  };
+
+  const emptyStateStyle: React.CSSProperties = {
+    maxWidth: '100%',
+    lineHeight: '1.8',
+    whiteSpace: 'pre-line',
+    textAlign: 'center',
+    padding: '3rem 2rem',
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+    border: '1px solid #f1f5f9',
+    color: '#64748b',
+    fontSize: '0.95rem'
+  };
 
   return (
     <div
       className={`${grid['container-fluid']} ${mLargePl15} ${pl45} ${mLargePTop8} ${programStyle.programsPageContainer}`}
+      style={pageContainerStyle}
     >
-      <div className={grid['row']}>
-        <div
-          className={`${grid['col-md-4']} ${grid['col-lg-3']}`}
-          key={`${selectedPlatform.id}${selectedPlatform.name} ${selectedPlatform.index}`}
-        >
-          {/* {platforms.length > 1 && (
-            <PlatformSlider
-              globalClass={`
-                  ${withDefaultColor}
-                  ${programSlider.programSliderWrapperArrowsWhite}
-                  `}
-              platforms={platforms}
-              onChange={onChangePlatform}
-              selectedPlatform={selectedPlatform}
-            />
-          )} */}
-          <ProgramBlockSelect onFilter={onFilter} />
+      {/* Page Header */}
+      <div className={grid['row']} style={headerStyle}>
+        <div className={grid['col-12']}>
+          <h1 style={titleStyle}>
+            <DynamicFormattedMessage id="programs.page.title" tag={HTML_TAGS.SPAN} />
+          </h1>
+          <p style={subtitleStyle}>
+            <DynamicFormattedMessage id="programs.page.subtitle" tag={HTML_TAGS.SPAN} />
+          </p>
         </div>
       </div>
+
+      {/* Unified Filters Row */}
       <div className={grid['row']}>
-        <div className={`${grid['col-md-4']} ${grid['col-lg-3']}`}>
-          {!userRole.isBeneficiary && (
-            <ProgramCreate
-              disabled={!userRole.isAdmin}
-              key={selectedPlatform.role}
-              onClick={() => history.push(LAUNCH_FIRST)}
-              id="create.new.program"
-              background={programStyle.programBg}
-            />
-          )}
-        </div>
-        <div className={`${grid['col-md-8']} ${grid['col-lg-9']}`}>
-          {hasntJoinedAnyPrograms && <div style={{ maxWidth: '70rem', lineHeight: '2.5', whiteSpace: 'pre-line', textAlign: 'center' }}> <DynamicFormattedMessage id="programs.noneJoined" tag={HTML_TAGS.P} /></div>}
-          {hasntJoinedAnyProgramsAdmin && <div style={{ maxWidth: '70rem', lineHeight: '2.5', whiteSpace: 'pre-line', textAlign: 'center' }}> <DynamicFormattedMessage id="programs.noneJoined.admin" tag={HTML_TAGS.P} /></div>}
-
-          {!hasntJoinedAnyPrograms && !hasntJoinedAnyProgramsAdmin && (
-            <ProgramsList
-              {...{
-                platforms,
-                programs,
-                isLoading,
-                hasMore: false,
-                handleLoadMore: emptyFn,
-                userRole,
-                confirmInvitationRefusal: confirmRefusal,
-                processingInvitations,
-                selectedPlatform,
-                onChangePlatform
-              }}
-            />
-          )}
-
+        <div className={grid['col-12']}>
+          <ProgramsFilters
+            superPlatforms={superPlatforms}
+            platforms={filteredPlatforms}
+            programs={availablePrograms}
+            selectedSuperPlatform={selectedSuperPlatformFilter}
+            selectedPlatform={selectedPlatformFilter}
+            selectedProgram={selectedProgramFilter}
+            selectedProgramType={selectedProgramType}
+            onSuperPlatformChange={handleSuperPlatformChange}
+            onPlatformChange={handlePlatformFilterChange}
+            onProgramChange={handleProgramFilterChange}
+            onProgramTypeChange={handleProgramTypeChange}
+            showSuperPlatformFilter={showSuperPlatformFilter}
+          />
         </div>
       </div>
+
+      {/* Content Row */}
+      <div className={grid['row']}>
+        <div className={grid['col-12']}>
+          <div style={contentContainerStyle}>
+            {/* Sidebar with Create Button */}
+            {!userRole.isBeneficiary && (
+              <div style={sidebarStyle}>
+                <ProgramCreate
+                  disabled={!userRole.isAdmin}
+                  key={selectedPlatform.role}
+                  onClick={() => history.push(LAUNCH_FIRST)}
+                  id="create.new.program"
+                  background={programStyle.programBg}
+                />
+              </div>
+            )}
+            
+            {/* Main Content */}
+            <div style={mainContentStyle}>
+              {hasntJoinedAnyPrograms && (
+                <div style={emptyStateStyle}>
+                  <DynamicFormattedMessage id="programs.noneJoined" tag={HTML_TAGS.P} />
+                </div>
+              )}
+              {hasntJoinedAnyProgramsAdmin && (
+                <div style={emptyStateStyle}>
+                  <DynamicFormattedMessage id="programs.noneJoined.admin" tag={HTML_TAGS.P} />
+                </div>
+              )}
+
+              {!hasntJoinedAnyPrograms && !hasntJoinedAnyProgramsAdmin && (
+                <ProgramsList
+                  {...{
+                    platforms,
+                    programs,
+                    isLoading,
+                    hasMore: false,
+                    handleLoadMore: emptyFn,
+                    userRole,
+                    confirmInvitationRefusal: confirmRefusal,
+                    processingInvitations,
+                    selectedPlatform,
+                    onChangePlatform
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <ConfirmationModal
         question={modalQuestion}
         onAccept={declineInvitation}

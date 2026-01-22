@@ -4,7 +4,6 @@ import ProgramBlock from 'components/molecules/programs/ProgramBlock';
 
 import grid from 'sass-boilerplate/stylesheets/vendors/bootstrap-grid.module.scss';
 import componentStyle from 'sass-boilerplate/stylesheets/components/wall/Programs.module.scss';
-import GenericInfiniteScroll from 'components/atoms/list/GenericInfiniteScroll';
 import HyperProgramBlock from './HyperProgramBlock';
 import { hasAdminRights } from 'services/security/accessServices';
 import HyperPlatformBlock from './HyperPlatformBlock';
@@ -54,20 +53,12 @@ const ProgramsList = ({
   };
 
   return (
-    <GenericInfiniteScroll
-      {...{
-        hasMore,
-        isLoading,
-        loadMore: handleLoadMore,
-        height: '600px',
-        className: componentStyle.sectionProgramsScroll
-      }}
-    >
+    <div className={`${blocksWrapper}`} style={{ overflow: 'visible', height: 'auto' }}>
       <div className={grid.row}>
         {
           platforms?.map((subPlatform, id) => (
-            <>
-              <div key={`subplatform_${subPlatform.id || 0}_${id}`} className={`${blockClassName4}`}>
+            <React.Fragment key={`subplatform_${subPlatform.id || 0}_${id}`}>
+              <div className={`${blockClassName4}`}>
                 <HyperPlatformBlock {...{ platform: subPlatform, canManagePlatform: canManagePlatform(subPlatform), enableOnly: false, onSelect: emptyFn, onPlatformDeveloppe: onPlatformDeveloppe }} />
               </div>
               {
@@ -98,7 +89,6 @@ const ProgramsList = ({
                 showSubPrograms && subPlatform.id == platformId && showEndedPrograms &&
                 programs?.filter((p) => new Date() > new Date(p.endDate) && p.endDate && p.endDate != '')?.map(program => (
                   <div className={blockClassName4} key={`program_${program.id}`}>
-                    {/* <HyperProgramBlock {...{ program: program, platform: subPlatform, isDisabled: disableProgramBlocks, isEndedProgram: false, onEndedPrmogramsOpen }} /> */}
                     <ProgramBlock
                       {...{
                         program,
@@ -112,28 +102,12 @@ const ProgramsList = ({
                   </div>
                 ))
               }
-            </>
+            </React.Fragment>
           ))
         }
       </div>
-      {/* <div className={`${blockClassName4}`}>
-        <div className={grid.row}>
-          {programs.map(program => (
-            <ProgramBlock
-              {...{
-                program,
-                userRole,
-                confirmInvitationRefusal,
-                processingInvitation: processingInvitations[program.id],
-                selectedPlatform
-              }}
-              key={program.id}
-            />
-          ))}
-        </div>
-      </div> */}
-    </GenericInfiniteScroll>
-  )
+    </div>
+  );
 };
 
 export default ProgramsList;

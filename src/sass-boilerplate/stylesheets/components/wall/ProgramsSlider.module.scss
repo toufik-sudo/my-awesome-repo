@@ -4,7 +4,7 @@
   &Container {
     @include font($font-size: 1.4rem, $color: $primary-color);
     margin: 0 auto 1rem;
-    border: .1rem solid $primary-color;
+    // border: .1rem solid $primary-color;
     width: 18rem;
     padding: .3rem 1rem;
     border-radius: 3rem;
@@ -17,7 +17,7 @@
       background-color: transparent !important;
     }
 
-    & + .programSliderContainer {
+    &+.programSliderContainer {
       margin-bottom: 1.5rem;
     }
   }
@@ -34,6 +34,7 @@
 
     &ArrowsWhite {
       background-color: $primary-color;
+
       button::before {
         color: $default-color !important;
       }
@@ -42,7 +43,9 @@
     button {
       @include on-event {
         color: inherit
-      };
+      }
+
+      ;
       z-index: 7;
       cursor: pointer;
       color: inherit;
@@ -76,8 +79,8 @@
   }
 }
 
-.smallSlider{
-  .sliderProgram{
+.smallSlider {
+  .sliderProgram {
     padding: 0 1rem !important;
   }
 }
@@ -86,6 +89,7 @@
   @include safariOnly() {
     top: 0;
   }
+
   @include position(relative, .3rem);
   overflow: hidden;
   padding: 0 2rem;
@@ -106,13 +110,13 @@
 }
 
 .subPlatform {
-  background: $secondary-color!important;
-  color: $default-color!important;
+  background: $secondary-color !important;
+  color: $default-color !important;
   border: none;
 }
 
 .superPlatform {
-  background: $secondary-color!important;
-  color: $default-color!important;
+  background: $secondary-color !important;
+  color: $default-color !important;
   border: none;
 }

@@ -4,20 +4,54 @@
 .rangeDatepicker {
   &Wrapper {
     @extend .totalCenter;
-    @include size($max-width: 41.8rem, $width: 100%);
+    @include size($max-width: 44rem, $width: 100%);
+    gap: 1rem;
+    padding: 0.5rem;
+    background: rgba($gray-light-accent-color, 0.1);
+    border-radius: 0.75rem;
 
     @include mobileLarge {
       flex-direction: column;
       max-width: none;
+      gap: 0.5rem;
+    }
+    
+    // Style the datepicker inputs within range picker
+    :global {
+      .react-datepicker-wrapper {
+        flex: 1;
+        
+        input {
+          width: 100%;
+          padding: 0.875rem 1rem;
+          border-radius: 0.5rem;
+          border: 2px solid transparent;
+          background: $default-color;
+          font-weight: 500;
+          text-align: center;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            border-color: rgba($secondary-color, 0.3);
+          }
+          
+          &:focus {
+            outline: none;
+            border-color: $secondary-color;
+            box-shadow: 0 0 0 3px rgba($secondary-color, 0.12);
+          }
+        }
+      }
     }
   }
 
   &To {
-    @include font($font-size: 1.4rem, $font-weight: $regular);
-    margin: 0 2rem;
+    @include font($font-size: 1.3rem, $font-weight: 500, $color: $gray-accent-color);
+    margin: 0 1rem;
+    text-transform: lowercase;
 
     @include mobileLarge {
-      margin: 2rem;
+      margin: 0.75rem;
     }
   }
 }

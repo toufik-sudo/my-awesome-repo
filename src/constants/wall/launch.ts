@@ -94,6 +94,14 @@ export const DROPZONE_TITLE_TYPE = {
   TITLE: 'title',
   ERROR: 'error'
 };
+
+export const EUROS = '€';
+export const DOLLARS = '$';
+
+export const CURRENCY_SYMBOLS = {
+  [EUROS]: 1,
+  [DOLLARS]: 2
+};
 export const GENERAL_URL = 'http://rewardzai.com';
 
 export const LAUNCH_PROGRAM = 'launchProgram';

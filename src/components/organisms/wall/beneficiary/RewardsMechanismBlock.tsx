@@ -1,7 +1,7 @@
 import React from 'react';
 
 import ProgramInformationBlock from 'components/molecules/wall/blocks/ProgramInformationBlock';
-import RewardsMechanismBody from 'components/molecules/wall/rewards/RewardsMechanismBody';
+import EnhancedObjectivesSummary from 'components/molecules/wall/rewards/EnhancedObjectivesSummary';
 import useToggler from 'hooks/general/useToggler';
 import { useSelectedProgramDesign } from 'hooks/wall/ui/useSelectedProgramColors';
 import { DynamicFormattedMessage } from 'components/atoms/ui/DynamicFormattedMessage';
@@ -10,7 +10,7 @@ import { HTML_TAGS } from 'constants/general';
 import coreStyle from 'sass-boilerplate/stylesheets/style.module.scss';
 
 /**
- * Component used to render rewards block
+ * Component used to render rewards block with enhanced objectives summary
  * @param programDetails
  * @param isPeopleManager
  * @constructor
@@ -35,7 +35,7 @@ const RewardsMechanismBlock = ({ programDetails, isPeopleManager }) => {
         className={`${withBoldFont} ${w100} ${textCenter}`}
         style={{ color: colorTitle }}
       />
-      {isActive && <RewardsMechanismBody {...{ programDetails, isPeopleManager }} />}
+      {isActive && <EnhancedObjectivesSummary {...{ programDetails, isPeopleManager }} />}
     </ProgramInformationBlock>
   );
 };

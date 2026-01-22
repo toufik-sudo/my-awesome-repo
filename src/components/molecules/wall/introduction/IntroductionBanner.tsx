@@ -19,9 +19,9 @@ const IntroductionBanner = ({ title, image }) => {
 
   return (
     <div style={{ backgroundImage: `url('${image}')` }} className={`${introBlockBanner} ${withBackgroundImage}`}>
-      <p style={{ color: colorTitle }} className={`${introBlockBannerTitle} ${textCenter} ${withBoldFont}`}>
+      {title && title.trim() != "" && <p style={{ color: colorTitle }} className={`${introBlockBannerTitle} ${textCenter} ${withBoldFont}`}>
         {title}
-      </p>
+      </p>}
     </div>
   );
 };

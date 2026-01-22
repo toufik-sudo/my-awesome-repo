@@ -3,44 +3,101 @@
 .userDeclarationsDetail {
   @include size($width: 100rem, $max-width: 100%);
   margin: 0 auto;
+  padding: 0 1.5rem;
 
   &Back {
     max-width: 15rem;
+    
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      
+      &:hover {
+        background: rgba($primary-color, 0.05);
+        transform: translateX(-2px);
+      }
+    }
   }
 
   &Wrapper {
     max-width: 85%;
     margin: 0 auto;
+    background: $default-color;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 
+      0 2px 12px rgba(62, 33, 107, 0.06),
+      0 1px 4px rgba(0, 0, 0, 0.03);
+    
     @include respond-to-max('mobile-large') {
-      margin-top: 2.5rem;
+      margin-top: 1.5rem;
+      max-width: 100%;
+      padding: 1.25rem;
     }
   }
 
   &Row {
     @include respond-to-max('tablet-portrait') {
       @include size($width: 30rem, $max-width: 100%);
+      flex-direction: column;
+      gap: 0.5rem;
     }
     @include size($width: 45rem, $max-width: 100%);
-    @include display-flex($align-items: baseline);
+    @include display-flex($align-items: center);
     margin: 0 auto;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba($gray-light-accent-color, 0.5);
+    transition: background 0.2s ease;
+    
+    &:hover {
+      background: rgba($gray-light-accent-color, 0.15);
+    }
+    
+    &:last-child {
+      border-bottom: none;
+    }
 
     [class*="Input_defaultInputStyle"] {
-      background-color: $gray-light-accent-color !important;
-      border-radius: 1.2rem;
+      background-color: rgba($gray-light-accent-color, 0.4) !important;
+      border-radius: 0.75rem;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      
+      &:focus {
+        border-color: rgba($primary-color, 0.3);
+        background-color: $default-color !important;
+      }
     }
 
     label {
       flex: 1;
       text-align: left;
       color: $gray-accent-color;
+      font-weight: 500;
+      font-size: 1.15rem;
     }
   }
 
   &Link {
     flex: 2;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
     color: $secondary-color;
     text-align: left;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: darken($secondary-color, 10%);
+      text-decoration: underline;
+    }
   }
 
   &BigInputWrapper {
@@ -56,11 +113,32 @@
     max-height: 15rem;
     overflow: auto;
     color: $gray-accent-color;
+    padding: 1rem;
+    background: rgba($gray-light-accent-color, 0.2);
+    border-radius: 0.75rem;
+    
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba($primary-color, 0.2);
+      border-radius: 2px;
+      
+      &:hover {
+        background: rgba($primary-color, 0.35);
+      }
+    }
   }
 
   &InputWrapper {
     flex: 2;
-    padding-bottom: 1rem;
+    padding-bottom: 0.75rem;
   }
 
   &Controls {
@@ -68,6 +146,18 @@
     @extend .flex-space-between;
     @extend .flex-center-total;
     margin-top: 2rem;
+    gap: 1rem;
+    
+    button {
+      border-radius: 0.5rem;
+      font-weight: 500;
+      padding: 0.875rem 1.5rem;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+      }
+    }
   }
-
 }

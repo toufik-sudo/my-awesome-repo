@@ -7,10 +7,14 @@
     }
     @include respond-to-max('mobile-large') {
       padding-top: 1.5rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
     }
     @include display-flex($justify-content: space-between);
-    padding: 0 5rem;
-    min-height: 12rem;
+    padding: 0 3rem;
+    min-height: 10rem;
+    background: linear-gradient(135deg, rgba($primary-color, 0.02) 0%, rgba($secondary-color, 0.02) 100%);
+    border-radius: 1rem 1rem 0 0;
   }
 
   &Menu {
@@ -29,20 +33,35 @@
   }
 
   &Header {
-    @include font($font-size: 1.4rem, $color: $gray-accent-color, $font-weight: map_get($font-weights, 'bold'));
+    @include font($font-size: 1.3rem, $color: $gray-accent-color, $font-weight: map_get($font-weights, 'bold'));
     @extend .flex-space-between;
     @extend .flex-start;
-    background-color: $default-color;
+    background: linear-gradient(180deg, $default-color 0%, rgba($gray-light-accent-color, 0.3) 100%);
     width: 100%;
-    padding: 2rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 2px solid rgba($primary-color, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 
     &Element {
       display: flex;
-      @include size($max-width: 12rem, $min-width: 12rem);
+      align-items: center;
+      @include size($max-width: 11rem, $min-width: 11rem);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 1.1rem;
+      color: rgba($gray-accent-color, 0.85);
     }
 
     &Sort {
       width: 1.25rem;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+      
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 
@@ -51,31 +70,64 @@
   }
 
   &Row {
-    @include font($font-size: 1.3rem, $color: $gray-accent-color);
+    @include font($font-size: 1.25rem, $color: $gray-accent-color);
     @extend .flex-space-between;
     background-color: $default-color;
-    padding: 2.5rem 2rem;
+    padding: 1.5rem;
     width: 100%;
-    transition: .2s ease-in-out;
-    border-bottom: .1rem solid $gray-light-accent-color;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid rgba($gray-light-accent-color, 0.6);
     position: relative;
+    align-items: center;
 
     &Element {
       &Index {
         @include position(absolute, null, null, null, 0);
+        font-weight: 600;
+        color: $primary-color;
+        opacity: 0.6;
       }
 
       display: flex;
-      @include size($max-width: 12rem, $min-width: 12rem);
+      align-items: center;
+      @include size($max-width: 11rem, $min-width: 11rem);
+      line-height: 1.4;
     }
 
     svg {
-      transition: .2s ease-in-out;
-      font-size: 1.3rem;
+      transition: all 0.2s ease-in-out;
+      font-size: 1.2rem;
+      opacity: 0.7;
     }
 
     &:hover {
-      box-shadow: $shadow-full-element;
+      background: linear-gradient(90deg, rgba($primary-color, 0.03) 0%, rgba($secondary-color, 0.02) 100%);
+      box-shadow: 
+        0 4px 16px rgba(62, 33, 107, 0.08),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+      transform: translateY(-1px);
+      
+      svg {
+        opacity: 1;
+        color: $primary-color;
+      }
+    }
+    
+    // Subtle left border accent on hover
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: $primary-color;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    
+    &:hover::before {
+      opacity: 1;
     }
   }
 
@@ -84,46 +136,113 @@
       @include display(flex, $flex-direction: column);
       @extend .flex-space-between;
       @extend .flex-center-total;
+      gap: 0.75rem;
 
       button {
-        margin: 1rem;
+        margin: 0.5rem;
         width: 100%;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          transform: translateY(-1px);
+        }
       }
     }
   }
-
 }
 
 .declarationRowStatus {
   &Validated {
-    color: rgb(77, 15, 113);
+    color: rgb(34, 139, 34);
+    font-weight: 600;
+    
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: rgb(34, 139, 34);
+      border-radius: 50%;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
   }
 
   &Pending {
     color: $label-inactive;
+    font-weight: 500;
+    
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: $label-inactive;
+      border-radius: 50%;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+      animation: pulse 2s infinite;
+    }
   }
 
   &Declined {
     color: $primary-color;
+    font-weight: 600;
+    
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: $primary-color;
+      border-radius: 50%;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
   }
   
   &Allocated {
     color: rgb(85, 125, 24);
+    font-weight: 600;
+    
+    &::after {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: rgb(85, 125, 24);
+      border-radius: 50%;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
   }
 }
 
 .payoutTooltip {
   @include position(absolute, calc(100% + .5rem), $left: 50%);
-  @include font($color: $default-color, $font-size: 1.2rem);
-  background: $primary-color;
+  @include font($color: $default-color, $font-size: 1.15rem);
+  background: linear-gradient(135deg, $primary-color 0%, darken($primary-color, 10%) 100%);
   text-align: center;
-  padding: 0 .5rem;
+  padding: 0.5rem 1rem;
   display: inline-block;
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   transform: translateX(-50%);
+  box-shadow: 0 4px 12px rgba($primary-color, 0.25);
+  white-space: nowrap;
 
   &::before {
-    @include position(absolute, -.1rem, $left: 50%);
+    @include position(absolute, -.25rem, $left: 50%);
     @include size(.5rem, .5rem);
     content: '';
     transform: rotate(45deg) translateX(-50%);
