@@ -127,7 +127,7 @@
     pointer-events: none;
 
     input, textarea, select {
-      background-color: rgba($gray-light-accent-color, 0.4);
+      background-color: #f0f1f2;
       border-color: rgba($border-light, 0.5);
       color: rgba($gray-accent-color, 0.8);
       cursor: not-allowed;
@@ -139,6 +139,7 @@
 
     label {
       color: rgba($gray-accent-color, 0.6);
+      background-color: #f0f1f2;
     }
 
     // Disabled icon indicator
@@ -161,6 +162,7 @@
   // ========== REQUIRED STATE ==========
   &.isRequired {
     input, textarea, select {
+      background-color: #fcfdfd;
       border-color: rgba($danger, 0.35);
       padding-right: 3rem;
       
@@ -170,10 +172,14 @@
       }
     }
 
-    label::after {
-      content: ' *';
-      color: $danger;
-      font-weight: 700;
+    label {
+      background-color: #fcfdfd;
+      
+      &::after {
+        content: ' *';
+        color: $danger;
+        font-weight: 700;
+      }
     }
 
     // Required icon indicator
@@ -195,6 +201,7 @@
   // ========== VALID STATE ==========
   &.isValid {
     input, textarea, select {
+      background-color: #f0fdf8;
       border-color: rgba($primary-color-secondary-accent, 0.5);
       padding-right: 3rem;
       
@@ -202,6 +209,10 @@
         border-color: $primary-color-secondary-accent;
         box-shadow: 0 0 0 4px rgba($primary-color-secondary-accent, 0.08), 0 4px 12px rgba($primary-color-secondary-accent, 0.06);
       }
+    }
+
+    label {
+      background-color: #f0fdf8;
     }
 
     // Valid icon indicator
@@ -225,7 +236,7 @@
   &.hasError {
     input, textarea, select {
       border-color: rgba($danger, 0.6);
-      background-color: rgba($danger, 0.02);
+      background-color: #fef2f2;
       padding-right: 3rem;
       
       &:focus {
@@ -236,6 +247,7 @@
 
     label {
       color: $danger;
+      background-color: #fef2f2;
     }
 
     // Error icon indicator
@@ -261,7 +273,7 @@
     margin: 0 auto;
     padding: 1.25rem 3rem 0.75rem 1.5rem;
     border: 2px solid rgba($border-light, 0.8);
-    background-color: $default-color;
+    background-color: #fcfdfd;
     border-radius: 0.65rem;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -272,7 +284,7 @@
     &:focus {
       outline: none;
       border-color: $secondary-color;
-      background-color: $default-color;
+      background-color: #fcfdfd;
       box-shadow: 
         0 0 0 4px rgba($secondary-color, 0.08),
         0 4px 12px rgba($secondary-color, 0.06);
@@ -290,6 +302,7 @@
 
   label {
     @include font($font-size: 1.5rem, $color: $secondary-color, $font-weight: 500, $font-family: $default-font);
+    background-color: #fcfdfd;
     transition: all 0.2s ease;
   }
 
@@ -333,7 +346,7 @@
   input:focus+label {
     @include font($font-size: 1.2rem, $color: $secondary-color, $font-weight: 600);
     top: -1rem;
-    background: $default-color;
+    background: #fcfdfd;
     padding: 0 0.35rem;
   }
 
@@ -342,7 +355,7 @@
     @include prefix(transition, all 0.2s cubic-bezier(0.4, 0, 0.2, 1), webkit moz ms o);
     pointer-events: none;
     top: -1rem;
-    background: $default-color;
+    background: #fcfdfd;
     padding: 0 0.35rem;
     z-index: 1;
   }
@@ -351,7 +364,7 @@
     label {
       @include font($font-size: 1.2rem, $color: $secondary-color, $font-weight: 600);
       top: -1rem;
-      background: $default-color;
+      background: #fcfdfd;
       padding: 0 0.35rem;
     }
   }
