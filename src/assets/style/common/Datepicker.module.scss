@@ -15,32 +15,36 @@
       max-width: none;
       gap: 0.5rem;
     }
-    
+
     // Style the datepicker inputs within range picker
     :global {
       .react-datepicker-wrapper {
         flex: 1;
-        
+
         input {
           width: 100%;
           padding: 0.875rem 1rem;
           border-radius: 0.5rem;
           border: 2px solid transparent;
-          background: $default-color;
+          background: #fcfdfd;
           font-weight: 500;
           text-align: center;
           transition: all 0.2s ease;
-          
+
           &:hover {
             border-color: rgba($secondary-color, 0.3);
           }
-          
+
           &:focus {
             outline: none;
             border-color: $secondary-color;
             box-shadow: 0 0 0 3px rgba($secondary-color, 0.12);
           }
         }
+      }
+
+      .react-datepicker {
+        background: #fcfdfd !important;
       }
     }
   }
@@ -53,5 +57,13 @@
     @include mobileLarge {
       margin: 0.75rem;
     }
+  }
+}
+
+:global {
+
+  .react-datepicker,
+  .react-datepicker-wrapper input {
+    background: #fcfdfd;
   }
 }
