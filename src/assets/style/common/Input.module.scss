@@ -1,12 +1,103 @@
 @import '../imports';
 @import '../utils/constants';
 
+// ========== STATUS ICONS ==========
+
+.statusIconWrapper {
+  @include display($justify-content: center, $align-items: center);
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.75rem;
+  height: 1.75rem;
+  pointer-events: none;
+  z-index: 2;
+  
+  svg, .statusIconSvg {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition: all 0.25s ease;
+  }
+}
+
+.statusIconDisabled {
+  color: $gray-accent-color;
+  opacity: 0.6;
+}
+
+.statusIconRequired {
+  color: $danger;
+}
+
+.statusIconValid {
+  color: $primary-color-secondary-accent;
+  animation: checkPop 0.3s ease;
+}
+
+.statusIconError {
+  color: $danger;
+  animation: shakeError 0.4s ease;
+}
+
+@keyframes checkPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+// ========== REQUIRED BADGE ==========
+
+.requiredBadge {
+  @include display($justify-content: center, $align-items: center);
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  background: linear-gradient(135deg, $danger 0%, darken($danger, 10%) 100%);
+  border-radius: 50%;
+  color: $forth-color;
+  font-size: 0.85rem;
+  font-weight: 700;
+  z-index: 3;
+  box-shadow: 0 2px 6px rgba($danger, 0.4);
+  animation: pulseRequired 2s infinite;
+}
+
+@keyframes pulseRequired {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba($danger, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 3px 10px rgba($danger, 0.5);
+  }
+}
+
+// ========== BASE CONTAINER ==========
+
 .container {
   width: 100%;
   position: relative;
   padding-bottom: 2.5rem;
   display: flex;
   text-align: left;
+
+  // Input wrapper for icon positioning
+  .inputWrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
 
   &.budgetWrapper {
     padding-bottom: 1rem;
@@ -30,10 +121,137 @@
     }
   }
 
+  // ========== DISABLED STATE ==========
   &.isDisabled {
-    input {
-      background: none;
-      opacity: 0.6;
+    opacity: 0.7;
+    pointer-events: none;
+
+    input, textarea, select {
+      background-color: rgba($gray-light-accent-color, 0.4);
+      border-color: rgba($border-light, 0.5);
+      color: rgba($gray-accent-color, 0.8);
+      cursor: not-allowed;
+      
+      &::placeholder {
+        color: rgba($gray-accent-color, 0.4);
+      }
+    }
+
+    label {
+      color: rgba($gray-accent-color, 0.6);
+    }
+
+    // Disabled icon indicator
+    &::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+  // ========== REQUIRED STATE ==========
+  &.isRequired {
+    input, textarea, select {
+      border-color: rgba($danger, 0.35);
+      padding-right: 3rem;
+      
+      &:focus {
+        border-color: $danger;
+        box-shadow: 0 0 0 4px rgba($danger, 0.08), 0 4px 12px rgba($danger, 0.06);
+      }
+    }
+
+    label::after {
+      content: ' *';
+      color: $danger;
+      font-weight: 700;
+    }
+
+    // Required icon indicator
+    .inputWrapper::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EF4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      pointer-events: none;
+    }
+  }
+
+  // ========== VALID STATE ==========
+  &.isValid {
+    input, textarea, select {
+      border-color: rgba($primary-color-secondary-accent, 0.5);
+      padding-right: 3rem;
+      
+      &:focus {
+        border-color: $primary-color-secondary-accent;
+        box-shadow: 0 0 0 4px rgba($primary-color-secondary-accent, 0.08), 0 4px 12px rgba($primary-color-secondary-accent, 0.06);
+      }
+    }
+
+    // Valid icon indicator
+    .inputWrapper::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      animation: checkPop 0.3s ease;
+    }
+  }
+
+  // ========== ERROR STATE ==========
+  &.hasError {
+    input, textarea, select {
+      border-color: rgba($danger, 0.6);
+      background-color: rgba($danger, 0.02);
+      padding-right: 3rem;
+      
+      &:focus {
+        border-color: $danger;
+        box-shadow: 0 0 0 4px rgba($danger, 0.08), 0 4px 12px rgba($danger, 0.06);
+      }
+    }
+
+    label {
+      color: $danger;
+    }
+
+    // Error icon indicator
+    .inputWrapper::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EF4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='15' y1='9' x2='9' y2='15'/%3E%3Cline x1='9' y1='9' x2='15' y2='15'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      animation: shakeError 0.4s ease;
     }
   }
 
@@ -41,18 +259,23 @@
     @include font($font-size: 1.6rem, $color: $primary-color, $font-weight: 400, $font-family: $default-font);
     width: 100%;
     margin: 0 auto;
-    padding: 1.25rem 1.5rem 0.75rem 1.5rem;
-    border: none;
-    border-bottom: 2px solid rgba($border-dark, 0.6);
-    background-color: rgba($gray-light-accent-color, 0.15);
-    border-radius: 0.5rem 0.5rem 0 0;
-    transition: all 0.25s ease;
+    padding: 1.25rem 3rem 0.75rem 1.5rem;
+    border: 2px solid rgba($border-light, 0.8);
+    background-color: $default-color;
+    border-radius: 0.65rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover:not(:focus):not(:disabled) {
+      border-color: rgba($secondary-color, 0.4);
+    }
 
     &:focus {
       outline: none;
-      border-bottom-color: $secondary-color;
-      background-color: rgba($gray-light-accent-color, 0.25);
-      box-shadow: 0 2px 8px rgba($secondary-color, 0.1);
+      border-color: $secondary-color;
+      background-color: $default-color;
+      box-shadow: 
+        0 0 0 4px rgba($secondary-color, 0.08),
+        0 4px 12px rgba($secondary-color, 0.06);
     }
     
     &::placeholder {
@@ -60,7 +283,7 @@
     }
 
     @include mobileLarge {
-      padding: 1rem 1.25rem 0.6rem;
+      padding: 1rem 2.75rem 0.6rem 1.25rem;
       font-size: 1.5rem;
     }
   }
