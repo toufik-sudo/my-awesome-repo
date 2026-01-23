@@ -4,5 +4,211 @@
     "customUrl": "zaeezaeza",
     "startDate": "2024-11-28T00:00:00.000000+01:00",
     "endDate": "2025-02-28T23:59:59.000000+01:00",
-    ...
+    "termsAndConditionsUrl": "https://s3.eu-west-3.amazonaws.com/cr-dev-tc/min%20max-2024-11-28_173280922467489208dd779.",
+    "design": {
+        "companyName": "nouveaux",
+        "companyLogoUrl": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/blob_173280909067489182e548f.",
+        "backgroundCoverUrl": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/blob_17328090916748918394888.",
+        "colorMainButtons": "#EC407A",
+        "colorSidebar": "#3e216b",
+        "colorTitles": "#3e216b",
+        "colorMenu": "#fff",
+        "colorContent": "#3e216b",
+        "colorTask": "#78bb7bcf",
+        "colorFont": "#000000",
+        "colorBackground": "#FFFFFF",
+        "font": "Roboto"
+    },
+    "landingTitle": "bnjjkkj",
+    "landingDescription": "bnjbkbkbjhbk",
+    "landingPictureUrl": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/blob_17328091126748919890e5c.",
+    "platformId": 49,
+    "currency": 1,
+    "creationType": 2,
+    "type": 1,
+    "registerFormFields": [
+        "civility",
+        "firstName",
+        "name",
+        "email"
+    ],
+    "sendEmailInvites": false,
+    "invitedUsersFiles": null,
+    "registerManualValidation": false,
+    "notifyOfNewRegistrations": false,
+    "declarationManualValidation": false,
+    "notifyOfNewResultsDeclaration": true,
+    "products": [
+        {
+            "id": 64,
+            "name": "boisson",
+            "picturePath": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/coca%20cola_17328087656748903d441b7.jpg"
+        },
+        {
+            "id": 65,
+            "name": "laptop",
+            "picturePath": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/laptop_173280877567489047b5f98.jpg"
+        },
+        {
+            "id": 66,
+            "name": "sac",
+            "picturePath": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/sac_173280878867489054173eb.jpg"
+        },
+        {
+            "id": 67,
+            "name": "camera",
+            "picturePath": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/appareilPhoto_17328087996748905f4b39c.jpg"
+        }
+    ],
+    "categoryIds": [],
+    "resultsDeclarationForm": true,
+    "uploadResultsFile": true,
+    "resultsFormFields": [
+        "dateOfSale",
+        "customerFirstName",
+        "customerLastName",
+        "productName",
+        "quantity",
+        "amount",
+        "proofOfSale"
+    ],
+    "visitedWall": true,
+    "companyName": "Nouveaux",
+    "companyId": 20,
+    "slideshow": [],
+    "pages": [
+        {
+            "menuTitle": "hjjhjhk",
+            "bannerTitle": "hjkjhghj",
+            "pictureUrl": "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/blob_1732809160674891c8e688b.",
+            "content": "{\"blocks\":[{\"key\":\"ct2jh\",\"text\":\"ghjkjhg\",\"type\":\"unstyled\",\"depth\":0,\"inlineStyleRanges\":[],\"entityRanges\":[],\"data\":{}}],\"entityMap\":{}}"
+        },
+        {
+            "menuTitle": "IMAGES_IDS",
+            "bannerTitle": "IMAGES_IDS",
+            "pictureUrl": null,
+            "content": "[{\"companyLogo\":849},{},{\"backgroundCover\":850},{},{\"identificationCoverId\":851},{},{\"contentsCoverId\":852},{\"contentsCoverIdImgName\":\"\"}]"
+        }
+    ],
+    "ecardPrograms": [
+        {
+            "addedTime": "2024-11-28T16:53:46+01:00",
+            "uuid": "VXFYdgDNuYqV",
+            "username": "superadminyooowin@yopmail.com",
+            "ecard": {
+                "ecardId": 17158,
+                "isValidEcard": true,
+                "ProductToken": "4bd45d7c-995c-4477-9ae2-79179e9bb54c",
+                "BrandName": "IKEA",
+                "Country": "France",
+                "CountryCode": "FR",
+                "Discount": null,
+                "Denominations": "10, 20, 30, 40, 50, 60, 70, 80, 90, 100",
+                "Currency": "EUR",
+                "RealTimeStock": null,
+                "Categories": "Home and Furniture",
+                "LanguageCode": "EN",
+                "BrandDescription": null,
+                "RedemptionInstructions": null,
+                "LogoFile": "https://data.huuray.com/Store_4468/Logo/132942378433059804.png"
+            }
+        }
+    ],
+    "iaCompany": {
+        "iaId": null,
+        "iaProjectId": null,
+        "iaAudioOn": null,
+        "iaName": null,
+        "iaType": null,
+        "iaExpireDate": null,
+        "iaDueDate": null,
+        "iaStatus": null,
+        "iaTrainingCompany": null,
+        "companyId": null,
+        "companyName": null
+    },
+    "programRanking": [],
+    "socialMediaAccounts": {
+        "facebook": null,
+        "twitter": null,
+        "linkedin": null,
+        "custom": null,
+        "instagram": null
+    },
+    "cube": {
+        "goals": [
+            {
+                "goal": 109,
+                "allocationType": 1,
+                "measurementType": "Volume",
+                "measurementName": "volume",
+                "forSpecificProducts": true,
+                "productIds": [
+                    64
+                ],
+                "productImagesUrls": [
+                    "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/coca%20cola_17328087656748903d441b7.jpg"
+                ],
+                "categoryIds": [],
+                "main": {
+                    "min": "200",
+                    "max": "20000",
+                    "value": "10.00",
+                    "currency": 1
+                },
+                "brackets": [],
+                "value": null
+            },
+            {
+                "goal": 110,
+                "allocationType": 1,
+                "measurementType": "Volume",
+                "measurementName": "volume",
+                "forSpecificProducts": true,
+                "productIds": [
+                    65
+                ],
+                "productImagesUrls": [
+                    "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/laptop_173280877567489047b5f98.jpg"
+                ],
+                "categoryIds": [],
+                "main": {
+                    "min": "200",
+                    "max": null,
+                    "value": "10.00",
+                    "currency": 1
+                },
+                "brackets": [],
+                "value": null
+            },
+            {
+                "goal": 111,
+                "allocationType": 1,
+                "measurementType": "Volume",
+                "measurementName": "volume",
+                "forSpecificProducts": true,
+                "productIds": [
+                    66
+                ],
+                "productImagesUrls": [
+                    "https://s3.eu-west-3.amazonaws.com/cr-dev-user-profile-images/sac_173280878867489054173eb.jpg"
+                ],
+                "categoryIds": [],
+                "main": {
+                    "min": "0",
+                    "max": "1000",
+                    "value": "10.00",
+                    "currency": 1
+                },
+                "brackets": [],
+                "value": null
+            }
+        ],
+        "validityOfPoints": "1Y",
+        "correlatedGoals": false,
+        "frequencyOfAllocation": 1,
+        "spendType": "1",
+        "rewardManagers": 10.0
+    },
+    "isSubscriptionProgram": null
 }
