@@ -10,4 +10,4 @@ While jest + enzyme is used to shallow test a component, react-testing-library i
 #### Tips:
 - If the component has a lot of childrens with compelx logic (context, hooks), shallow testing can be used. (better if this can be avoided)
 \
-[Go back to main README.md ](../README.md) 
+[Go back to main README.md ](../README.md)

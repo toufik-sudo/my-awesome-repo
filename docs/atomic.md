@@ -21,4 +21,4 @@ While adding more time to develop a component, please complete all the below ste
  - Do not use global css rules, always use css modules in order to not affect other components
  - Order components based on roles (external modules first -> export defaults -> modules imports -> assets)
 
-[Go back to main README.md ](../README.md) 
+[Go back to main README.md ](../README.md)

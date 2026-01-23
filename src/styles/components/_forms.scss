@@ -1,0 +1,25 @@
+.form-input {
+  padding: 8px 12px; /* Match other inputs */
+  border: 1px solid #ccc; /* Consistent border style */
+  border-radius: 4px; /* Match other inputs */
+  font-size: 14px; /* Consistent font size */
+  color: #333; /* Match text color */
+  background-color: #fff; /* Consistent background */
+
+  &:focus {
+    border-color: #007bff; /* Focus state color */
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+
+  /* Calendar icon alignment */
+  &.input-group {
+    display: flex;
+    align-items: center;
+
+    .input-icon {
+      color: #555; /* Icon color */
+      margin-right: 8px; /* Space between icon and input */
+    }
+  }
+}

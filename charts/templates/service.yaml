@@ -11,4 +11,3 @@ spec:
   - protocol: TCP
     port: {{ .Values.app.port }}
     targetPort: {{ .Values.app.port }}
-

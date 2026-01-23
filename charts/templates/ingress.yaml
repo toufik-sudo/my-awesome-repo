@@ -20,4 +20,3 @@ spec:
               number: {{ .Values.app.port }}
         path: /
         pathType: Prefix
-

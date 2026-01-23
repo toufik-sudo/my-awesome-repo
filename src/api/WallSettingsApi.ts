@@ -19,4 +19,3 @@ class WallSettingsApi {
 }
 
 export default WallSettingsApi;
-

@@ -55,4 +55,3 @@ spec:
       - name: nginx
         configMap:
           name: nginx
-

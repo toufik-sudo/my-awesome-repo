@@ -27,4 +27,4 @@ A: When applying a change on a story file, does not reflect on main app also. Yo
 Few components might have wrong design if there is an external css applied. So it is recommended to use CSS Modules in order
 to have the correct design for each story.\
 \
-[Go back to main README.md ](../README.md) 
+[Go back to main README.md ](../README.md)
