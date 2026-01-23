@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`UserProgramStatus renders 3 user status counts on all programs selection 1`] = `ShallowWrapper {}`;
-
-exports[`UserProgramStatus renders a single user status on program selection 1`] = `ShallowWrapper {}`;

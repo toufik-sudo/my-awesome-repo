@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`MediaBlock renders with file preview without crashing 1`] = `ShallowWrapper {}`;
-
-exports[`MediaBlock renders with image preview for video without crashing 1`] = `ShallowWrapper {}`;

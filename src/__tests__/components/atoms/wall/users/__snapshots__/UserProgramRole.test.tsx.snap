@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`UserProgramRole renders a single user role on program selection 1`] = `ShallowWrapper {}`;
-
-exports[`UserProgramRole renders user and manager role count on all programs selection 1`] = `ShallowWrapper {}`;

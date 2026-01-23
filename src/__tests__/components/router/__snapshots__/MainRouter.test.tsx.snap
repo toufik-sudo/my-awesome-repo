@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`React router should output the correct component if route is matched snapshot testing 1`] = `ShallowWrapper {}`;

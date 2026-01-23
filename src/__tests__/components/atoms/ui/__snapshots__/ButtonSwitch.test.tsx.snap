@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`ButtonSwitch renders without crashing and has default class 1`] = `ShallowWrapper {}`;

@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`MediaModal renders image without crashing when open 1`] = `ReactWrapper {}`;
-
-exports[`MediaModal renders video without crashing when open 1`] = `ReactWrapper {}`;

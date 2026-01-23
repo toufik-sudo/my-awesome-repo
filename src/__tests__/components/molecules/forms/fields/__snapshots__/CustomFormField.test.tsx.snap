@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`CustomFormField renders correct type 1`] = `ShallowWrapper {}`;
-
-exports[`CustomFormField renders correctly when hidden is on a field type 1`] = `ShallowWrapper {}`;
