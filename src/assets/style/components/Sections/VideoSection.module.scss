@@ -1,5 +1,0 @@
-@import '../../imports';
-
-.video {
-  @include size($max-width: 100%, $max-height: 100%, $width: 100%);
-}
