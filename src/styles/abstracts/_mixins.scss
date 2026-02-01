@@ -1,0 +1,272 @@
+// -----------------------------------------------------------------------------
+// This file contains all application-wide Sass mixins.
+// Merged from sass-boilerplate and assets/style
+// -----------------------------------------------------------------------------
+
+/// Event wrapper
+/// @author Harry Roberts
+/// @param {Bool} $self [false] - Whether or not to include current selector
+@mixin on-event($self: false) {
+  @if $self {
+    &,
+    &:hover,
+    &:active,
+    &:focus {
+      @content;
+    }
+  } @else {
+    &:hover,
+    &:active,
+    &:focus {
+      @content;
+    }
+  }
+}
+
+// Alias for on-event
+@mixin on_event($self: false) {
+  @include on-event($self) {
+    @content;
+  }
+}
+
+/*
+  Size mixin for width/height properties
+  ex: @include size($width: 100%, $max-width: 320px);
+*/
+@mixin size($height: null, $width: null, $min-width: null, $max-width: null, $min-height: null, $max-height: null) {
+  height: $height;
+  width: $width;
+  min-width: $min-width;
+  max-width: $max-width;
+  min-height: $min-height;
+  max-height: $max-height;
+}
+
+/*
+  Font mixin for typography properties
+  ex: @include font($font-size: 10px, $line-height: 1em);
+*/
+@mixin font(
+  $font-size: null,
+  $color: null,
+  $text-align: null,
+  $line-height: null,
+  $font-weight: null,
+  $font-family: null,
+  $text-indent: null,
+  $white-space: null,
+  $letter-spacing: null,
+  $word-spacing: null,
+  $text-transform: null,
+  $text-decoration: null,
+  $font-style: null
+) {
+  color: $color;
+  font-family: $font-family;
+  font-size: $font-size;
+  font-style: $font-style;
+  font-weight: $font-weight;
+  line-height: $line-height;
+  letter-spacing: $letter-spacing;
+  text-transform: $text-transform;
+  text-decoration: $text-decoration;
+  text-align: $text-align;
+  text-indent: $text-indent;
+  white-space: $white-space;
+  word-spacing: $word-spacing;
+}
+
+/*
+  Position mixin
+  ex: @include position(absolute, $top: 10px, $left: 20px);
+*/
+@mixin position($position: null, $top: null, $right: null, $bottom: null, $left: null) {
+  position: $position;
+  top: $top;
+  right: $right;
+  bottom: $bottom;
+  left: $left;
+}
+
+/*
+  Vendor prefix mixin
+  ex: @include prefix(transform, rotate(42deg), webkit moz ms o);
+*/
+@mixin prefix($property, $value, $vendors: webkit moz ms o) {
+  @if $vendors {
+    @each $vendor in $vendors {
+      #{"-" + $vendor + "-" + $property}: #{$value};
+    }
+  }
+  #{$property}: #{$value};
+}
+
+/*
+  Vertical center mixin
+  ex: @include vertical_center(absolute);
+*/
+@mixin vertical_center($position) {
+  @include prefix(transform, translateY(-50%), webkit moz ms o);
+  @include position($position, $top: 50%);
+}
+
+/*
+  Force center (both horizontal and vertical)
+  ex: @include force_center(absolute);
+*/
+@mixin force_center($position) {
+  @include prefix(transform, translate(-50%, -50%), webkit moz ms o);
+  @include position($position, $top: 50%, $left: 50%);
+}
+
+/*
+  Border radius mixin
+  ex: @include border-radius(20px);
+*/
+@mixin border-radius($radius) {
+  border-radius: $radius;
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+}
+
+/*
+  Background prefix mixin for gradients
+  ex: @include background-prefix(background-image, linear-gradient, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.12), webkit moz ms o);
+*/
+@mixin background-prefix($property, $value, $color-start, $color-end, $vendors: webkit moz ms o) {
+  @if $vendors {
+    @each $vendor in $vendors {
+      #{$property}: #{'-' + $vendor + '-' + $value + '(' + $color-start + ',' + $color-end + ')'};
+    }
+  }
+  #{$property}: #{$value};
+}
+
+/*
+  Flexbox display mixin with flex shorthand
+  ex: @include display($display: flex, $justify-content: center, $align-items: center);
+*/
+@mixin display(
+  $display: null,
+  $justify-content: null,
+  $align-items: null,
+  $align-self: null,
+  $flex-direction: null,
+  $flex-wrap: null,
+  $flex-grow: null,
+  $order: null,
+  $flex: null
+) {
+  display: $display;
+  justify-content: $justify-content;
+  align-items: $align-items;
+  align-self: $align-self;
+  flex-direction: $flex-direction;
+  flex-wrap: $flex-wrap;
+  flex-grow: $flex-grow;
+  order: $order;
+  flex: $flex;
+}
+
+/*
+  Flexbox display mixin (shorthand that sets display: flex)
+  ex: @include display-flex($justify-content: center, $align-items: center);
+*/
+@mixin display-flex(
+  $justify-content: null,
+  $align-items: null,
+  $align-self: null,
+  $flex-direction: null,
+  $flex-wrap: null,
+  $flex-grow: null,
+  $order: null
+) {
+  display: flex;
+  justify-content: $justify-content;
+  align-items: $align-items;
+  align-self: $align-self;
+  flex-direction: $flex-direction;
+  flex-wrap: $flex-wrap;
+  flex-grow: $flex-grow;
+  order: $order;
+}
+
+/*
+  Error styling mixin
+  ex: @include error(absolute, null, null, 0.8rem, 0, $text-align: center, $width: 100%);
+*/
+@mixin error($position: null, $top: null, $right: null, $bottom: null, $left: null, $display: null, $text-align: null, $width: null) {
+  @include position($position, $top, $right, $bottom, $left);
+  @include font($font-size: 1.2rem, $color: $danger-color, $text-align: $text-align);
+  width: $width;
+  display: $display;
+}
+
+/// Context based selector
+/// @author Hugo Giraudel
+/// @param {String} $context
+@mixin when-inside($context) {
+  #{$context} & {
+    @content;
+  }
+}
+
+@mixin buttonBase($color: null, $background: null, $border: null) {
+  background: $background;
+  border: $border;
+  color: $color;
+}
+
+@mixin border($border-width: null, $border-style: null, $border-color: null) {
+  border-width: $border-width;
+  border-style: $border-style;
+  border-color: $border-color;
+}
+
+@mixin border-top($border-width: null, $border-style: null, $border-color: null, $border-radius: null) {
+  border-width: $border-width;
+  border-style: $border-style;
+  border-color: $border-color;
+  border-radius: $border-radius;
+}
+
+@mixin placeholder {
+  ::-webkit-input-placeholder { @content }
+  :-moz-placeholder { @content }
+  ::-moz-placeholder { @content }
+  :-ms-input-placeholder { @content }
+}
+
+// Clearfix
+%clearfix {
+  *zoom: 1;
+  &:before,
+  &:after {
+    content: ' ';
+    display: table;
+  }
+  &:after {
+    clear: both;
+  }
+}
+
+// Visually hidden (for accessibility)
+%visuallyhidden {
+  margin: -1px;
+  padding: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip: rect(0, 0, 0, 0);
+  position: absolute;
+}
+
+.userBlockBase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1.5rem;
+}

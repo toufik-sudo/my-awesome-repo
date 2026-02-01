@@ -1,0 +1,178 @@
+// -----------------------------------------------------------------------------
+// Sidebar Layout Styles
+// Migrated from old_app/src/assets/style/components/wall/LeftNavigation.module.scss
+// -----------------------------------------------------------------------------
+
+// Sidebar container
+.sidebar {
+  @include display($display: flex, $flex-direction: column);
+  @include size($width: 26rem, $height: 100vh);
+  background: $logo-gradient;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 200;
+  transition: width 0.3s ease-in-out;
+  
+  &.sidebar-collapsed {
+    width: 7rem;
+    
+    .sidebar-brand-text,
+    .nav-item-text,
+    .sidebar-footer-text {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+  
+  @media (max-width: map-get($breakpoints-max, 'tablet-portrait')) {
+    transform: translateX(-100%);
+    width: 28rem;
+    
+    &.sidebar-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Sidebar header
+.sidebar-header {
+  @include display($display: flex, $align-items: center, $justify-content: space-between);
+  padding: 1.5rem 2rem;
+  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.1);
+  
+  .sidebar-brand {
+    @include display($display: flex, $align-items: center);
+    gap: 1rem;
+    
+    .sidebar-logo {
+      @include size($width: 3.5rem, $height: 3.5rem);
+    }
+    
+    .sidebar-brand-text {
+      @include font($font-size: 1.8rem, $font-weight: 700, $color: $forth-color);
+      transition: opacity 0.2s ease-in-out;
+    }
+  }
+}
+
+// Sidebar navigation
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem 0;
+  overflow-y: auto;
+  
+  .nav-group {
+    margin-bottom: 1.5rem;
+    
+    .nav-group-label {
+      @include font($font-size: 1.1rem, $font-weight: 600, $color: rgba(255, 255, 255, 0.5), $text-transform: uppercase, $letter-spacing: 0.1rem);
+      padding: 0 2rem;
+      margin-bottom: 0.8rem;
+    }
+    
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
+}
+
+// Navigation item
+.nav-item {
+  .nav-link {
+    @include display($display: flex, $align-items: center);
+    @include font($font-size: 1.4rem, $font-weight: 500, $color: rgba(255, 255, 255, 0.7));
+    @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+    gap: 1.2rem;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-left: 0.3rem solid transparent;
+    
+    .nav-icon {
+      @include display($display: flex, $align-items: center, $justify-content: center);
+      @include size($width: 2.2rem, $height: 2.2rem);
+      flex-shrink: 0;
+    }
+    
+    .nav-item-text {
+      transition: opacity 0.2s ease-in-out;
+      white-space: nowrap;
+    }
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $forth-color;
+    }
+    
+    &.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-left-color: $primary-color;
+      color: $forth-color;
+    }
+    
+    &.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+}
+
+// Sidebar footer
+.sidebar-footer {
+  padding: 1.5rem 2rem;
+  border-top: 0.1rem solid rgba(255, 255, 255, 0.1);
+  
+  .sidebar-footer-link {
+    @include display($display: flex, $align-items: center);
+    @include font($font-size: 1.3rem, $color: rgba(255, 255, 255, 0.6));
+    gap: 1rem;
+    padding: 0.8rem 0;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+    
+    &:hover {
+      color: $forth-color;
+    }
+  }
+}
+
+// Sidebar toggle button
+.sidebar-toggle {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+  @include size($width: 3rem, $height: 3rem);
+  @include position(absolute, $top: 2rem, $right: -1.5rem);
+  background: $forth-color;
+  border: none;
+  border-radius: 50%;
+  box-shadow: $shadow-tight;
+  cursor: pointer;
+  z-index: 10;
+  
+  svg {
+    @include size($width: 1.6rem, $height: 1.6rem);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  &.collapsed {
+    svg {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// Mobile overlay
+.sidebar-overlay {
+  @include position(fixed, 0, 0, 0, 0);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 199;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-in-out;
+  
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}

@@ -1,0 +1,195 @@
+// -----------------------------------------------------------------------------
+// Navigation Styles
+// Migrated from old_app/src/assets/style/components/Navbar.module.scss
+// -----------------------------------------------------------------------------
+
+// Top navigation bar
+.navbar {
+  @include display($display: flex, $align-items: center, $justify-content: space-between);
+  @include size($width: 100%, $height: 6rem);
+  background: $default-color;
+  box-shadow: $shadow-light;
+  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  
+  .navbar-brand {
+    @include display($display: flex, $align-items: center);
+    gap: 1rem;
+    
+    .navbar-logo {
+      @include size($height: 3.5rem);
+    }
+    
+    .navbar-title {
+      @include font($font-size: 2rem, $font-weight: 700, $color: $primary-color);
+    }
+  }
+  
+  .navbar-nav {
+    @include display($display: flex, $align-items: center);
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    
+    .nav-item {
+      .nav-link {
+        @include font($font-size: 1.4rem, $font-weight: 500);
+        @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+        color: $gray-accent-color;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.4rem;
+        
+        &:hover {
+          color: $primary-color;
+          background: rgba($primary-color, 0.1);
+        }
+        
+        &.active {
+          color: $primary-color;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  
+  .navbar-actions {
+    @include display($display: flex, $align-items: center);
+    gap: 1rem;
+  }
+}
+
+// Mobile menu trigger
+.navbar-toggle {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+  @include size($width: 4rem, $height: 4rem);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: none;
+  
+  @media (max-width: map-get($breakpoints-max, 'tablet-portrait')) {
+    display: flex;
+  }
+  
+  .toggle-bar {
+    @include size($width: 2.4rem, $height: 0.2rem);
+    background: $default-text-color;
+    position: relative;
+    transition: all 0.3s ease-in-out;
+    
+    &::before,
+    &::after {
+      content: '';
+      @include position(absolute, $left: 0);
+      @include size($width: 100%, $height: 0.2rem);
+      background: $default-text-color;
+      transition: all 0.3s ease-in-out;
+    }
+    
+    &::before {
+      top: -0.7rem;
+    }
+    
+    &::after {
+      bottom: -0.7rem;
+    }
+  }
+  
+  &.open {
+    .toggle-bar {
+      background: transparent;
+      
+      &::before {
+        top: 0;
+        transform: rotate(45deg);
+      }
+      
+      &::after {
+        bottom: 0;
+        transform: rotate(-45deg);
+      }
+    }
+  }
+}
+
+// Breadcrumbs
+.breadcrumbs {
+  @include display($display: flex, $align-items: center);
+  gap: 0.5rem;
+  padding: 1rem 0;
+  
+  .breadcrumb-item {
+    @include font($font-size: 1.4rem);
+    
+    a {
+      color: $gray-accent-color;
+      text-decoration: none;
+      
+      &:hover {
+        color: $primary-color;
+      }
+    }
+    
+    &.active {
+      color: $default-text-color;
+      font-weight: 500;
+    }
+  }
+  
+  .breadcrumb-separator {
+    color: $gray-light-accent-color;
+  }
+}
+
+// Page header
+.page-header {
+  @include display($display: flex, $align-items: center, $justify-content: space-between);
+  margin-bottom: 2rem;
+  
+  .page-title {
+    @include font($font-size: 2.8rem, $font-weight: 700);
+    margin: 0;
+  }
+  
+  .page-subtitle {
+    @include font($font-size: 1.4rem, $color: $gray-accent-color);
+    margin-top: 0.4rem;
+  }
+  
+  .page-actions {
+    @include display($display: flex, $align-items: center);
+    gap: 1rem;
+  }
+}
+
+// Tabs navigation
+.tabs-nav {
+  @include display($display: flex, $align-items: center);
+  border-bottom: 0.1rem solid $border-light;
+  gap: 0;
+  
+  .tab-item {
+    @include font($font-size: 1.4rem, $font-weight: 500);
+    @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+    background: transparent;
+    border: none;
+    border-bottom: 0.2rem solid transparent;
+    color: $gray-accent-color;
+    cursor: pointer;
+    padding: 1rem 2rem;
+    margin-bottom: -0.1rem;
+    
+    &:hover {
+      color: $primary-color;
+    }
+    
+    &.active {
+      color: $primary-color;
+      border-bottom-color: $primary-color;
+    }
+  }
+}

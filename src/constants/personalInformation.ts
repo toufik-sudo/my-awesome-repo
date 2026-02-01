@@ -1,0 +1,57 @@
+/**
+ * Personal Information Constants
+ */
+
+export const ZOOM = 'zoom';
+export const ROTATE = 'rotate';
+export const CROPPED = 'cropped-';
+export const ACCEPTED_IMAGE_FORMAT = ['.jpg', '.gif', '.png', '.svg', '.jpeg'];
+
+/**
+ * Avatar Editor Configuration Enum
+ */
+export enum AVATAR_EDITOR_CONFIG {
+  SQUARE_WIDTH = 250,
+  LARGE_WIDTH = 450,
+  HEIGHT = 250,
+  HEIGHT_SMALL = 125,
+  XL_WIDTH = 645,
+  XS_HEIGHT = 153,
+  BORDER = 0,
+  ROUNDED_BORDER_RADIUS = 125, // SQUARE_WIDTH / 2
+  FULL_BORDER_RADIUS = 0,
+  LIGHT = 123,
+  COLOR_OPACITY = 0.6,
+  SLIDER_STEP = 0.1,
+  RECTANGLE_WIDTH = 900,
+  RECTANGLE_HEIGHT = 1000,
+  COVER_WIDTH_SMALL = 300,
+  COVER_HEIGHT_SMALL = 55,
+  COVER_CROP_WIDTH_LARGE = 1200,
+  COVER_CROP_HEIGHT_LARGE = 800
+}
+
+/**
+ * Avatar control types
+ */
+export const AVATAR_CONTROLS_TYPE = [ZOOM, ROTATE];
+
+/**
+ * Avatar configuration type with min/max values
+ */
+export const AVATAR_CONFIG_TYPE = {
+  zoom: { min: -10, max: 10 },
+  rotate: { min: 0, max: 180 }
+};
+
+/**
+ * User Image Type Enum
+ */
+export enum USER_IMAGE_TYPE {
+  USER_PROFILE_PICTURE = 1,
+  USER_CROPPED_PROFILE_PICTURE = 2,
+  PRODUCT_IMAGE = 3,
+  PROGRAM_IMAGE = 5,
+  DESIGN_IMAGE = 6,
+  PAGE_IMAGE = 7
+}

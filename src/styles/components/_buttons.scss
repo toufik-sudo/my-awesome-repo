@@ -1,0 +1,95 @@
+// -----------------------------------------------------------------------------
+// Button Styles
+// Migrated from old_app/src/assets/style/common/_buttons.scss
+// -----------------------------------------------------------------------------
+
+// Base button styles (extending shadcn Button component)
+.btn {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+  @include font($font-size: 1.6rem);
+  @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+  border-radius: 3rem;
+  cursor: pointer;
+  padding: 0.4rem 3.8rem;
+  
+  &.btn-secondary {
+    background: $third-color;
+    border-color: $third-color;
+    color: $forth-color;
+    
+    &:hover {
+      background: darken($third-color, 15%);
+    }
+  }
+  
+  &.btn-disabled {
+    color: $border-light;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  
+  &.btn-primary {
+    background: $secondary-color;
+    border-color: $secondary-color;
+    color: $forth-color;
+    
+    &:hover {
+      background: darken($secondary-color, 10%);
+    }
+    
+    &.btn-inverted {
+      background: $gradient;
+      border-color: $forth-color;
+      
+      &:hover {
+        background: $secondary-gradient;
+      }
+    }
+  }
+  
+  &.btn-danger {
+    background: $danger-color;
+    color: $forth-color;
+    border-color: $danger-color;
+    
+    &:hover {
+      background: darken($danger-color, 15%);
+    }
+  }
+  
+  &.btn-outline {
+    background: transparent;
+    border: 0.1rem solid currentColor;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+// Button groups
+.btn-group {
+  @include display($display: flex, $align-items: center);
+  gap: 1rem;
+  
+  &.btn-group-vertical {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// Icon buttons
+.btn-icon {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+  @include size($width: 4rem, $height: 4rem);
+  border-radius: 50%;
+  padding: 0;
+  
+  &.btn-icon-sm {
+    @include size($width: 3rem, $height: 3rem);
+  }
+  
+  &.btn-icon-lg {
+    @include size($width: 5rem, $height: 5rem);
+  }
+}

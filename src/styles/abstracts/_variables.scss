@@ -1,0 +1,267 @@
+// -----------------------------------------------------------------------------
+// This file contains all application-wide Sass variables.
+// Merged from sass-boilerplate and assets/style
+// -----------------------------------------------------------------------------
+
+// === Colors ===
+
+//Default colors
+$default-color: #ffffff;
+$default-text-color: #000000;
+
+//Gray accent
+$gray: #707070 !default;
+$gray-accent-color: #868586 !default;
+$grey-light-color: #DCDCDC !default;
+$gray-light-accent-color: #cdcdcd !default;
+$gray-lighter-color: #F5F5F5 !default;
+
+//Primary colors
+$primary-color: #EC407A !default;
+$primary-color-accent: #EC407A !default;
+$primary-color-secondary-accent: #78bb7bc0 !default;
+$primary-light-color: #dd73a2;
+
+//Secondary colors
+$secondary-color: #6134a5 !default;
+$secondary-color-accent: #3f216be1 !default;
+$secondary-color-light: #3f216be1 !default;
+$wysiwig-color: #C2D4E6;
+
+//Third colors
+$third-color: #78bb7bcf !default;
+$third-color-accent: #78bb7bd5 !default;
+$third-light-color: #78bb7ba7;
+
+//Additional colors
+$forth-color: #ffffff;
+$accent-color: #78bb7bcf;
+$pink: #EC407A;
+$light-green: #78bb7bc0;
+$programs-separator-color: #dd73a2;
+$secondary-accent: #1492E6;
+
+$warning-color: #ffc107;
+
+//Border colors
+$border-dark-color: #6B6B6B !default;
+$border-color: #cdcdcd !default;
+$border-light-color: #EBEEEF !default;
+$border-light: #EBEEEF !default;
+$border-medium: #EBEEEF;
+$border-dark: #6B6B6B;
+$grey-light: #DCDCDC;
+
+//Others
+$menu-accent: #78bb7bcf !default;
+$modal-success-background: #78bb7bcf !default;
+$modalSuccessBackground: #78bb7bcf;
+$label-inactive: #E8B43D !default;
+$table-header-background: #3f216be1 !default;
+
+//States colors
+$disabled-color: #eaeaea !default;
+$danger-color: #E57B8D !default;
+$danger: #dd73a2;
+$alert-color: #EC407A !default;
+$alert: #EC407A;
+
+//Social accounts
+$facebook: #4267B2;
+$twitter: #1DA1F2;
+$linkedIn: #0073B0;
+$instagram: #E1306C;
+
+//Hyper admin
+$hyperAdmin: #3e216b;
+
+//Layout
+$container-width: 1370px !default;
+$containerWidth: 1370px;
+
+//Fonts
+$primary-font: 'Roboto', Arial !default;
+$default-font: 'Roboto', Arial;
+
+//Icon Font
+$font-awesome: 'Font Awesome 5 Free';
+
+/// Font weights map
+$font-weights: (
+  'thin': 100,
+  'light': 300,
+  'regular': 400,
+  'bold': 700
+) !default;
+
+$white: #ffffff;
+$light-gray: #f0f0f0;
+
+//Icons
+$flag-icon: '\\f024';
+$star-icon: '\\f005';
+$prev-icon: '\\f0d9';
+$next-icon: '\\f0da';
+$file-icon: '\\f15b';
+$arrow-right-icon: '\\f0da';
+$chevron-left-icon: '\\f053';
+$chevron-right-icon: '\\f054';
+$plus-icon: '\\f067';
+$pen-icon: '\\f304';
+$left-arrow-icon: '\\02FF';
+$left-arrow-icon-unicode: '\\279C';
+$close-icon: '\\f00d';
+
+//Shadows
+$shadow: 0.1rem 0.4rem 1rem 0.1rem rgba(0, 0, 0, 0.21);
+$shadow-light: 0.1rem 0.25rem 1.5rem 0.2rem rgba(0, 0, 0, 0.12);
+$shadow-comment: -0.1rem 0.15rem 0.5rem 0.4rem rgba(0, 0, 0, 0.14);
+$shadow-full: 0.1rem 0.4rem 1rem 0.1rem rgba(0, 0, 0, 0.21);
+$shadow-full-element: .1rem 0 .7rem .5rem rgba(0, 0, 0, .12);
+$shadow-tight: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.16);
+$shadow-tight-1: 0 .3rem .7rem 0 rgba(0, 0, 0, 0.16);
+
+/// Breakpoints map
+$breakpoints-max: (
+  'desktop-large': 1599px,
+  'desktop-medium': 1499px,
+  'desktop-small': 1279px,
+  'desktop-x-small': 1200px,
+  'tablet-landscape': 1024px,
+  'tablet-portrait': 991px,
+  'mobile-large': 767px,
+  'mobile-medium': 425px,
+  'mobile-small': 320px
+) !default;
+
+$breakpoints-max-sizes: (
+  'dMedium': 1499px,
+  'dSmall': 1279px,
+  'dXsmall': 1200px,
+  'tLandscape': 1024px,
+  'tPortrait': 991px,
+  'mLarge': 767px,
+  'mMedium': 425px,
+  'mSmall': 320px
+) !default;
+
+$breakpoints-min: (
+  'desktop-medium': 1500px,
+  'desktop-small': 1280px,
+  'tablet-landscape': 1025px,
+  'tablet-portrait': 992px,
+  'mobile-large': 768px,
+  'mobile-medium': 426px,
+  'mobile-small': 320px
+) !default;
+
+$breakpoints-max-height: (
+  'tablet-portrait-height': 768px,
+  'tablet-landscape-height': 915px,
+  'custom-resolution-1': 950px,
+  'custom-resolution-2': 850px,
+  'custom-resolution-3': 880px,
+  'custom-resolution-4': 699px,
+  'custom-resolution-5': 799px,
+  'custom-resolution-6': 769px,
+  'custom-resolution-7': 716px,
+  'custom-resolution-8': 868px,
+  'custom-resolution': 980px
+);
+
+$orientation: (
+  'landscape': landscape,
+  'portrait': portrait
+) !default;
+
+//Spacing map used for generate margin and padding helper classes
+$spacings: (
+  "auto": auto,
+  "0": 0,
+  "05": .5rem,
+  "07": .7rem,
+  "1": 1rem,
+  "15": 1.5rem,
+  "2": 2rem,
+  "25": 2.5rem,
+  "3": 3rem,
+  "35": 3.5rem,
+  "4": 4rem,
+  "45": 4.5rem,
+  "5": 5rem,
+  "55": 5.5rem,
+  "6": 6rem,
+  "65": 6.5rem,
+  "7": 7rem,
+  "75": 7.5rem,
+  "8": 8rem,
+  "85": 8.5rem,
+  "9": 9rem,
+  "95": 9.5rem,
+  "10": 10rem,
+  "105": 10.5rem,
+  "11": 11rem,
+  "115": 11.5rem,
+  "12": 12rem,
+  "125": 12.5rem,
+  "13": 13rem,
+  "20": 20rem,
+  "40": 40rem,
+  "135": 13.5rem,
+  "260": 26rem,
+  "280": 28rem,
+  "400": 40rem,
+  "50": 50rem,
+  "53": 53rem,
+  "650": 65rem,
+  "710": 71rem,
+  "750": 75rem,
+  "800": 80rem,
+  "900": 90rem,
+  "Half": 50%,
+  "65Percent": 65%,
+  "Auto": auto
+);
+
+$position: (
+  "relative": relative,
+  "absolute": absolute,
+  "fixed": fixed,
+  "static": static
+);
+
+$positionValues: (
+  "0": 0,
+  "1": 1rem,
+  "3": 3rem,
+  "15": 15rem,
+  "50": 50%,
+  "100": 100%
+);
+
+$fontSizes: (
+  'Xs': 1rem,
+  '1Xs': 1.3rem,
+  'Sm': 1.4rem,
+  'Tiny': 1.6rem,
+  'Md': 1.8rem,
+  'Lg': 2rem,
+  'Xl': 2.2rem,
+  "1xl": 2.4rem,
+  '2xl': 2.6rem,
+  '3xl': 3rem,
+  '4xl': 3.6rem,
+  '5xl': 5.2rem
+);
+
+/// Relative or absolute URL where all assets are served from
+$base-url: '/assets/' !default;
+$font-path: '../../fonts/';
+$img-path: '../../../assets/images/';
+
+//Gradients
+$gradient: linear-gradient(90deg, $third-color 0%, $third-color 73%, $third-light-color 100%);
+$secondary-gradient: linear-gradient(133deg, $third-color 0%, $third-color 35%, $third-light-color 73%, $third-light-color 100%);
+$logo-gradient: linear-gradient(133deg, #0e0439 0%, #0e0439 35%, #170e40 73%, #201746 100%);
+
+$editPen: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAANCAYAAACgu+4kAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAFPSURBVHjadNI9S1xBFMbx3yi6NmkiFqYIRItYxUJFMU00+hnWFFskfoIU1nYW9haChWgrFlrkQhJBUBBJDJo6dUiw1l1f9qY5A5cLGRhmmDPz/M8856Rmq2igjJlHiRT7HnQwhY/YxDEauEvNVtGPXnTjQaoIJNxiFqcRv8c8TjCQmq2iLyhlRSCvbcxgFOt4FrE7PMffqkA9/Q4m8A0FPuAIY/iDV/8TyOTX2McXLGEXW1gLL76jkQV6K+R2kE9xiEU8Ccg23gdoAN1sYs6gjUl8DcI4nkbsN5bxCRnazRn04QYv8Rk/MBdkFTMvo3z5q48p+uAeL+LCTVwYivUab3GV066U+DE1W0VPHO5gGAsVQzt4g7MKuawLwCDOsRLlWcUDpnER5Hq3JpRZYAS/4iudMPUdDoKcao+zQDcLDGEjzLzCHn6iv9ZgdYH0bwAxe2HJN8L4CAAAAABJRU5ErkJggg==';

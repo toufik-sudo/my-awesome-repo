@@ -1,0 +1,310 @@
+// -----------------------------------------------------------------------------
+// Wall Layout Styles
+// Wall/Feed specific layout styles
+// -----------------------------------------------------------------------------
+
+// Wall container
+.wall-container {
+  @include size($max-width: 80rem);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+// Wall header with cover
+.wall-header {
+  position: relative;
+  margin-bottom: 2rem;
+  
+  .wall-cover {
+    @include size($width: 100%, $height: 20rem);
+    background: $gradient;
+    border-radius: 0.8rem;
+    overflow: hidden;
+    
+    img {
+      @include size($width: 100%, $height: 100%);
+      object-fit: cover;
+    }
+  }
+  
+  .wall-header-content {
+    @include display($display: flex, $align-items: flex-end, $justify-content: space-between);
+    @include position(relative);
+    padding: 0 2rem;
+    margin-top: -4rem;
+    
+    .wall-program-info {
+      @include display($display: flex, $align-items: flex-end);
+      gap: 1.5rem;
+      
+      .program-logo {
+        @include size($width: 10rem, $height: 10rem);
+        background: $default-color;
+        border: 0.3rem solid $default-color;
+        border-radius: 0.8rem;
+        box-shadow: $shadow-light;
+        object-fit: cover;
+      }
+      
+      .program-details {
+        padding-bottom: 1rem;
+        
+        .program-name {
+          @include font($font-size: 2.4rem, $font-weight: 700, $color: $default-color);
+          text-shadow: 0 0.1rem 0.3rem rgba(0, 0, 0, 0.3);
+        }
+        
+        .program-members-count {
+          @include font($font-size: 1.4rem, $color: rgba(255, 255, 255, 0.9));
+        }
+      }
+    }
+    
+    .wall-header-actions {
+      @include display($display: flex, $align-items: center);
+      gap: 1rem;
+      padding-bottom: 1rem;
+    }
+  }
+}
+
+// Create post block
+.create-post {
+  background: $default-color;
+  border-radius: 0.8rem;
+  box-shadow: $shadow-light;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  
+  .create-post-header {
+    @include display($display: flex, $align-items: center);
+    gap: 1rem;
+    
+    .user-avatar {
+      @include size($width: 4rem, $height: 4rem);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    
+    .create-post-input {
+      @include font($font-size: 1.4rem);
+      flex: 1;
+      background: $gray-lighter-color;
+      border: none;
+      border-radius: 2rem;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      
+      &:hover {
+        background: darken($gray-lighter-color, 5%);
+      }
+    }
+  }
+  
+  .create-post-actions {
+    @include display($display: flex, $align-items: center, $justify-content: space-around);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 0.1rem solid $border-light;
+    
+    .post-action {
+      @include display($display: flex, $align-items: center);
+      @include font($font-size: 1.4rem, $font-weight: 500, $color: $gray-accent-color);
+      @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+      gap: 0.5rem;
+      padding: 0.8rem 1.5rem;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      
+      &:hover {
+        background: $gray-lighter-color;
+        color: $primary-color;
+      }
+    }
+  }
+}
+
+// Post block
+.post-block {
+  background: $default-color;
+  border-radius: 0.8rem;
+  box-shadow: $shadow-light;
+  margin-bottom: 1.5rem;
+  
+  .post-header {
+    @include display($display: flex, $align-items: center, $justify-content: space-between);
+    padding: 1.5rem;
+    
+    .post-author {
+      @include display($display: flex, $align-items: center);
+      gap: 1rem;
+      
+      .author-avatar {
+        @include size($width: 4.5rem, $height: 4.5rem);
+        border-radius: 50%;
+      }
+      
+      .author-info {
+        .author-name {
+          @include font($font-size: 1.5rem, $font-weight: 600);
+        }
+        
+        .post-meta {
+          @include display($display: flex, $align-items: center);
+          gap: 0.5rem;
+          
+          .post-date {
+            @include font($font-size: 1.2rem, $color: $gray-accent-color);
+          }
+        }
+      }
+    }
+    
+    .post-options {
+      @include display($display: flex, $align-items: center, $justify-content: center);
+      @include size($width: 3.5rem, $height: 3.5rem);
+      border-radius: 50%;
+      cursor: pointer;
+      
+      &:hover {
+        background: $gray-lighter-color;
+      }
+    }
+  }
+  
+  .post-content {
+    padding: 0 1.5rem 1.5rem;
+    
+    .post-text {
+      @include font($font-size: 1.5rem, $line-height: 1.5);
+    }
+    
+    .post-media {
+      margin-top: 1rem;
+      border-radius: 0.6rem;
+      overflow: hidden;
+      
+      img, video {
+        @include size($width: 100%);
+        display: block;
+      }
+    }
+  }
+  
+  .post-stats {
+    @include display($display: flex, $align-items: center, $justify-content: space-between);
+    padding: 0.8rem 1.5rem;
+    border-top: 0.1rem solid $border-light;
+    border-bottom: 0.1rem solid $border-light;
+    
+    .likes-count, .comments-count {
+      @include font($font-size: 1.3rem, $color: $gray-accent-color);
+    }
+  }
+  
+  .post-actions {
+    @include display($display: flex, $align-items: center);
+    padding: 0.5rem 1.5rem;
+    
+    .action-btn {
+      @include display($display: flex, $align-items: center, $justify-content: center);
+      @include font($font-size: 1.4rem, $font-weight: 500, $color: $gray-accent-color);
+      @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+      flex: 1;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      
+      &:hover {
+        background: $gray-lighter-color;
+      }
+      
+      &.liked {
+        color: $primary-color;
+      }
+    }
+  }
+  
+  .post-comments {
+    padding: 1rem 1.5rem;
+    border-top: 0.1rem solid $border-light;
+    
+    .comment-item {
+      @include display($display: flex);
+      gap: 1rem;
+      margin-bottom: 1rem;
+      
+      .comment-avatar {
+        @include size($width: 3.2rem, $height: 3.2rem);
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      
+      .comment-content {
+        background: $gray-lighter-color;
+        border-radius: 1.5rem;
+        padding: 0.8rem 1.2rem;
+        
+        .comment-author {
+          @include font($font-size: 1.3rem, $font-weight: 600);
+        }
+        
+        .comment-text {
+          @include font($font-size: 1.4rem, $line-height: 1.4);
+        }
+      }
+    }
+    
+    .add-comment {
+      @include display($display: flex, $align-items: center);
+      gap: 1rem;
+      margin-top: 1rem;
+      
+      .comment-avatar {
+        @include size($width: 3.2rem, $height: 3.2rem);
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      
+      .comment-input {
+        @include font($font-size: 1.4rem);
+        flex: 1;
+        background: $gray-lighter-color;
+        border: none;
+        border-radius: 2rem;
+        padding: 0.8rem 1.5rem;
+        
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.2);
+        }
+      }
+    }
+  }
+}
+
+// Empty feed
+.feed-empty {
+  @include display($display: flex, $align-items: center, $justify-content: center, $flex-direction: column);
+  background: $default-color;
+  border-radius: 0.8rem;
+  box-shadow: $shadow-light;
+  gap: 1.5rem;
+  padding: 4rem 2rem;
+  text-align: center;
+  
+  .empty-icon {
+    @include size($width: 8rem, $height: 8rem);
+    color: $gray-light-accent-color;
+  }
+  
+  .empty-title {
+    @include font($font-size: 1.8rem, $font-weight: 600);
+  }
+  
+  .empty-text {
+    @include font($font-size: 1.4rem, $color: $gray-accent-color);
+    max-width: 30rem;
+  }
+}

@@ -1,0 +1,187 @@
+// -----------------------------------------------------------------------------
+// Form Styles
+// Migrated from old_app/src/styles/components/_forms.scss
+// -----------------------------------------------------------------------------
+
+// Form container
+.form-container {
+  @include size($width: 100%, $max-width: 50rem);
+  margin: 0 auto;
+}
+
+// Form group
+.form-group {
+  margin-bottom: 1.5rem;
+  
+  label {
+    @include font($font-size: 1.4rem, $font-weight: 500);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}
+
+// Form row (inline fields)
+.form-row {
+  @include display($display: flex, $align-items: flex-start);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  
+  > * {
+    flex: 1;
+  }
+  
+  @media (max-width: map-get($breakpoints-max, 'mobile-large')) {
+    flex-direction: column;
+    
+    > * {
+      width: 100%;
+    }
+  }
+}
+
+// Input base styles
+.input-base {
+  @include font($font-size: 1.4rem, $color: $default-text-color);
+  @include size($width: 100%, $min-height: 4rem);
+  @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+  background: $default-color;
+  border: 0.1rem solid $border-color;
+  border-radius: 0.4rem;
+  padding: 0.8rem 1.2rem;
+  
+  &:focus {
+    border-color: $primary-color;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.1);
+  }
+  
+  &::placeholder {
+    color: $gray-accent-color;
+  }
+  
+  &:disabled {
+    background: $disabled-color;
+    cursor: not-allowed;
+  }
+  
+  &.input-error {
+    border-color: $danger-color;
+  }
+}
+
+// Textarea
+.textarea-base {
+  @extend .input-base;
+  @include size($min-height: 12rem);
+  resize: vertical;
+}
+
+// Select
+.select-base {
+  @extend .input-base;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2rem;
+  padding-right: 3rem;
+}
+
+// Checkbox and Radio
+.checkbox-container,
+.radio-container {
+  @include display($display: flex, $align-items: center);
+  gap: 0.8rem;
+  cursor: pointer;
+  
+  input {
+    @include size($width: 1.8rem, $height: 1.8rem);
+    cursor: pointer;
+  }
+  
+  label {
+    @include font($font-size: 1.4rem);
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+}
+
+// Form error message
+.form-error {
+  @include font($font-size: 1.2rem, $color: $danger-color);
+  margin-top: 0.4rem;
+}
+
+// Form helper text
+.form-helper {
+  @include font($font-size: 1.2rem, $color: $gray-accent-color);
+  margin-top: 0.4rem;
+}
+
+// Form actions (submit buttons area)
+.form-actions {
+  @include display($display: flex, $align-items: center, $justify-content: flex-end);
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 0.1rem solid $border-light;
+}
+
+// Inline form
+.form-inline {
+  @include display($display: flex, $align-items: center, $flex-wrap: wrap);
+  gap: 1rem;
+  
+  .form-group {
+    margin-bottom: 0;
+  }
+}
+
+// Search form
+.search-form {
+  @include display($display: flex, $align-items: center);
+  position: relative;
+  
+  .search-input {
+    @extend .input-base;
+    padding-left: 4rem;
+  }
+  
+  .search-icon {
+    @include position(absolute, $left: 1.2rem, $top: 50%);
+    transform: translateY(-50%);
+    color: $gray-accent-color;
+    pointer-events: none;
+  }
+}
+
+// File input
+.file-input-container {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+  @include size($width: 100%, $min-height: 15rem);
+  border: 0.2rem dashed $border-color;
+  border-radius: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease-in-out;
+  
+  &:hover {
+    border-color: $primary-color;
+  }
+  
+  input[type="file"] {
+    display: none;
+  }
+  
+  .file-input-label {
+    @include display($display: flex, $flex-direction: column, $align-items: center);
+    gap: 1rem;
+    
+    .file-icon {
+      @include font($font-size: 4rem, $color: $gray-accent-color);
+    }
+    
+    .file-text {
+      @include font($font-size: 1.4rem, $color: $gray-accent-color, $text-align: center);
+    }
+  }
+}

@@ -1,0 +1,207 @@
+// -----------------------------------------------------------------------------
+// Grid System
+// Utility grid classes
+// -----------------------------------------------------------------------------
+
+// Container
+.container {
+  @include size($width: 100%, $max-width: $container-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+  
+  @media (max-width: map-get($breakpoints-max, 'mobile-large')) {
+    padding: 0 1.5rem;
+  }
+}
+
+// Container fluid
+.container-fluid {
+  @include size($width: 100%);
+  padding: 0 2rem;
+}
+
+// Row
+.row {
+  @include display($display: flex, $flex-wrap: wrap);
+  margin: 0 -1rem;
+  
+  > * {
+    padding: 0 1rem;
+  }
+}
+
+// Column base
+%col-base {
+  flex: 1;
+  min-width: 0;
+}
+
+// Columns
+@for $i from 1 through 12 {
+  .col-#{$i} {
+    @extend %col-base;
+    flex: 0 0 calc(100% / 12 * #{$i});
+    max-width: calc(100% / 12 * #{$i});
+  }
+}
+
+// Responsive columns
+@each $breakpoint, $value in $breakpoints-max {
+  @media (max-width: $value) {
+    @for $i from 1 through 12 {
+      .col-#{$breakpoint}-#{$i} {
+        flex: 0 0 calc(100% / 12 * #{$i});
+        max-width: calc(100% / 12 * #{$i});
+      }
+    }
+  }
+}
+
+// Grid
+.grid {
+  display: grid;
+  gap: 2rem;
+  
+  @for $i from 1 through 6 {
+    &.grid-cols-#{$i} {
+      grid-template-columns: repeat(#{$i}, 1fr);
+    }
+  }
+  
+  // Auto-fill grid
+  &.grid-auto {
+    grid-template-columns: repeat(auto-fill, minmax(25rem, 1fr));
+  }
+  
+  // Gap variants
+  &.gap-sm {
+    gap: 1rem;
+  }
+  
+  &.gap-lg {
+    gap: 3rem;
+  }
+}
+
+// Flex utilities (matching old app)
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  @include display($display: flex, $align-items: center, $justify-content: center);
+}
+
+.flex-between {
+  @include display($display: flex, $align-items: center, $justify-content: space-between);
+}
+
+.flex-start {
+  @include display($display: flex, $align-items: flex-start);
+}
+
+.flex-end {
+  @include display($display: flex, $align-items: flex-end);
+}
+
+.flex-column {
+  @include display($display: flex, $flex-direction: column);
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+// Gap utilities
+@each $name, $value in $spacings {
+  .gap-#{$name} {
+    gap: $value;
+  }
+}
+
+// Spacing utilities (margin/padding)
+$directions: (
+  't': 'top',
+  'r': 'right',
+  'b': 'bottom',
+  'l': 'left',
+  'x': ('left', 'right'),
+  'y': ('top', 'bottom'),
+  '': ()
+);
+
+@each $spacing-name, $spacing-value in $spacings {
+  // Margin
+  .m-#{$spacing-name} {
+    margin: $spacing-value;
+  }
+  
+  // Padding
+  .p-#{$spacing-name} {
+    padding: $spacing-value;
+  }
+  
+  @each $dir-key, $dir-value in $directions {
+    @if $dir-key != '' {
+      @if type-of($dir-value) == 'list' {
+        .m#{$dir-key}-#{$spacing-name} {
+          @each $d in $dir-value {
+            margin-#{$d}: $spacing-value;
+          }
+        }
+        
+        .p#{$dir-key}-#{$spacing-name} {
+          @each $d in $dir-value {
+            padding-#{$d}: $spacing-value;
+          }
+        }
+      } @else {
+        .m#{$dir-key}-#{$spacing-name} {
+          margin-#{$dir-value}: $spacing-value;
+        }
+        
+        .p#{$dir-key}-#{$spacing-name} {
+          padding-#{$dir-value}: $spacing-value;
+        }
+      }
+    }
+  }
+}
+
+// Width utilities
+.w-full {
+  width: 100%;
+}
+
+.w-auto {
+  width: auto;
+}
+
+.max-w-full {
+  max-width: 100%;
+}
+
+// Height utilities
+.h-full {
+  height: 100%;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}

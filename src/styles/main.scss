@@ -1,0 +1,25 @@
+// -----------------------------------------------------------------------------
+// Main Styles Entry Point
+// Consolidated styles from sass-boilerplate and assets/style
+// -----------------------------------------------------------------------------
+
+// 1. Abstracts (variables, mixins, functions)
+@import 'abstracts/index';
+
+// 2. Base styles (reset, typography, fonts)
+@import 'base/index';
+
+// 3. Components (buttons, forms, cards, modals, loading, navigation)
+@import 'components/index';
+
+// 4. Layout (sidebar, dashboard, wall, grid)
+@import 'layout/index';
+
+// 5. Pages (will be added as migration progresses)
+// @import 'pages/index';
+
+// 6. Themes (will be added as migration progresses)
+// @import 'themes/index';
+
+// 7. Vendors (will be added as migration progresses)
+// @import 'vendors/index';

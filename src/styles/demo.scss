@@ -1,0 +1,272 @@
+// Demo SASS file showcasing SASS features
+$primary-color: hsl(220, 70%, 50%);
+$secondary-color: hsl(160, 60%, 45%);
+$accent-color: hsl(280, 65%, 55%);
+$background-dark: hsl(220, 20%, 10%);
+$card-bg: hsl(220, 20%, 15%);
+$text-light: hsl(0, 0%, 95%);
+$text-muted: hsl(220, 10%, 60%);
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin card-style {
+  background: $card-bg;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// Main styles
+.demo-page {
+  min-height: 100vh;
+  background: $background-dark;
+  color: $text-light;
+  font-family: 'Inter', system-ui, sans-serif;
+  
+  .hero {
+    @include flex-center;
+    flex-direction: column;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, $background-dark 0%, rgba($primary-color, 0.2) 100%);
+    
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, $primary-color, $accent-color);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    p {
+      color: $text-muted;
+      font-size: 1.25rem;
+      max-width: 600px;
+    }
+  }
+  
+  .libraries-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .library-card {
+    @include card-style;
+    
+    h3 {
+      color: $primary-color;
+      margin-bottom: 0.75rem;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      .badge {
+        font-size: 0.7rem;
+        background: rgba($secondary-color, 0.2);
+        color: $secondary-color;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+    }
+    
+    .demo-area {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      min-height: 80px;
+      @include flex-center;
+    }
+  }
+  
+  // Form styles
+  .demo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    
+    input {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      color: $text-light;
+      
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+      }
+    }
+    
+    button {
+      background: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      
+      &:hover {
+        background: darken($primary-color, 10%);
+      }
+    }
+  }
+  
+  // React Select custom styles
+  .custom-select {
+    width: 100%;
+    
+    .react-select__control {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        border-color: $primary-color;
+      }
+    }
+    
+    .react-select__menu {
+      background: $card-bg;
+    }
+    
+    .react-select__option {
+      &:hover {
+        background: rgba($primary-color, 0.2);
+      }
+      
+      &--is-selected {
+        background: $primary-color;
+      }
+    }
+    
+    .react-select__single-value,
+    .react-select__multi-value__label {
+      color: $text-light;
+    }
+    
+    .react-select__multi-value {
+      background: rgba($primary-color, 0.3);
+    }
+  }
+  
+  // Datepicker custom styles
+  .react-datepicker {
+    background: $card-bg !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    
+    &__header {
+      background: rgba($primary-color, 0.2) !important;
+      border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    &__day, &__day-name, &__current-month {
+      color: $text-light !important;
+    }
+    
+    &__day:hover {
+      background: rgba($primary-color, 0.3) !important;
+    }
+    
+    &__day--selected {
+      background: $primary-color !important;
+    }
+  }
+  
+  // Modal styles
+  .demo-modal {
+    background: $card-bg;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    margin: auto;
+    color: $text-light;
+    
+    h2 {
+      margin-bottom: 1rem;
+      color: $primary-color;
+    }
+    
+    .close-btn {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-light;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+  
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.75);
+    position: fixed;
+    inset: 0;
+    @include flex-center;
+  }
+  
+  // Button styles
+  .demo-btn {
+    background: linear-gradient(135deg, $primary-color, $accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s, box-shadow 0.2s;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba($primary-color, 0.3);
+    }
+  }
+  
+  // Status badge
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba($secondary-color, 0.2);
+    color: $secondary-color;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    
+    &::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: $secondary-color;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}

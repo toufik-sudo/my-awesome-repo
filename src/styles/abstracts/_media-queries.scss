@@ -1,0 +1,61 @@
+// -----------------------------------------------------------------------------
+// This file contains all media query mixins.
+// -----------------------------------------------------------------------------
+
+@mixin respond-to-max($breakpoint) {
+  @if map-has-key($breakpoints-max, $breakpoint) {
+    @media (max-width: map-get($breakpoints-max, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-max)}.";
+  }
+}
+
+@mixin respond-to-max-height($breakpoint) {
+  @if map-has-key($breakpoints-max-height, $breakpoint) {
+    @media (max-height: map-get($breakpoints-max-height, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-max-height)}.";
+  }
+}
+
+@mixin respond-to-up($breakpoint) {
+  @if map-has-key($breakpoints-min, $breakpoint) {
+    @media (min-width: map-get($breakpoints-min, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-min)}.";
+  }
+}
+
+@mixin respond-to-orientation($breakpoint) {
+  @if map-has-key($orientation, $breakpoint) {
+    @media (orientation: map-get($orientation, $breakpoint)) {
+      @content;
+    }
+  } @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints-min)}.";
+  }
+}
+
+@mixin safariOnly() {
+  @media not all and (min-resolution:.001dpcm) {
+    @supports (-webkit-appearance:none) {
+      @content;
+    }
+  }
+}
+
+@mixin isIE11 {
+  @media screen and (-ms-high-contrast: active), screen and (-ms-high-contrast: none) {
+    @content;
+  }
+}

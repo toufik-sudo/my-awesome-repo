@@ -1,0 +1,182 @@
+// -----------------------------------------------------------------------------
+// Card Styles
+// Card component styles for consistent card presentation
+// -----------------------------------------------------------------------------
+
+// Base card
+.card-base {
+  background: $default-color;
+  border-radius: 0.8rem;
+  box-shadow: $shadow-light;
+  overflow: hidden;
+}
+
+// Card with hover effect
+.card-hover {
+  @extend .card-base;
+  @include prefix(transition, all 0.2s ease-in-out, webkit moz ms o);
+  cursor: pointer;
+  
+  &:hover {
+    box-shadow: $shadow;
+    transform: translateY(-0.2rem);
+  }
+}
+
+// Card header
+.card-header {
+  @include display($display: flex, $align-items: center, $justify-content: space-between);
+  padding: 1.5rem 2rem;
+  border-bottom: 0.1rem solid $border-light;
+  
+  .card-title {
+    @include font($font-size: 1.8rem, $font-weight: 600);
+    margin: 0;
+  }
+  
+  .card-subtitle {
+    @include font($font-size: 1.4rem, $color: $gray-accent-color);
+    margin-top: 0.4rem;
+  }
+}
+
+// Card body
+.card-body {
+  padding: 2rem;
+}
+
+// Card footer
+.card-footer {
+  @include display($display: flex, $align-items: center, $justify-content: flex-end);
+  padding: 1.5rem 2rem;
+  border-top: 0.1rem solid $border-light;
+  gap: 1rem;
+}
+
+// Card image (for media cards)
+.card-image {
+  @include size($width: 100%, $height: 20rem);
+  object-fit: cover;
+}
+
+// Card grid
+.card-grid {
+  display: grid;
+  gap: 2rem;
+  
+  &.card-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    
+    @media (max-width: map-get($breakpoints-max, 'mobile-large')) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &.card-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    
+    @media (max-width: map-get($breakpoints-max, 'tablet-portrait')) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: map-get($breakpoints-max, 'mobile-large')) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &.card-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    
+    @media (max-width: map-get($breakpoints-max, 'tablet-landscape')) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    @media (max-width: map-get($breakpoints-max, 'tablet-portrait')) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: map-get($breakpoints-max, 'mobile-large')) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Stats card
+.stats-card {
+  @extend .card-base;
+  padding: 2rem;
+  
+  .stats-icon {
+    @include display($display: flex, $align-items: center, $justify-content: center);
+    @include size($width: 5rem, $height: 5rem);
+    background: rgba($primary-color, 0.1);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    
+    svg {
+      @include size($width: 2.4rem, $height: 2.4rem);
+      color: $primary-color;
+    }
+  }
+  
+  .stats-value {
+    @include font($font-size: 3rem, $font-weight: 700, $line-height: 1);
+    margin-bottom: 0.5rem;
+  }
+  
+  .stats-label {
+    @include font($font-size: 1.4rem, $color: $gray-accent-color);
+  }
+  
+  .stats-change {
+    @include font($font-size: 1.2rem);
+    margin-top: 0.5rem;
+    
+    &.positive {
+      color: $third-color;
+    }
+    
+    &.negative {
+      color: $danger-color;
+    }
+  }
+}
+
+// Program card
+.program-card {
+  @extend .card-hover;
+  
+  .program-cover {
+    @include size($width: 100%, $height: 15rem);
+    object-fit: cover;
+    background: $gradient;
+  }
+  
+  .program-content {
+    padding: 1.5rem;
+  }
+  
+  .program-title {
+    @include font($font-size: 1.8rem, $font-weight: 600);
+    margin-bottom: 0.5rem;
+  }
+  
+  .program-description {
+    @include font($font-size: 1.4rem, $color: $gray-accent-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .program-meta {
+    @include display($display: flex, $align-items: center, $justify-content: space-between);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 0.1rem solid $border-light;
+    
+    .program-members {
+      @include font($font-size: 1.3rem, $color: $gray-accent-color);
+    }
+  }
+}

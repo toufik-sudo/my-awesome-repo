@@ -1,0 +1,142 @@
+// -----------------------------------------------------------------------------
+// Flex utility classes
+// -----------------------------------------------------------------------------
+
+.flex {
+  display: flex !important;
+
+  &-align-items {
+    &-start {
+      align-items: flex-start !important;
+    }
+  }
+
+  &-center {
+    &-vertical {
+      @extend .flex;
+      align-items: center;
+    }
+
+    &-horizontal {
+      @extend .flex;
+      justify-content: center;
+    }
+
+    &-total {
+      @extend .flex;
+      @extend .flex-center-vertical;
+      @extend .flex-center-horizontal;
+    }
+  }
+
+  &-space-between {
+    @extend .flex;
+    justify-content: space-between !important;
+  }
+
+  &-middle-between {
+    @extend .flex-space-between;
+    align-items: center;
+  }
+
+  &-justify-start {
+    justify-content: flex-start;
+  }
+
+  &-end {
+    @extend .flex;
+    justify-content: flex-end;
+  }
+
+  &-space-end {
+    @extend .flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  &-start {
+    @extend .flex;
+    align-items: flex-start;
+  }
+
+  &-direction {
+    &-column {
+      @extend .flex;
+      flex-direction: column;
+    }
+
+    &-row {
+      @extend .flex;
+      flex-direction: row;
+    }
+  }
+
+  &-wrap {
+    @extend .flex;
+    flex-wrap: wrap;
+  }
+
+  &-align-items-center {
+    align-items: center !important;
+  }
+
+  // Spacing
+  &Space05 {
+    flex: .5;
+  }
+
+  @include respond-to-max('mobile-large') {
+    &SpaceMobile1 {
+      flex: 1 !important;
+      width: 100%;
+    }
+  }
+
+  @for $i from 1 through 10 {
+    &Space#{$i} {
+      flex: $i !important;
+    }
+  }
+
+  &Direction {
+    &Column {
+      flex-direction: column !important;
+    }
+
+    &Row {
+      flex-direction: row;
+    }
+  }
+
+  &AlignItems {
+    &Center {
+      align-items: center !important;
+    }
+
+    &Start {
+      align-items: flex-start !important;
+    }
+
+    &End {
+      align-items: flex-end !important;
+    }
+  }
+
+  &JustifyContent {
+    &Center {
+      justify-content: center !important;
+    }
+
+    &End {
+      justify-content: flex-end;
+    }
+  }
+
+  &Wrap {
+    flex-wrap: wrap !important;
+  }
+}
+
+.flex100 {
+  flex: 0 0 100% !important;
+}
