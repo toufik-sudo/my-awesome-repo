@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------------------
 // useRewardsConfig Hook
-// Manages rewards configuration state
-// Migrated from old_app hooks
+// Manages rewards configuration state (now includes measurementType)
 // -----------------------------------------------------------------------------
 
 import { useState, useCallback, useEffect } from 'react';
@@ -16,6 +15,7 @@ const CORRELATED = 'correlated';
 
 interface RewardsConfig {
   allocationType: 'fixed' | 'variable' | 'tiered';
+  measurementType?: string;
   frequency: string;
   spendType: 'points' | 'currency';
   minAllocation: number;
@@ -35,6 +35,7 @@ export const useRewardsConfig = () => {
 
   const [config, setConfig] = useState<RewardsConfig>(() => ({
     allocationType: (launchData.allocationType as RewardsConfig['allocationType']) || 'fixed',
+    measurementType: (launchData.measurementType as string) || '',
     frequency: cube?.frequency || (launchData.frequencyAllocation as string) || FREQUENCY_TYPE.MONTHLY,
     spendType: cube?.spendType || (launchData.spendType as RewardsConfig['spendType']) || 'points',
     minAllocation: (launchData.minAllocation as number) || 0,
@@ -50,6 +51,7 @@ export const useRewardsConfig = () => {
   // Sync to store
   useEffect(() => {
     updateStepData('allocationType', config.allocationType);
+    updateStepData('measurementType', config.measurementType);
     updateStepData('frequencyAllocation', config.frequency);
     updateStepData('spendType', config.spendType);
     updateStepData('minAllocation', config.minAllocation);
@@ -70,12 +72,15 @@ export const useRewardsConfig = () => {
       rewardPeopleManagerAccepted: config.rewardManagers,
       [CORRELATED]: config.correlatedGoals,
       validityPoints: { value: config.validityPeriod, label: config.validityPeriod },
+      measurementType: config.measurementType,
     });
   }, [config]);
 
-  const updateConfig = useCallback(<K extends keyof RewardsConfig>(key: K, value: RewardsConfig[K]) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  }, []);
+  const updateConfig = useCallback<<K extends keyof RewardsConfig>(key: K, value: RewardsConfig[K]) => void>(
+    (key, value) => {
+      setConfig(prev => ({ ...prev, [key]: value }));
+    }, []
+  );
 
   const setCorrelatedGoals = useCallback((correlated: boolean) => {
     setConfig(prev => ({ ...prev, correlatedGoals: correlated }));
@@ -90,7 +95,7 @@ export const useRewardsConfig = () => {
   }, []);
 
   // Validation
-  const isValid = config.allocationType !== undefined && config.frequency !== undefined;
+  const isValid = config.allocationType !== undefined && config.frequency !== undefined && !!config.measurementType;
 
   return {
     config,
