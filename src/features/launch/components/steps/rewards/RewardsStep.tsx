@@ -1,10 +1,8 @@
 // -----------------------------------------------------------------------------
-// RewardsStep Component (Updated for new business logic)
-// Only allocation frequency, manager rewards, post-goals sections, and Star Rankings
-// Star Rankings section now uses bracket logic from star.appriciation.tsx
+// RewardsStep Component (with Next Step button removed and star section optional)
 // -----------------------------------------------------------------------------
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,7 +56,7 @@ const StarIcon = ({ filled = false }) => (
   <Star className={cn("h-5 w-5", filled ? "text-yellow-500" : "text-muted-foreground")} fill={filled ? "currentColor" : "none"} />
 );
 
-const StarRankingsBracket = ({ onSave }) => {
+const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
   const [bracketsData, setBracketsData] = useState([...defaultBrackets]);
   const [isBracketsSeted, setIsBracketsSeted] = useState(false);
 
@@ -130,8 +128,16 @@ const StarRankingsBracket = ({ onSave }) => {
       return acc;
     }, {});
     setIsBracketsSeted(true);
-    if (onSave) onSave(programRanking);
+    if (onSave) onSave(programRanking, true);
   };
+
+  // Expose isBracketsSeted to parent via ref
+  React.useImperativeHandle(ref, () => ({
+    isBracketsSeted,
+    allInputsFilled,
+    bracketsData,
+    setIsBracketsSeted,
+  }));
 
   return (
     <div>
@@ -203,7 +209,8 @@ const StarRankingsBracket = ({ onSave }) => {
       )}
     </div>
   );
-};
+});
+StarRankingsBracket.displayName = "StarRankingsBracket";
 
 export const RewardsStep: React.FC = () => {
   // Allocation frequency
@@ -218,8 +225,31 @@ export const RewardsStep: React.FC = () => {
 
   // Star Rankings programRanking output
   const [programRanking, setProgramRanking] = useState({});
+  const [starRankingSaved, setStarRankingSaved] = useState(false);
+
+  // Ref to access StarRankingsBracket state
+  const starRankingRef = useRef(null);
 
   // Save config to parent/store if needed (not shown here)
+
+  // --- Section completion logic ---
+  // Allocation frequency and validity period are always set (default)
+  const isAllocationSectionComplete = !!frequency && !!validityPeriod;
+  // Manager rewards: if enabled, managerPercentage must be set (always true since default is 10)
+  const isManagerSectionComplete = !rewardManagers || (rewardManagers && typeof managerPercentage === 'number');
+  // Star rankings: now OPTIONAL, so always true
+  const isStarRankingSectionComplete = true;
+
+  const allSectionsComplete = isAllocationSectionComplete && isManagerSectionComplete && isStarRankingSectionComplete;
+
+  // Handler for StarRankingsBracket save
+  const handleStarRankingSave = (ranking, saved) => {
+    setProgramRanking(ranking);
+    setStarRankingSaved(!!saved);
+  };
+
+  // Handler for Next Step
+  // (Removed local Next Step button)
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -342,7 +372,7 @@ export const RewardsStep: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <StarRankingsBracket onSave={setProgramRanking} />
+          <StarRankingsBracket ref={starRankingRef} onSave={handleStarRankingSave} />
           {/* For debugging, show the output */}
           {Object.keys(programRanking).length > 0 && (
             <div className="mt-4 p-2 bg-muted rounded text-xs">
@@ -352,6 +382,9 @@ export const RewardsStep: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Next Step Button removed from here */}
+
     </div>
   );
 };
