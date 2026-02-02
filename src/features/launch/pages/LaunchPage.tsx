@@ -30,6 +30,7 @@ import { useLaunchProgram } from '@/api/hooks/useLaunchApi';
 import { constructQuickLaunchPayload, constructFullLaunchPayload } from '@/api/hooks/useLaunchApi';
 import { PROGRAM, USERS, RESULTS, PRODUCTS, REWARDS, DESIGN, CUBE, QUICK } from '@/constants/wall/launch';
 import { toast } from 'sonner';
+import { RewardsGoalsStep } from '../components/steps/cube/RewardsGoalsStep';
 
 // Platform step constant (matches hook)
 const PLATFORM = 'platform';
@@ -80,9 +81,9 @@ const STEP_COMPONENTS: Record<string, Record<number, React.FC>> = {
     ),
   },
   [REWARDS]: {
-    // 1: RewardsStep,
-    1: GoalAllocationStep,
-    2: () => (
+    1: RewardsGoalsStep,
+    2: RewardsStep,
+    3: () => (
       <div className="text-center py-8 text-muted-foreground">
         <FormattedMessage
           id="launch.step.rewards.preview"
