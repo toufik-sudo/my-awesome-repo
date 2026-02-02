@@ -1,401 +1,237 @@
 // -----------------------------------------------------------------------------
 // RewardsStep Component
-// Rewards configuration step: Configure allocation, frequency, and reward rules
-// Integrated with Redux store and Allocation Types API
+// Stepwise configuration: select products, then measurementType, then allocationType, etc.
 // -----------------------------------------------------------------------------
 
-import React, { useState, useEffect } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Gift, 
-  Calendar, 
-  Users, 
-  TrendingUp,
-  DollarSign,
-  Clock,
-  Target,
-  Award,
-  AlertCircle
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { FormattedMessage } from 'react-intl';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useProductsSelection } from '../../hooks/useProductsSelection';
+import { useRewardsConfig } from '../../hooks/useRewardsConfig';
 import { cn } from '@/lib/utils';
-import { useLaunchWizard } from '../../hooks/useLaunchWizard';
-import { useAllocationTypes } from '@/api/hooks/useLaunchApi';
-import {
-  SIMPLE,
-  BRACKET,
-  GROWTH,
-  RANKING,
-  FREQUENCY_TYPE,
-  CUBE
-} from '@/constants/wall/launch';
 
-type AllocationType = 'fixed' | 'variable' | 'tiered';
-type FrequencyType = 'instantaneously' | 'weekly' | 'monthly' | 'quarter';
-type SpendType = 'points' | 'currency';
-
-interface RewardsConfig {
-  allocationType: AllocationType;
-  frequency: FrequencyType;
-  spendType: SpendType;
-  minAllocation: number;
-  maxAllocation: number;
-  fixedValue: number;
-  rewardManagers: boolean;
-  managerPercentage: number;
-  validityPeriod: string;
-  autoRollover: boolean;
-}
-
-const VALIDITY_OPTIONS = [
-  { value: '3m', label: '3 Months' },
-  { value: '6m', label: '6 Months' },
-  { value: '1y', label: '1 Year' },
-  { value: '2y', label: '2 Years' },
-  { value: 'never', label: 'Never Expires' },
+const MEASUREMENT_TYPES = [
+  { id: 'quantity', label: 'Quantity' },
+  { id: 'value', label: 'Value' },
+  { id: 'frequency', label: 'Frequency' }
 ];
 
-const FREQUENCY_OPTIONS = [
-  { value: FREQUENCY_TYPE.INSTANTANEOUSLY, label: 'Instantaneously' },
-  { value: FREQUENCY_TYPE.WEEKLY, label: 'Weekly' },
-  { value: FREQUENCY_TYPE.MONTHLY, label: 'Monthly' },
-  { value: FREQUENCY_TYPE.QUARTER, label: 'Quarterly' },
+const ALLOCATION_TYPES = [
+  { id: 'fixed', label: 'Fixed' },
+  { id: 'variable', label: 'Variable' },
+  { id: 'tiered', label: 'Tiered' }
 ];
 
-const RewardsStep: React.FC = () => {
-  const { formatMessage } = useIntl();
-  const { updateStepData, updateMultipleData, launchData } = useLaunchWizard();
-  
-  const platformId = (launchData.platform as { id?: number })?.id || (launchData.platformId as number);
-  const programType = launchData.type as number;
-  
-  // Fetch allocation types from API
-  const { data: allocationTypes, isLoading: allocationLoading } = useAllocationTypes(platformId, programType);
-  
-  // Get config from store or use defaults
-  const cube = launchData[CUBE] as Partial<RewardsConfig> | undefined;
-  
-  const [config, setConfig] = useState<RewardsConfig>({
-    allocationType: (launchData.allocationType as AllocationType) || 'fixed',
-    frequency: (cube?.frequency as FrequencyType) || (launchData.frequencyAllocation as FrequencyType) || FREQUENCY_TYPE.MONTHLY,
-    spendType: (cube?.spendType as SpendType) || (launchData.spendType as SpendType) || 'points',
-    minAllocation: (launchData.minAllocation as number) || 0,
-    maxAllocation: (launchData.maxAllocation as number) || 1000,
-    fixedValue: (launchData.fixedValue as number) || 500,
-    rewardManagers: (cube?.rewardManagers as boolean) || (launchData.rewardManagers as boolean) || false,
-    managerPercentage: (cube?.managerPercentage as number) || (launchData.managerPercentage as number) || 10,
-    validityPeriod: (cube?.validityPeriod as string) || (launchData.validityPeriod as string) || '1y',
-    autoRollover: (launchData.autoRollover as boolean) || false,
-  });
-  
-  // Sync config to store on change
-  useEffect(() => {
-    const updates: Record<string, unknown> = {
-      allocationType: config.allocationType,
-      frequencyAllocation: config.frequency,
-      spendType: config.spendType,
-      minAllocation: config.minAllocation,
-      maxAllocation: config.maxAllocation,
-      fixedValue: config.fixedValue,
-      rewardManagers: config.rewardManagers,
-      managerPercentage: config.managerPercentage,
-      validityPeriod: config.validityPeriod,
-      autoRollover: config.autoRollover,
-    };
-    
-    // Update cube object as well for consistency
-    updateStepData(CUBE, {
-      ...cube,
-      frequencyAllocation: config.frequency,
-      spendType: config.spendType,
-      rewardPeopleManagers: config.rewardManagers,
-      rewardPeopleManagerAccepted: config.rewardManagers,
-      validityPoints: { value: config.validityPeriod, label: config.validityPeriod },
-    });
-    
-    Object.entries(updates).forEach(([key, value]) => {
-      updateStepData(key, value);
-    });
-  }, [config]);
-  
-  const updateConfig = (key: keyof RewardsConfig, value: unknown) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  };
-  
+export const RewardsStep: React.FC = () => {
+  // Step: 0 = products, 1 = measurement, 2 = allocation, 3 = next...
+  const [step, setStep] = useState(0);
+
+  // Product selection
+  const {
+    availableProducts,
+    selectedProductIds,
+    selectedProducts,
+    toggleProduct,
+    isValid: productsValid
+  } = useProductsSelection();
+
+  // Rewards config
+  const {
+    config,
+    updateConfig,
+    isValid: configValid
+  } = useRewardsConfig();
+
+  // Local state for measurementType and allocationType
+  const [measurementType, setMeasurementType] = useState < string > (config.measurementType || '');
+  const [allocationType, setAllocationType] = useState < string > (config.allocationType || '');
+
+  // Stepwise handlers
+  const handleNext = () => setStep((s) => s + 1);
+  const handleBack = () => setStep((s) => Math.max(0, s - 1));
+
+  // Save measurementType and allocationType to config
+  React.useEffect(() => {
+    if (measurementType) updateConfig('measurementType' as any, measurementType as any);
+  }, [measurementType]);
+  React.useEffect(() => {
+    if (allocationType) updateConfig('allocationType', allocationType as any);
+  }, [allocationType]);
+
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">
-          <FormattedMessage 
-            id="launch.step.rewards.title" 
-            defaultMessage="Configure Rewards" 
-          />
-        </h2>
-        <p className="text-muted-foreground">
-          <FormattedMessage 
-            id="launch.step.rewards.description" 
-            defaultMessage="Set up how rewards are allocated and distributed" 
-          />
-        </p>
+    <div className="max-w-2xl mx-auto space-y-8">
+      {/* Stepper */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
+          <StepIndicator active={step === 0} done={step > 0} label="Products" />
+          <StepIndicator active={step === 1} done={step > 1} label="Measurement" />
+          <StepIndicator active={step === 2} done={step > 2} label="Allocation" />
+        </div>
       </div>
-      
-      <div className="grid gap-6">
-        {/* Allocation Type */}
+
+      {/* Step 0: Product Selection */}
+      {step === 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Target className="h-5 w-5 text-primary" />
-              <FormattedMessage id="launch.rewards.allocationType" defaultMessage="Allocation Type" />
+            <CardTitle>
+              <FormattedMessage id="launch.rewards.selectProducts" defaultMessage="Select Products for Rewards" />
             </CardTitle>
             <CardDescription>
-              <FormattedMessage id="launch.rewards.allocationTypeDesc" defaultMessage="How should rewards be distributed?" />
+              <FormattedMessage id="launch.rewards.selectProducts.desc" defaultMessage="Choose which products will be available as rewards in this program." />
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {allocationLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-24 w-full" />
-                ))}
-              </div>
-            ) : (
-              <RadioGroup
-                value={config.allocationType}
-                onValueChange={(value) => updateConfig('allocationType', value as AllocationType)}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4"
-              >
-                <Label
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {availableProducts.map((product) => (
+                <div
+                  key={product.id}
                   className={cn(
-                    'flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all',
-                    config.allocationType === 'fixed' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'
+                    'border rounded-lg p-4 flex flex-col gap-2 cursor-pointer transition-all',
+                    selectedProductIds.includes(product.id)
+                      ? 'border-primary bg-primary/10'
+                      : 'hover:border-primary'
                   )}
+                  onClick={() => toggleProduct(product)}
                 >
-                  <RadioGroupItem value="fixed" className="sr-only" />
-                  <DollarSign className="h-8 w-8 text-primary" />
-                  <span className="font-medium">Fixed</span>
-                  <span className="text-xs text-muted-foreground text-center">Same amount for everyone</span>
-                </Label>
-                
-                <Label
-                  className={cn(
-                    'flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all',
-                    config.allocationType === 'variable' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'
+                  <div className="font-semibold">{product.name}</div>
+                  <div className="text-sm text-muted-foreground">{product.description}</div>
+                  {product.points && (
+                    <div className="text-xs text-primary font-medium">
+                      <FormattedMessage id="launch.rewards.product.points" defaultMessage="{points} points" values={{ points: product.points }} />
+                    </div>
                   )}
-                >
-                  <RadioGroupItem value="variable" className="sr-only" />
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                  <span className="font-medium">Variable</span>
-                  <span className="text-xs text-muted-foreground text-center">Based on performance</span>
-                </Label>
-                
-                <Label
-                  className={cn(
-                    'flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer transition-all',
-                    config.allocationType === 'tiered' ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'
-                  )}
-                >
-                  <RadioGroupItem value="tiered" className="sr-only" />
-                  <Award className="h-8 w-8 text-primary" />
-                  <span className="font-medium">Tiered</span>
-                  <span className="text-xs text-muted-foreground text-center">Different levels of rewards</span>
-                </Label>
-              </RadioGroup>
-            )}
-            
-            {/* Allocation values */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {config.allocationType === 'fixed' ? (
-                <div className="space-y-2">
-                  <Label>
-                    <FormattedMessage id="launch.rewards.fixedValue" defaultMessage="Fixed Value" />
-                  </Label>
-                  <Input
-                    type="number"
-                    value={config.fixedValue}
-                    onChange={(e) => updateConfig('fixedValue', parseInt(e.target.value) || 0)}
-                  />
                 </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <Label>
-                      <FormattedMessage id="launch.rewards.minAllocation" defaultMessage="Minimum" />
-                    </Label>
-                    <Input
-                      type="number"
-                      value={config.minAllocation}
-                      onChange={(e) => updateConfig('minAllocation', parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>
-                      <FormattedMessage id="launch.rewards.maxAllocation" defaultMessage="Maximum" />
-                    </Label>
-                    <Input
-                      type="number"
-                      value={config.maxAllocation}
-                      onChange={(e) => updateConfig('maxAllocation', parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-                </>
-              )}
+              ))}
+            </div>
+            <div className="flex justify-end mt-6">
+              <Button
+                onClick={handleNext}
+                disabled={!productsValid}
+                size="lg"
+              >
+                <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
+              </Button>
             </div>
           </CardContent>
         </Card>
-        
-        {/* Frequency & Spend Type */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      )}
+
+      {/* Step 1: Measurement Type */}
+      {step === 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <FormattedMessage id="launch.rewards.measurementType" defaultMessage="Select Measurement Type" />
+            </CardTitle>
+            <CardDescription>
+              <FormattedMessage id="launch.rewards.measurementType.desc" defaultMessage="How will achievement be measured for rewards?" />
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              {MEASUREMENT_TYPES.map((type) => (
+                <Button
+                  key={type.id}
+                  variant={measurementType === type.id ? 'default' : 'outline'}
+                  className="w-full"
+                  onClick={() => setMeasurementType(type.id)}
+                >
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex justify-between mt-6">
+              <Button variant="outline" onClick={handleBack}>
+                <FormattedMessage id="launch.rewards.back" defaultMessage="Back" />
+              </Button>
+              <Button
+                onClick={handleNext}
+                disabled={!measurementType}
+                size="lg"
+              >
+                <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 2: Allocation Type */}
+      {step === 2 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <FormattedMessage id="launch.rewards.allocationType" defaultMessage="Select Allocation Type" />
+            </CardTitle>
+            <CardDescription>
+              <FormattedMessage id="launch.rewards.allocationType.desc" defaultMessage="How will rewards be allocated?" />
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              {ALLOCATION_TYPES.map((type) => (
+                <Button
+                  key={type.id}
+                  variant={allocationType === type.id ? 'default' : 'outline'}
+                  className="w-full"
+                  onClick={() => setAllocationType(type.id)}
+                >
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex justify-between mt-6">
+              <Button variant="outline" onClick={handleBack}>
+                <FormattedMessage id="launch.rewards.back" defaultMessage="Back" />
+              </Button>
+              <Button
+                onClick={handleNext}
+                disabled={!allocationType}
+                size="lg"
+              >
+                <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Continue with rest of rewards config... */}
+      {step > 2 && (
+        <div>
+          {/* Render the rest of the rewards configuration as before */}
+          {/* You can insert the existing RewardsBlockList, ManagerRewardsConfig, etc. here */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Calendar className="h-5 w-5 text-primary" />
-                <FormattedMessage id="launch.rewards.frequency" defaultMessage="Frequency" />
+              <CardTitle>
+                <FormattedMessage id="launch.rewards.advancedConfig" defaultMessage="Continue Rewards Configuration" />
               </CardTitle>
+              <CardDescription>
+                <FormattedMessage id="launch.rewards.advancedConfig.desc" defaultMessage="Configure advanced reward options below." />
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Select
-                value={config.frequency}
-                onValueChange={(value) => updateConfig('frequency', value as FrequencyType)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FREQUENCY_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Gift className="h-5 w-5 text-primary" />
-                <FormattedMessage id="launch.rewards.spendType" defaultMessage="Spend Type" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup
-                value={config.spendType}
-                onValueChange={(value) => updateConfig('spendType', value as SpendType)}
-                className="flex gap-4"
-              >
-                <Label className={cn(
-                  'flex items-center gap-2 p-3 border rounded-lg cursor-pointer flex-1',
-                  config.spendType === 'points' ? 'border-primary bg-primary/5' : 'border-muted'
-                )}>
-                  <RadioGroupItem value="points" />
-                  Points
-                </Label>
-                <Label className={cn(
-                  'flex items-center gap-2 p-3 border rounded-lg cursor-pointer flex-1',
-                  config.spendType === 'currency' ? 'border-primary bg-primary/5' : 'border-muted'
-                )}>
-                  <RadioGroupItem value="currency" />
-                  Currency
-                </Label>
-              </RadioGroup>
+              {/* Placeholders for advanced config */}
+              <div className="text-muted-foreground">
+                <FormattedMessage id="launch.rewards.advancedConfig.placeholder" defaultMessage="Continue with the rest of the rewards setup..." />
+              </div>
             </CardContent>
           </Card>
         </div>
-        
-        {/* Validity Period */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Clock className="h-5 w-5 text-primary" />
-              <FormattedMessage id="launch.rewards.validity" defaultMessage="Points Validity" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Select
-              value={config.validityPeriod}
-              onValueChange={(value) => updateConfig('validityPeriod', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {VALIDITY_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>
-                  <FormattedMessage id="launch.rewards.autoRollover" defaultMessage="Auto Rollover" />
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  <FormattedMessage id="launch.rewards.autoRolloverDesc" defaultMessage="Automatically carry over unused points" />
-                </p>
-              </div>
-              <Switch
-                checked={config.autoRollover}
-                onCheckedChange={(checked) => updateConfig('autoRollover', checked)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Manager Rewards */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5 text-primary" />
-              <FormattedMessage id="launch.rewards.managers" defaultMessage="Manager Rewards" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>
-                  <FormattedMessage id="launch.rewards.rewardManagers" defaultMessage="Reward People Managers" />
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  <FormattedMessage id="launch.rewards.rewardManagersDesc" defaultMessage="Give managers a percentage of their team's rewards" />
-                </p>
-              </div>
-              <Switch
-                checked={config.rewardManagers}
-                onCheckedChange={(checked) => updateConfig('rewardManagers', checked)}
-              />
-            </div>
-            
-            {config.rewardManagers && (
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Manager Percentage</span>
-                  <span className="font-medium">{config.managerPercentage}%</span>
-                </div>
-                <Slider
-                  value={[config.managerPercentage]}
-                  onValueChange={([value]) => updateConfig('managerPercentage', value)}
-                  max={25}
-                  step={1}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   );
 };
 
-export { RewardsStep };
+// Step indicator component
+const StepIndicator: React.FC<{ active: boolean; done: boolean; label: string }> = ({ active, done, label }) => (
+  <div className={cn(
+    'flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium',
+    active ? 'bg-primary text-primary-foreground' : done ? 'bg-muted text-muted-foreground' : 'bg-muted/50 text-muted-foreground'
+  )}>
+    {label}
+  </div>
+);
+
 export default RewardsStep;
