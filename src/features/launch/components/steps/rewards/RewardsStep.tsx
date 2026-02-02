@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
 // RewardsStep Component
-// Stepwise configuration: select products, then measurementType, then star ranking config, etc.
+// Stepwise configuration: select products, then measurementType, then allocationType, etc.
 // -----------------------------------------------------------------------------
 
 import React, { useState } from 'react';
@@ -11,23 +11,20 @@ import { useProductsSelection } from '../../hooks/useProductsSelection';
 import { useRewardsConfig } from '../../hooks/useRewardsConfig';
 import { cn } from '@/lib/utils';
 
-// Star ranking options (example: 1-5 stars)
-const STAR_RANKINGS = [
-  { id: 1, label: '1 Star' },
-  { id: 2, label: '2 Stars' },
-  { id: 3, label: '3 Stars' },
-  { id: 4, label: '4 Stars' },
-  { id: 5, label: '5 Stars' }
-];
-
 const MEASUREMENT_TYPES = [
   { id: 'quantity', label: 'Quantity' },
   { id: 'value', label: 'Value' },
   { id: 'frequency', label: 'Frequency' }
 ];
 
+const ALLOCATION_TYPES = [
+  { id: 'fixed', label: 'Fixed' },
+  { id: 'variable', label: 'Variable' },
+  { id: 'tiered', label: 'Tiered' }
+];
+
 export const RewardsStep: React.FC = () => {
-  // Step: 0 = products, 1 = measurement, 2 = star ranking, 3 = next...
+  // Step: 0 = products, 1 = measurement, 2 = allocation, 3 = next...
   const [step, setStep] = useState(0);
 
   // Product selection
@@ -46,21 +43,21 @@ export const RewardsStep: React.FC = () => {
     isValid: configValid
   } = useRewardsConfig();
 
-  // Local state for measurementType and starRanking
+  // Local state for measurementType and allocationType
   const [measurementType, setMeasurementType] = useState<string>(config.measurementType || '');
-  const [starRanking, setStarRanking] = useState<number>(config.starRanking || 0);
+  const [allocationType, setAllocationType] = useState<string>(config.allocationType || '');
 
   // Stepwise handlers
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => Math.max(0, s - 1));
 
-  // Save measurementType and starRanking to config
+  // Save measurementType and allocationType to config
   React.useEffect(() => {
     if (measurementType) updateConfig('measurementType' as any, measurementType as any);
   }, [measurementType]);
   React.useEffect(() => {
-    if (starRanking) updateConfig('starRanking', starRanking as any);
-  }, [starRanking]);
+    if (allocationType) updateConfig('allocationType', allocationType as any);
+  }, [allocationType]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -69,7 +66,7 @@ export const RewardsStep: React.FC = () => {
         <div className="flex gap-2">
           <StepIndicator active={step === 0} done={step > 0} label="Products" />
           <StepIndicator active={step === 1} done={step > 1} label="Measurement" />
-          <StepIndicator active={step === 2} done={step > 2} label="Star Ranking" />
+          <StepIndicator active={step === 2} done={step > 2} label="Allocation" />
         </div>
       </div>
 
@@ -160,31 +157,27 @@ export const RewardsStep: React.FC = () => {
         </Card>
       )}
 
-      {/* Step 2: Star Ranking Config */}
+      {/* Step 2: Allocation Type */}
       {step === 2 && (
         <Card>
           <CardHeader>
             <CardTitle>
-              <FormattedMessage id="launch.rewards.starRanking" defaultMessage="Configure Star Ranking" />
+              <FormattedMessage id="launch.rewards.allocationType" defaultMessage="Select Allocation Type" />
             </CardTitle>
             <CardDescription>
-              <FormattedMessage id="launch.rewards.starRanking.desc" defaultMessage="Assign a star ranking for this reward configuration." />
+              <FormattedMessage id="launch.rewards.allocationType.desc" defaultMessage="How will rewards be allocated?" />
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-row gap-4 justify-center items-center">
-              {STAR_RANKINGS.map((star) => (
+            <div className="flex flex-col gap-4">
+              {ALLOCATION_TYPES.map((type) => (
                 <Button
-                  key={star.id}
-                  variant={starRanking === star.id ? 'default' : 'outline'}
-                  className="w-16 h-16 flex flex-col items-center justify-center text-lg"
-                  onClick={() => setStarRanking(star.id)}
-                  aria-label={`${star.id} Star${star.id > 1 ? 's' : ''}`}
+                  key={type.id}
+                  variant={allocationType === type.id ? 'default' : 'outline'}
+                  className="w-full"
+                  onClick={() => setAllocationType(type.id)}
                 >
-                  <span className="text-yellow-500 text-2xl">
-                    {'★'.repeat(star.id)}
-                  </span>
-                  <span className="text-xs mt-1">{star.label}</span>
+                  {type.label}
                 </Button>
               ))}
             </div>
@@ -194,7 +187,7 @@ export const RewardsStep: React.FC = () => {
               </Button>
               <Button
                 onClick={handleNext}
-                disabled={!starRanking}
+                disabled={!allocationType}
                 size="lg"
               >
                 <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
