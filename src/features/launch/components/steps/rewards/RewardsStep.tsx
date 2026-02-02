@@ -1,234 +1,366 @@
 // -----------------------------------------------------------------------------
-// RewardsStep Component
-// Stepwise configuration: select products, then measurementType, then allocationType, etc.
+// RewardsStep Component (Updated for new business logic)
+// Only allocation frequency, manager rewards, post-goals sections, and Star Rankings
+// Star Rankings section now uses bracket logic from star.appriciation.tsx
 // -----------------------------------------------------------------------------
 
 import React, { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useProductsSelection } from '../../hooks/useProductsSelection';
-import { useRewardsConfig } from '../../hooks/useRewardsConfig';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Star, Users, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const MEASUREMENT_TYPES = [
-  { id: 'quantity', label: 'Quantity' },
-  { id: 'value', label: 'Value' },
-  { id: 'frequency', label: 'Frequency' }
+// --- Star Rankings Bracket Logic ---
+const STAR_LABELS = [
+  'firstStar',
+  'secondStar',
+  'thirdStar',
+  'fourthStar',
+  'fifthStar',
 ];
 
-const ALLOCATION_TYPES = [
-  { id: 'fixed', label: 'Fixed' },
-  { id: 'variable', label: 'Variable' },
-  { id: 'tiered', label: 'Tiered' }
+const STAR_LABELS_DISPLAY = [
+  'Bronze',
+  'Silver',
+  'Gold',
+  'Platinum',
+  'Diamond',
 ];
+
+const FREQUENCY_OPTIONS = [
+  { value: 'instantaneously', label: 'Instantaneously' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarter', label: 'Quarterly' },
+];
+
+const VALIDITY_OPTIONS = [
+  { value: '3m', label: '3 Months' },
+  { value: '6m', label: '6 Months' },
+  { value: '1y', label: '1 Year' },
+  { value: '2y', label: '2 Years' },
+  { value: 'never', label: 'Never Expires' },
+];
+
+const defaultBrackets = [
+  { min: '', max: '', value: 1, errors: {} },
+  { min: '', max: '', value: 2, errors: {} },
+  { min: '', max: '', value: 3, errors: {} },
+];
+
+const StarIcon = ({ filled = false }) => (
+  <Star className={cn("h-5 w-5", filled ? "text-yellow-500" : "text-muted-foreground")} fill={filled ? "currentColor" : "none"} />
+);
+
+const StarRankingsBracket = ({ onSave }) => {
+  const [bracketsData, setBracketsData] = useState([...defaultBrackets]);
+  const [isBracketsSeted, setIsBracketsSeted] = useState(false);
+
+  // Validation logic
+  const validateBrackets = (updatedBrackets) => {
+    setIsBracketsSeted(false);
+    return updatedBrackets.map((bracket, index) => {
+      const errors = {};
+      const prevBracket = updatedBrackets[index - 1];
+
+      if (
+        (index !== updatedBrackets.length - 1 || (index === updatedBrackets.length - 1 && updatedBrackets.max !== "")) &&
+        bracket.max !== '' &&
+        bracket.min !== '' &&
+        parseInt(bracket.max, 10) <= parseInt(bracket.min, 10)
+      ) {
+        errors.max = "Must be strictly greater than min";
+        errors.min = "Must be strictly less than max";
+      }
+
+      if (prevBracket && parseInt(bracket.min, 10) <= parseInt(prevBracket.max, 10)) {
+        errors.min = "Must be greater than previous max";
+        prevBracket.errors.max = "Must be less than next min";
+      }
+
+      return { ...bracket, errors };
+    });
+  };
+
+  const handleBracketChange = (index, field, value) => {
+    const updatedBrackets = [...bracketsData];
+    updatedBrackets[index][field] = value;
+    setBracketsData(validateBrackets(updatedBrackets));
+  };
+
+  const handleAddBracket = () => {
+    if (bracketsData.length < 5) {
+      const newValue = bracketsData.length + 1;
+      const updatedBrackets = [
+        ...bracketsData,
+        { min: '', max: '', value: newValue, errors: {} },
+      ];
+      setBracketsData(validateBrackets(updatedBrackets));
+    }
+  };
+
+  const handleDeleteBracket = (index) => {
+    if (bracketsData.length > 3) {
+      const updatedBrackets = bracketsData.filter((_, i) => i !== index);
+      setBracketsData(validateBrackets(updatedBrackets));
+    }
+  };
+
+  const allInputsFilled = bracketsData.every(
+    (bracket, index) =>
+      bracket.min !== '' &&
+      (index === bracketsData.length - 1 || bracket.max !== '') &&
+      Object.keys(bracket.errors).length === 0
+  );
+
+  // Save as programRanking object
+  const saveProgramRanking = () => {
+    const programRanking = bracketsData.reduce((acc, bracket, index) => {
+      const key = STAR_LABELS[index];
+      acc[key] = {
+        min: parseInt(bracket.min, 10),
+        max: bracket.max === '' && index === bracketsData.length - 1 ? null : parseInt(bracket.max, 10),
+      };
+      return acc;
+    }, {});
+    setIsBracketsSeted(true);
+    if (onSave) onSave(programRanking);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: '2rem' }} className={isBracketsSeted ? "opacity-60 pointer-events-none" : ""}>
+        {bracketsData.map((bracket, index) => (
+          <div key={index} className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+            <span className="font-semibold min-w-[70px]">{STAR_LABELS_DISPLAY[index] || `Star ${index + 1}`}</span>
+            <Input
+              type="number"
+              className={bracket.errors.min ? "border-red-500" : ""}
+              value={bracket.min}
+              min={0}
+              onChange={e => handleBracketChange(index, 'min', e.target.value)}
+              placeholder="Min"
+              style={{ width: 80 }}
+            />
+            <span className="text-xs text-muted-foreground">to</span>
+            <Input
+              type="number"
+              className={bracket.errors.max ? "border-red-500" : ""}
+              value={bracket.max}
+              min={0}
+              onChange={e => handleBracketChange(index, 'max', e.target.value)}
+              placeholder={index === bracketsData.length - 1 ? "No max" : "Max"}
+              style={{ width: 80 }}
+            />
+            <span className="flex items-center ml-2">
+              {[...Array(bracket.value)].map((_, starIndex) => (
+                <StarIcon key={starIndex} filled={true} />
+              ))}
+              {[...Array(bracketsData.length - bracket.value)].map((_, starIndex) => (
+                <StarIcon key={starIndex} filled={false} />
+              ))}
+            </span>
+            {index === bracketsData.length - 1 && index > 2 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-red-500 ml-2"
+                onClick={() => handleDeleteBracket(index)}
+              >
+                Remove
+              </Button>
+            )}
+            <div className="flex flex-col">
+              {bracket.errors.min && <span className="text-xs text-red-500">{bracket.errors.min}</span>}
+              {bracket.errors.max && <span className="text-xs text-red-500">{bracket.errors.max}</span>}
+            </div>
+          </div>
+        ))}
+        <div>
+          {bracketsData.length < 5 && (
+            <Button type="button" variant="link" onClick={handleAddBracket} className="text-primary underline">
+              + Add Star Ranking
+            </Button>
+          )}
+        </div>
+      </div>
+      {allInputsFilled && (
+        <Button
+          type="button"
+          onClick={saveProgramRanking}
+          className="mt-2"
+          variant={isBracketsSeted ? "outline" : "default"}
+        >
+          {isBracketsSeted ? "Saved" : "Save Star Rankings"}
+        </Button>
+      )}
+    </div>
+  );
+};
 
 export const RewardsStep: React.FC = () => {
-  // Step: 0 = products, 1 = measurement, 2 = allocation, 3 = next...
-  const [step, setStep] = useState(0);
+  // Allocation frequency
+  const [frequency, setFrequency] = useState('monthly');
+  // Validity period
+  const [validityPeriod, setValidityPeriod] = useState('1y');
+  const [autoRollover, setAutoRollover] = useState(false);
 
-  // Product selection
-  const {
-    availableProducts,
-    selectedProductIds,
-    selectedProducts,
-    toggleProduct,
-    isValid: productsValid
-  } = useProductsSelection();
+  // Manager rewards
+  const [rewardManagers, setRewardManagers] = useState(false);
+  const [managerPercentage, setManagerPercentage] = useState(10);
 
-  // Rewards config
-  const {
-    config,
-    updateConfig,
-    isValid: configValid
-  } = useRewardsConfig();
+  // Star Rankings programRanking output
+  const [programRanking, setProgramRanking] = useState({});
 
-  // Local state for measurementType and allocationType
-  const [measurementType, setMeasurementType] = useState<string>(config.measurementType || '');
-  const [allocationType, setAllocationType] = useState<string>(config.allocationType || '');
-
-  // Stepwise handlers
-  const handleNext = () => setStep((s) => s + 1);
-  const handleBack = () => setStep((s) => Math.max(0, s - 1));
-
-  // Save measurementType and allocationType to config
-  React.useEffect(() => {
-    if (measurementType) updateConfig('measurementType' as any, measurementType as any);
-  }, [measurementType]);
-  React.useEffect(() => {
-    if (allocationType) updateConfig('allocationType', allocationType as any);
-  }, [allocationType]);
+  // Save config to parent/store if needed (not shown here)
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Stepper */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-2">
-          <StepIndicator active={step === 0} done={step > 0} label="Products" />
-          <StepIndicator active={step === 1} done={step > 1} label="Measurement" />
-          <StepIndicator active={step === 2} done={step > 2} label="Allocation" />
+          <StepIndicator active label="Allocation" />
+          <StepIndicator label="Manager Rewards" />
+          <StepIndicator label="Star Rankings" />
         </div>
       </div>
 
-      {/* Step 0: Product Selection */}
-      {step === 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <FormattedMessage id="launch.rewards.selectProducts" defaultMessage="Select Products for Rewards" />
-            </CardTitle>
-            <CardDescription>
-              <FormattedMessage id="launch.rewards.selectProducts.desc" defaultMessage="Choose which products will be available as rewards in this program." />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {availableProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className={cn(
-                    'border rounded-lg p-4 flex flex-col gap-2 cursor-pointer transition-all',
-                    selectedProductIds.includes(product.id)
-                      ? 'border-primary bg-primary/10'
-                      : 'hover:border-primary'
-                  )}
-                  onClick={() => toggleProduct(product)}
-                >
-                  <div className="font-semibold">{product.name}</div>
-                  <div className="text-sm text-muted-foreground">{product.description}</div>
-                  {product.points && (
-                    <div className="text-xs text-primary font-medium">
-                      <FormattedMessage id="launch.rewards.product.points" defaultMessage="{points} points" values={{ points: product.points }} />
-                    </div>
-                  )}
-                </div>
+      {/* Allocation Frequency */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <FormattedMessage id="launch.rewards.frequency" defaultMessage="Allocation Frequency" />
+          </CardTitle>
+          <CardDescription>
+            <FormattedMessage id="launch.rewards.frequency.desc" defaultMessage="How often are rewards allocated?" />
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select value={frequency} onValueChange={setFrequency}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FREQUENCY_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
               ))}
-            </div>
-            <div className="flex justify-end mt-6">
-              <Button
-                onClick={handleNext}
-                disabled={!productsValid}
-                size="lg"
-              >
-                <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
-      {/* Step 1: Measurement Type */}
-      {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <FormattedMessage id="launch.rewards.measurementType" defaultMessage="Select Measurement Type" />
-            </CardTitle>
-            <CardDescription>
-              <FormattedMessage id="launch.rewards.measurementType.desc" defaultMessage="How will achievement be measured for rewards?" />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              {MEASUREMENT_TYPES.map((type) => (
-                <Button
-                  key={type.id}
-                  variant={measurementType === type.id ? 'default' : 'outline'}
-                  className="w-full"
-                  onClick={() => setMeasurementType(type.id)}
-                >
-                  {type.label}
-                </Button>
+      {/* Validity Period */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Clock className="h-5 w-5 text-primary" />
+            <FormattedMessage id="launch.rewards.validity" defaultMessage="Points Validity" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Select value={validityPeriod} onValueChange={setValidityPeriod}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {VALIDITY_OPTIONS.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label>
+                <FormattedMessage id="launch.rewards.autoRollover" defaultMessage="Auto Rollover" />
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                <FormattedMessage id="launch.rewards.autoRolloverDesc" defaultMessage="Automatically carry over unused points" />
+              </p>
             </div>
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={handleBack}>
-                <FormattedMessage id="launch.rewards.back" defaultMessage="Back" />
-              </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!measurementType}
-                size="lg"
-              >
-                <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            <Switch checked={autoRollover} onCheckedChange={setAutoRollover} />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Step 2: Allocation Type */}
-      {step === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <FormattedMessage id="launch.rewards.allocationType" defaultMessage="Select Allocation Type" />
-            </CardTitle>
-            <CardDescription>
-              <FormattedMessage id="launch.rewards.allocationType.desc" defaultMessage="How will rewards be allocated?" />
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              {ALLOCATION_TYPES.map((type) => (
-                <Button
-                  key={type.id}
-                  variant={allocationType === type.id ? 'default' : 'outline'}
-                  className="w-full"
-                  onClick={() => setAllocationType(type.id)}
-                >
-                  {type.label}
-                </Button>
-              ))}
+      {/* Manager Rewards */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Users className="h-5 w-5 text-primary" />
+            <FormattedMessage id="launch.rewards.managers" defaultMessage="Manager Rewards" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label>
+                <FormattedMessage id="launch.rewards.rewardManagers" defaultMessage="Reward People Managers" />
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                <FormattedMessage id="launch.rewards.rewardManagersDesc" defaultMessage="Give managers a percentage of their team's rewards" />
+              </p>
             </div>
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={handleBack}>
-                <FormattedMessage id="launch.rewards.back" defaultMessage="Back" />
-              </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!allocationType}
-                size="lg"
-              >
-                <FormattedMessage id="launch.rewards.next" defaultMessage="Next" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 3: Continue with rest of rewards config... */}
-      {step > 2 && (
-        <div>
-          {/* Render the rest of the rewards configuration as before */}
-          {/* You can insert the existing RewardsBlockList, ManagerRewardsConfig, etc. here */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                <FormattedMessage id="launch.rewards.advancedConfig" defaultMessage="Continue Rewards Configuration" />
-              </CardTitle>
-              <CardDescription>
-                <FormattedMessage id="launch.rewards.advancedConfig.desc" defaultMessage="Configure advanced reward options below." />
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Placeholders for advanced config */}
-              <div className="text-muted-foreground">
-                <FormattedMessage id="launch.rewards.advancedConfig.placeholder" defaultMessage="Continue with the rest of the rewards setup..." />
+            <Switch checked={rewardManagers} onCheckedChange={setRewardManagers} />
+          </div>
+          {rewardManagers && (
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span>Manager Percentage</span>
+                <span className="font-medium">{managerPercentage}%</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              <Slider
+                value={[managerPercentage]}
+                onValueChange={([value]) => setManagerPercentage(value)}
+                max={25}
+                step={1}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Star Rankings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Star className="h-5 w-5 text-yellow-500" />
+            <FormattedMessage id="launch.rewards.starRankings" defaultMessage="Star Rankings" />
+          </CardTitle>
+          <CardDescription>
+            <FormattedMessage id="launch.rewards.starRankings.desc" defaultMessage="Define star-based achievement levels for participants." />
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StarRankingsBracket onSave={setProgramRanking} />
+          {/* For debugging, show the output */}
+          {Object.keys(programRanking).length > 0 && (
+            <div className="mt-4 p-2 bg-muted rounded text-xs">
+              <b>programRanking output:</b>
+              <pre>{JSON.stringify(programRanking, null, 2)}</pre>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
 // Step indicator component
-const StepIndicator: React.FC<{ active: boolean; done: boolean; label: string }> = ({ active, done, label }) => (
+const StepIndicator: React.FC<{ active?: boolean; label: string }> = ({ active, label }) => (
   <div className={cn(
     'flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium',
-    active ? 'bg-primary text-primary-foreground' : done ? 'bg-muted text-muted-foreground' : 'bg-muted/50 text-muted-foreground'
+    active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
   )}>
     {label}
   </div>

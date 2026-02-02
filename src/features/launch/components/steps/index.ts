@@ -10,7 +10,7 @@ export { UsersInvitationStep } from './UsersInvitationStep';
 export { ResultsConfigStep } from './ResultsConfigStep';
 export { PlatformSelectionStep } from './PlatformSelectionStep';
 export { ProductsStep } from './ProductsStep';
-export { RewardsStep } from './RewardsStep';
+export { RewardsStep } from './rewards/RewardsStep';
 export { DesignStep } from './DesignStep';
 export { GoalAllocationStep } from './GoalAllocationStep';
 
