@@ -82,7 +82,7 @@ const STEP_COMPONENTS: Record<string, Record<number, React.FC>> = {
   },
   [REWARDS]: {
     1: RewardsGoalsStep,
-    2: GoalAllocationStep,
+    2: RewardsStep,
     3: () => (
       <div className="text-center py-8 text-muted-foreground">
         <FormattedMessage
