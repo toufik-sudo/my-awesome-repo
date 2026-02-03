@@ -7,9 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useIntl } from 'react-intl';
 import { useParams } from 'react-router-dom';
-import { ArrowRight, FileText, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, Sparkles } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ContentsEditor } from './ContentsEditor';
@@ -30,10 +28,13 @@ const CONTENT_SECTIONS_COUNT = 5;
 export const ContentsStep: React.FC = () => {
   const { formatMessage } = useIntl();
   const { stepIndex = '1' } = useParams<{ stepIndex: string }>();
-  const { updateStepData, goToNextStep, launchData } = useLaunchWizard();
+  const { updateStepData, launchData } = useLaunchWizard();
 
   const currentIndex = parseInt(stepIndex, 10);
   const isSocialNetworksStep = currentIndex === 6;
+  const currentSection = currentIndex <= CONTENT_SECTIONS_COUNT ? 
+    (launchData.contentSections as ContentSection[] | undefined)?.[currentIndex - 1] : null;
+  const isMainBanner = currentIndex === 1;
 
   // Initialize content sections from store or create defaults
   const [sections, setSections] = useState<ContentSection[]>(() => {
@@ -70,18 +71,14 @@ export const ContentsStep: React.FC = () => {
     );
   };
 
-  const currentSection = sections[currentIndex - 1];
-  const isMainBanner = currentIndex === 1;
+  // Get actual current section from local state
+  const activeSection = sections[currentIndex - 1];
 
   // Calculate progress
   const filledSections = sections.filter(
     (s) => s.bannerTitle || s.bannerImage || s.content
   ).length;
   const progress = (filledSections / CONTENT_SECTIONS_COUNT) * 100;
-
-  const handleNext = () => {
-    goToNextStep();
-  };
 
   if (isSocialNetworksStep) {
     return (
@@ -106,13 +103,6 @@ export const ContentsStep: React.FC = () => {
           networks={socialNetworks}
           onChange={setSocialNetworks}
         />
-
-        <div className="flex justify-center pt-4">
-          <Button onClick={handleNext} size="lg" className="gap-2">
-            {formatMessage({ id: 'form.submit.next', defaultMessage: 'Continue' })}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
     );
   }
@@ -184,10 +174,10 @@ export const ContentsStep: React.FC = () => {
       </div>
 
       {/* Current Section Editor */}
-      {currentSection && (
+      {activeSection && (
         <div className="space-y-6 max-w-4xl mx-auto">
           <ContentsBannerUpload
-            value={currentSection.bannerImage}
+            value={activeSection.bannerImage}
             onChange={(img) => updateSection(currentIndex - 1, { bannerImage: img })}
             title={
               isMainBanner
@@ -197,7 +187,7 @@ export const ContentsStep: React.FC = () => {
                     { number: currentIndex - 1 }
                   )
             }
-            bannerTitle={currentSection.bannerTitle}
+            bannerTitle={activeSection.bannerTitle}
             onBannerTitleChange={(title) =>
               updateSection(currentIndex - 1, { bannerTitle: title })
             }
@@ -207,7 +197,7 @@ export const ContentsStep: React.FC = () => {
           />
 
           <ContentsEditor
-            value={currentSection.content}
+            value={activeSection.content}
             onChange={(content) => updateSection(currentIndex - 1, { content })}
             title={formatMessage({ id: 'contents.editor.title', defaultMessage: 'Content' })}
             placeholder={formatMessage({
@@ -218,14 +208,6 @@ export const ContentsStep: React.FC = () => {
           />
         </div>
       )}
-
-      {/* Next Button */}
-      <div className="flex justify-center pt-4">
-        <Button onClick={handleNext} size="lg" className="gap-2">
-          {formatMessage({ id: 'form.submit.next', defaultMessage: 'Continue' })}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 };

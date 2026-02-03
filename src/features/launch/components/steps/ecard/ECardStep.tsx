@@ -6,8 +6,7 @@
 
 import React from 'react';
 import { useIntl } from 'react-intl';
-import { CreditCard, ArrowRight, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CreditCard, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ECardFilter } from './ECardFilter';
 import { ECardGrid } from './ECardGrid';
@@ -26,7 +25,7 @@ export const ECardStep: React.FC<ECardStepProps> = ({
   programEcards,
 }) => {
   const { formatMessage } = useIntl();
-  const { updateStepData, goToNextStep, launchData } = useLaunchWizard();
+  const { updateStepData, launchData } = useLaunchWizard();
   
   const {
     filteredCards,
@@ -53,15 +52,13 @@ export const ECardStep: React.FC<ECardStepProps> = ({
     }
   }, [launchData.eCardSelectdList]);
 
-  const handleNext = () => {
-    // Format selected cards for storage
+  // Sync selected cards to store on change
+  React.useEffect(() => {
     const ecardSelectedList = selectedCards.map((card) => ({
       ecardId: card.ecardId,
     }));
-    
     updateStepData('eCardSelectdList', ecardSelectedList);
-    goToNextStep();
-  };
+  }, [selectedCards, updateStepData]);
 
   const isAllSelected = filteredCards.length > 0 && 
     filteredCards.every((card) => isCardSelected(card.ecardId));
@@ -129,41 +126,18 @@ export const ECardStep: React.FC<ECardStepProps> = ({
         isConversion={isConversion}
       />
 
-      {/* Next Button */}
-      {!isConversion && (
-        <div className="flex justify-center pt-8 border-t">
-          <Button 
-            onClick={handleNext} 
-            size="lg"
-            disabled={selectedCards.length === 0}
-            className="gap-2 min-w-[200px] shadow-lg shadow-primary/20"
-          >
-            {formatMessage({ id: 'form.submit.next', defaultMessage: 'Continue' })}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Selection Summary - Floating */}
+      {/* Selection Summary - Info Badge */}
       {selectedCards.length > 0 && !isConversion && (
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t shadow-[0_-4px_20px_rgba(0,0,0,0.1)] p-4 z-50">
-          <div className="container mx-auto flex items-center justify-between max-w-6xl">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10">
-                <CreditCard className="h-5 w-5 text-primary" />
-              </div>
-              <p className="font-medium">
-                {formatMessage(
-                  { id: 'eCard.summary.selected', defaultMessage: '{count} gift cards selected' },
-                  { count: selectedCards.length }
-                )}
-              </p>
-            </div>
-            <Button onClick={handleNext} className="gap-2 shadow-md">
-              {formatMessage({ id: 'common.continue', defaultMessage: 'Continue' })}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+        <div className="flex items-center justify-center gap-3 p-4 border rounded-lg bg-muted/30">
+          <div className="p-2 rounded-full bg-primary/10">
+            <CreditCard className="h-5 w-5 text-primary" />
           </div>
+          <p className="font-medium">
+            {formatMessage(
+              { id: 'eCard.summary.selected', defaultMessage: '{count} gift cards selected' },
+              { count: selectedCards.length }
+            )}
+          </p>
         </div>
       )}
     </div>

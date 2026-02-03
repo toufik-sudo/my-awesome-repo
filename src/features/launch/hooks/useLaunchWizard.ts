@@ -266,8 +266,6 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
       case PRODUCTS:
         // Substep 1: Products or categories selected
         if (currentSub === 1) {
-          const productIds = launchData.productIds as string[] | undefined;
-          const categoryIds = launchData.categoryIds as string[] | undefined;
           // Optional step - valid even without selections
           return true;
         }
@@ -276,15 +274,6 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
       case REWARDS:
         // Substep 1: Allocation type must be selected
         if (currentSub === 1) {
-          // const allocationType = launchData.allocationType as string | undefined;
-          // const fixedValue = launchData.fixedValue as number | undefined;
-          // const minAllocation = launchData.minAllocation as number | undefined;
-
-          // if (!allocationType) return true; // Optional, defaults are set
-          // if (allocationType === 'fixed') {
-          //   return fixedValue !== undefined && fixedValue > 0;
-          // }
-          // launchData.cube = null; // Reset cube data if changing allocation type
           return true; // Variable/tiered have defaults
         }
         // Substep 2: Goal allocation - check cube goals
@@ -296,13 +285,24 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
         }
         // Substep 3: Preview - always valid
         return true;
+      case IA:
+        // AI selection is optional - always valid
+        return true;
+      case ECARD:
+        // ECard selection is optional - always valid
+        return true;
       case DESIGN:
         // Substep 1: Design options - always valid (all have defaults)
-        if (currentSub === 1) {
-          return true;
-        }
         // Substep 2: Preview - always valid
         return true;
+      case CONTENTS:
+        // All content substeps are optional
+        return true;
+      case FINAL:
+        // Final step validation - check if required data is present
+        const hasProgram = !!(launchData.programName && launchData.type);
+        const hasDates = !!(launchData.duration as { start?: string })?.start;
+        return hasProgram && hasDates;
       default:
         return true;
     }

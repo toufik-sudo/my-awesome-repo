@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, ArrowRight, Rocket, Check, Loader2 } from 'lucide-react';
@@ -20,22 +20,27 @@ import {
   ProductsStep,
   RewardsStep,
   DesignStep,
-  GoalAllocationStep,
   UserFieldsSelectionStep,
   UserFileUploadStep,
-  UserValidationStep
+  UserValidationStep,
+  AISelectionStep,
+  ECardStep,
+  ContentsStep,
+  FinalStep,
+  DesignPreviewStep,
 } from '../components/steps';
 import { useLaunchWizard } from '../hooks/useLaunchWizard';
-import { useLaunchProgram } from '@/api/hooks/useLaunchApi';
-import { constructQuickLaunchPayload, constructFullLaunchPayload } from '@/api/hooks/useLaunchApi';
-import { PROGRAM, USERS, RESULTS, PRODUCTS, REWARDS, DESIGN, CUBE, QUICK } from '@/constants/wall/launch';
+import { useLaunchProgram, constructQuickLaunchPayload, constructFullLaunchPayload } from '@/api/hooks/useLaunchApi';
+import { PROGRAM, USERS, RESULTS, PRODUCTS, REWARDS, DESIGN, QUICK, IA, ECARD, CONTENTS } from '@/constants/wall/launch';
 import { toast } from 'sonner';
 import { RewardsGoalsStep } from '../components/steps/cube/RewardsGoalsStep';
+import { useUserData } from '@/hooks/user/useUserData';
 
-// Platform step constant (matches hook)
+// Platform and final step constants (matches hook)
 const PLATFORM = 'platform';
+const FINAL = 'final';
 
-// Step component mapping
+// Step component mapping - all steps with real components
 const STEP_COMPONENTS: Record<string, Record<number, React.FC>> = {
   [PLATFORM]: {
     1: PlatformSelectionStep,
@@ -92,16 +97,26 @@ const STEP_COMPONENTS: Record<string, Record<number, React.FC>> = {
       </div>
     ),
   },
+  [IA]: {
+    1: AISelectionStep,
+  },
+  [ECARD]: {
+    1: ECardStep,
+  },
   [DESIGN]: {
     1: DesignStep,
-    2: () => (
-      <div className="text-center py-8 text-muted-foreground">
-        <FormattedMessage
-          id="launch.step.design.preview"
-          defaultMessage="Design preview step coming soon"
-        />
-      </div>
-    ),
+    2: DesignPreviewStep,
+  },
+  [CONTENTS]: {
+    1: ContentsStep,
+    2: ContentsStep,
+    3: ContentsStep,
+    4: ContentsStep,
+    5: ContentsStep,
+    6: ContentsStep, // Social Networks step
+  },
+  [FINAL]: {
+    1: FinalStep,
   },
 };
 

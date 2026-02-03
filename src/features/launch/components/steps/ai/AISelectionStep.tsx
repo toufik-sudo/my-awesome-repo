@@ -6,8 +6,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
-import { Bot, Volume2, VolumeX, GraduationCap, Loader2, ArrowRight, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Bot, Volume2, VolumeX, GraduationCap, Loader2, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -22,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useLaunchWizard } from '@/features/launch/hooks/useLaunchWizard';
+import { useUserData } from '@/hooks/user/useUserData';
 import aiPersoApi from '@/api/AiPersoApi';
 import type { IAiPersoProfile, IAiTrainingCourse, IAiCompanyProgram } from '@/features/ai/types';
 
@@ -38,13 +38,11 @@ const NO_AI_OPTION: IAiPersoProfile = {
   iaName: "Pas d'IA",
 };
 
-interface AISelectionStepProps {
-  userUuid: string;
-}
-
-export const AISelectionStep: React.FC<AISelectionStepProps> = ({ userUuid }) => {
+export const AISelectionStep: React.FC = () => {
   const { formatMessage } = useIntl();
-  const { updateStepData, goToNextStep, launchData } = useLaunchWizard();
+  const { updateStepData, launchData } = useLaunchWizard();
+  const { userData } = useUserData();
+  const userUuid = userData?.uuid || '';
 
   const [profiles, setProfiles] = useState<IAiPersoProfile[]>([]);
   const [selectedAi, setSelectedAi] = useState<IAiPersoProfile | null>(null);
@@ -56,7 +54,9 @@ export const AISelectionStep: React.FC<AISelectionStepProps> = ({ userUuid }) =>
   // Fetch AI profiles
   useEffect(() => {
     const fetchProfiles = async () => {
+      // If no userUuid, skip fetching and just offer "No AI" option
       if (!userUuid) {
+        setProfiles([NO_AI_OPTION]);
         setIsLoading(false);
         return;
       }
@@ -94,6 +94,25 @@ export const AISelectionStep: React.FC<AISelectionStepProps> = ({ userUuid }) =>
     }
   }, [profiles, launchData.iaCompany]);
 
+  // Sync to store when selection changes
+  useEffect(() => {
+    const aiConfig: IAiCompanyProgram = selectedAi && selectedAi.id !== 0
+      ? {
+          iaName: selectedAi.iaName,
+          iaProjectId: selectedAi.iaProjectId,
+          iaType: selectedAi.iaType || '',
+          iaComment: '',
+          iaExpireDate: '',
+          iaDueDate: '',
+          iaStatus: '',
+          iaTrainingCompany: selectedCourse?.iaTrainingName ? [selectedCourse] : [],
+          iaAudioOn: isVoiceEnabled,
+        }
+      : {};
+
+    updateStepData('iaCompany', aiConfig);
+  }, [selectedAi, selectedCourse, isVoiceEnabled, updateStepData]);
+
   const handleAiSelect = (profileId: string) => {
     const id = parseInt(profileId, 10);
     if (id === 0) {
@@ -110,25 +129,6 @@ export const AISelectionStep: React.FC<AISelectionStepProps> = ({ userUuid }) =>
   const handleCourseSelect = (courseName: string) => {
     const course = TRAINING_COURSES.find((c) => c.iaTrainingName === courseName);
     setSelectedCourse(course || null);
-  };
-
-  const handleNext = () => {
-    const aiConfig: IAiCompanyProgram = selectedAi && selectedAi.id !== 0
-      ? {
-          iaName: selectedAi.iaName,
-          iaProjectId: selectedAi.iaProjectId,
-          iaType: selectedAi.iaType || '',
-          iaComment: '',
-          iaExpireDate: '',
-          iaDueDate: '',
-          iaStatus: '',
-          iaTrainingCompany: selectedCourse?.iaTrainingName ? [selectedCourse] : [],
-          iaAudioOn: isVoiceEnabled,
-        }
-      : {};
-
-    updateStepData('iaCompany', aiConfig);
-    goToNextStep();
   };
 
   const showCourseSelection = selectedAi && (
@@ -329,14 +329,6 @@ export const AISelectionStep: React.FC<AISelectionStepProps> = ({ userUuid }) =>
           </CardContent>
         </Card>
       )}
-
-      {/* Continue Button */}
-      <div className="flex justify-center pt-6">
-        <Button onClick={handleNext} size="lg" className="gap-2 min-w-[200px] shadow-lg shadow-primary/20">
-          {formatMessage({ id: 'form.submit.next', defaultMessage: 'Continue' })}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 };

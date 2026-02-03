@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// RewardsStep Component (with Next Step button removed and star section optional)
+// RewardsStep Component (with useLaunchWizard integration)
 // -----------------------------------------------------------------------------
 
 import React, { useState, useRef } from 'react';
@@ -13,6 +13,8 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Star, Users, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLaunchWizard } from '@/features/launch/hooks/useLaunchWizard';
+import { FREQUENCY_TYPE } from '@/constants/wall/launch';
 
 // --- Star Rankings Bracket Logic ---
 const STAR_LABELS = [
@@ -32,10 +34,10 @@ const STAR_LABELS_DISPLAY = [
 ];
 
 const FREQUENCY_OPTIONS = [
-  { value: 'instantaneously', label: 'Instantaneously' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarter', label: 'Quarterly' },
+  { value: FREQUENCY_TYPE.INSTANTANEOUSLY, label: 'Instantaneously' },
+  { value: FREQUENCY_TYPE.WEEKLY, label: 'Weekly' },
+  { value: FREQUENCY_TYPE.MONTHLY, label: 'Monthly' },
+  { value: FREQUENCY_TYPE.QUARTER, label: 'Quarterly' },
 ];
 
 const VALIDITY_OPTIONS = [
@@ -46,7 +48,14 @@ const VALIDITY_OPTIONS = [
   { value: 'never', label: 'Never Expires' },
 ];
 
-const defaultBrackets = [
+interface BracketData {
+  min: string;
+  max: string;
+  value: number;
+  errors: Record<string, string>;
+}
+
+const defaultBrackets: BracketData[] = [
   { min: '', max: '', value: 1, errors: {} },
   { min: '', max: '', value: 2, errors: {} },
   { min: '', max: '', value: 3, errors: {} },
@@ -56,19 +65,26 @@ const StarIcon = ({ filled = false }) => (
   <Star className={cn("h-5 w-5", filled ? "text-yellow-500" : "text-muted-foreground")} fill={filled ? "currentColor" : "none"} />
 );
 
-const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
-  const [bracketsData, setBracketsData] = useState([...defaultBrackets]);
+interface StarRankingsBracketProps {
+  onSave?: (ranking: Record<string, { min: number; max: number | null }>, saved: boolean) => void;
+}
+
+const StarRankingsBracket = React.forwardRef<
+  { isBracketsSeted: boolean; allInputsFilled: boolean; bracketsData: BracketData[]; setIsBracketsSeted: (val: boolean) => void },
+  StarRankingsBracketProps
+>(({ onSave }, ref) => {
+  const [bracketsData, setBracketsData] = useState<BracketData[]>([...defaultBrackets]);
   const [isBracketsSeted, setIsBracketsSeted] = useState(false);
 
   // Validation logic
-  const validateBrackets = (updatedBrackets) => {
+  const validateBrackets = (updatedBrackets: BracketData[]) => {
     setIsBracketsSeted(false);
     return updatedBrackets.map((bracket, index) => {
-      const errors = {};
+      const errors: Record<string, string> = {};
       const prevBracket = updatedBrackets[index - 1];
 
       if (
-        (index !== updatedBrackets.length - 1 || (index === updatedBrackets.length - 1 && updatedBrackets.max !== "")) &&
+        (index !== updatedBrackets.length - 1 || (index === updatedBrackets.length - 1 && bracket.max !== "")) &&
         bracket.max !== '' &&
         bracket.min !== '' &&
         parseInt(bracket.max, 10) <= parseInt(bracket.min, 10)
@@ -79,14 +95,14 @@ const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
 
       if (prevBracket && parseInt(bracket.min, 10) <= parseInt(prevBracket.max, 10)) {
         errors.min = "Must be greater than previous max";
-        prevBracket.errors.max = "Must be less than next min";
+        prevBracket.errors = { ...prevBracket.errors, max: "Must be less than next min" };
       }
 
       return { ...bracket, errors };
     });
   };
 
-  const handleBracketChange = (index, field, value) => {
+  const handleBracketChange = (index: number, field: 'min' | 'max', value: string) => {
     const updatedBrackets = [...bracketsData];
     updatedBrackets[index][field] = value;
     setBracketsData(validateBrackets(updatedBrackets));
@@ -95,7 +111,7 @@ const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
   const handleAddBracket = () => {
     if (bracketsData.length < 5) {
       const newValue = bracketsData.length + 1;
-      const updatedBrackets = [
+      const updatedBrackets: BracketData[] = [
         ...bracketsData,
         { min: '', max: '', value: newValue, errors: {} },
       ];
@@ -103,7 +119,7 @@ const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
     }
   };
 
-  const handleDeleteBracket = (index) => {
+  const handleDeleteBracket = (index: number) => {
     if (bracketsData.length > 3) {
       const updatedBrackets = bracketsData.filter((_, i) => i !== index);
       setBracketsData(validateBrackets(updatedBrackets));
@@ -126,7 +142,7 @@ const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
         max: bracket.max === '' && index === bracketsData.length - 1 ? null : parseInt(bracket.max, 10),
       };
       return acc;
-    }, {});
+    }, {} as Record<string, { min: number; max: number | null }>);
     setIsBracketsSeted(true);
     if (onSave) onSave(programRanking, true);
   };
@@ -213,24 +229,39 @@ const StarRankingsBracket = React.forwardRef(({ onSave }, ref) => {
 StarRankingsBracket.displayName = "StarRankingsBracket";
 
 export const RewardsStep: React.FC = () => {
-  // Allocation frequency
-  const [frequency, setFrequency] = useState('monthly');
+  const { updateStepData, goToNextStep, launchData } = useLaunchWizard();
+
+  // Allocation frequency - default to instantaneously
+  const [frequency, setFrequency] = useState(
+    (launchData.frequencyAllocation as string) || FREQUENCY_TYPE.INSTANTANEOUSLY
+  );
   // Validity period
-  const [validityPeriod, setValidityPeriod] = useState('1y');
-  const [autoRollover, setAutoRollover] = useState(false);
+  const [validityPeriod, setValidityPeriod] = useState(
+    (launchData.validityPeriod as string) || '1y'
+  );
+  const [autoRollover, setAutoRollover] = useState(
+    (launchData.autoRollover as boolean) || false
+  );
 
   // Manager rewards
-  const [rewardManagers, setRewardManagers] = useState(false);
-  const [managerPercentage, setManagerPercentage] = useState(10);
+  const [rewardManagers, setRewardManagers] = useState(
+    (launchData.rewardManagers as boolean) || false
+  );
+  const [managerPercentage, setManagerPercentage] = useState(
+    (launchData.managerPercentage as number) || 10
+  );
 
   // Star Rankings programRanking output
-  const [programRanking, setProgramRanking] = useState({});
+  const [programRanking, setProgramRanking] = useState<Record<string, { min: number; max: number | null }>>({});
   const [starRankingSaved, setStarRankingSaved] = useState(false);
 
   // Ref to access StarRankingsBracket state
-  const starRankingRef = useRef(null);
-
-  // Save config to parent/store if needed (not shown here)
+  const starRankingRef = useRef<{
+    isBracketsSeted: boolean;
+    allInputsFilled: boolean;
+    bracketsData: BracketData[];
+    setIsBracketsSeted: (val: boolean) => void;
+  } | null>(null);
 
   // --- Section completion logic ---
   // Allocation frequency and validity period are always set (default)
@@ -243,13 +274,51 @@ export const RewardsStep: React.FC = () => {
   const allSectionsComplete = isAllocationSectionComplete && isManagerSectionComplete && isStarRankingSectionComplete;
 
   // Handler for StarRankingsBracket save
-  const handleStarRankingSave = (ranking, saved) => {
+  const handleStarRankingSave = (ranking: Record<string, { min: number; max: number | null }>, saved: boolean) => {
     setProgramRanking(ranking);
     setStarRankingSaved(!!saved);
+    updateStepData('programRanking', ranking);
+  };
+
+  // Update store when values change
+  const handleFrequencyChange = (value: string) => {
+    setFrequency(value);
+    updateStepData('frequencyAllocation', value);
+  };
+
+  const handleValidityChange = (value: string) => {
+    setValidityPeriod(value);
+    updateStepData('validityPeriod', value);
+  };
+
+  const handleAutoRolloverChange = (checked: boolean) => {
+    setAutoRollover(checked);
+    updateStepData('autoRollover', checked);
+  };
+
+  const handleRewardManagersChange = (checked: boolean) => {
+    setRewardManagers(checked);
+    updateStepData('rewardManagers', checked);
+  };
+
+  const handleManagerPercentageChange = (value: number) => {
+    setManagerPercentage(value);
+    updateStepData('managerPercentage', value);
   };
 
   // Handler for Next Step
-  // (Removed local Next Step button)
+  const handleNextStep = () => {
+    // Save all data before navigating
+    updateStepData('frequencyAllocation', frequency);
+    updateStepData('validityPeriod', validityPeriod);
+    updateStepData('autoRollover', autoRollover);
+    updateStepData('rewardManagers', rewardManagers);
+    updateStepData('managerPercentage', managerPercentage);
+    if (Object.keys(programRanking).length > 0) {
+      updateStepData('programRanking', programRanking);
+    }
+    goToNextStep();
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -258,7 +327,7 @@ export const RewardsStep: React.FC = () => {
         <div className="flex gap-2">
           <StepIndicator active label="Allocation" />
           <StepIndicator label="Manager Rewards" />
-          <StepIndicator label="Star Rankings" />
+          <StepIndicator label="Star Rankings (Optional)" />
         </div>
       </div>
 
@@ -273,7 +342,7 @@ export const RewardsStep: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={frequency} onValueChange={setFrequency}>
+          <Select value={frequency} onValueChange={handleFrequencyChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -297,7 +366,7 @@ export const RewardsStep: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Select value={validityPeriod} onValueChange={setValidityPeriod}>
+          <Select value={validityPeriod} onValueChange={handleValidityChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -318,7 +387,7 @@ export const RewardsStep: React.FC = () => {
                 <FormattedMessage id="launch.rewards.autoRolloverDesc" defaultMessage="Automatically carry over unused points" />
               </p>
             </div>
-            <Switch checked={autoRollover} onCheckedChange={setAutoRollover} />
+            <Switch checked={autoRollover} onCheckedChange={handleAutoRolloverChange} />
           </div>
         </CardContent>
       </Card>
@@ -341,7 +410,7 @@ export const RewardsStep: React.FC = () => {
                 <FormattedMessage id="launch.rewards.rewardManagersDesc" defaultMessage="Give managers a percentage of their team's rewards" />
               </p>
             </div>
-            <Switch checked={rewardManagers} onCheckedChange={setRewardManagers} />
+            <Switch checked={rewardManagers} onCheckedChange={handleRewardManagersChange} />
           </div>
           {rewardManagers && (
             <div className="space-y-3">
@@ -351,7 +420,7 @@ export const RewardsStep: React.FC = () => {
               </div>
               <Slider
                 value={[managerPercentage]}
-                onValueChange={([value]) => setManagerPercentage(value)}
+                onValueChange={([value]) => handleManagerPercentageChange(value)}
                 max={25}
                 step={1}
               />
@@ -360,12 +429,13 @@ export const RewardsStep: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Star Rankings */}
+      {/* Star Rankings (Optional) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Star className="h-5 w-5 text-yellow-500" />
             <FormattedMessage id="launch.rewards.starRankings" defaultMessage="Star Rankings" />
+            <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
           </CardTitle>
           <CardDescription>
             <FormattedMessage id="launch.rewards.starRankings.desc" defaultMessage="Define star-based achievement levels for participants." />
@@ -383,8 +453,16 @@ export const RewardsStep: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Next Step Button removed from here */}
-
+      {/* Next Step Button */}
+      <div className="flex justify-end">
+        <Button 
+          onClick={handleNextStep} 
+          disabled={!allSectionsComplete}
+          size="lg"
+        >
+          <FormattedMessage id="launch.continue" defaultMessage="Continue" />
+        </Button>
+      </div>
     </div>
   );
 };
