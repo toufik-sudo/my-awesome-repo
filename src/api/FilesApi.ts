@@ -4,6 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import axiosInstance from '@/config/axiosConfig';
+import hostAxiosInstance from '@/config/axiosHostConfig';
 import envConfig from '@/config/envConfig';
 import {
   UPLOAD_FILES_ENDPOINT,
@@ -17,13 +18,14 @@ import { IFileUpload, IFileDownload } from './types';
 class FilesApi {
   /**
    * Download a file from an endpoint
+   * Uses hostAxiosInstance (envConfig.backendHostUrl)
    */
   async downloadFile(
     endpointUrl: string,
     queryParams?: Record<string, unknown>,
     fileName: string = 'file'
   ): Promise<IFileDownload> {
-    const { data, headers } = await axiosInstance()({
+    const { data, headers } = await hostAxiosInstance()({
       method: 'GET',
       url: endpointUrl,
       params: queryParams,
@@ -45,12 +47,13 @@ class FilesApi {
 
   /**
    * Upload multiple files (legacy; prefer uploadFileToUrl for launch)
+   * Uses hostAxiosInstance (envConfig.backendHostUrl)
    */
   async uploadFiles(files: IFileUpload[]): Promise<{ id: number; url?: string }[]> {
-    const url = `${envConfig.backendUrl}${UPLOAD_FILES_ENDPOINT}`;
+    const url = `${envConfig.backendHostUrl}${UPLOAD_FILES_ENDPOINT}`;
     const formData = this.buildFormData({ data: files });
 
-    const { data } = await axiosInstance()({
+    const { data } = await hostAxiosInstance()({
       method: 'POST',
       url,
       data: formData,
@@ -64,12 +67,13 @@ class FilesApi {
   /**
    * Upload file to a custom URL (used for launch: always '/file/upload')
    * Accepts FormData directly
+   * Uses hostAxiosInstance (envConfig.backendHostUrl)
    */
   async uploadFileToUrl(
     url: string,
     formData: FormData
   ): Promise<{ data: { id: number; url?: string; filename?: string; publicPath?: string }[] }> {
-    return axiosInstance()({
+    return hostAxiosInstance()({
       method: 'POST',
       url,
       data: formData,
@@ -80,9 +84,10 @@ class FilesApi {
 
   /**
    * Get file URL by ID
+   * Uses envConfig.backendHostUrl
    */
   getFileUrl(fileId: number): string {
-    return `${envConfig.backendUrl}/files/${fileId}`;
+    return `${envConfig.backendHostUrl}/files/${fileId}`;
   }
 
   /**
