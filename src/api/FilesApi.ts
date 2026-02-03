@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import axiosInstance from '@/config/axiosConfig';
-import hostAxiosInstance from '@/config/axiosHostConfig';
+import hostAxiosInstance from '@/config/axiosConfig';
 import envConfig from '@/config/envConfig';
 import {
   UPLOAD_FILES_ENDPOINT,
