@@ -44,7 +44,7 @@ class FilesApi {
   }
 
   /**
-   * Upload multiple files
+   * Upload multiple files (legacy; prefer uploadFileToUrl for launch)
    */
   async uploadFiles(files: IFileUpload[]): Promise<{ id: number; url?: string }[]> {
     const url = `${envConfig.backendUrl}${UPLOAD_FILES_ENDPOINT}`;
@@ -62,28 +62,13 @@ class FilesApi {
   }
 
   /**
-   * Upload a single file
-   */
-  async uploadFile(file: File, type: number): Promise<{ id: number; url?: string }> {
-    const [result] = await this.uploadFiles([
-      {
-        file,
-        filename: file.name,
-        type
-      }
-    ]);
-    return result;
-  }
-
-  /**
-   * Upload file to a custom URL
+   * Upload file to a custom URL (used for launch: always '/file/upload')
+   * Accepts FormData directly
    */
   async uploadFileToUrl(
     url: string,
-    fileData: Record<string, unknown>
-  ): Promise<{ data: { id: number; url?: string }[] }> {
-    const formData = this.buildFormData(fileData);
-
+    formData: FormData
+  ): Promise<{ data: { id: number; url?: string; filename?: string; publicPath?: string }[] }> {
     return axiosInstance()({
       method: 'POST',
       url,

@@ -88,3 +88,4 @@ export const SocialNetworksConfig: React.FC<Props> = ({ networks, onChange }) =>
     </div>
   );
 };
+export default SocialNetworksConfig;

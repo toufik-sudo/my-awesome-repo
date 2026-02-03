@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------------------
 // Contents Banner Upload Component
-// Banner/cover image upload for content pages
+// Banner/cover image upload for content pages (launch step)
+// Uses /file/upload with correct FormData and PAGE_IMAGE type
 // -----------------------------------------------------------------------------
 
 import React, { useRef, useState } from 'react';
@@ -18,10 +19,12 @@ import {
   Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { filesApi } from '@/api/FilesApi';
+import { uploadLaunchImage, LAUNCH_IMAGE_TYPES, generateUniqueFilename } from '@/services/FileServices';
 
 interface ContentsBannerUploadProps {
   value: string | null;
-  onChange: (value: string | null) => void;
+  onChange: (value: string | null, imageMeta?: { id: number; filename: string; publicPath?: string }) => void;
   title: string;
   bannerTitle?: string;
   onBannerTitleChange?: (title: string) => void;
@@ -47,30 +50,40 @@ export const ContentsBannerUpload: React.FC<ContentsBannerUploadProps> = ({
   index = 1,
 }) => {
   const { formatMessage } = useIntl();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef < HTMLInputElement > (null);
   const [isDragging, setIsDragging] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState < string | null > (null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     setError(null);
-    
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setError(formatMessage({ id: 'upload.error.fileType', defaultMessage: 'Please select an image file' }));
       return;
     }
-    
+
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError(formatMessage({ id: 'upload.error.fileSize', defaultMessage: 'File size must be less than 5MB' }));
       return;
     }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      onChange(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      // Always use PAGE_IMAGE = 7 for content banners
+      const filename = generateUniqueFilename(file.name);
+      const [uploadResult] = await uploadLaunchImage(file, filename, LAUNCH_IMAGE_TYPES.PAGE_IMAGE, filesApi);
+      if (uploadResult && uploadResult.publicPath) {
+        onChange(uploadResult.publicPath, uploadResult);
+      } else {
+        setError(formatMessage({ id: 'upload.error.failed', defaultMessage: 'Upload failed' }));
+      }
+    } catch (e) {
+      setError(formatMessage({ id: 'upload.error.failed', defaultMessage: 'Upload failed' }));
+    }
+    setUploading(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -85,7 +98,7 @@ export const ContentsBannerUpload: React.FC<ContentsBannerUploadProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
     if (file) {
       handleFileSelect(file);
@@ -124,9 +137,9 @@ export const ContentsBannerUpload: React.FC<ContentsBannerUploadProps> = ({
             <Input
               value={bannerTitle}
               onChange={(e) => onBannerTitleChange(e.target.value)}
-              placeholder={formatMessage({ 
-                id: 'contents.bannerTitle.placeholder', 
-                defaultMessage: 'Enter a title for this section' 
+              placeholder={formatMessage({
+                id: 'contents.bannerTitle.placeholder',
+                defaultMessage: 'Enter a title for this section'
               })}
             />
           </div>
@@ -161,6 +174,7 @@ export const ContentsBannerUpload: React.FC<ContentsBannerUploadProps> = ({
                     e.stopPropagation();
                     fileInputRef.current?.click();
                   }}
+                  disabled={uploading}
                 >
                   <Upload className="h-4 w-4" />
                   {formatMessage({ id: 'common.change', defaultMessage: 'Change' })}
@@ -173,6 +187,7 @@ export const ContentsBannerUpload: React.FC<ContentsBannerUploadProps> = ({
                     e.stopPropagation();
                     onChange(null);
                   }}
+                  disabled={uploading}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -184,7 +199,9 @@ export const ContentsBannerUpload: React.FC<ContentsBannerUploadProps> = ({
                 <Upload className="h-8 w-8" />
               </div>
               <p className="font-medium">
-                {formatMessage({ id: 'upload.dropOrClick', defaultMessage: 'Drop image or click to upload' })}
+                {uploading
+                  ? formatMessage({ id: 'upload.uploading', defaultMessage: 'Uploading...' })
+                  : formatMessage({ id: 'upload.dropOrClick', defaultMessage: 'Drop image or click to upload' })}
               </p>
               <p className="text-sm text-muted-foreground/70 mt-1">
                 PNG, JPG, GIF up to 5MB
