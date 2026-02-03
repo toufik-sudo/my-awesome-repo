@@ -23,21 +23,31 @@ interface ContentSection {
   content: string;
 }
 
+// Only use string icon, not React element
+interface SocialNetworkWithIconName {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+  placeholder: string;
+  icon: string;
+}
+
 const CONTENT_SECTIONS_COUNT = 5;
 
 export const ContentsStep: React.FC = () => {
   const { formatMessage } = useIntl();
-  const { stepIndex = '1' } = useParams<{ stepIndex: string }>();
+  const { stepIndex = '1' } = useParams < { stepIndex: string } > ();
   const { updateStepData, launchData } = useLaunchWizard();
 
   const currentIndex = parseInt(stepIndex, 10);
   const isSocialNetworksStep = currentIndex === 6;
-  const currentSection = currentIndex <= CONTENT_SECTIONS_COUNT ? 
+  const currentSection = currentIndex <= CONTENT_SECTIONS_COUNT ?
     (launchData.contentSections as ContentSection[] | undefined)?.[currentIndex - 1] : null;
   const isMainBanner = currentIndex === 1;
 
   // Initialize content sections from store or create defaults
-  const [sections, setSections] = useState<ContentSection[]>(() => {
+  const [sections, setSections] = useState < ContentSection[] > (() => {
     const storedSections = launchData.contentSections as ContentSection[] | undefined;
     if (storedSections?.length) {
       return storedSections;
@@ -50,8 +60,17 @@ export const ContentsStep: React.FC = () => {
     }));
   });
 
-  const [socialNetworks, setSocialNetworks] = useState<SocialNetwork[]>(
-    (launchData.socialMediaAccounts as SocialNetwork[]) || []
+  // Only use icon name (string), not React element
+  const [socialNetworks, setSocialNetworks] = useState < SocialNetworkWithIconName[] > (
+    (launchData.socialMediaAccounts as SocialNetworkWithIconName[]) ||
+    [
+      { id: 'facebook', name: 'Facebook', url: '', enabled: false, placeholder: 'https://facebook.com/yourpage', icon: 'Facebook' },
+      { id: 'instagram', name: 'Instagram', url: '', enabled: false, placeholder: 'https://instagram.com/yourprofile', icon: 'Instagram' },
+      { id: 'linkedin', name: 'LinkedIn', url: '', enabled: false, placeholder: 'https://linkedin.com/company/yourcompany', icon: 'Linkedin' },
+      { id: 'twitter', name: 'X (Twitter)', url: '', enabled: false, placeholder: 'https://x.com/yourhandle', icon: 'Twitter' },
+      { id: 'youtube', name: 'YouTube', url: '', enabled: false, placeholder: 'https://youtube.com/@yourchannel', icon: 'Youtube' },
+      { id: 'website', name: 'Website', url: '', enabled: false, placeholder: 'https://yourwebsite.com', icon: 'Globe' },
+    ]
   );
 
   // Sync to store on change
@@ -117,21 +136,21 @@ export const ContentsStep: React.FC = () => {
             {isMainBanner
               ? formatMessage({ id: 'contents.mainBanner.title', defaultMessage: 'Main Content Banner' })
               : formatMessage(
-                  { id: 'contents.section.title', defaultMessage: 'Content Section {number}' },
-                  { number: currentIndex - 1 }
-                )}
+                { id: 'contents.section.title', defaultMessage: 'Content Section {number}' },
+                { number: currentIndex - 1 }
+              )}
           </h1>
         </div>
         <p className="text-muted-foreground max-w-lg mx-auto">
           {isMainBanner
             ? formatMessage({
-                id: 'contents.mainBanner.subtitle',
-                defaultMessage: 'Set up the main banner that appears at the top of your program.',
-              })
+              id: 'contents.mainBanner.subtitle',
+              defaultMessage: 'Set up the main banner that appears at the top of your program.',
+            })
             : formatMessage({
-                id: 'contents.section.subtitle',
-                defaultMessage: 'Add content to engage and inform your participants.',
-              })}
+              id: 'contents.section.subtitle',
+              defaultMessage: 'Add content to engage and inform your participants.',
+            })}
         </p>
       </div>
 
@@ -162,8 +181,8 @@ export const ContentsStep: React.FC = () => {
                 isActive
                   ? 'border-primary bg-primary text-primary-foreground'
                   : isFilled
-                  ? 'border-primary/50 bg-primary/10 text-primary'
-                  : 'border-muted bg-muted text-muted-foreground hover:border-primary/30'
+                    ? 'border-primary/50 bg-primary/10 text-primary'
+                    : 'border-muted bg-muted text-muted-foreground hover:border-primary/30'
               )}
               disabled
             >
@@ -183,9 +202,9 @@ export const ContentsStep: React.FC = () => {
               isMainBanner
                 ? formatMessage({ id: 'contents.banner.main', defaultMessage: 'Main Program Banner' })
                 : formatMessage(
-                    { id: 'contents.banner.section', defaultMessage: 'Section {number} Banner' },
-                    { number: currentIndex - 1 }
-                  )
+                  { id: 'contents.banner.section', defaultMessage: 'Section {number} Banner' },
+                  { number: currentIndex - 1 }
+                )
             }
             bannerTitle={activeSection.bannerTitle}
             onBannerTitleChange={(title) =>

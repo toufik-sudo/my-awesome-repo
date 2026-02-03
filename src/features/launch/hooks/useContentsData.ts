@@ -21,6 +21,7 @@ export interface ContentSocialNetwork {
   url: string;
   enabled: boolean;
   placeholder: string;
+  icon: string; // Store icon name, not component!
 }
 
 export interface UseContentsDataReturn {
@@ -34,13 +35,14 @@ export interface UseContentsDataReturn {
 
 const CONTENT_SECTIONS_COUNT = 5;
 
+// Only store icon NAME (string), not React element
 const DEFAULT_SOCIAL_NETWORKS: Omit<ContentSocialNetwork, 'url' | 'enabled'>[] = [
-  { id: 'facebook', name: 'Facebook', placeholder: 'https://facebook.com/yourpage' },
-  { id: 'instagram', name: 'Instagram', placeholder: 'https://instagram.com/yourprofile' },
-  { id: 'linkedin', name: 'LinkedIn', placeholder: 'https://linkedin.com/company/yourcompany' },
-  { id: 'twitter', name: 'X (Twitter)', placeholder: 'https://x.com/yourhandle' },
-  { id: 'youtube', name: 'YouTube', placeholder: 'https://youtube.com/@yourchannel' },
-  { id: 'website', name: 'Website', placeholder: 'https://yourwebsite.com' },
+  { id: 'facebook', name: 'Facebook', placeholder: 'https://facebook.com/yourpage', icon: 'Facebook' },
+  { id: 'instagram', name: 'Instagram', placeholder: 'https://instagram.com/yourprofile', icon: 'Instagram' },
+  { id: 'linkedin', name: 'LinkedIn', placeholder: 'https://linkedin.com/company/yourcompany', icon: 'Linkedin' },
+  { id: 'twitter', name: 'X (Twitter)', placeholder: 'https://x.com/yourhandle', icon: 'Twitter' },
+  { id: 'youtube', name: 'YouTube', placeholder: 'https://youtube.com/@yourchannel', icon: 'Youtube' },
+  { id: 'website', name: 'Website', placeholder: 'https://yourwebsite.com', icon: 'Globe' },
 ];
 
 export function useContentsData(): UseContentsDataReturn {
