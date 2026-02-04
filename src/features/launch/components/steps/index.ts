@@ -41,5 +41,8 @@ export * from './ai';
 // Contents substep components
 export * from './contents';
 
+// Social substep component
+export { SocialStep } from './social/SocialStep';
+
 // Final step
 export * from './final';

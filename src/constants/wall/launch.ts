@@ -21,6 +21,7 @@ export const DESIGN = 'design';
 export const ECARD = 'eCard';
 export const IA = 'IA';
 export const CONTENTS = 'contents';
+export const SOCIAL = 'social';
 export const CUBE = 'cube';
 export const PROGRAM_ID = 'programId';
 export const PROGRAM_JOURNEY = 'programJourney';

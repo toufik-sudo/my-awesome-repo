@@ -26,21 +26,21 @@ import {
   IA,
   ECARD,
   CONTENTS,
+  SOCIAL,
 } from '@/constants/wall/launch';
 import { launchProgram as launchProgramService } from '@/services/launch/LaunchService';
 
 // Platform selection step constant
 const PLATFORM = 'platform';
 const FINAL = 'final';
-const SOCIAL = 'social'; // new explicit step
 
 // Step configuration for different program types - Updated to match old_app
 const QUICK_LAUNCH_STEPS = [PLATFORM, PROGRAM, USERS, REWARDS, FINAL];
-const FULL_LAUNCH_STEPS = [PLATFORM, PROGRAM, USERS, PRODUCTS, RESULTS, REWARDS, IA, ECARD, DESIGN, CONTENTS, FINAL];
-const FREEMIUM_QUICK_STEPS = [PLATFORM, PROGRAM, USERS, FINAL];
-const FREEMIUM_FULL_STEPS = [PLATFORM, PROGRAM, USERS, IA, DESIGN, CONTENTS, FINAL];
-const CHALLENGE_QUICK_STEPS = [PLATFORM, PROGRAM, USERS, REWARDS, FINAL];
-const CHALLENGE_FULL_STEPS = [PLATFORM, PROGRAM, USERS, PRODUCTS, RESULTS, REWARDS, IA, ECARD, DESIGN, CONTENTS, FINAL];
+const FULL_LAUNCH_STEPS = [PLATFORM, PROGRAM, USERS, PRODUCTS, RESULTS, REWARDS, IA, ECARD, DESIGN, CONTENTS, SOCIAL, FINAL];
+const FREEMIUM_QUICK_STEPS = [PLATFORM, PROGRAM, USERS, SOCIAL, FINAL];
+const FREEMIUM_FULL_STEPS = [PLATFORM, PROGRAM, USERS, IA, DESIGN, CONTENTS, SOCIAL, FINAL];
+const CHALLENGE_QUICK_STEPS = [PLATFORM, PROGRAM, USERS, REWARDS, SOCIAL, FINAL];
+const CHALLENGE_FULL_STEPS = [PLATFORM, PROGRAM, USERS, PRODUCTS, RESULTS, REWARDS, IA, ECARD, DESIGN, CONTENTS, SOCIAL, FINAL];
 
 // Step details
 const STEP_CONFIG: Record<string, { substeps: number; label: string }> = {
@@ -53,7 +53,7 @@ const STEP_CONFIG: Record<string, { substeps: number; label: string }> = {
   [IA]: { substeps: 1, label: 'AI Assistant' },
   [ECARD]: { substeps: 1, label: 'Gift Cards' },
   [DESIGN]: { substeps: 2, label: 'Design & Branding' },
-  [CONTENTS]: { substeps: 6, label: 'Content Pages' },
+  [CONTENTS]: { substeps: 5, label: 'Content Pages' },
   [SOCIAL]: { substeps: 1, label: 'Social Networks' },
   [FINAL]: { substeps: 1, label: 'Launch' },
 };
@@ -136,18 +136,16 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
 
   // Determine available steps based on program type and journey
   const availableSteps = useMemo(() => {
-    // For freemium or wall, after content step, go directly to social then final, and only one content substep
+    // For freemium or wall, after content step, go directly to social then final,
+    // and only one content substep for full, none for quick (content skipped in quick).
     if (isFreemium || isWall) {
-      // Full journey: show all steps up to CONTENTS, then SOCIAL, FINAL
-      let baseSteps: string[];
       if (programJourney === QUICK) {
         // Only: PLATFORM, PROGRAM, USERS, SOCIAL, FINAL
-        baseSteps = [PLATFORM, PROGRAM, USERS, SOCIAL, FINAL];
+        return [PLATFORM, PROGRAM, USERS, SOCIAL, FINAL];
       } else {
         // FULL: PLATFORM, PROGRAM, USERS, IA, DESIGN, CONTENTS, SOCIAL, FINAL
-        baseSteps = [PLATFORM, PROGRAM, USERS, IA, DESIGN, CONTENTS, SOCIAL, FINAL];
+        return [PLATFORM, PROGRAM, USERS, IA, DESIGN, CONTENTS, SOCIAL, FINAL];
       }
-      return baseSteps;
     } else if (isChallenge) {
       return programJourney === QUICK ? CHALLENGE_QUICK_STEPS : CHALLENGE_FULL_STEPS;
     } else {
@@ -155,17 +153,14 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
     }
   }, [isFreemium, isWall, isChallenge, programJourney]);
 
-  // Patch step config: for freemium/wall, CONTENTS only has 1 substep
+  // Patch step config: for freemium/wall, CONTENTS only has 1 substep (main banner)
   const patchedStepConfig: Record<string, { substeps: number; label: string }> = useMemo(() => {
+    const patch = { ...STEP_CONFIG };
     if (!(isFreemium || isWall)) {
-      return {
-        ...STEP_CONFIG,
-        [CONTENTS]: { substeps: 1, label: 'Main Content Banner' },
-        [SOCIAL]: { substeps: 1, label: 'Social Networks' },
-      };
+      patch[CONTENTS] = { substeps: 1, label: 'Main Content Banner' };
     }
-    return STEP_CONFIG;
-  }, [isFreemium, isWall]);
+    return patch;
+  }, [isFreemium, isWall, programJourney]);
 
   const stepKey = step;
 
@@ -178,7 +173,7 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
   const completedSubsteps = availableSteps.slice(0, currentStepIndex).reduce(
     (sum, s) => sum + (patchedStepConfig[s]?.substeps || 1), 0
   ) + currentSubstep - 1;
-  const progress = Math.round((completedSubsteps / totalSubsteps) * 100);
+  const progress = totalSubsteps === 0 ? 0 : Math.round((completedSubsteps / totalSubsteps) * 100);
 
   // Navigation state
   const isFirstStep = currentStepIndex === 0 && currentSubstep === 1;
@@ -329,8 +324,8 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
         return true;
       case CONTENTS:
         // For freemium or wall, only require main banner (substep 1)
-        if (isFreemium || isWall) {
-          // You can extend this to check for main banner fields if needed
+        if ((isFreemium || isWall) && programJourney === FULL) {
+          // Optionally add validation for banner fields
           return true;
         }
         // All content substeps are optional for standard flow
@@ -346,7 +341,7 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
       default:
         return true;
     }
-  }, [launchData, currentSubstep, isFreemium, isWall]);
+  }, [launchData, currentSubstep, isFreemium, isWall, programJourney]);
 
   // Launch program
   const launchProgram = useCallback(async () => {

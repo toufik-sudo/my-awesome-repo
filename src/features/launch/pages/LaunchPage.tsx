@@ -26,12 +26,13 @@ import {
   AISelectionStep,
   ECardStep,
   ContentsStep,
+  SocialStep,
   FinalStep,
   DesignPreviewStep,
 } from '../components/steps';
 import { useLaunchWizard } from '../hooks/useLaunchWizard';
 import { useLaunchProgram, constructQuickLaunchPayload, constructFullLaunchPayload } from '@/api/hooks/useLaunchApi';
-import { PROGRAM, USERS, RESULTS, PRODUCTS, REWARDS, DESIGN, QUICK, IA, ECARD, CONTENTS } from '@/constants/wall/launch';
+import { PROGRAM, USERS, RESULTS, PRODUCTS, REWARDS, DESIGN, QUICK, IA, ECARD, CONTENTS, SOCIAL } from '@/constants/wall/launch';
 import { toast } from 'sonner';
 import { RewardsGoalsStep } from '../components/steps/cube/RewardsGoalsStep';
 import { useUserData } from '@/hooks/user/useUserData';
@@ -113,7 +114,9 @@ const STEP_COMPONENTS: Record<string, Record<number, React.FC>> = {
     3: ContentsStep,
     4: ContentsStep,
     5: ContentsStep,
-    6: ContentsStep, // Social Networks step
+  },
+  [SOCIAL]: {
+    1: SocialStep,
   },
   [FINAL]: {
     1: FinalStep,
