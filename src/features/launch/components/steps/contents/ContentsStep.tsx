@@ -4,7 +4,7 @@
 // Combines editor, banner upload, and social networks
 // -----------------------------------------------------------------------------
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { useParams } from 'react-router-dom';
 import { FileText, Sparkles } from 'lucide-react';
@@ -33,26 +33,52 @@ interface SocialNetworkWithIconName {
   icon: string;
 }
 
-const CONTENT_SECTIONS_COUNT = 5;
+// Helper to determine if program type is freemium or wall
+function isFreemiumOrWall(type: string | undefined): boolean {
+  if (!type) return false;
+  return type.toLowerCase() === 'freemium' || type.toLowerCase() === 'wall';
+}
+
+const TOTAL_SECTIONS = 5;
+const FREEMIUM_WALL_SECTIONS = 1; // Only Main Banner and Section 1
 
 export const ContentsStep: React.FC = () => {
   const { formatMessage } = useIntl();
   const { stepIndex = '1' } = useParams < { stepIndex: string } > ();
-  const { updateStepData, launchData } = useLaunchWizard();
+  const { updateStepData, launchData, programType } = useLaunchWizard();
 
+  // Determine currentIndex and whether to restrict to only first section
   const currentIndex = parseInt(stepIndex, 10);
-  const isSocialNetworksStep = currentIndex === 6;
-  const currentSection = currentIndex <= CONTENT_SECTIONS_COUNT ?
-    (launchData.contentSections as ContentSection[] | undefined)?.[currentIndex - 1] : null;
+
+  // Check for freemium or wall type
+  // programType from useLaunchWizard is already normalized
+  const isLimitedSections = useMemo(() => isFreemiumOrWall(programType), [programType]);
+  const sectionCount = isLimitedSections ? FREEMIUM_WALL_SECTIONS : TOTAL_SECTIONS;
+
+  // Only show sections 1 if freemium/wall, otherwise all
+  const isSocialNetworksStep = currentIndex === sectionCount + 1;
+
   const isMainBanner = currentIndex === 1;
 
   // Initialize content sections from store or create defaults
   const [sections, setSections] = useState < ContentSection[] > (() => {
     const storedSections = launchData.contentSections as ContentSection[] | undefined;
     if (storedSections?.length) {
-      return storedSections;
+      // Always keep at least sectionCount sections
+      return [
+        ...storedSections.slice(0, sectionCount),
+        ...Array.from(
+          { length: Math.max(0, sectionCount - (storedSections.length)) },
+          (_, i) => ({
+            id: `section-${storedSections.length + i + 1}`,
+            bannerTitle: '',
+            bannerImage: null,
+            content: '',
+          })
+        ),
+      ];
     }
-    return Array.from({ length: CONTENT_SECTIONS_COUNT }, (_, i) => ({
+    return Array.from({ length: sectionCount }, (_, i) => ({
       id: `section-${i + 1}`,
       bannerTitle: '',
       bannerImage: null,
@@ -97,7 +123,7 @@ export const ContentsStep: React.FC = () => {
   const filledSections = sections.filter(
     (s) => s.bannerTitle || s.bannerImage || s.content
   ).length;
-  const progress = (filledSections / CONTENT_SECTIONS_COUNT) * 100;
+  const progress = (filledSections / sectionCount) * 100;
 
   if (isSocialNetworksStep) {
     return (
@@ -161,7 +187,7 @@ export const ContentsStep: React.FC = () => {
             {formatMessage({ id: 'contents.progress', defaultMessage: 'Content Progress' })}
           </span>
           <Badge variant="secondary">
-            {filledSections}/{CONTENT_SECTIONS_COUNT}
+            {filledSections}/{sectionCount}
           </Badge>
         </div>
         <Progress value={progress} className="h-2" />
