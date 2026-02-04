@@ -40,7 +40,7 @@ function isFreemiumOrWall(type: string | undefined): boolean {
 }
 
 const TOTAL_SECTIONS = 5;
-const FREEMIUM_WALL_SECTIONS = 2; // Only Main Banner and Section 1
+const FREEMIUM_WALL_SECTIONS = 1; // Only Main Banner and Section 1
 
 export const ContentsStep: React.FC = () => {
   const { formatMessage } = useIntl();
