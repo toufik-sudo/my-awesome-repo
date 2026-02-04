@@ -129,27 +129,51 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
   const programType = (launchData.type as string) || '';
   const programJourney = (launchData.programJourney as string) || QUICK;
   const isFreemium = programType === FREEMIUM;
+  const isWall = programType === 'wall'; // Add wall program type check here
   const isChallenge = programType === CHALLENGE;
 
   // Determine available steps based on program type and journey
   const availableSteps = useMemo(() => {
-    if (isFreemium) {
-      return programJourney === QUICK ? FREEMIUM_QUICK_STEPS : FREEMIUM_FULL_STEPS;
+    // ---- ONLY override Contents step for freemium or wall ----
+    function patchContentsStep(arr: string[]) {
+      return arr.map((s) =>
+        s === CONTENTS ? '__CONTENTS_SPECIAL__' : s
+      );
     }
-    if (isChallenge) {
-      return programJourney === QUICK ? CHALLENGE_QUICK_STEPS : CHALLENGE_FULL_STEPS;
-    }
-    return programJourney === QUICK ? QUICK_LAUNCH_STEPS : FULL_LAUNCH_STEPS;
-  }, [isFreemium, isChallenge, programJourney]);
 
-  const currentStepIndex = availableSteps.indexOf(step);
+    let baseSteps: string[];
+    if (isFreemium) {
+      baseSteps = programJourney === QUICK ? FREEMIUM_QUICK_STEPS : FREEMIUM_FULL_STEPS;
+    } else if (isChallenge) {
+      baseSteps = programJourney === QUICK ? CHALLENGE_QUICK_STEPS : CHALLENGE_FULL_STEPS;
+    } else {
+      baseSteps = programJourney === QUICK ? QUICK_LAUNCH_STEPS : FULL_LAUNCH_STEPS;
+    }
+
+    // If freemium or wall, patch the CONTENTS step marker
+    if (isFreemium || isWall) {
+      return patchContentsStep(baseSteps);
+    }
+    return baseSteps;
+  }, [isFreemium, isWall, isChallenge, programJourney]);
+
+  // Step config override for special CONTENTS step logic
+  const patchedStepConfig: Record<string, { substeps: number; label: string }> = {
+    ...STEP_CONFIG,
+    __CONTENTS_SPECIAL__: { substeps: 1, label: STEP_CONFIG[CONTENTS].label },
+  };
+
+  // Map CONTENTS marker for step logic
+  const stepKey = useMemo(() => (step === CONTENTS && (isFreemium || isWall) ? '__CONTENTS_SPECIAL__' : step), [step, isFreemium, isWall]);
+
+  const currentStepIndex = availableSteps.indexOf(stepKey);
   const currentSubstep = parseInt(stepIndex, 10) || 1;
-  const stepConfig = STEP_CONFIG[step] || { substeps: 1, label: 'Unknown' };
+  const stepConfig = patchedStepConfig[stepKey] || { substeps: 1, label: 'Unknown' };
 
   // Calculate progress
-  const totalSubsteps = availableSteps.reduce((sum, s) => sum + (STEP_CONFIG[s]?.substeps || 1), 0);
+  const totalSubsteps = availableSteps.reduce((sum, s) => sum + (patchedStepConfig[s]?.substeps || 1), 0);
   const completedSubsteps = availableSteps.slice(0, currentStepIndex).reduce(
-    (sum, s) => sum + (STEP_CONFIG[s]?.substeps || 1), 0
+    (sum, s) => sum + (patchedStepConfig[s]?.substeps || 1), 0
   ) + currentSubstep - 1;
   const progress = Math.round((completedSubsteps / totalSubsteps) * 100);
 
@@ -164,7 +188,8 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
       navigate(`${LAUNCH_BASE}/${step}/${currentSubstep + 1}`);
     } else if (currentStepIndex < availableSteps.length - 1) {
       const nextStep = availableSteps[currentStepIndex + 1];
-      navigate(`${LAUNCH_BASE}/${nextStep}/1`);
+      const nextKey = nextStep === '__CONTENTS_SPECIAL__' ? CONTENTS : nextStep;
+      navigate(`${LAUNCH_BASE}/${nextKey}/1`);
     } else {
       // Launch complete - navigate to wall
       navigate(WALL_ROUTE);
@@ -176,14 +201,18 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
       navigate(`${LAUNCH_BASE}/${step}/${currentSubstep - 1}`);
     } else if (currentStepIndex > 0) {
       const prevStep = availableSteps[currentStepIndex - 1];
-      const prevConfig = STEP_CONFIG[prevStep];
-      navigate(`${LAUNCH_BASE}/${prevStep}/${prevConfig.substeps}`);
+      const prevKey = prevStep === '__CONTENTS_SPECIAL__' ? CONTENTS : prevStep;
+      const prevConfig = patchedStepConfig[prevStep];
+      navigate(`${LAUNCH_BASE}/${prevKey}/${prevConfig.substeps}`);
     }
   }, [currentSubstep, currentStepIndex, availableSteps, step, navigate]);
 
   const goToStep = useCallback((targetStep: string, substep = 1) => {
-    navigate(`${LAUNCH_BASE}/${targetStep}/${substep}`);
-  }, [navigate]);
+    let mappedStep = targetStep;
+    if ((isFreemium || isWall) && targetStep === CONTENTS) mappedStep = '__CONTENTS_SPECIAL__';
+    const realStep = mappedStep === '__CONTENTS_SPECIAL__' ? CONTENTS : mappedStep;
+    navigate(`${LAUNCH_BASE}/${realStep}/${substep}`);
+  }, [navigate, isFreemium, isWall]);
 
   // Data actions
   const updateStepData = useCallback((key: string, value: unknown) => {
@@ -201,9 +230,11 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
 
   // Validation (substep-aware)
   const isStepValid = useCallback((checkStep: string, substep?: number): boolean => {
+    // Patch for __CONTENTS_SPECIAL__ to act like CONTENTS
+    const stepToCheck = (checkStep === '__CONTENTS_SPECIAL__') ? CONTENTS : checkStep;
     const currentSub = substep ?? currentSubstep;
 
-    switch (checkStep) {
+    switch (stepToCheck) {
       case PLATFORM:
         return !!(launchData.platform || launchData.platformId);
       case PROGRAM:
@@ -330,7 +361,7 @@ export function useLaunchWizard(): UseLaunchWizardReturn {
 
   return {
     // State
-    currentStep: step,
+    currentStep: stepKey === '__CONTENTS_SPECIAL__' ? CONTENTS : stepKey,
     currentSubstep,
     totalSteps: availableSteps.length,
     progress,
