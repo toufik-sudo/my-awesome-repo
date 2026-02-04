@@ -36,11 +36,11 @@ interface SocialNetworkWithIconName {
 // Helper to determine if program type is freemium or wall
 function isFreemiumOrWall(type: string | undefined): boolean {
   if (!type) return false;
-  return type.toLowerCase() === 'freemium' || type.toLowerCase() === 'wall';
+  return type.toLowerCase() != 'freemium' && type.toLowerCase() != 'wall';
 }
 
 const TOTAL_SECTIONS = 5;
-const FREEMIUM_WALL_SECTIONS = 1; // Only Main Banner and Section 1
+const FREEMIUM_WALL_SECTIONS = 2; // Only Main Banner and Section 1
 
 export const ContentsStep: React.FC = () => {
   const { formatMessage } = useIntl();
@@ -56,7 +56,7 @@ export const ContentsStep: React.FC = () => {
   const sectionCount = isLimitedSections ? FREEMIUM_WALL_SECTIONS : TOTAL_SECTIONS;
 
   // Only show sections 1 if freemium/wall, otherwise all
-  const isSocialNetworksStep = currentIndex === sectionCount + 1;
+  const isSocialNetworksStep = currentIndex >= sectionCount + 1;
 
   const isMainBanner = currentIndex === 1;
 
