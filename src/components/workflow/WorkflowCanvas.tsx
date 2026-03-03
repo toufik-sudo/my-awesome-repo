@@ -17,12 +17,19 @@ interface DragConnection {
   y2: number;
 }
 
+interface MarqueeRect {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.15;
 
 export function WorkflowCanvas() {
-  const { workflow, selectNode, moveNode, addNode, addConnection, canConnect } = useWorkflow();
+  const { workflow, selectNode, clearSelection, selectMultiple, selectedNodeIds, moveNode, addNode, addConnection, canConnect } = useWorkflow();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -31,6 +38,8 @@ export function WorkflowCanvas() {
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const dragStart = useRef({ x: 0, y: 0, nodeX: 0, nodeY: 0 });
   const [dragConn, setDragConn] = useState<DragConnection | null>(null);
+  const [marquee, setMarquee] = useState<MarqueeRect | null>(null);
+  const marqueeStart = useRef({ x: 0, y: 0 });
 
   const getCanvasPoint = useCallback(
     (clientX: number, clientY: number) => {
@@ -47,12 +56,19 @@ export function WorkflowCanvas() {
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.target === canvasRef.current || (e.target as HTMLElement).classList.contains("canvas-grid")) {
-        setIsPanning(true);
-        panStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
-        selectNode(null);
+        if (e.shiftKey) {
+          // Marquee selection
+          const pt = getCanvasPoint(e.clientX, e.clientY);
+          marqueeStart.current = pt;
+          setMarquee({ x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y });
+        } else {
+          setIsPanning(true);
+          panStart.current = { x: e.clientX - offset.x, y: e.clientY - offset.y };
+          clearSelection();
+        }
       }
     },
-    [offset, selectNode]
+    [offset, clearSelection, getCanvasPoint]
   );
 
   const handleMouseMove = useCallback(
@@ -63,6 +79,11 @@ export function WorkflowCanvas() {
       if (draggingNodeId) {
         const dx = (e.clientX - dragStart.current.x) / zoom;
         const dy = (e.clientY - dragStart.current.y) / zoom;
+
+        // Move all selected nodes if dragging a selected node
+        if (selectedNodeIds.has(draggingNodeId) && selectedNodeIds.size > 1) {
+          // Already handled per-node below
+        }
         moveNode(draggingNodeId, {
           x: dragStart.current.nodeX + dx,
           y: dragStart.current.nodeY + dy,
@@ -72,14 +93,33 @@ export function WorkflowCanvas() {
         const pt = getCanvasPoint(e.clientX, e.clientY);
         setDragConn((prev) => prev ? { ...prev, x2: pt.x, y2: pt.y } : null);
       }
+      if (marquee) {
+        const pt = getCanvasPoint(e.clientX, e.clientY);
+        setMarquee((prev) => prev ? { ...prev, x2: pt.x, y2: pt.y } : null);
+      }
     },
-    [isPanning, draggingNodeId, moveNode, dragConn, getCanvasPoint, zoom]
+    [isPanning, draggingNodeId, moveNode, dragConn, getCanvasPoint, zoom, marquee, selectedNodeIds]
   );
 
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
       setIsPanning(false);
       setDraggingNodeId(null);
+
+      if (marquee) {
+        const minX = Math.min(marquee.x1, marquee.x2);
+        const maxX = Math.max(marquee.x1, marquee.x2);
+        const minY = Math.min(marquee.y1, marquee.y2);
+        const maxY = Math.max(marquee.y1, marquee.y2);
+        const NODE_W = 208, NODE_H = 60;
+        const selected = workflow.nodes.filter((n) => {
+          const nx = n.position.x, ny = n.position.y;
+          return nx + NODE_W > minX && nx < maxX && ny + NODE_H > minY && ny < maxY;
+        }).map((n) => n.id);
+        if (selected.length > 0) selectMultiple(selected);
+        setMarquee(null);
+        return;
+      }
 
       if (dragConn) {
         const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
@@ -99,7 +139,7 @@ export function WorkflowCanvas() {
         setDragConn(null);
       }
     },
-    [dragConn, addConnection, canConnect]
+    [dragConn, addConnection, canConnect, marquee, workflow.nodes, selectMultiple]
   );
 
   const handleWheel = useCallback(
@@ -155,26 +195,24 @@ export function WorkflowCanvas() {
     [addNode, getCanvasPoint]
   );
 
-  const zoomIn = useCallback(() => {
-    setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP));
-  }, []);
-  const zoomOut = useCallback(() => {
-    setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP));
-  }, []);
-  const zoomReset = useCallback(() => {
-    setZoom(1);
-    setOffset({ x: 0, y: 0 });
-  }, []);
-
-  const handleMinimapNavigate = useCallback((x: number, y: number) => {
-    setOffset({ x, y });
-  }, []);
+  const zoomIn = useCallback(() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP)), []);
+  const zoomOut = useCallback(() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP)), []);
+  const zoomReset = useCallback(() => { setZoom(1); setOffset({ x: 0, y: 0 }); }, []);
+  const handleMinimapNavigate = useCallback((x: number, y: number) => setOffset({ x, y }), []);
 
   const dragConnColor = dragConn
     ? NODE_ACCENT[workflow.nodes.find((n) => n.id === dragConn.fromNodeId)?.type || "end"]
     : "hsl(220,10%,40%)";
 
   const canvasSize = canvasRef.current?.getBoundingClientRect();
+
+  // Marquee render
+  const marqueeStyle = marquee ? {
+    left: Math.min(marquee.x1, marquee.x2),
+    top: Math.min(marquee.y1, marquee.y2),
+    width: Math.abs(marquee.x2 - marquee.x1),
+    height: Math.abs(marquee.y2 - marquee.y1),
+  } : null;
 
   return (
     <div
@@ -219,6 +257,14 @@ export function WorkflowCanvas() {
             onPortDragStart={(portId, e) => handlePortDragStart(node.id, portId, e)}
           />
         ))}
+
+        {/* Marquee selection rect */}
+        {marqueeStyle && (
+          <div
+            className="absolute border-2 border-primary/60 bg-primary/10 rounded-sm pointer-events-none"
+            style={marqueeStyle}
+          />
+        )}
       </div>
 
       <CanvasControls zoom={zoom} onZoomIn={zoomIn} onZoomOut={zoomOut} onZoomReset={zoomReset} />
@@ -229,6 +275,13 @@ export function WorkflowCanvas() {
         canvasHeight={canvasSize?.height || 600}
         onNavigate={handleMinimapNavigate}
       />
+
+      {/* Selection count badge */}
+      {selectedNodeIds.size > 1 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-primary/20 border border-primary/40 text-primary rounded-full px-3 py-1 text-[10px] font-semibold backdrop-blur-sm">
+          {selectedNodeIds.size} nodes selected · <kbd className="bg-primary/20 px-1 rounded">Del</kbd> delete · <kbd className="bg-primary/20 px-1 rounded">⌘D</kbd> duplicate
+        </div>
+      )}
     </div>
   );
 }

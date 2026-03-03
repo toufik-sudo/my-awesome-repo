@@ -51,6 +51,9 @@ export default {
           webhook: "hsl(var(--node-webhook))",
           db: "hsl(var(--node-db))",
           js: "hsl(var(--node-js))",
+          text: "hsl(var(--node-text))",
+          button: "hsl(var(--node-button))",
+          variable: "hsl(var(--node-variable))",
         },
       },
       fontFamily: {

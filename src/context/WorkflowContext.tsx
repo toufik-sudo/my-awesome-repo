@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { Workflow, WorkflowNode, Connection, NodeType, Position } from "@/types/workflow";
+import type { Workflow, WorkflowNode, Connection, NodeType, Position, GlobalVariable } from "@/types/workflow";
 import { createNode } from "@/types/workflow";
 
 const MAX_HISTORY = 50;
@@ -8,15 +8,24 @@ const MAX_HISTORY = 50;
 interface WorkflowContextType {
   workflow: Workflow;
   selectedNodeId: string | null;
+  selectedNodeIds: Set<string>;
   selectNode: (id: string | null) => void;
+  toggleSelectNode: (id: string) => void;
+  selectMultiple: (ids: string[]) => void;
+  clearSelection: () => void;
   addNode: (type: NodeType, position: Position) => void;
   updateNode: (id: string, updates: Partial<WorkflowNode>) => void;
   removeNode: (id: string) => void;
+  removeNodes: (ids: string[]) => void;
+  duplicateNodes: (ids: string[]) => void;
   moveNode: (id: string, position: Position) => void;
   addConnection: (conn: Omit<Connection, "id">) => void;
   removeConnection: (id: string) => void;
   canConnect: (fromNodeId: string, fromPortId: string, toNodeId: string, toPortId: string) => boolean;
   importWorkflow: (data: Workflow) => void;
+  addGlobalVariable: (v: Omit<GlobalVariable, "id">) => void;
+  updateGlobalVariable: (id: string, updates: Partial<GlobalVariable>) => void;
+  removeGlobalVariable: (id: string) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -56,6 +65,7 @@ function defaultWorkflow(): Workflow {
         toPortId: aiNode.ports.inputs[0].id,
       },
     ],
+    globalVariables: [],
   };
 }
 
@@ -66,11 +76,11 @@ function cloneWorkflow(w: Workflow): Workflow {
 export function WorkflowProvider({ children }: { children: ReactNode }) {
   const [workflow, setWorkflow] = useState<Workflow>(defaultWorkflow);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
 
-  // History stacks store snapshots
   const pastRef = useRef<Workflow[]>([]);
   const futureRef = useRef<Workflow[]>([]);
-  const [historyVersion, setHistoryVersion] = useState(0); // triggers re-render for canUndo/canRedo
+  const [historyVersion, setHistoryVersion] = useState(0);
 
   const pushHistory = useCallback((current: Workflow) => {
     pastRef.current = [...pastRef.current.slice(-(MAX_HISTORY - 1)), cloneWorkflow(current)];
@@ -110,32 +120,66 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "z") {
         e.preventDefault();
-        if (e.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
+        e.shiftKey ? redo() : undo();
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "y") {
         e.preventDefault();
         redo();
       }
+      // Delete / Backspace for bulk delete
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedNodeIds.size > 0) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT") return;
+        e.preventDefault();
+        removeNodes(Array.from(selectedNodeIds));
+      }
+      // Ctrl+D duplicate
+      if ((e.metaKey || e.ctrlKey) && e.key === "d" && selectedNodeIds.size > 0) {
+        e.preventDefault();
+        duplicateNodes(Array.from(selectedNodeIds));
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo]);
+  }, [undo, redo, selectedNodeIds]);
 
-  const selectNode = useCallback((id: string | null) => setSelectedNodeId(id), []);
+  const selectNode = useCallback((id: string | null) => {
+    setSelectedNodeId(id);
+    setSelectedNodeIds(id ? new Set([id]) : new Set());
+  }, []);
+
+  const toggleSelectNode = useCallback((id: string) => {
+    setSelectedNodeIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      setSelectedNodeId(next.size === 1 ? Array.from(next)[0] : null);
+      return next;
+    });
+  }, []);
+
+  const selectMultiple = useCallback((ids: string[]) => {
+    setSelectedNodeIds(new Set(ids));
+    setSelectedNodeId(ids.length === 1 ? ids[0] : null);
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedNodeId(null);
+    setSelectedNodeIds(new Set());
+  }, []);
 
   const addNode = useCallback((type: NodeType, position: Position) => {
     const node = createNode(type, position);
     setWorkflowWithHistory((w) => ({ ...w, nodes: [...w.nodes, node] }));
     setSelectedNodeId(node.id);
+    setSelectedNodeIds(new Set([node.id]));
   }, [setWorkflowWithHistory]);
 
   const updateNode = useCallback((id: string, updates: Partial<WorkflowNode>) => {
@@ -152,9 +196,79 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
       connections: w.connections.filter((c) => c.fromNodeId !== id && c.toNodeId !== id),
     }));
     setSelectedNodeId((s) => (s === id ? null : s));
+    setSelectedNodeIds((prev) => { const n = new Set(prev); n.delete(id); return n; });
   }, [setWorkflowWithHistory]);
 
-  // moveNode does NOT push history (too frequent during drag)
+  const removeNodes = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    setWorkflowWithHistory((w) => ({
+      ...w,
+      nodes: w.nodes.filter((n) => !idSet.has(n.id)),
+      connections: w.connections.filter((c) => !idSet.has(c.fromNodeId) && !idSet.has(c.toNodeId)),
+    }));
+    setSelectedNodeId(null);
+    setSelectedNodeIds(new Set());
+  }, [setWorkflowWithHistory]);
+
+  const duplicateNodes = useCallback((ids: string[]) => {
+    setWorkflowWithHistory((w) => {
+      const idMap = new Map<string, string>();
+      const portMap = new Map<string, string>();
+      const newNodes: WorkflowNode[] = [];
+
+      for (const id of ids) {
+        const node = w.nodes.find((n) => n.id === id);
+        if (!node) continue;
+        const newId = uuidv4();
+        idMap.set(id, newId);
+        const newNode: WorkflowNode = {
+          ...JSON.parse(JSON.stringify(node)),
+          id: newId,
+          position: { x: node.position.x + 40, y: node.position.y + 40 },
+          ports: {
+            inputs: node.ports.inputs.map((p) => {
+              const newPortId = `${uuidv4()}-${p.id.split("-").pop()}`;
+              portMap.set(p.id, newPortId);
+              return { ...p, id: newPortId };
+            }),
+            outputs: node.ports.outputs.map((p) => {
+              const newPortId = `${uuidv4()}-${p.id.split("-").pop()}`;
+              portMap.set(p.id, newPortId);
+              return { ...p, id: newPortId };
+            }),
+          },
+        };
+        newNodes.push(newNode);
+      }
+
+      // Duplicate internal connections
+      const newConns: Connection[] = [];
+      for (const conn of w.connections) {
+        if (idMap.has(conn.fromNodeId) && idMap.has(conn.toNodeId)) {
+          newConns.push({
+            id: uuidv4(),
+            fromNodeId: idMap.get(conn.fromNodeId)!,
+            fromPortId: portMap.get(conn.fromPortId) || conn.fromPortId,
+            toNodeId: idMap.get(conn.toNodeId)!,
+            toPortId: portMap.get(conn.toPortId) || conn.toPortId,
+          });
+        }
+      }
+
+      const newIds = newNodes.map((n) => n.id);
+      setTimeout(() => {
+        setSelectedNodeIds(new Set(newIds));
+        setSelectedNodeId(newIds.length === 1 ? newIds[0] : null);
+      }, 0);
+
+      return {
+        ...w,
+        nodes: [...w.nodes, ...newNodes],
+        connections: [...w.connections, ...newConns],
+      };
+    });
+  }, [setWorkflowWithHistory]);
+
   const moveNode = useCallback((id: string, position: Position) => {
     setWorkflow((w) => ({
       ...w,
@@ -188,9 +302,32 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
 
   const importWorkflow = useCallback((data: Workflow) => {
     if (data && data.nodes && data.connections) {
-      setWorkflowWithHistory(() => data);
+      setWorkflowWithHistory(() => ({ ...data, globalVariables: data.globalVariables || [] }));
       setSelectedNodeId(null);
+      setSelectedNodeIds(new Set());
     }
+  }, [setWorkflowWithHistory]);
+
+  // Global variables
+  const addGlobalVariable = useCallback((v: Omit<GlobalVariable, "id">) => {
+    setWorkflowWithHistory((w) => ({
+      ...w,
+      globalVariables: [...(w.globalVariables || []), { ...v, id: uuidv4() }],
+    }));
+  }, [setWorkflowWithHistory]);
+
+  const updateGlobalVariable = useCallback((id: string, updates: Partial<GlobalVariable>) => {
+    setWorkflowWithHistory((w) => ({
+      ...w,
+      globalVariables: (w.globalVariables || []).map((v) => (v.id === id ? { ...v, ...updates } : v)),
+    }));
+  }, [setWorkflowWithHistory]);
+
+  const removeGlobalVariable = useCallback((id: string) => {
+    setWorkflowWithHistory((w) => ({
+      ...w,
+      globalVariables: (w.globalVariables || []).filter((v) => v.id !== id),
+    }));
   }, [setWorkflowWithHistory]);
 
   const canUndo = pastRef.current.length > 0;
@@ -201,15 +338,24 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
       value={{
         workflow,
         selectedNodeId,
+        selectedNodeIds,
         selectNode,
+        toggleSelectNode,
+        selectMultiple,
+        clearSelection,
         addNode,
         updateNode,
         removeNode,
+        removeNodes,
+        duplicateNodes,
         moveNode,
         addConnection,
         removeConnection,
         canConnect,
         importWorkflow,
+        addGlobalVariable,
+        updateGlobalVariable,
+        removeGlobalVariable,
         undo,
         redo,
         canUndo,

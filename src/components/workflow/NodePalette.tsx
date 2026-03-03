@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
   { type: "user_input", label: "User Input", group: "Flow" },
   { type: "ai_response", label: "AI Response", group: "Flow" },
+  { type: "text_display", label: "Text Display", group: "Flow" },
+  { type: "button_input", label: "Button Choice", group: "Flow" },
   { type: "condition", label: "Condition", group: "Flow" },
   { type: "end", label: "End", group: "Flow" },
   { type: "api_call", label: "API Call", group: "Integrations" },
@@ -14,6 +16,7 @@ const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
   { type: "db_query", label: "DB Query", group: "Integrations" },
   { type: "action", label: "Action", group: "Logic" },
   { type: "js_function", label: "JS Function", group: "Logic" },
+  { type: "set_variable", label: "Set Variable", group: "Logic" },
 ];
 
 const GROUPS = ["Flow", "Integrations", "Logic"];
@@ -53,7 +56,7 @@ export function NodePalette() {
       </div>
       <div className="px-4 py-3 border-t border-border">
         <p className="text-[10px] text-muted-foreground">
-          Drag blocks onto the canvas to build your agent flow.
+          Drag blocks onto the canvas. Shift+click to multi-select.
         </p>
       </div>
     </div>
