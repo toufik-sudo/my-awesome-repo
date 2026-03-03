@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
 import { Download, Upload, Play, Square, Undo2, Redo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TemplatePicker } from "./TemplatePicker";
 import type { ExecutionState } from "@/types/workflow";
 
 interface Props {
@@ -61,6 +62,10 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
       >
         <Redo2 className="w-3.5 h-3.5" />
       </button>
+
+      <div className="w-px h-5 bg-border mx-1" />
+
+      <TemplatePicker />
 
       <div className="w-px h-5 bg-border mx-1" />
 
