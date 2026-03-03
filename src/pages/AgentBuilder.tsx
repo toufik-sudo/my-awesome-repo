@@ -55,6 +55,9 @@ function AgentBuilderInner() {
         case "webhook_trigger": output = `Listen: ${node.config.url || "(no url)"}`; break;
         case "db_query": output = `Query: ${node.config.query?.substring(0, 30) || "(empty)"}`; break;
         case "js_function": output = "Execute JS"; break;
+        case "text_display": output = `Display: ${(node.config.text || "").substring(0, 30)}`; break;
+        case "button_input": output = `Buttons: ${(node.config.buttons || []).map((b: any) => b.label).join(", ")}`; break;
+        case "set_variable": output = `Set {{${node.config.variableName || "?"}}} = ${node.config.value || ""}`; break;
         case "end": output = node.config.message || "Ended"; break;
       }
 

@@ -1,7 +1,7 @@
 import React from "react";
 import {
   Bot, MessageSquare, Globe, GitBranch, Zap, Play, Square,
-  Mail, Webhook, Database, Code,
+  Mail, Webhook, Database, Code, Type, MousePointerClick, Variable,
 } from "lucide-react";
 import type { NodeType } from "@/types/workflow";
 
@@ -17,6 +17,9 @@ export const NODE_ICONS: Record<NodeType, React.ReactNode> = {
   webhook_trigger: <Webhook className="w-4 h-4" />,
   db_query: <Database className="w-4 h-4" />,
   js_function: <Code className="w-4 h-4" />,
+  text_display: <Type className="w-4 h-4" />,
+  button_input: <MousePointerClick className="w-4 h-4" />,
+  set_variable: <Variable className="w-4 h-4" />,
 };
 
 export const NODE_COLORS: Record<NodeType, string> = {
@@ -31,6 +34,9 @@ export const NODE_COLORS: Record<NodeType, string> = {
   webhook_trigger: "bg-node-webhook/20 border-node-webhook text-node-webhook",
   db_query: "bg-node-db/20 border-node-db text-node-db",
   js_function: "bg-node-js/20 border-node-js text-node-js",
+  text_display: "bg-node-text/20 border-node-text text-node-text",
+  button_input: "bg-node-button/20 border-node-button text-node-button",
+  set_variable: "bg-node-variable/20 border-node-variable text-node-variable",
 };
 
 export const NODE_ACCENT: Record<NodeType, string> = {
@@ -45,4 +51,7 @@ export const NODE_ACCENT: Record<NodeType, string> = {
   webhook_trigger: "hsl(280, 70%, 60%)",
   db_query: "hsl(160, 60%, 45%)",
   js_function: "hsl(50, 85%, 55%)",
+  text_display: "hsl(190, 70%, 55%)",
+  button_input: "hsl(310, 70%, 60%)",
+  set_variable: "hsl(130, 60%, 50%)",
 };

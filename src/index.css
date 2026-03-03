@@ -34,6 +34,9 @@
   --node-webhook: 280 70% 60%;
   --node-db: 160 60% 45%;
   --node-js: 50 85% 55%;
+  --node-text: 190 70% 55%;
+  --node-button: 310 70% 60%;
+  --node-variable: 130 60% 50%;
 }
 
 * {

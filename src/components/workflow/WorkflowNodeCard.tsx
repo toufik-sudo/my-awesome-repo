@@ -2,7 +2,7 @@ import React from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
 import { cn } from "@/lib/utils";
 import { NODE_ICONS, NODE_COLORS } from "./nodeConfig";
-import { X } from "lucide-react";
+import { X, Copy } from "lucide-react";
 import type { WorkflowNode } from "@/types/workflow";
 
 interface Props {
@@ -12,8 +12,10 @@ interface Props {
 }
 
 export function WorkflowNodeCard({ node, onDragStart, onPortDragStart }: Props) {
-  const { selectedNodeId, selectNode, removeNode } = useWorkflow();
-  const isSelected = selectedNodeId === node.id;
+  const { selectedNodeId, selectedNodeIds, selectNode, toggleSelectNode, removeNode, duplicateNodes } = useWorkflow();
+  const isSelected = selectedNodeIds.has(node.id);
+
+  const configPreview = getConfigPreview(node);
 
   return (
     <div
@@ -25,8 +27,15 @@ export function WorkflowNodeCard({ node, onDragStart, onPortDragStart }: Props) 
       )}
       style={{ left: node.position.x, top: node.position.y }}
       onMouseDown={(e) => {
-        selectNode(node.id);
-        onDragStart(e);
+        if (e.shiftKey) {
+          e.stopPropagation();
+          toggleSelectNode(node.id);
+        } else {
+          if (!selectedNodeIds.has(node.id)) {
+            selectNode(node.id);
+          }
+          onDragStart(e);
+        }
       }}
     >
       {/* Header */}
@@ -37,17 +46,29 @@ export function WorkflowNodeCard({ node, onDragStart, onPortDragStart }: Props) 
         <span className="text-xs font-semibold tracking-wide uppercase flex-1 truncate">
           {node.label}
         </span>
-        {node.type !== "start" && (
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-current/10"
+            className="p-0.5 rounded hover:bg-current/10"
             onClick={(e) => {
               e.stopPropagation();
-              removeNode(node.id);
+              duplicateNodes([node.id]);
             }}
+            title="Duplicate"
           >
-            <X className="w-3 h-3" />
+            <Copy className="w-3 h-3" />
           </button>
-        )}
+          {node.type !== "start" && (
+            <button
+              className="p-0.5 rounded hover:bg-current/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeNode(node.id);
+              }}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Ports */}
@@ -81,41 +102,26 @@ export function WorkflowNodeCard({ node, onDragStart, onPortDragStart }: Props) 
       </div>
 
       {/* Config preview */}
-      {node.type === "ai_response" && node.config.systemPrompt && (
+      {configPreview && (
         <div className="px-3 pb-2">
-          <p className="text-[10px] text-current/50 truncate font-mono">
-            {node.config.systemPrompt}
-          </p>
-        </div>
-      )}
-      {node.type === "api_call" && node.config.url && (
-        <div className="px-3 pb-2">
-          <p className="text-[10px] text-current/50 truncate font-mono">
-            {node.config.method} {node.config.url}
-          </p>
-        </div>
-      )}
-      {node.type === "js_function" && node.config.code && (
-        <div className="px-3 pb-2">
-          <p className="text-[10px] text-current/50 truncate font-mono">
-            {node.config.code.substring(0, 40)}…
-          </p>
-        </div>
-      )}
-      {node.type === "email_sender" && node.config.to && (
-        <div className="px-3 pb-2">
-          <p className="text-[10px] text-current/50 truncate font-mono">
-            → {node.config.to}
-          </p>
-        </div>
-      )}
-      {node.type === "db_query" && node.config.query && (
-        <div className="px-3 pb-2">
-          <p className="text-[10px] text-current/50 truncate font-mono">
-            {node.config.query.substring(0, 40)}
-          </p>
+          <p className="text-[10px] text-current/50 truncate font-mono">{configPreview}</p>
         </div>
       )}
     </div>
   );
+}
+
+function getConfigPreview(node: WorkflowNode): string | null {
+  switch (node.type) {
+    case "ai_response": return node.config.systemPrompt || null;
+    case "api_call": return node.config.url ? `${node.config.method} ${node.config.url}` : null;
+    case "js_function": return node.config.code ? `${node.config.code.substring(0, 40)}…` : null;
+    case "email_sender": return node.config.to ? `→ ${node.config.to}` : null;
+    case "db_query": return node.config.query ? node.config.query.substring(0, 40) : null;
+    case "text_display": return node.config.text ? node.config.text.substring(0, 40) : null;
+    case "button_input": return node.config.buttons ? `${node.config.buttons.length} buttons` : null;
+    case "set_variable": return node.config.variableName ? `{{${node.config.variableName}}} = ${node.config.value}` : null;
+    case "condition": return node.config.expression || null;
+    default: return null;
+  }
 }
