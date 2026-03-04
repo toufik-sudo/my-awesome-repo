@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
-import { X, Sparkles, Plus, Trash2, Variable, Palette, ChevronDown, ChevronRight } from "lucide-react";
+import { X, Sparkles, Plus, Trash2, Variable, Palette, ChevronDown, ChevronRight, Image, Film } from "lucide-react";
 import { NODE_EXAMPLES } from "@/types/workflow";
 import type { GlobalVariable } from "@/types/workflow";
 
@@ -321,18 +321,7 @@ export function NodeConfigPanel() {
         )}
 
         {node.type === "text_display" && (
-          <>
-            <Field label="Display Text">
-              <textarea className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none h-24" placeholder="Hello {{user_name}}!" value={node.config.text || ""} onChange={(e) => updateConfig("text", e.target.value)} />
-            </Field>
-            <Field label="Format">
-              <select className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" value={node.config.format || "markdown"} onChange={(e) => updateConfig("format", e.target.value)}>
-                <option value="markdown">Markdown</option>
-                <option value="plain">Plain Text</option>
-                <option value="html">HTML</option>
-              </select>
-            </Field>
-          </>
+          <TextDisplayConfig node={node} updateConfig={updateConfig} />
         )}
 
         {node.type === "button_input" && (
@@ -359,6 +348,87 @@ export function NodeConfigPanel() {
         )}
       </div>
     </div>
+  );
+}
+
+function TextDisplayConfig({ node, updateConfig }: { node: any; updateConfig: (k: string, v: any) => void }) {
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const url = URL.createObjectURL(file);
+          const currentText = node.config.text || "";
+          updateConfig("text", currentText + `\n![pasted image](${url})\n`);
+        }
+        return;
+      }
+      if (item.type.startsWith("video/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const url = URL.createObjectURL(file);
+          const currentText = node.config.text || "";
+          updateConfig("text", currentText + `\n<video src="${url}" controls style="max-width:100%;border-radius:6px"></video>\n`);
+        }
+        return;
+      }
+    }
+  }, [node.config.text, updateConfig]);
+
+  const handleFileAttach = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const currentText = node.config.text || "";
+    if (file.type.startsWith("image/")) {
+      updateConfig("text", currentText + `\n![${file.name}](${url})\n`);
+    } else if (file.type.startsWith("video/")) {
+      updateConfig("text", currentText + `\n<video src="${url}" controls style="max-width:100%;border-radius:6px"></video>\n`);
+    }
+    e.target.value = "";
+  }, [node.config.text, updateConfig]);
+
+  return (
+    <>
+      <Field label="Display Text">
+        <textarea
+          className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none h-24"
+          placeholder="Hello {{user_name}}! Supports markdown, HTML, images & videos. Paste an image here!"
+          value={node.config.text || ""}
+          onChange={(e) => updateConfig("text", e.target.value)}
+          onPaste={handlePaste}
+        />
+        <div className="flex items-center gap-2 mt-1">
+          <label className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium cursor-pointer">
+            <Image className="w-3 h-3" />
+            Add image
+            <input type="file" accept="image/*" className="hidden" onChange={handleFileAttach} />
+          </label>
+          <label className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium cursor-pointer">
+            <Film className="w-3 h-3" />
+            Add video
+            <input type="file" accept="video/*" className="hidden" onChange={handleFileAttach} />
+          </label>
+        </div>
+      </Field>
+      <Field label="Format">
+        <select className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" value={node.config.format || "markdown"} onChange={(e) => updateConfig("format", e.target.value)}>
+          <option value="markdown">Markdown</option>
+          <option value="plain">Plain Text</option>
+          <option value="html">HTML</option>
+          <option value="mixed">Mixed (HTML + Text)</option>
+        </select>
+        <p className="text-[9px] text-muted-foreground mt-0.5">
+          {node.config.format === "mixed" ? "Renders HTML tags and plain text together" : 
+           node.config.format === "html" ? "Full HTML rendering" :
+           node.config.format === "plain" ? "No formatting applied" :
+           "Supports **bold**, *italic*, images, links, and more"}
+        </p>
+      </Field>
+    </>
   );
 }
 

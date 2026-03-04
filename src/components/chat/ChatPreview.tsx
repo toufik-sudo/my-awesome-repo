@@ -1,29 +1,41 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film, RotateCcw } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { useWorkflow } from "@/context/WorkflowContext";
 import type { ChatMessage } from "@/types/workflow";
 
+const initialMessage: ChatMessage = {
+  id: uuidv4(),
+  role: "assistant",
+  content: "Hello! I'm your AI agent. How can I help you today?",
+  timestamp: Date.now(),
+};
+
 export function ChatPreview() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: uuidv4(),
-      role: "assistant",
-      content: "Hello! I'm your AI agent. How can I help you today?",
-      timestamp: Date.now(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const { workflow, updateGlobalVariable, addGlobalVariable } = useWorkflow();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Auto-inject last_utterance global variable on user interaction
+  const updateLastUtterance = useCallback((text: string) => {
+    const existing = (workflow.globalVariables || []).find((v) => v.name === "last_utterance");
+    if (existing) {
+      updateGlobalVariable(existing.id, { defaultValue: text });
+    } else {
+      addGlobalVariable({ name: "last_utterance", type: "string", defaultValue: text, description: "Automatically updated with the latest user input (text, voice, or attachment)" });
+    }
+  }, [workflow.globalVariables, updateGlobalVariable, addGlobalVariable]);
 
   // Speech-to-Text
   const toggleSTT = useCallback(() => {
@@ -59,10 +71,45 @@ export function ChatPreview() {
     setIsListening(true);
   }, [isListening]);
 
+  // Simulate text_display and button_input nodes in chat
+  const injectWorkflowBlocks = useCallback(() => {
+    const blockMessages: ChatMessage[] = [];
+    
+    // Find text_display nodes in workflow
+    for (const node of workflow.nodes) {
+      if (node.type === "text_display" && node.config.text) {
+        blockMessages.push({
+          id: uuidv4(),
+          role: "assistant",
+          content: node.config.text,
+          timestamp: Date.now(),
+          type: "text_display",
+          format: node.config.format || "markdown",
+        } as any);
+      }
+      if (node.type === "button_input") {
+        blockMessages.push({
+          id: uuidv4(),
+          role: "assistant",
+          content: node.config.prompt || "Choose an option:",
+          timestamp: Date.now(),
+          type: "button_input",
+          buttons: node.config.buttons || [],
+          layout: node.config.layout || "horizontal",
+        } as any);
+      }
+    }
+    
+    return blockMessages;
+  }, [workflow.nodes]);
+
   // Mock streaming response
   const sendMessage = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoading) return;
+
+    // Update last_utterance global variable
+    updateLastUtterance(text);
 
     const userMsg: ChatMessage = {
       id: uuidv4(),
@@ -94,9 +141,15 @@ export function ChatPreview() {
       );
     }
 
+    // Inject workflow blocks (text_display, button_input) after AI response
+    const blockMsgs = injectWorkflowBlocks();
+    if (blockMsgs.length > 0) {
+      setMessages((prev) => [...prev, ...blockMsgs]);
+    }
+
     setIsLoading(false);
     setIsStreaming(false);
-  }, [input, isLoading]);
+  }, [input, isLoading, updateLastUtterance, injectWorkflowBlocks]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -114,11 +167,22 @@ export function ChatPreview() {
         if (file) {
           const url = URL.createObjectURL(file);
           setInput((prev) => prev + `\n![pasted image](${url})\n`);
+          updateLastUtterance(`[image attachment]`);
+        }
+        return;
+      }
+      if (item.type.startsWith("video/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const url = URL.createObjectURL(file);
+          setInput((prev) => prev + `\n<video src="${url}" controls style="max-width:100%;border-radius:6px"></video>\n`);
+          updateLastUtterance(`[video attachment]`);
         }
         return;
       }
     }
-  }, []);
+  }, [updateLastUtterance]);
 
   const handleFileAttach = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,11 +190,13 @@ export function ChatPreview() {
     const url = URL.createObjectURL(file);
     if (file.type.startsWith("image/")) {
       setInput((prev) => prev + `\n![${file.name}](${url})\n`);
+      updateLastUtterance(`[image: ${file.name}]`);
     } else if (file.type.startsWith("video/")) {
       setInput((prev) => prev + `\n<video src="${url}" controls style="max-width:100%;border-radius:6px"></video>\n`);
+      updateLastUtterance(`[video: ${file.name}]`);
     }
     e.target.value = "";
-  }, []);
+  }, [updateLastUtterance]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -145,6 +211,95 @@ export function ChatPreview() {
     }
   }, []);
 
+  const resetChat = useCallback(() => {
+    setMessages([{
+      id: uuidv4(),
+      role: "assistant",
+      content: "Hello! I'm your AI agent. How can I help you today?",
+      timestamp: Date.now(),
+    }]);
+    setInput("");
+    setIsLoading(false);
+    setIsStreaming(false);
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
+  }, [isListening]);
+
+  const handleButtonClick = useCallback((value: string, label: string) => {
+    updateLastUtterance(value);
+    const userMsg: ChatMessage = {
+      id: uuidv4(),
+      role: "user",
+      content: label,
+      timestamp: Date.now(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+  }, [updateLastUtterance]);
+
+  const renderMessageContent = (msg: any) => {
+    // Text display block
+    if (msg.type === "text_display") {
+      const format = msg.format || "markdown";
+      return (
+        <div className="space-y-1">
+          <span className="text-[9px] uppercase tracking-wider font-bold text-primary/60">📝 Text Display</span>
+          {format === "html" ? (
+            <div className="text-xs" dangerouslySetInnerHTML={{ __html: msg.content }} />
+          ) : format === "markdown" ? (
+            <MarkdownRenderer content={msg.content} className="text-xs" />
+          ) : (
+            <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
+          )}
+        </div>
+      );
+    }
+
+    // Button input block
+    if (msg.type === "button_input") {
+      return (
+        <div className="space-y-2">
+          <p className="text-xs">{msg.content}</p>
+          <div className={cn(
+            "flex gap-1.5 flex-wrap",
+            msg.layout === "vertical" ? "flex-col" : "flex-row"
+          )}>
+            {(msg.buttons || []).map((btn: any, i: number) => (
+              <button
+                key={i}
+                onClick={() => handleButtonClick(btn.value, btn.label)}
+                className="px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:scale-105 active:scale-95 border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+                style={{
+                  ...(btn.bgColor ? { backgroundColor: btn.bgColor, borderColor: btn.bgColor } : {}),
+                  ...(btn.textColor ? { color: btn.textColor } : {}),
+                  ...(btn.fontSize ? { fontSize: `${btn.fontSize}px` } : {}),
+                }}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Regular messages
+    if (msg.role === "assistant") {
+      return (
+        <>
+          <MarkdownRenderer content={msg.content} className="text-xs" />
+          {isStreaming && msg.id === messages[messages.length - 1]?.id && (
+            <span className="inline-block w-1.5 h-3.5 bg-primary/60 ml-0.5 animate-pulse" />
+          )}
+        </>
+      );
+    }
+
+    // User message - render markdown to show images/videos
+    return <MarkdownRenderer content={msg.content} className="text-xs" />;
+  };
+
   return (
     <div className="w-96 bg-card border-l border-border flex flex-col">
       {/* Header */}
@@ -156,9 +311,18 @@ export function ChatPreview() {
           <h2 className="text-xs font-semibold text-foreground">Agent Preview</h2>
           <p className="text-[10px] text-muted-foreground">Test your conversational flow</p>
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className={cn("w-2 h-2 rounded-full", isStreaming ? "bg-yellow-400 animate-pulse" : "bg-green-400")} />
-          <span className="text-[10px] text-muted-foreground">{isStreaming ? "Streaming" : "Ready"}</span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={resetChat}
+            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Reset conversation"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className={cn("w-2 h-2 rounded-full", isStreaming ? "bg-yellow-400 animate-pulse" : "bg-green-400")} />
+            <span className="text-[10px] text-muted-foreground">{isStreaming ? "Streaming" : "Ready"}</span>
+          </div>
         </div>
       </div>
 
@@ -192,14 +356,7 @@ export function ChatPreview() {
                   : "bg-muted text-foreground"
               )}
             >
-              {msg.role === "assistant" ? (
-                <MarkdownRenderer content={msg.content} className="text-xs" />
-              ) : (
-                msg.content
-              )}
-              {msg.role === "assistant" && isStreaming && msg.id === messages[messages.length - 1]?.id && (
-                <span className="inline-block w-1.5 h-3.5 bg-primary/60 ml-0.5 animate-pulse" />
-              )}
+              {renderMessageContent(msg)}
             </div>
           </div>
         ))}
@@ -233,7 +390,7 @@ export function ChatPreview() {
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
           />
-          <label className="p-1.5 rounded-lg hover:bg-muted-foreground/10 text-muted-foreground cursor-pointer shrink-0" title="Attach image">
+          <label className="p-1.5 rounded-lg hover:bg-muted-foreground/10 text-muted-foreground cursor-pointer shrink-0" title="Attach image or video">
             <Image className="w-4 h-4" />
             <input type="file" accept="image/*,video/*" className="hidden" onChange={handleFileAttach} />
           </label>
