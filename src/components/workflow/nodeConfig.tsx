@@ -2,6 +2,7 @@ import React from "react";
 import {
   Bot, MessageSquare, Globe, GitBranch, Zap, Play, Square,
   Mail, Webhook, Database, Code, Type, MousePointerClick, Variable,
+  Box,
 } from "lucide-react";
 import type { NodeType } from "@/types/workflow";
 
@@ -20,6 +21,7 @@ export const NODE_ICONS: Record<NodeType, React.ReactNode> = {
   text_display: <Type className="w-4 h-4" />,
   button_input: <MousePointerClick className="w-4 h-4" />,
   set_variable: <Variable className="w-4 h-4" />,
+  component: <Box className="w-4 h-4" />,
 };
 
 export const NODE_COLORS: Record<NodeType, string> = {
@@ -37,6 +39,7 @@ export const NODE_COLORS: Record<NodeType, string> = {
   text_display: "bg-node-text/20 border-node-text text-node-text",
   button_input: "bg-node-button/20 border-node-button text-node-button",
   set_variable: "bg-node-variable/20 border-node-variable text-node-variable",
+  component: "bg-accent/20 border-accent text-accent",
 };
 
 export const NODE_ACCENT: Record<NodeType, string> = {
@@ -54,4 +57,5 @@ export const NODE_ACCENT: Record<NodeType, string> = {
   text_display: "hsl(190, 70%, 55%)",
   button_input: "hsl(310, 70%, 60%)",
   set_variable: "hsl(130, 60%, 50%)",
+  component: "hsl(170, 70%, 50%)",
 };

@@ -15,7 +15,8 @@ export type NodeType =
   | "js_function"
   | "text_display"
   | "button_input"
-  | "set_variable";
+  | "set_variable"
+  | "component";
 
 export interface Position {
   x: number;
@@ -38,6 +39,10 @@ export interface WorkflowNode {
     inputs: NodePort[];
     outputs: NodePort[];
   };
+  /** IDs of child nodes contained in this component (only for type "component") */
+  childNodeIds?: string[];
+  /** If this node is inside a component, reference the parent component ID */
+  parentComponentId?: string;
 }
 
 export interface Connection {
@@ -101,7 +106,14 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
   ai_response: {
     type: "ai_response",
     label: "AI Response",
-    config: { model: "gemini-flash", systemPrompt: "You are a helpful assistant.", stream: true },
+    config: {
+      model: "gemini-flash",
+      systemPrompt: "You are a helpful assistant.",
+      userMessageTemplate: "{{user_input}}",
+      utterances: ["Hello", "Help me with", "Tell me about"],
+      variables: [] as { name: string; value: string }[],
+      stream: true,
+    },
     ports: {
       inputs: [{ id: "in", label: "In", type: "input" }],
       outputs: [{ id: "out", label: "Next", type: "output" }],
@@ -185,7 +197,10 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
     config: { code: "// input is available as `data`\nreturn data;" },
     ports: {
       inputs: [{ id: "in", label: "In", type: "input" }],
-      outputs: [{ id: "out", label: "Result", type: "output" }],
+      outputs: [
+        { id: "out", label: "Result", type: "output" },
+        { id: "error", label: "Error", type: "output" },
+      ],
     },
   },
   text_display: {
@@ -203,10 +218,11 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
     config: {
       prompt: "Choose an option:",
       buttons: [
-        { label: "Option A", value: "a" },
-        { label: "Option B", value: "b" },
-        { label: "Option C", value: "c" },
+        { label: "Option A", value: "a", bgColor: "", textColor: "", fontSize: "14" },
+        { label: "Option B", value: "b", bgColor: "", textColor: "", fontSize: "14" },
+        { label: "Option C", value: "c", bgColor: "", textColor: "", fontSize: "14" },
       ],
+      layout: "horizontal" as "horizontal" | "vertical",
     },
     ports: {
       inputs: [{ id: "in", label: "In", type: "input" }],
@@ -222,6 +238,15 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
     ports: {
       inputs: [{ id: "in", label: "In", type: "input" }],
       outputs: [{ id: "out", label: "Next", type: "output" }],
+    },
+  },
+  component: {
+    type: "component",
+    label: "Component",
+    config: { name: "My Component", description: "" },
+    ports: {
+      inputs: [{ id: "in", label: "In", type: "input" }],
+      outputs: [{ id: "out", label: "Out", type: "output" }],
     },
   },
 };
@@ -288,6 +313,10 @@ export const NODE_EXAMPLES: Record<NodeType, { title: string; config: Record<str
   set_variable: [
     { title: "Set user name", config: { variableName: "user_name", value: "{{input}}", operation: "set" } },
     { title: "Increment counter", config: { variableName: "attempt_count", value: "1", operation: "increment" } },
+  ],
+  component: [
+    { title: "API Gateway", config: { name: "API Gateway", description: "Handles authentication and rate limiting before forwarding requests" } },
+    { title: "Email Pipeline", config: { name: "Email Pipeline", description: "Composes, validates, and sends emails with retry logic" } },
   ],
 };
 

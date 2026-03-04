@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import type { NodeType } from "@/types/workflow";
 import { NODE_ICONS, NODE_COLORS } from "./nodeConfig";
 import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
 
 const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
   { type: "user_input", label: "User Input", group: "Flow" },
@@ -10,6 +11,7 @@ const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
   { type: "button_input", label: "Button Choice", group: "Flow" },
   { type: "condition", label: "Condition", group: "Flow" },
   { type: "end", label: "End", group: "Flow" },
+  { type: "component", label: "Component", group: "Flow" },
   { type: "api_call", label: "API Call", group: "Integrations" },
   { type: "email_sender", label: "Email Sender", group: "Integrations" },
   { type: "webhook_trigger", label: "Webhook", group: "Integrations" },
@@ -22,21 +24,43 @@ const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
 const GROUPS = ["Flow", "Integrations", "Logic"];
 
 export function NodePalette() {
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return PALETTE_ITEMS;
+    const q = search.toLowerCase();
+    return PALETTE_ITEMS.filter(
+      (i) => i.label.toLowerCase().includes(q) || i.group.toLowerCase().includes(q) || i.type.toLowerCase().includes(q)
+    );
+  }, [search]);
+
+  const visibleGroups = GROUPS.filter((g) => filtered.some((i) => i.group === g));
+
   return (
     <div className="w-56 bg-card border-r border-border flex flex-col">
-      <div className="px-4 py-3 border-b border-border">
+      <div className="px-3 py-3 border-b border-border space-y-2">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Blocks
         </h2>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search blocks…"
+            className="w-full pl-7 pr-2 py-1.5 text-[11px] rounded-md bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
       </div>
       <div className="p-3 space-y-3 overflow-y-auto flex-1">
-        {GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group}>
             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1.5 px-1">
               {group}
             </p>
             <div className="space-y-1.5">
-              {PALETTE_ITEMS.filter((i) => i.group === group).map((item) => (
+              {filtered.filter((i) => i.group === group).map((item) => (
                 <div
                   key={item.type}
                   draggable
@@ -53,6 +77,9 @@ export function NodePalette() {
             </div>
           </div>
         ))}
+        {filtered.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-4">No blocks match "{search}"</p>
+        )}
       </div>
       <div className="px-4 py-3 border-t border-border">
         <p className="text-[10px] text-muted-foreground">

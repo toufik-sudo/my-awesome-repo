@@ -26,6 +26,9 @@ interface WorkflowContextType {
   addGlobalVariable: (v: Omit<GlobalVariable, "id">) => void;
   updateGlobalVariable: (id: string, updates: Partial<GlobalVariable>) => void;
   removeGlobalVariable: (id: string) => void;
+  addNodeToComponent: (nodeId: string, componentId: string) => void;
+  removeNodeFromComponent: (nodeId: string) => void;
+  groupIntoComponent: (nodeIds: string[]) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -330,6 +333,64 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
     }));
   }, [setWorkflowWithHistory]);
 
+  // ─── Component nesting ────────────────────────
+  const addNodeToComponent = useCallback((nodeId: string, componentId: string) => {
+    setWorkflowWithHistory((w) => {
+      const component = w.nodes.find((n) => n.id === componentId);
+      const node = w.nodes.find((n) => n.id === nodeId);
+      if (!component || !node || component.type !== "component" || nodeId === componentId) return w;
+      if (node.parentComponentId) return w; // already nested
+      if (node.type === "start") return w; // can't nest start
+      return {
+        ...w,
+        nodes: w.nodes.map((n) => {
+          if (n.id === componentId) return { ...n, childNodeIds: [...(n.childNodeIds || []), nodeId] };
+          if (n.id === nodeId) return { ...n, parentComponentId: componentId };
+          return n;
+        }),
+      };
+    });
+  }, [setWorkflowWithHistory]);
+
+  const removeNodeFromComponent = useCallback((nodeId: string) => {
+    setWorkflowWithHistory((w) => {
+      const node = w.nodes.find((n) => n.id === nodeId);
+      if (!node || !node.parentComponentId) return w;
+      const parentId = node.parentComponentId;
+      return {
+        ...w,
+        nodes: w.nodes.map((n) => {
+          if (n.id === parentId) return { ...n, childNodeIds: (n.childNodeIds || []).filter((id) => id !== nodeId) };
+          if (n.id === nodeId) {
+            const { parentComponentId, ...rest } = n;
+            return rest as WorkflowNode;
+          }
+          return n;
+        }),
+      };
+    });
+  }, [setWorkflowWithHistory]);
+
+  const groupIntoComponent = useCallback((nodeIds: string[]) => {
+    setWorkflowWithHistory((w) => {
+      const nodes = w.nodes.filter((n) => nodeIds.includes(n.id) && n.type !== "start" && !n.parentComponentId);
+      if (nodes.length === 0) return w;
+      // Calculate center position
+      const avgX = nodes.reduce((s, n) => s + n.position.x, 0) / nodes.length;
+      const avgY = nodes.reduce((s, n) => s + n.position.y, 0) / nodes.length;
+      const componentNode = createNode("component", { x: avgX - 30, y: avgY - 60 });
+      componentNode.childNodeIds = nodes.map((n) => n.id);
+      componentNode.label = `Component (${nodes.length})`;
+      return {
+        ...w,
+        nodes: [
+          ...w.nodes.map((n) => nodeIds.includes(n.id) && n.type !== "start" ? { ...n, parentComponentId: componentNode.id } : n),
+          componentNode,
+        ],
+      };
+    });
+  }, [setWorkflowWithHistory]);
+
   const canUndo = pastRef.current.length > 0;
   const canRedo = futureRef.current.length > 0;
 
@@ -356,6 +417,9 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
         addGlobalVariable,
         updateGlobalVariable,
         removeGlobalVariable,
+        addNodeToComponent,
+        removeNodeFromComponent,
+        groupIntoComponent,
         undo,
         redo,
         canUndo,

@@ -4,6 +4,7 @@ import { WorkflowNodeCard } from "./WorkflowNodeCard";
 import { ConnectionLines } from "./ConnectionLines";
 import { CanvasControls } from "./CanvasControls";
 import { Minimap } from "./Minimap";
+import { ContextMenu, type ContextMenuState } from "./ContextMenu";
 import { cn } from "@/lib/utils";
 import { NODE_ACCENT } from "./nodeConfig";
 import type { NodeType } from "@/types/workflow";
@@ -29,17 +30,20 @@ const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.15;
 
 export function WorkflowCanvas() {
-  const { workflow, selectNode, clearSelection, selectMultiple, selectedNodeIds, moveNode, addNode, addConnection, canConnect } = useWorkflow();
+  const { workflow, selectNode, clearSelection, selectMultiple, selectedNodeIds, moveNode, addNode, addConnection, canConnect, addNodeToComponent } = useWorkflow();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef({ x: 0, y: 0 });
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [dragOverComponentId, setDragOverComponentId] = useState<string | null>(null);
   const dragStart = useRef({ x: 0, y: 0, nodeX: 0, nodeY: 0 });
+  const multiDragStart = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [dragConn, setDragConn] = useState<DragConnection | null>(null);
   const [marquee, setMarquee] = useState<MarqueeRect | null>(null);
   const marqueeStart = useRef({ x: 0, y: 0 });
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
   const getCanvasPoint = useCallback(
     (clientX: number, clientY: number) => {
@@ -55,9 +59,9 @@ export function WorkflowCanvas() {
 
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      if (contextMenu) { setContextMenu(null); return; }
       if (e.target === canvasRef.current || (e.target as HTMLElement).classList.contains("canvas-grid")) {
         if (e.shiftKey) {
-          // Marquee selection
           const pt = getCanvasPoint(e.clientX, e.clientY);
           marqueeStart.current = pt;
           setMarquee({ x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y });
@@ -68,7 +72,7 @@ export function WorkflowCanvas() {
         }
       }
     },
-    [offset, clearSelection, getCanvasPoint]
+    [offset, clearSelection, getCanvasPoint, contextMenu]
   );
 
   const handleMouseMove = useCallback(
@@ -79,15 +83,26 @@ export function WorkflowCanvas() {
       if (draggingNodeId) {
         const dx = (e.clientX - dragStart.current.x) / zoom;
         const dy = (e.clientY - dragStart.current.y) / zoom;
-
-        // Move all selected nodes if dragging a selected node
         if (selectedNodeIds.has(draggingNodeId) && selectedNodeIds.size > 1) {
-          // Already handled per-node below
+          multiDragStart.current.forEach((startPos, nodeId) => {
+            moveNode(nodeId, { x: startPos.x + dx, y: startPos.y + dy });
+          });
+        } else {
+          moveNode(draggingNodeId, { x: dragStart.current.nodeX + dx, y: dragStart.current.nodeY + dy });
         }
-        moveNode(draggingNodeId, {
-          x: dragStart.current.nodeX + dx,
-          y: dragStart.current.nodeY + dy,
-        });
+        // Check drag-over component
+        const draggedNode = workflow.nodes.find((n) => n.id === draggingNodeId);
+        if (draggedNode && !draggedNode.parentComponentId && draggedNode.type !== "start" && draggedNode.type !== "component") {
+          const pt = { x: draggedNode.position.x, y: draggedNode.position.y };
+          const target = workflow.nodes.find((n) =>
+            n.type === "component" && n.id !== draggingNodeId &&
+            pt.x >= n.position.x && pt.x <= n.position.x + 256 &&
+            pt.y >= n.position.y && pt.y <= n.position.y + 200
+          );
+          setDragOverComponentId(target?.id || null);
+        } else {
+          setDragOverComponentId(null);
+        }
       }
       if (dragConn) {
         const pt = getCanvasPoint(e.clientX, e.clientY);
@@ -103,8 +118,26 @@ export function WorkflowCanvas() {
 
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
+      // Check if node was dropped onto a component
+      if (draggingNodeId) {
+        const draggedNode = workflow.nodes.find((n) => n.id === draggingNodeId);
+        if (draggedNode && !draggedNode.parentComponentId && draggedNode.type !== "start") {
+          const pt = { x: draggedNode.position.x, y: draggedNode.position.y };
+          const componentTarget = workflow.nodes.find((n) =>
+            n.type === "component" && n.id !== draggingNodeId &&
+            pt.x >= n.position.x && pt.x <= n.position.x + 256 &&
+            pt.y >= n.position.y && pt.y <= n.position.y + 200
+          );
+          if (componentTarget) {
+            addNodeToComponent(draggingNodeId, componentTarget.id);
+          }
+        }
+      }
+
       setIsPanning(false);
       setDraggingNodeId(null);
+      setDragOverComponentId(null);
+      multiDragStart.current.clear();
 
       if (marquee) {
         const minX = Math.min(marquee.x1, marquee.x2);
@@ -139,7 +172,7 @@ export function WorkflowCanvas() {
         setDragConn(null);
       }
     },
-    [dragConn, addConnection, canConnect, marquee, workflow.nodes, selectMultiple]
+    [dragConn, addConnection, canConnect, marquee, workflow.nodes, selectMultiple, draggingNodeId, addNodeToComponent]
   );
 
   const handleWheel = useCallback(
@@ -182,7 +215,29 @@ export function WorkflowCanvas() {
     if (!node) return;
     setDraggingNodeId(nodeId);
     dragStart.current = { x: e.clientX, y: e.clientY, nodeX: node.position.x, nodeY: node.position.y };
-  }, [workflow.nodes]);
+    if (selectedNodeIds.has(nodeId) && selectedNodeIds.size > 1) {
+      const positions = new Map<string, { x: number; y: number }>();
+      selectedNodeIds.forEach((id) => {
+        const n = workflow.nodes.find((nd) => nd.id === id);
+        if (n) positions.set(id, { x: n.position.x, y: n.position.y });
+      });
+      multiDragStart.current = positions;
+    }
+  }, [workflow.nodes, selectedNodeIds]);
+
+  const handleNodeContextMenu = useCallback((nodeId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const ids = selectedNodeIds.has(nodeId) && selectedNodeIds.size > 1
+      ? Array.from(selectedNodeIds)
+      : [nodeId];
+    if (!selectedNodeIds.has(nodeId)) selectNode(nodeId);
+    setContextMenu({ x: e.clientX, y: e.clientY, type: "node", targetId: nodeId, multiNodeIds: ids });
+  }, [selectedNodeIds, selectNode]);
+
+  const handleConnectionContextMenu = useCallback((connId: string, x: number, y: number) => {
+    setContextMenu({ x, y, type: "connection", targetId: connId });
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -206,7 +261,6 @@ export function WorkflowCanvas() {
 
   const canvasSize = canvasRef.current?.getBoundingClientRect();
 
-  // Marquee render
   const marqueeStyle = marquee ? {
     left: Math.min(marquee.x1, marquee.x2),
     top: Math.min(marquee.y1, marquee.y2),
@@ -228,6 +282,11 @@ export function WorkflowCanvas() {
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
       onWheel={handleWheel}
+      onContextMenu={(e) => {
+        if (e.target === canvasRef.current || (e.target as HTMLElement).classList.contains("canvas-grid")) {
+          e.preventDefault();
+        }
+      }}
     >
       <div
         className="absolute inset-0 origin-top-left"
@@ -236,7 +295,7 @@ export function WorkflowCanvas() {
         }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>
-          <ConnectionLines />
+          <ConnectionLines onConnectionContextMenu={handleConnectionContextMenu} />
           {dragConn && (
             <path
               d={`M ${dragConn.x1} ${dragConn.y1} C ${dragConn.x1 + 60} ${dragConn.y1}, ${dragConn.x2 - 60} ${dragConn.y2}, ${dragConn.x2} ${dragConn.y2}`}
@@ -255,10 +314,11 @@ export function WorkflowCanvas() {
             node={node}
             onDragStart={(e) => handleNodeDragStart(node.id, e)}
             onPortDragStart={(portId, e) => handlePortDragStart(node.id, portId, e)}
+            onContextMenu={(e) => handleNodeContextMenu(node.id, e)}
+            isDragOver={dragOverComponentId === node.id}
           />
         ))}
 
-        {/* Marquee selection rect */}
         {marqueeStyle && (
           <div
             className="absolute border-2 border-primary/60 bg-primary/10 rounded-sm pointer-events-none"
@@ -276,12 +336,13 @@ export function WorkflowCanvas() {
         onNavigate={handleMinimapNavigate}
       />
 
-      {/* Selection count badge */}
       {selectedNodeIds.size > 1 && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-primary/20 border border-primary/40 text-primary rounded-full px-3 py-1 text-[10px] font-semibold backdrop-blur-sm">
-          {selectedNodeIds.size} nodes selected · <kbd className="bg-primary/20 px-1 rounded">Del</kbd> delete · <kbd className="bg-primary/20 px-1 rounded">⌘D</kbd> duplicate
+          {selectedNodeIds.size} nodes selected · drag to move all · <kbd className="bg-primary/20 px-1 rounded">Del</kbd> delete · <kbd className="bg-primary/20 px-1 rounded">⌘D</kbd> duplicate
         </div>
       )}
+
+      {contextMenu && <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />}
     </div>
   );
 }

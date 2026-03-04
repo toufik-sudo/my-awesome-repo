@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
-import { X, Sparkles, Plus, Trash2, Variable } from "lucide-react";
+import { X, Sparkles, Plus, Trash2, Variable, Palette, ChevronDown, ChevronRight } from "lucide-react";
 import { NODE_EXAMPLES } from "@/types/workflow";
 import type { GlobalVariable } from "@/types/workflow";
 
@@ -169,6 +169,69 @@ export function NodeConfigPanel() {
                 onChange={(e) => updateConfig("systemPrompt", e.target.value)}
               />
             </Field>
+            <Field label="User Message Template">
+              <textarea
+                className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none h-16 font-mono"
+                placeholder="{{user_input}}"
+                value={node.config.userMessageTemplate || ""}
+                onChange={(e) => updateConfig("userMessageTemplate", e.target.value)}
+              />
+              <p className="text-[9px] text-muted-foreground mt-0.5">Use <code className="bg-muted px-1 rounded">{"{{var}}"}</code> to inject variables</p>
+            </Field>
+            <Field label="Variables">
+              <div className="space-y-1.5">
+                {(node.config.variables || []).map((v: { name: string; value: string }, i: number) => (
+                  <div key={i} className="flex gap-1.5">
+                    <input
+                      className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={v.name}
+                      onChange={(e) => {
+                        const vars = [...(node.config.variables || [])];
+                        vars[i] = { ...vars[i], name: e.target.value };
+                        updateConfig("variables", vars);
+                      }}
+                      placeholder="name"
+                    />
+                    <input
+                      className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={v.value}
+                      onChange={(e) => {
+                        const vars = [...(node.config.variables || [])];
+                        vars[i] = { ...vars[i], value: e.target.value };
+                        updateConfig("variables", vars);
+                      }}
+                      placeholder="value / {{ref}}"
+                    />
+                    <button onClick={() => updateConfig("variables", (node.config.variables || []).filter((_: any, j: number) => j !== i))} className="p-0.5 text-muted-foreground hover:text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => updateConfig("variables", [...(node.config.variables || []), { name: "", value: "" }])} className="text-[10px] text-primary hover:text-primary/80 font-medium">+ Add variable</button>
+              </div>
+            </Field>
+            <Field label="Sample Utterances">
+              <div className="space-y-1">
+                {(node.config.utterances || []).map((u: string, i: number) => (
+                  <div key={i} className="flex gap-1.5">
+                    <input
+                      className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={u}
+                      onChange={(e) => {
+                        const utt = [...(node.config.utterances || [])];
+                        utt[i] = e.target.value;
+                        updateConfig("utterances", utt);
+                      }}
+                      placeholder="Sample user message..."
+                    />
+                    <button onClick={() => updateConfig("utterances", (node.config.utterances || []).filter((_: any, j: number) => j !== i))} className="p-0.5 text-muted-foreground hover:text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => updateConfig("utterances", [...(node.config.utterances || []), ""])} className="text-[10px] text-primary hover:text-primary/80 font-medium">+ Add utterance</button>
+              </div>
+            </Field>
             <Field label="Streaming">
               <label className="flex items-center gap-2 text-xs text-foreground">
                 <input type="checkbox" checked={node.config.stream ?? true} onChange={(e) => updateConfig("stream", e.target.checked)} className="rounded border-border" />
@@ -273,54 +336,7 @@ export function NodeConfigPanel() {
         )}
 
         {node.type === "button_input" && (
-          <>
-            <Field label="Prompt">
-              <input className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
-            </Field>
-            <Field label="Buttons">
-              <div className="space-y-1.5">
-                {(node.config.buttons || []).map((btn: { label: string; value: string }, i: number) => (
-                  <div key={i} className="flex gap-1.5">
-                    <input
-                      className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={btn.label}
-                      onChange={(e) => {
-                        const newBtns = [...node.config.buttons];
-                        newBtns[i] = { ...newBtns[i], label: e.target.value };
-                        updateConfig("buttons", newBtns);
-                      }}
-                      placeholder="Label"
-                    />
-                    <input
-                      className="w-16 bg-muted border border-border rounded px-2 py-1 text-[10px] font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                      value={btn.value}
-                      onChange={(e) => {
-                        const newBtns = [...node.config.buttons];
-                        newBtns[i] = { ...newBtns[i], value: e.target.value };
-                        updateConfig("buttons", newBtns);
-                      }}
-                      placeholder="value"
-                    />
-                    <button
-                      onClick={() => {
-                        const newBtns = node.config.buttons.filter((_: any, j: number) => j !== i);
-                        updateConfig("buttons", newBtns);
-                      }}
-                      className="p-0.5 rounded text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => updateConfig("buttons", [...(node.config.buttons || []), { label: "New", value: "new" }])}
-                  className="text-[10px] text-primary hover:text-primary/80 font-medium"
-                >
-                  + Add button
-                </button>
-              </div>
-            </Field>
-          </>
+          <ButtonInputConfig node={node} updateConfig={updateConfig} />
         )}
 
         {node.type === "set_variable" && (
@@ -343,6 +359,110 @@ export function NodeConfigPanel() {
         )}
       </div>
     </div>
+  );
+}
+
+function ButtonInputConfig({ node, updateConfig }: { node: any; updateConfig: (k: string, v: any) => void }) {
+  const [expandedBtn, setExpandedBtn] = useState<number | null>(null);
+
+  return (
+    <>
+      <Field label="Prompt">
+        <input className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+      </Field>
+      <Field label="Layout">
+        <select className="w-full bg-muted border border-border rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring" value={node.config.layout || "horizontal"} onChange={(e) => updateConfig("layout", e.target.value)}>
+          <option value="horizontal">Horizontal</option>
+          <option value="vertical">Vertical</option>
+        </select>
+      </Field>
+      <Field label="Buttons">
+        <div className="space-y-2">
+          {(node.config.buttons || []).map((btn: any, i: number) => (
+            <div key={i} className="border border-border rounded-lg overflow-hidden">
+              <div className="flex items-center gap-1.5 px-2 py-1.5 bg-secondary/30">
+                <button onClick={() => setExpandedBtn(expandedBtn === i ? null : i)} className="p-0.5 text-muted-foreground">
+                  {expandedBtn === i ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                </button>
+                <input
+                  className="flex-1 bg-transparent text-[10px] font-medium text-foreground focus:outline-none"
+                  value={btn.label}
+                  onChange={(e) => {
+                    const newBtns = [...node.config.buttons];
+                    newBtns[i] = { ...newBtns[i], label: e.target.value };
+                    updateConfig("buttons", newBtns);
+                  }}
+                  placeholder="Label"
+                />
+                <input
+                  className="w-14 bg-muted border border-border rounded px-1.5 py-0.5 text-[10px] font-mono text-foreground focus:outline-none"
+                  value={btn.value}
+                  onChange={(e) => {
+                    const newBtns = [...node.config.buttons];
+                    newBtns[i] = { ...newBtns[i], value: e.target.value };
+                    updateConfig("buttons", newBtns);
+                  }}
+                  placeholder="value"
+                />
+                {btn.bgColor && (
+                  <div className="w-3 h-3 rounded-full border border-border" style={{ background: btn.bgColor }} />
+                )}
+                <button onClick={() => updateConfig("buttons", node.config.buttons.filter((_: any, j: number) => j !== i))} className="p-0.5 text-muted-foreground hover:text-destructive">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              {expandedBtn === i && (
+                <div className="px-2 py-2 space-y-1.5 bg-muted/30">
+                  <div className="flex gap-1.5">
+                    <div className="flex-1">
+                      <label className="text-[9px] text-muted-foreground uppercase">BG Color</label>
+                      <div className="flex gap-1 items-center">
+                        <input type="color" className="w-5 h-5 rounded border-none cursor-pointer" value={btn.bgColor || "#6366f1"} onChange={(e) => {
+                          const newBtns = [...node.config.buttons];
+                          newBtns[i] = { ...newBtns[i], bgColor: e.target.value };
+                          updateConfig("buttons", newBtns);
+                        }} />
+                        <input className="flex-1 bg-muted border border-border rounded px-1.5 py-0.5 text-[10px] font-mono text-foreground focus:outline-none" value={btn.bgColor || ""} onChange={(e) => {
+                          const newBtns = [...node.config.buttons];
+                          newBtns[i] = { ...newBtns[i], bgColor: e.target.value };
+                          updateConfig("buttons", newBtns);
+                        }} placeholder="#6366f1" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[9px] text-muted-foreground uppercase">Text Color</label>
+                      <div className="flex gap-1 items-center">
+                        <input type="color" className="w-5 h-5 rounded border-none cursor-pointer" value={btn.textColor || "#ffffff"} onChange={(e) => {
+                          const newBtns = [...node.config.buttons];
+                          newBtns[i] = { ...newBtns[i], textColor: e.target.value };
+                          updateConfig("buttons", newBtns);
+                        }} />
+                        <input className="flex-1 bg-muted border border-border rounded px-1.5 py-0.5 text-[10px] font-mono text-foreground focus:outline-none" value={btn.textColor || ""} onChange={(e) => {
+                          const newBtns = [...node.config.buttons];
+                          newBtns[i] = { ...newBtns[i], textColor: e.target.value };
+                          updateConfig("buttons", newBtns);
+                        }} placeholder="#ffffff" />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-muted-foreground uppercase">Font Size (px)</label>
+                    <input className="w-full bg-muted border border-border rounded px-2 py-1 text-[10px] text-foreground focus:outline-none" type="number" min="10" max="32" value={btn.fontSize || "14"} onChange={(e) => {
+                      const newBtns = [...node.config.buttons];
+                      newBtns[i] = { ...newBtns[i], fontSize: e.target.value };
+                      updateConfig("buttons", newBtns);
+                    }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+          <button onClick={() => updateConfig("buttons", [...(node.config.buttons || []), { label: "New", value: "new", bgColor: "", textColor: "", fontSize: "14" }])} className="text-[10px] text-primary hover:text-primary/80 font-medium">
+            + Add button
+          </button>
+        </div>
+      </Field>
+    </>
   );
 }
 

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Mic, MicOff, Bot, User, Loader2 } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 import type { ChatMessage } from "@/types/workflow";
 
 export function ChatPreview() {
@@ -104,6 +105,46 @@ export function ChatPreview() {
     }
   };
 
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const url = URL.createObjectURL(file);
+          setInput((prev) => prev + `\n![pasted image](${url})\n`);
+        }
+        return;
+      }
+    }
+  }, []);
+
+  const handleFileAttach = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    if (file.type.startsWith("image/")) {
+      setInput((prev) => prev + `\n![${file.name}](${url})\n`);
+    } else if (file.type.startsWith("video/")) {
+      setInput((prev) => prev + `\n<video src="${url}" controls style="max-width:100%;border-radius:6px"></video>\n`);
+    }
+    e.target.value = "";
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    for (const file of Array.from(files)) {
+      const url = URL.createObjectURL(file);
+      if (file.type.startsWith("image/")) {
+        setInput((prev) => prev + `\n![${file.name}](${url})\n`);
+      } else if (file.type.startsWith("video/")) {
+        setInput((prev) => prev + `\n<video src="${url}" controls style="max-width:100%;border-radius:6px"></video>\n`);
+      }
+    }
+  }, []);
+
   return (
     <div className="w-96 bg-card border-l border-border flex flex-col">
       {/* Header */}
@@ -151,7 +192,11 @@ export function ChatPreview() {
                   : "bg-muted text-foreground"
               )}
             >
-              {msg.content}
+              {msg.role === "assistant" ? (
+                <MarkdownRenderer content={msg.content} className="text-xs" />
+              ) : (
+                msg.content
+              )}
               {msg.role === "assistant" && isStreaming && msg.id === messages[messages.length - 1]?.id && (
                 <span className="inline-block w-1.5 h-3.5 bg-primary/60 ml-0.5 animate-pulse" />
               )}
@@ -179,12 +224,19 @@ export function ChatPreview() {
         <div className="flex items-end gap-2 bg-muted rounded-xl px-3 py-2 border border-border focus-within:ring-1 focus-within:ring-ring">
           <textarea
             className="flex-1 bg-transparent text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground min-h-[20px] max-h-[80px]"
-            placeholder="Type a message or use voice..."
+            placeholder="Type a message (supports **markdown**)..."
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
           />
+          <label className="p-1.5 rounded-lg hover:bg-muted-foreground/10 text-muted-foreground cursor-pointer shrink-0" title="Attach image">
+            <Image className="w-4 h-4" />
+            <input type="file" accept="image/*,video/*" className="hidden" onChange={handleFileAttach} />
+          </label>
           <button
             onClick={toggleSTT}
             className={cn(
