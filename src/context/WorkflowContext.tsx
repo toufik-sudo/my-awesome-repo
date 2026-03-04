@@ -45,30 +45,30 @@ export function useWorkflow() {
 
 function defaultWorkflow(): Workflow {
   const startNode = createNode("start", { x: 100, y: 200 });
-  const inputNode = createNode("user_input", { x: 400, y: 200 });
-  const aiNode = createNode("ai_response", { x: 700, y: 200 });
+  const aiNode = createNode("ai_response", { x: 400, y: 200 });
 
   return {
     id: uuidv4(),
     name: "My Agent",
-    nodes: [startNode, inputNode, aiNode],
+    nodes: [startNode, aiNode],
     connections: [
       {
         id: uuidv4(),
         fromNodeId: startNode.id,
         fromPortId: startNode.ports.outputs[0].id,
-        toNodeId: inputNode.id,
-        toPortId: inputNode.ports.inputs[0].id,
-      },
-      {
-        id: uuidv4(),
-        fromNodeId: inputNode.id,
-        fromPortId: inputNode.ports.outputs[0].id,
         toNodeId: aiNode.id,
         toPortId: aiNode.ports.inputs[0].id,
       },
     ],
-    globalVariables: [],
+    globalVariables: [
+      {
+        id: uuidv4(),
+        name: "last_utterance",
+        type: "string",
+        defaultValue: "",
+        description: "Automatically updated with the latest user input (text, voice, or attachment)",
+      },
+    ],
   };
 }
 

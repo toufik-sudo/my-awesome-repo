@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 
 const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
-  { type: "user_input", label: "User Input", group: "Flow" },
   { type: "ai_response", label: "AI Response", group: "Flow" },
   { type: "text_display", label: "Text Display", group: "Flow" },
   { type: "button_input", label: "Button Choice", group: "Flow" },
