@@ -523,7 +523,12 @@ function TextDisplayConfig({ node, updateConfig }: { node: any; updateConfig: (k
   return (
     <>
       <Field label="Display Text">
-        <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24" placeholder="Supports markdown, HTML, images" value={node.config.text || ""} onChange={(e) => updateConfig("text", e.target.value)} onPaste={handlePaste} />
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 pr-8" placeholder="Supports markdown, HTML, images" value={node.config.text || ""} onChange={(e) => updateConfig("text", e.target.value)} onPaste={handlePaste} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("text", (node.config.text || "") + " " + text)} />
+          </div>
+        </div>
         <div className="flex items-center gap-2 mt-1">
           <label className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium cursor-pointer">
             <Image className="w-3 h-3" /> Add image
