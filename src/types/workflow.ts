@@ -141,10 +141,15 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
     label: "AI Response",
     config: {
       model: "gemini-flash",
+      apiKey: "{{LOVABLE_API_KEY}}",
+      endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      headers: {} as Record<string, string>,
       systemPrompt: "You are a helpful assistant.",
-      userMessageTemplate: "{{user_input}}",
+      userMessageTemplate: "{{last_utterance}}",
       utterances: ["Hello", "Help me with", "Tell me about"],
       variables: [] as { name: string; value: string }[],
+      temperature: 0.7,
+      maxTokens: 4096,
       stream: true,
     },
     ports: {
@@ -346,9 +351,11 @@ export const NODE_EXAMPLES: Record<NodeType, { title: string; config: Record<str
     { title: "Voice-first", config: { prompt: "Tell me what you need — I'm listening!", enableSTT: true } },
   ],
   ai_response: [
-    { title: "Code assistant", config: { model: "gemini-flash", systemPrompt: "You are an expert programmer. Provide clean, well-commented code with explanations.", stream: true } },
-    { title: "Translator", config: { model: "gemini-flash", systemPrompt: "You are a translator. Translate the user's text to the target language specified. Keep the original tone.", stream: true } },
-    { title: "Summarizer", config: { model: "gemini-flash", systemPrompt: "Summarize the following text in 3 bullet points. Be concise.", stream: false } },
+    { title: "Code assistant", config: { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are an expert programmer. Write clean, well-commented code. Explain your approach step by step. Use best practices and modern patterns.", userMessageTemplate: "{{last_utterance}}", utterances: ["Write a function that", "Debug this code", "Refactor this to be more efficient", "Explain how this works"], temperature: 0.3, stream: true } },
+    { title: "Translator", config: { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", systemPrompt: "You are a professional translator. Translate the user's text to the target language specified. Preserve tone, context, and cultural nuances. If no target language is specified, translate to English.", userMessageTemplate: "Translate: {{last_utterance}}", utterances: ["Translate this to French", "How do you say hello in Japanese", "Convert this paragraph to Spanish"], temperature: 0.2, stream: true } },
+    { title: "Summarizer", config: { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", systemPrompt: "Summarize the following text concisely. Use 3-5 bullet points. Highlight key insights, action items, and important data. Be direct and factual.", userMessageTemplate: "Summarize: {{last_utterance}}", utterances: ["Summarize this article", "Give me the key points", "TL;DR this document"], temperature: 0.3, stream: false } },
+    { title: "Customer Service", config: { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", systemPrompt: "You are a friendly, professional customer service agent for {{company_name}}. Help customers with their inquiries. Be empathetic, solution-oriented, and always offer next steps. Escalate complex issues appropriately.", userMessageTemplate: "Customer says: {{last_utterance}}\n\nContext: {{conversation_history}}", utterances: ["I need help with my order", "I want a refund", "My account is locked", "How do I change my password?", "What are your business hours?"], temperature: 0.5, stream: true } },
+    { title: "Data Analyst", config: { model: "gemini-pro", apiKey: "{{LOVABLE_API_KEY}}", systemPrompt: "You are a data analyst. Analyze the provided data and give insights. Use tables, charts descriptions, and statistical observations. Always cite specific numbers from the data.", userMessageTemplate: "Analyze this data: {{data_input}}\n\nQuestion: {{last_utterance}}", utterances: ["What trends do you see?", "Compare these metrics", "What's the growth rate?"], temperature: 0.2, maxTokens: 8192, stream: true } },
   ],
   api_call: [
     { title: "Weather API", config: { url: "https://api.openweathermap.org/data/2.5/weather?q={{city}}&appid={{API_KEY}}", method: "GET", body: "" } },

@@ -29,7 +29,11 @@ const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 2;
 const ZOOM_STEP = 0.15;
 
-export function WorkflowCanvas() {
+interface WorkflowCanvasProps {
+  onNodeDoubleClick?: (nodeId: string) => void;
+}
+
+export function WorkflowCanvas({ onNodeDoubleClick }: WorkflowCanvasProps) {
   const { workflow, selectNode, clearSelection, selectMultiple, selectedNodeIds, moveNode, addNode, addConnection, canConnect, addNodeToComponent } = useWorkflow();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -317,6 +321,7 @@ export function WorkflowCanvas() {
             onDragStart={(e) => handleNodeDragStart(node.id, e)}
             onPortDragStart={(portId, e) => handlePortDragStart(node.id, portId, e)}
             onContextMenu={(e) => handleNodeContextMenu(node.id, e)}
+            onDoubleClick={() => onNodeDoubleClick?.(node.id)}
             isDragOver={dragOverComponentId === node.id}
           />
         ))}

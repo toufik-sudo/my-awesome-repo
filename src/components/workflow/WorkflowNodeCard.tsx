@@ -10,10 +10,11 @@ interface Props {
   onDragStart: (e: React.MouseEvent) => void;
   onPortDragStart: (portId: string, e: React.MouseEvent) => void;
   onContextMenu?: (e: React.MouseEvent) => void;
+  onDoubleClick?: (e: React.MouseEvent) => void;
   isDragOver?: boolean;
 }
 
-export function WorkflowNodeCard({ node, onDragStart, onPortDragStart, onContextMenu, isDragOver }: Props) {
+export function WorkflowNodeCard({ node, onDragStart, onPortDragStart, onContextMenu, onDoubleClick, isDragOver }: Props) {
   const { selectedNodeId, selectedNodeIds, selectNode, toggleSelectNode, removeNode, duplicateNodes, workflow } = useWorkflow();
   const isSelected = selectedNodeIds.has(node.id);
   const [collapsed, setCollapsed] = useState(false);
@@ -50,6 +51,10 @@ export function WorkflowNodeCard({ node, onDragStart, onPortDragStart, onContext
         }
       }}
       onContextMenu={onContextMenu}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onDoubleClick?.(e);
+      }}
     >
       {/* Drag-over glow overlay */}
       {isDragOver && isComponent && (

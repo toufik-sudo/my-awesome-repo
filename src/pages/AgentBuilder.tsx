@@ -160,7 +160,9 @@ type ViewMode = "builder" | "chat" | "split";
 
 function AgentBuilderInner() {
   const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const { workflow, selectedNodeId, selectedNodeIds } = useWorkflow();
+  const [chatMinimized, setChatMinimized] = useState(false);
+  const [configModalNodeId, setConfigModalNodeId] = useState<string | null>(null);
+  const { workflow, selectedNodeId, selectedNodeIds, selectNode } = useWorkflow();
   const [execution, setExecution] = useState<ExecutionState>({
     status: "idle",
     currentNodeId: null,
@@ -247,8 +249,21 @@ function AgentBuilderInner() {
     stopRef.current = true;
   }, []);
 
-  // Show config modal when a single node is selected
-  const showConfigModal = selectedNodeId && selectedNodeIds.size <= 1;
+  // Close config modal when node is deselected
+  useEffect(() => {
+    if (configModalNodeId && !workflow.nodes.find(n => n.id === configModalNodeId)) {
+      setConfigModalNodeId(null);
+    }
+  }, [workflow.nodes, configModalNodeId]);
+
+  const handleNodeDoubleClick = useCallback((nodeId: string) => {
+    selectNode(nodeId);
+    setConfigModalNodeId(nodeId);
+  }, [selectNode]);
+
+  const handleCloseConfigModal = useCallback(() => {
+    setConfigModalNodeId(null);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -306,17 +321,30 @@ function AgentBuilderInner() {
           <>
             <NodePalette />
             <div className="flex-1 flex flex-col relative">
-              <WorkflowCanvas />
+              <WorkflowCanvas onNodeDoubleClick={handleNodeDoubleClick} />
               <ExecutionLog execution={execution} />
             </div>
-            
           </>
         )}
-        {viewMode !== "builder" && <ChatPreview />}
+        {viewMode !== "builder" && (
+          chatMinimized ? (
+            <button
+              onClick={() => setChatMinimized(false)}
+              className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary shadow-xl shadow-primary/30 flex items-center justify-center text-primary-foreground hover:scale-110 active:scale-95 transition-transform"
+              title="Open chat"
+            >
+              <MessageSquare className="w-6 h-6" />
+            </button>
+          ) : (
+            <ChatPreview onMinimize={() => setChatMinimized(true)} />
+          )
+        )}
       </div>
 
-      {/* Node config modal */}
-      {showConfigModal && <NodeConfigModal />}
+      {/* Node config modal — opens on double-click only */}
+      {configModalNodeId && (
+        <NodeConfigModal nodeId={configModalNodeId} onClose={handleCloseConfigModal} />
+      )}
     </div>
   );
 }

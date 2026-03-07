@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film, RotateCcw, Play, Sparkles } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film, RotateCcw, Play, Sparkles, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 import { marked } from "marked";
@@ -35,7 +35,11 @@ function RenderContent({ content, format, className = "" }: { content: string; f
   }
 }
 
-export function ChatPreview() {
+interface ChatPreviewProps {
+  onMinimize?: () => void;
+}
+
+export function ChatPreview({ onMinimize }: ChatPreviewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -634,6 +638,11 @@ export function ChatPreview() {
           <button onClick={resetChat} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Reset">
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+          {onMinimize && (
+            <button onClick={onMinimize} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Minimize chat">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
           <div className="flex items-center gap-1.5">
             <span className={cn("w-2 h-2 rounded-full", isStreaming ? "bg-warning animate-pulse" : isRunning ? "bg-success animate-pulse" : "bg-muted-foreground/40")} />
             <span className="text-[10px] text-muted-foreground">{isStreaming ? "Streaming" : isRunning ? "Running" : "Idle"}</span>
