@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film, RotateCcw, Play, Sparkles } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Loader2, Image, Film, RotateCcw, Play, Sparkles, X } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 import { marked } from "marked";
