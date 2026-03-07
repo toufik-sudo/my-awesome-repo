@@ -249,8 +249,21 @@ function AgentBuilderInner() {
     stopRef.current = true;
   }, []);
 
-  // Show config modal when a single node is selected
-  const showConfigModal = selectedNodeId && selectedNodeIds.size <= 1;
+  // Close config modal when node is deselected
+  useEffect(() => {
+    if (configModalNodeId && !workflow.nodes.find(n => n.id === configModalNodeId)) {
+      setConfigModalNodeId(null);
+    }
+  }, [workflow.nodes, configModalNodeId]);
+
+  const handleNodeDoubleClick = useCallback((nodeId: string) => {
+    selectNode(nodeId);
+    setConfigModalNodeId(nodeId);
+  }, [selectNode]);
+
+  const handleCloseConfigModal = useCallback(() => {
+    setConfigModalNodeId(null);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background">
