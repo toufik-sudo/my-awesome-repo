@@ -321,6 +321,7 @@ export function WorkflowCanvas({ onNodeDoubleClick }: WorkflowCanvasProps) {
             onDragStart={(e) => handleNodeDragStart(node.id, e)}
             onPortDragStart={(portId, e) => handlePortDragStart(node.id, portId, e)}
             onContextMenu={(e) => handleNodeContextMenu(node.id, e)}
+            onDoubleClick={() => onNodeDoubleClick?.(node.id)}
             isDragOver={dragOverComponentId === node.id}
           />
         ))}
