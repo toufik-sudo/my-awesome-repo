@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
-import { X, Sparkles, Plus, Trash2, Variable, ChevronDown, ChevronRight, Image, Film } from "lucide-react";
+import { X, Sparkles, Plus, Trash2, Variable, ChevronDown, ChevronRight, Image, Film, Mic, MicOff, Key, Globe } from "lucide-react";
 import { NODE_EXAMPLES } from "@/types/workflow";
 import { CodeEditor } from "./CodeEditor";
 import { motion, AnimatePresence } from "framer-motion";
