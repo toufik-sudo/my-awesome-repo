@@ -219,15 +219,99 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
 
 // ─── Sub-components ────────────────────────────────
 
+function MicButton({ onTranscript }: { onTranscript: (text: string) => void }) {
+  const [listening, setListening] = useState(false);
+  const recRef = React.useRef<any>(null);
+
+  const toggle = useCallback(() => {
+    if (listening) {
+      recRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { alert("Speech recognition not supported."); return; }
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+    rec.onresult = (e: any) => {
+      const text = Array.from(e.results).map((r: any) => r[0].transcript).join("");
+      onTranscript(text);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    rec.start();
+    setListening(true);
+  }, [listening, onTranscript]);
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className={`p-1 rounded-md transition-colors ${listening ? "bg-destructive/20 text-destructive animate-pulse" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+      title={listening ? "Stop recording" : "Voice to text"}
+    >
+      {listening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+    </button>
+  );
+}
+
 function AIResponseConfig({ node, updateConfig }: { node: any; updateConfig: (k: string, v: any) => void }) {
   return (
     <>
+      <Field label="API Key Variable">
+        <div className="flex items-center gap-1.5">
+          <Key className="w-3.5 h-3.5 text-warning shrink-0" />
+          <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="{{OPENAI_API_KEY}} or {{LOVABLE_API_KEY}}" value={node.config.apiKey || ""} onChange={(e) => updateConfig("apiKey", e.target.value)} />
+        </div>
+        <p className="text-[9px] text-muted-foreground mt-0.5">Reference a global variable containing your API key</p>
+      </Field>
+      <Field label="Endpoint URL">
+        <div className="flex items-center gap-1.5">
+          <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="https://ai.gateway.lovable.dev/v1/chat/completions" value={node.config.endpoint || ""} onChange={(e) => updateConfig("endpoint", e.target.value)} />
+        </div>
+      </Field>
+      <Field label="Model">
+        <select className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.model || "gemini-flash"} onChange={(e) => updateConfig("model", e.target.value)}>
+          <option value="gemini-flash">Google Gemini Flash</option>
+          <option value="gemini-pro">Google Gemini Pro</option>
+          <option value="gpt-5">OpenAI GPT-5</option>
+          <option value="gpt-5-mini">OpenAI GPT-5 Mini</option>
+          <option value="gpt-5-nano">OpenAI GPT-5 Nano</option>
+          <option value="custom">Custom</option>
+        </select>
+      </Field>
+      <Field label="Headers">
+        <div className="space-y-1.5">
+          {Object.entries(node.config.headers || {}).map(([key, val], i) => (
+            <div key={i} className="flex gap-1.5">
+              <input className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] font-mono text-foreground focus:outline-none" value={key} onChange={(e) => { const entries = Object.entries(node.config.headers || {}); entries[i] = [e.target.value, entries[i][1]]; updateConfig("headers", Object.fromEntries(entries)); }} placeholder="Header-Name" />
+              <input className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] font-mono text-foreground focus:outline-none" value={val as string} onChange={(e) => { const entries = Object.entries(node.config.headers || {}); entries[i] = [entries[i][0], e.target.value]; updateConfig("headers", Object.fromEntries(entries)); }} placeholder="value" />
+              <button onClick={() => { const h = { ...(node.config.headers || {}) }; const entries = Object.entries(h); entries.splice(i, 1); updateConfig("headers", Object.fromEntries(entries)); }} className="p-0.5 text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+            </div>
+          ))}
+          <button onClick={() => updateConfig("headers", { ...(node.config.headers || {}), "": "" })} className="text-[10px] text-primary hover:text-primary/80 font-medium">+ Add header</button>
+        </div>
+      </Field>
       <Field label="System Prompt">
-        <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono" value={node.config.systemPrompt || ""} onChange={(e) => updateConfig("systemPrompt", e.target.value)} />
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono pr-8" value={node.config.systemPrompt || ""} onChange={(e) => updateConfig("systemPrompt", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("systemPrompt", (node.config.systemPrompt || "") + " " + text)} />
+          </div>
+        </div>
       </Field>
       <Field label="User Message Template">
-        <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-16 font-mono" placeholder="{{user_input}}" value={node.config.userMessageTemplate || ""} onChange={(e) => updateConfig("userMessageTemplate", e.target.value)} />
-        <p className="text-[9px] text-muted-foreground mt-0.5">Use <code className="bg-muted px-1 rounded">{"{{var}}"}</code> to inject variables</p>
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-16 font-mono pr-8" placeholder="{{last_utterance}}" value={node.config.userMessageTemplate || ""} onChange={(e) => updateConfig("userMessageTemplate", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("userMessageTemplate", (node.config.userMessageTemplate || "") + " " + text)} />
+          </div>
+        </div>
+        <p className="text-[9px] text-muted-foreground mt-0.5">Use <code className="bg-muted px-1 rounded">{"{{var}}"}</code> to inject variables. <code className="bg-muted px-1 rounded">{"{{last_utterance}}"}</code> contains the latest user message.</p>
       </Field>
       <Field label="Variables">
         <div className="space-y-1.5">
@@ -246,11 +330,18 @@ function AIResponseConfig({ node, updateConfig }: { node: any; updateConfig: (k:
           {(node.config.utterances || []).map((u: string, i: number) => (
             <div key={i} className="flex gap-1.5">
               <input className="flex-1 bg-muted border border-border rounded px-2 py-1 text-[10px] text-foreground focus:outline-none" value={u} onChange={(e) => { const utt = [...(node.config.utterances || [])]; utt[i] = e.target.value; updateConfig("utterances", utt); }} placeholder="Sample user message..." />
+              <MicButton onTranscript={(text) => { const utt = [...(node.config.utterances || [])]; utt[i] = text; updateConfig("utterances", utt); }} />
               <button onClick={() => updateConfig("utterances", (node.config.utterances || []).filter((_: any, j: number) => j !== i))} className="p-0.5 text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
             </div>
           ))}
           <button onClick={() => updateConfig("utterances", [...(node.config.utterances || []), ""])} className="text-[10px] text-primary hover:text-primary/80 font-medium">+ Add utterance</button>
         </div>
+      </Field>
+      <Field label="Temperature">
+        <input type="number" min="0" max="2" step="0.1" className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.temperature ?? 0.7} onChange={(e) => updateConfig("temperature", parseFloat(e.target.value))} />
+      </Field>
+      <Field label="Max Tokens">
+        <input type="number" min="1" step="100" className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="4096" value={node.config.maxTokens || ""} onChange={(e) => updateConfig("maxTokens", parseInt(e.target.value) || undefined)} />
       </Field>
       <Field label="Streaming">
         <label className="flex items-center gap-2 text-xs text-foreground">
