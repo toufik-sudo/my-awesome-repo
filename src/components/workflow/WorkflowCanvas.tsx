@@ -231,7 +231,10 @@ export function WorkflowCanvas() {
     const ids = selectedNodeIds.has(nodeId) && selectedNodeIds.size > 1
       ? Array.from(selectedNodeIds)
       : [nodeId];
-    if (!selectedNodeIds.has(nodeId)) selectNode(nodeId);
+    // Select for context menu without opening config modal
+    if (!selectedNodeIds.has(nodeId)) {
+      selectNode(nodeId, true); // silent select
+    }
     setContextMenu({ x: e.clientX, y: e.clientY, type: "node", targetId: nodeId, multiNodeIds: ids });
   }, [selectedNodeIds, selectNode]);
 
