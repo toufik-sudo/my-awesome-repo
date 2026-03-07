@@ -638,6 +638,11 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
           <button onClick={resetChat} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Reset">
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+          {onMinimize && (
+            <button onClick={onMinimize} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Minimize chat">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
           <div className="flex items-center gap-1.5">
             <span className={cn("w-2 h-2 rounded-full", isStreaming ? "bg-warning animate-pulse" : isRunning ? "bg-success animate-pulse" : "bg-muted-foreground/40")} />
             <span className="text-[10px] text-muted-foreground">{isStreaming ? "Streaming" : isRunning ? "Running" : "Idle"}</span>
