@@ -5,11 +5,16 @@ import { NODE_EXAMPLES } from "@/types/workflow";
 import { CodeEditor } from "./CodeEditor";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function NodeConfigModal() {
+interface NodeConfigModalProps {
+  nodeId: string;
+  onClose: () => void;
+}
+
+export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
   const {
-    workflow, selectedNodeId, selectNode, updateNode,
+    workflow, updateNode,
   } = useWorkflow();
-  const node = workflow.nodes.find((n) => n.id === selectedNodeId);
+  const node = workflow.nodes.find((n) => n.id === nodeId);
 
   // Close on Escape
   useEffect(() => {
