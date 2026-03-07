@@ -14,7 +14,7 @@ interface Props {
   isDragOver?: boolean;
 }
 
-export function WorkflowNodeCard({ node, onDragStart, onPortDragStart, onContextMenu, isDragOver }: Props) {
+export function WorkflowNodeCard({ node, onDragStart, onPortDragStart, onContextMenu, onDoubleClick, isDragOver }: Props) {
   const { selectedNodeId, selectedNodeIds, selectNode, toggleSelectNode, removeNode, duplicateNodes, workflow } = useWorkflow();
   const isSelected = selectedNodeIds.has(node.id);
   const [collapsed, setCollapsed] = useState(false);
