@@ -141,10 +141,15 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
     label: "AI Response",
     config: {
       model: "gemini-flash",
+      apiKey: "{{LOVABLE_API_KEY}}",
+      endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      headers: {} as Record<string, string>,
       systemPrompt: "You are a helpful assistant.",
-      userMessageTemplate: "{{user_input}}",
+      userMessageTemplate: "{{last_utterance}}",
       utterances: ["Hello", "Help me with", "Tell me about"],
       variables: [] as { name: string; value: string }[],
+      temperature: 0.7,
+      maxTokens: 4096,
       stream: true,
     },
     ports: {
