@@ -35,7 +35,11 @@ function RenderContent({ content, format, className = "" }: { content: string; f
   }
 }
 
-export function ChatPreview() {
+interface ChatPreviewProps {
+  onMinimize?: () => void;
+}
+
+export function ChatPreview({ onMinimize }: ChatPreviewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
