@@ -20,11 +20,11 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
   useEffect(() => {
     if (!node) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") selectNode(null);
+      if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [node, selectNode]);
+  }, [node, onClose]);
 
   if (!node) return null;
 
