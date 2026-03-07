@@ -160,7 +160,9 @@ type ViewMode = "builder" | "chat" | "split";
 
 function AgentBuilderInner() {
   const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const { workflow, selectedNodeId, selectedNodeIds } = useWorkflow();
+  const [chatMinimized, setChatMinimized] = useState(false);
+  const [configModalNodeId, setConfigModalNodeId] = useState<string | null>(null);
+  const { workflow, selectedNodeId, selectedNodeIds, selectNode } = useWorkflow();
   const [execution, setExecution] = useState<ExecutionState>({
     status: "idle",
     currentNodeId: null,
