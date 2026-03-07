@@ -51,6 +51,10 @@ export function WorkflowNodeCard({ node, onDragStart, onPortDragStart, onContext
         }
       }}
       onContextMenu={onContextMenu}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onDoubleClick?.(e);
+      }}
     >
       {/* Drag-over glow overlay */}
       {isDragOver && isComponent && (
