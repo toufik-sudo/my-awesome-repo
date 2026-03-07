@@ -10,6 +10,7 @@ interface Props {
   onDragStart: (e: React.MouseEvent) => void;
   onPortDragStart: (portId: string, e: React.MouseEvent) => void;
   onContextMenu?: (e: React.MouseEvent) => void;
+  onDoubleClick?: (e: React.MouseEvent) => void;
   isDragOver?: boolean;
 }
 
