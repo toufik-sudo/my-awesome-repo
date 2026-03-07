@@ -1,8 +1,9 @@
 import React, { useRef } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
-import { Download, Upload, Play, Square, Undo2, Redo2 } from "lucide-react";
+import { Download, Upload, Play, Square, Undo2, Redo2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TemplatePicker } from "./TemplatePicker";
+import { toast } from "sonner";
 import type { ExecutionState } from "@/types/workflow";
 
 interface Props {
@@ -34,12 +35,23 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
       try {
         const data = JSON.parse(ev.target?.result as string);
         importWorkflow(data);
+        toast.success("Workflow imported successfully");
       } catch {
-        alert("Invalid JSON file");
+        toast.error("Invalid JSON file");
       }
     };
     reader.readAsText(file);
     e.target.value = "";
+  };
+
+  const handleSave = () => {
+    try {
+      const json = JSON.stringify(workflow);
+      localStorage.setItem("agent-builder-saved-workflow", json);
+      toast.success("Workflow saved", { description: `"${workflow.name}" saved to local storage` });
+    } catch (err) {
+      toast.error("Failed to save workflow");
+    }
   };
 
   const isRunning = execution.status === "running";
@@ -68,6 +80,15 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
       <TemplatePicker />
 
       <div className="w-px h-5 bg-border mx-1" />
+
+      <button
+        onClick={handleSave}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
+        title="Save workflow"
+      >
+        <Save className="w-3.5 h-3.5" />
+        Save
+      </button>
 
       <button
         onClick={handleExport}
@@ -111,9 +132,7 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
       )}
 
       {execution.status === "running" && execution.currentNodeId && (
-        <span className="text-[10px] text-warning animate-pulse ml-1">
-          Executing…
-        </span>
+        <span className="text-[10px] text-warning animate-pulse ml-1">Executing…</span>
       )}
       {execution.status === "completed" && (
         <span className="text-[10px] text-success ml-1">✓ Done</span>

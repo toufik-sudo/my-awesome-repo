@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { Workflow, WorkflowNode, Connection, NodeType, Position, GlobalVariable } from "@/types/workflow";
-import { createNode } from "@/types/workflow";
+import type { Workflow, WorkflowNode, Connection, NodeType, Position, GlobalVariable, ChatConfig } from "@/types/workflow";
+import { createNode, DEFAULT_CHAT_CONFIG } from "@/types/workflow";
 
 const MAX_HISTORY = 50;
 
@@ -29,13 +29,14 @@ interface WorkflowContextType {
   addNodeToComponent: (nodeId: string, componentId: string) => void;
   removeNodeFromComponent: (nodeId: string) => void;
   groupIntoComponent: (nodeIds: string[]) => void;
+  updateChatConfig: (updates: Partial<ChatConfig>) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
 }
 
-const WorkflowContext = createContext<WorkflowContextType | null>(null);
+export const WorkflowContext = createContext<WorkflowContextType | null>(null);
 
 export function useWorkflow() {
   const ctx = useContext(WorkflowContext);
@@ -69,6 +70,7 @@ function defaultWorkflow(): Workflow {
         description: "Automatically updated with the latest user input (text, voice, or attachment)",
       },
     ],
+    chatConfig: { ...DEFAULT_CHAT_CONFIG },
   };
 }
 
@@ -77,7 +79,16 @@ function cloneWorkflow(w: Workflow): Workflow {
 }
 
 export function WorkflowProvider({ children }: { children: ReactNode }) {
-  const [workflow, setWorkflow] = useState<Workflow>(defaultWorkflow);
+  const [workflow, setWorkflow] = useState<Workflow>(() => {
+    try {
+      const saved = localStorage.getItem("agent-builder-saved-workflow");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.nodes && parsed.connections) return parsed;
+      }
+    } catch {}
+    return defaultWorkflow();
+  });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
 
@@ -375,12 +386,17 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
     setWorkflowWithHistory((w) => {
       const nodes = w.nodes.filter((n) => nodeIds.includes(n.id) && n.type !== "start" && !n.parentComponentId);
       if (nodes.length === 0) return w;
-      // Calculate center position
       const avgX = nodes.reduce((s, n) => s + n.position.x, 0) / nodes.length;
       const avgY = nodes.reduce((s, n) => s + n.position.y, 0) / nodes.length;
       const componentNode = createNode("component", { x: avgX - 30, y: avgY - 60 });
       componentNode.childNodeIds = nodes.map((n) => n.id);
       componentNode.label = `Component (${nodes.length})`;
+      // Show toast
+      import("sonner").then(({ toast }) => {
+        toast.success(`Grouped ${nodes.length} nodes into a Component`, {
+          description: "You can expand/collapse or drag nodes out via right-click.",
+        });
+      });
       return {
         ...w,
         nodes: [
@@ -389,6 +405,13 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
         ],
       };
     });
+  }, [setWorkflowWithHistory]);
+
+  const updateChatConfig = useCallback((updates: Partial<ChatConfig>) => {
+    setWorkflowWithHistory((w) => ({
+      ...w,
+      chatConfig: { ...(w.chatConfig || DEFAULT_CHAT_CONFIG), ...updates },
+    }));
   }, [setWorkflowWithHistory]);
 
   const canUndo = pastRef.current.length > 0;
@@ -420,6 +443,7 @@ export function WorkflowProvider({ children }: { children: ReactNode }) {
         addNodeToComponent,
         removeNodeFromComponent,
         groupIntoComponent,
+        updateChatConfig,
         undo,
         redo,
         canUndo,

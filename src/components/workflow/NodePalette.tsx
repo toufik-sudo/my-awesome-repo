@@ -5,19 +5,25 @@ import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 
 const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
+  { type: "start", label: "Start", group: "Flow" },
+  { type: "user_input", label: "User Input", group: "Flow" },
   { type: "ai_response", label: "AI Response", group: "Flow" },
   { type: "text_display", label: "Text Display", group: "Flow" },
   { type: "button_input", label: "Button Choice", group: "Flow" },
+  { type: "image_gallery", label: "Image Gallery", group: "Flow" },
   { type: "condition", label: "Condition", group: "Flow" },
   { type: "end", label: "End", group: "Flow" },
   { type: "component", label: "Component", group: "Flow" },
+  { type: "timer", label: "Timer / Delay", group: "Logic" },
+  { type: "random_choice", label: "Random Choice", group: "Logic" },
+  { type: "loop", label: "Loop", group: "Logic" },
+  { type: "action", label: "Action", group: "Logic" },
+  { type: "js_function", label: "JS Function", group: "Logic" },
+  { type: "set_variable", label: "Set Variable", group: "Logic" },
   { type: "api_call", label: "API Call", group: "Integrations" },
   { type: "email_sender", label: "Email Sender", group: "Integrations" },
   { type: "webhook_trigger", label: "Webhook", group: "Integrations" },
   { type: "db_query", label: "DB Query", group: "Integrations" },
-  { type: "action", label: "Action", group: "Logic" },
-  { type: "js_function", label: "JS Function", group: "Logic" },
-  { type: "set_variable", label: "Set Variable", group: "Logic" },
 ];
 
 const GROUPS = ["Flow", "Integrations", "Logic"];

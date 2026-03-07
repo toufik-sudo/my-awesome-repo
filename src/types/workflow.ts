@@ -16,7 +16,11 @@ export type NodeType =
   | "text_display"
   | "button_input"
   | "set_variable"
-  | "component";
+  | "component"
+  | "timer"
+  | "random_choice"
+  | "loop"
+  | "image_gallery";
 
 export interface Position {
   x: number;
@@ -61,12 +65,41 @@ export interface GlobalVariable {
   description: string;
 }
 
+export interface ChatConfig {
+  headerTitle: string;
+  headerSubtitle: string;
+  headerImageUrl: string;
+  bubbleIconUrl: string;
+  welcomeAvatarUrl: string;
+  welcomeMessage: string;
+  primaryColor: string;
+  userBubbleColor: string;
+  botBubbleColor: string;
+  fontFamily: string;
+  borderRadius: number;
+}
+
+export const DEFAULT_CHAT_CONFIG: ChatConfig = {
+  headerTitle: "AI Assistant",
+  headerSubtitle: "Always here to help",
+  headerImageUrl: "",
+  bubbleIconUrl: "",
+  welcomeAvatarUrl: "",
+  welcomeMessage: "Start a conversation by running the workflow",
+  primaryColor: "",
+  userBubbleColor: "",
+  botBubbleColor: "",
+  fontFamily: "Inter",
+  borderRadius: 16,
+};
+
 export interface Workflow {
   id: string;
   name: string;
   nodes: WorkflowNode[];
   connections: Connection[];
   globalVariables?: GlobalVariable[];
+  chatConfig?: ChatConfig;
 }
 
 // ─── Chat Types ─────────────────────────────────
@@ -249,6 +282,57 @@ export const NODE_TEMPLATES: Record<NodeType, Omit<WorkflowNode, "id" | "positio
       outputs: [{ id: "out", label: "Out", type: "output" }],
     },
   },
+  timer: {
+    type: "timer",
+    label: "Timer / Delay",
+    config: { duration: 3, unit: "seconds", message: "" },
+    ports: {
+      inputs: [{ id: "in", label: "In", type: "input" }],
+      outputs: [{ id: "out", label: "Next", type: "output" }],
+    },
+  },
+  random_choice: {
+    type: "random_choice",
+    label: "Random Choice",
+    config: { branches: ["Option A", "Option B"] },
+    ports: {
+      inputs: [{ id: "in", label: "In", type: "input" }],
+      outputs: [
+        { id: "branch_0", label: "Option A", type: "output" },
+        { id: "branch_1", label: "Option B", type: "output" },
+      ],
+    },
+  },
+  loop: {
+    type: "loop",
+    label: "Loop",
+    config: { iterations: 3, counterVar: "loop_i" },
+    ports: {
+      inputs: [{ id: "in", label: "In", type: "input" }],
+      outputs: [
+        { id: "body", label: "Loop Body", type: "output" },
+        { id: "done", label: "Done", type: "output" },
+      ],
+    },
+  },
+  image_gallery: {
+    type: "image_gallery",
+    label: "Image Gallery",
+    config: {
+      images: [
+        { url: "https://via.placeholder.com/300x200?text=Image+1", title: "Image 1", description: "Description for image 1" },
+        { url: "https://via.placeholder.com/300x200?text=Image+2", title: "Image 2", description: "Description for image 2" },
+      ],
+      selectable: true,
+      layout: "horizontal" as "horizontal" | "grid",
+      imageWidth: 200,
+      imageHeight: 150,
+    },
+    ports: {
+      inputs: [{ id: "in", label: "In", type: "input" }],
+      outputs: [{ id: "selected", label: "Selected", type: "output" }],
+    },
+  },
 };
 
 // ─── Example configs for each block type ────────
@@ -317,6 +401,22 @@ export const NODE_EXAMPLES: Record<NodeType, { title: string; config: Record<str
   component: [
     { title: "API Gateway", config: { name: "API Gateway", description: "Handles authentication and rate limiting before forwarding requests" } },
     { title: "Email Pipeline", config: { name: "Email Pipeline", description: "Composes, validates, and sends emails with retry logic" } },
+  ],
+  timer: [
+    { title: "3 second delay", config: { duration: 3, unit: "seconds", message: "Please wait..." } },
+    { title: "Typing indicator", config: { duration: 1.5, unit: "seconds", message: "⏳ Thinking..." } },
+  ],
+  random_choice: [
+    { title: "A/B test", config: { branches: ["Variant A", "Variant B"] } },
+    { title: "3-way split", config: { branches: ["Path 1", "Path 2", "Path 3"] } },
+  ],
+  loop: [
+    { title: "Retry 3 times", config: { iterations: 3, counterVar: "retry_count" } },
+    { title: "Process items", config: { iterations: 5, counterVar: "item_index" } },
+  ],
+  image_gallery: [
+    { title: "Product showcase", config: { images: [{ url: "https://via.placeholder.com/300x200?text=Product+A", title: "Product A", description: "$29.99 — Best seller" }, { url: "https://via.placeholder.com/300x200?text=Product+B", title: "Product B", description: "$49.99 — Premium" }, { url: "https://via.placeholder.com/300x200?text=Product+C", title: "Product C", description: "$19.99 — Budget" }], selectable: true, layout: "horizontal" } },
+    { title: "Photo album", config: { images: [{ url: "https://via.placeholder.com/300x200?text=Photo+1", title: "Sunset", description: "Beautiful sunset at the beach" }, { url: "https://via.placeholder.com/300x200?text=Photo+2", title: "Mountain", description: "Snowy mountain peak" }], selectable: false, layout: "horizontal" } },
   ],
 };
 

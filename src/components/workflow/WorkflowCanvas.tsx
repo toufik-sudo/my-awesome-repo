@@ -289,9 +289,11 @@ export function WorkflowCanvas() {
       }}
     >
       <div
-        className="absolute inset-0 origin-top-left"
+        className="absolute inset-0 origin-top-left canvas-grid"
         style={{
           transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+          width: "10000px",
+          height: "10000px",
         }}
       >
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: "visible" }}>

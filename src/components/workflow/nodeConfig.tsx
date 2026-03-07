@@ -2,7 +2,7 @@ import React from "react";
 import {
   Bot, MessageSquare, Globe, GitBranch, Zap, Play, Square,
   Mail, Webhook, Database, Code, Type, MousePointerClick, Variable,
-  Box,
+  Box, Timer, Shuffle, Repeat, Images,
 } from "lucide-react";
 import type { NodeType } from "@/types/workflow";
 
@@ -22,6 +22,10 @@ export const NODE_ICONS: Record<NodeType, React.ReactNode> = {
   button_input: <MousePointerClick className="w-4 h-4" />,
   set_variable: <Variable className="w-4 h-4" />,
   component: <Box className="w-4 h-4" />,
+  timer: <Timer className="w-4 h-4" />,
+  random_choice: <Shuffle className="w-4 h-4" />,
+  loop: <Repeat className="w-4 h-4" />,
+  image_gallery: <Images className="w-4 h-4" />,
 };
 
 export const NODE_COLORS: Record<NodeType, string> = {
@@ -40,6 +44,10 @@ export const NODE_COLORS: Record<NodeType, string> = {
   button_input: "bg-node-button/20 border-node-button text-node-button",
   set_variable: "bg-node-variable/20 border-node-variable text-node-variable",
   component: "bg-accent/20 border-accent text-accent",
+  timer: "bg-node-timer/20 border-node-timer text-node-timer",
+  random_choice: "bg-node-random/20 border-node-random text-node-random",
+  loop: "bg-node-loop/20 border-node-loop text-node-loop",
+  image_gallery: "bg-node-gallery/20 border-node-gallery text-node-gallery",
 };
 
 export const NODE_ACCENT: Record<NodeType, string> = {
@@ -58,4 +66,8 @@ export const NODE_ACCENT: Record<NodeType, string> = {
   button_input: "hsl(310, 70%, 60%)",
   set_variable: "hsl(130, 60%, 50%)",
   component: "hsl(170, 70%, 50%)",
+  timer: "hsl(25, 85%, 55%)",
+  random_choice: "hsl(290, 70%, 55%)",
+  loop: "hsl(210, 75%, 55%)",
+  image_gallery: "hsl(350, 70%, 55%)",
 };

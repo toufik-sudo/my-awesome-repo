@@ -54,6 +54,10 @@ export default {
           text: "hsl(var(--node-text))",
           button: "hsl(var(--node-button))",
           variable: "hsl(var(--node-variable))",
+          timer: "hsl(var(--node-timer))",
+          random: "hsl(var(--node-random))",
+          loop: "hsl(var(--node-loop))",
+          gallery: "hsl(var(--node-gallery))",
         },
       },
       fontFamily: {
