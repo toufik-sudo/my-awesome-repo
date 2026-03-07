@@ -440,4 +440,144 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       };
     },
   },
+
+  // ── Legal Document Assistant ──────────────────────
+  {
+    id: "legal-assistant",
+    name: "Legal Document Assistant",
+    description: "AI-powered contract review, clause analysis, risk assessment, and document summarization.",
+    icon: "⚖️",
+    tags: ["Legal", "AI", "Documents"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Welcome", { greeting: "Welcome to **LegalAI** ⚖️\n\nI can help you review contracts, analyze clauses, and identify potential risks. Upload or paste your document to get started." });
+      const docType = tNode("button_input", { x: 380, y: 260 }, "Document Type", { prompt: "What type of document are you reviewing?", buttons: [{ label: "📄 NDA", value: "nda", bgColor: "#1e40af", textColor: "#fff" }, { label: "📋 Employment Contract", value: "employment", bgColor: "#7c3aed", textColor: "#fff" }, { label: "🤝 Service Agreement", value: "service", bgColor: "#059669", textColor: "#fff" }, { label: "📑 Other", value: "other", bgColor: "#6b7280", textColor: "#fff" }], layout: "vertical" });
+      const docInput = tNode("user_input", { x: 680, y: 260 }, "Paste Document", { prompt: "Please paste the document text or key clauses you want me to review.\n\nI'll analyze it for risks, missing clauses, and provide a plain-language summary.", enableSTT: false });
+      const aiAnalysis = tNode("ai_response", { x: 980, y: 260 }, "AI Analysis", { model: "gemini-pro", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are an expert legal analyst. Review the provided document and:\n1. Summarize key terms in plain language\n2. Identify potential risks and red flags (⚠️)\n3. Flag missing or unusual clauses\n4. Rate overall risk level (Low/Medium/High)\n5. Provide specific recommendations\n\nFormat with markdown. Use clear headers and bullet points. Always include a disclaimer that this is not legal advice.", userMessageTemplate: "Document type: {{doc_type}}\n\nDocument text:\n{{last_utterance}}", temperature: 0.2, maxTokens: 8192, stream: true });
+      const review = tNode("text_display", { x: 1280, y: 260 }, "Review Report", { text: "## ⚖️ Document Review Report\n\n{{ai_output}}\n\n---\n\n⚠️ *This analysis is for informational purposes only and does not constitute legal advice. Consult a licensed attorney for legal decisions.*", format: "markdown" });
+      const action = tNode("button_input", { x: 1580, y: 260 }, "Next Steps", { prompt: "What would you like to do next?", buttons: [{ label: "🔍 Deep Dive Clause", value: "deep_dive" }, { label: "📝 Suggest Edits", value: "suggest" }, { label: "📧 Email Report", value: "email" }, { label: "✅ Done", value: "done" }] });
+      const end = tNode("end", { x: 1880, y: 260 }, "Complete", { message: "Your document review is complete! ⚖️\n\nRemember to have important contracts reviewed by a licensed attorney before signing.\n\nStay legally protected! 🛡️" });
+      return {
+        id: uuidv4(), name: "Legal Document Assistant",
+        nodes: [start, docType, docInput, aiAnalysis, review, action, end],
+        connections: [conn(start, docType), conn(docType, docInput, 0), conn(docInput, aiAnalysis), conn(aiAnalysis, review), conn(review, action), conn(action, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "doc_type", type: "string", defaultValue: "", description: "Type of legal document" },
+          { id: uuidv4(), name: "risk_level", type: "string", defaultValue: "", description: "AI-assessed risk level" },
+        ],
+      };
+    },
+  },
+
+  // ── Education / Quiz Bot ──────────────────────────
+  {
+    id: "education-quiz",
+    name: "Education Quiz Master",
+    description: "Interactive learning with AI-generated quizzes, explanations, progress tracking, and adaptive difficulty.",
+    icon: "🎓",
+    tags: ["Education", "AI", "Quiz"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Welcome Student", { greeting: "Welcome to **QuizMaster AI** 🎓📚\n\nI'll test your knowledge with adaptive quizzes and provide detailed explanations. Let's learn together!" });
+      const subject = tNode("button_input", { x: 380, y: 260 }, "Choose Subject", { prompt: "Which subject would you like to study?", buttons: [{ label: "🧮 Mathematics", value: "math", bgColor: "#3b82f6", textColor: "#fff" }, { label: "🔬 Science", value: "science", bgColor: "#10b981", textColor: "#fff" }, { label: "📜 History", value: "history", bgColor: "#f59e0b", textColor: "#fff" }, { label: "💻 Programming", value: "programming", bgColor: "#8b5cf6", textColor: "#fff" }], layout: "vertical" });
+      const difficulty = tNode("button_input", { x: 680, y: 160 }, "Difficulty", { prompt: "What level are you at?", buttons: [{ label: "🟢 Beginner", value: "beginner" }, { label: "🟡 Intermediate", value: "intermediate" }, { label: "🔴 Advanced", value: "advanced" }] });
+      const setScore = tNode("set_variable", { x: 680, y: 380 }, "Init Score", { variableName: "score", value: "0", operation: "set" });
+      const aiQuiz = tNode("ai_response", { x: 980, y: 260 }, "Generate Quiz", { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", systemPrompt: "You are an expert educator. Generate a quiz question for the given subject and difficulty level.\n\nFormat:\n**Question:** [question]\n\n**Options:**\nA) [option]\nB) [option]\nC) [option]\nD) [option]\n\nStore the correct answer letter internally. After the user answers, explain why the correct answer is right and why others are wrong.", userMessageTemplate: "Subject: {{subject}}\nDifficulty: {{difficulty}}\nCurrent score: {{score}}/{{total_questions}}\n\nGenerate the next question.", temperature: 0.8, stream: true });
+      const question = tNode("text_display", { x: 1280, y: 160 }, "Show Question", { text: "## 📝 Question {{question_number}}\n\n{{ai_output}}", format: "markdown" });
+      const answer = tNode("button_input", { x: 1280, y: 380 }, "Your Answer", { prompt: "Select your answer:", buttons: [{ label: "A", value: "A", bgColor: "#3b82f6", textColor: "#fff" }, { label: "B", value: "B", bgColor: "#10b981", textColor: "#fff" }, { label: "C", value: "C", bgColor: "#f59e0b", textColor: "#fff" }, { label: "D", value: "D", bgColor: "#ef4444", textColor: "#fff" }] });
+      const loop = tNode("loop", { x: 1580, y: 260 }, "Quiz Loop", { iterations: 5, counterVar: "question_number" });
+      const results = tNode("text_display", { x: 1880, y: 260 }, "Results", { text: "## 🏆 Quiz Complete!\n\n**Score: {{score}}/{{total_questions}}**\n\n{{performance_message}}\n\n---\n\n📊 Keep practicing to improve your knowledge!", format: "markdown" });
+      const end = tNode("end", { x: 2180, y: 260 }, "Great Job!", { message: "Thanks for studying with QuizMaster AI! 🎓\n\nCome back anytime to test your knowledge. Learning never stops! 📚" });
+      return {
+        id: uuidv4(), name: "Education Quiz Master",
+        nodes: [start, subject, difficulty, setScore, aiQuiz, question, answer, loop, results, end],
+        connections: [conn(start, subject), conn(subject, difficulty, 0), conn(subject, setScore, 0), conn(difficulty, aiQuiz, 0), conn(setScore, aiQuiz), conn(aiQuiz, question), conn(question, answer), conn(answer, loop, 0), conn(loop, results, 1), conn(results, end)],
+        globalVariables: [
+          { id: uuidv4(), name: "subject", type: "string", defaultValue: "", description: "Selected study subject" },
+          { id: uuidv4(), name: "difficulty", type: "string", defaultValue: "beginner", description: "Quiz difficulty level" },
+          { id: uuidv4(), name: "score", type: "number", defaultValue: "0", description: "Current quiz score" },
+          { id: uuidv4(), name: "total_questions", type: "number", defaultValue: "5", description: "Total number of questions" },
+        ],
+      };
+    },
+  },
+
+  // ── Social Media Content Generator ────────────────
+  {
+    id: "social-media-generator",
+    name: "Social Media Content Studio",
+    description: "Generate platform-optimized posts with AI copywriting, hashtag suggestions, and scheduling.",
+    icon: "📱",
+    tags: ["Marketing", "AI", "Social"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Welcome Creator", { greeting: "Welcome to **ContentStudio AI** 📱✨\n\nI'll help you create engaging social media content optimized for each platform. Let's create something viral!" });
+      const platform = tNode("button_input", { x: 380, y: 260 }, "Platform", { prompt: "Which platform are you creating content for?", buttons: [{ label: "📸 Instagram", value: "instagram", bgColor: "#e1306c", textColor: "#fff" }, { label: "🐦 Twitter/X", value: "twitter", bgColor: "#1da1f2", textColor: "#fff" }, { label: "💼 LinkedIn", value: "linkedin", bgColor: "#0077b5", textColor: "#fff" }, { label: "🎵 TikTok", value: "tiktok", bgColor: "#010101", textColor: "#fff" }], layout: "vertical" });
+      const topic = tNode("user_input", { x: 680, y: 260 }, "Content Brief", { prompt: "Describe what you want to post about:\n• Topic or product\n• Target audience\n• Tone (fun, professional, educational)\n• Any key messages to include", enableSTT: true });
+      const contentType = tNode("button_input", { x: 980, y: 160 }, "Content Type", { prompt: "What type of content?", buttons: [{ label: "📝 Post/Caption", value: "post" }, { label: "🧵 Thread/Carousel", value: "thread" }, { label: "📖 Story Script", value: "story" }] });
+      const aiGenerate = tNode("ai_response", { x: 980, y: 380 }, "AI Copywriter", { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are a professional social media copywriter. Create platform-optimized content.\n\nFor each platform:\n- Instagram: Visual-first, emojis, 2000 char limit, 30 hashtags max\n- Twitter/X: Concise, punchy, 280 chars, 3-5 hashtags\n- LinkedIn: Professional, storytelling, longer form, 3-5 hashtags\n- TikTok: Hook-first, trending sounds reference, casual tone\n\nAlways include:\n1. Main content\n2. Suggested hashtags\n3. Best posting time\n4. Engagement hook\n5. CTA suggestion", userMessageTemplate: "Platform: {{platform}}\nContent type: {{content_type}}\nBrief: {{last_utterance}}", temperature: 0.8, stream: true });
+      const preview = tNode("text_display", { x: 1280, y: 260 }, "Content Preview", { text: "## ✨ Your Content\n\n{{ai_output}}\n\n---\n\n📊 *Optimized for maximum engagement on {{platform}}*", format: "markdown" });
+      const action = tNode("button_input", { x: 1580, y: 260 }, "What Next?", { prompt: "Happy with the content?", buttons: [{ label: "✅ Use This", value: "use" }, { label: "🔄 Regenerate", value: "regen" }, { label: "✏️ Modify Tone", value: "modify" }, { label: "📅 Schedule Post", value: "schedule" }] });
+      const end = tNode("end", { x: 1880, y: 260 }, "Ready!", { message: "Your content is ready to publish! 📱🚀\n\nRemember: Consistency is key to social media growth!\n\n📈 Track your engagement and iterate!" });
+      return {
+        id: uuidv4(), name: "Social Media Content Studio",
+        nodes: [start, platform, topic, contentType, aiGenerate, preview, action, end],
+        connections: [conn(start, platform), conn(platform, topic, 0), conn(topic, contentType), conn(topic, aiGenerate), conn(contentType, aiGenerate, 0), conn(aiGenerate, preview), conn(preview, action), conn(action, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "platform", type: "string", defaultValue: "", description: "Target social media platform" },
+          { id: uuidv4(), name: "content_type", type: "string", defaultValue: "post", description: "Type of content to create" },
+        ],
+      };
+    },
+  },
+
+  // ── Financial Advisor Bot ─────────────────────────
+  {
+    id: "financial-advisor",
+    name: "Financial Advisor",
+    description: "Personal finance assistant with budget analysis, investment guidance, and financial goal planning.",
+    icon: "💰",
+    tags: ["Finance", "AI", "Advisory"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Welcome", { greeting: "Welcome to **WealthWise AI** 💰📊\n\nI'm your personal finance assistant. I'll help you with budgeting, investments, and financial planning.\n\n⚠️ *This is educational content, not financial advice.*" });
+      const goal = tNode("button_input", { x: 380, y: 260 }, "Your Goal", { prompt: "What financial topic interests you?", buttons: [{ label: "📊 Budget Review", value: "budget", bgColor: "#10b981", textColor: "#fff" }, { label: "📈 Investment Ideas", value: "invest", bgColor: "#3b82f6", textColor: "#fff" }, { label: "🏠 Savings Goal", value: "savings", bgColor: "#f59e0b", textColor: "#fff" }, { label: "💳 Debt Strategy", value: "debt", bgColor: "#ef4444", textColor: "#fff" }], layout: "vertical" });
+      const details = tNode("user_input", { x: 680, y: 260 }, "Financial Details", { prompt: "Share some details about your financial situation:\n• Monthly income range\n• Major expenses\n• Current savings\n• Financial goals and timeline\n\n🔒 Your data is not stored or shared.", enableSTT: true });
+      const aiAdvice = tNode("ai_response", { x: 980, y: 260 }, "AI Financial Analysis", { model: "gemini-pro", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are a knowledgeable financial educator. Based on the user's situation:\n1. Provide actionable financial guidance\n2. Create a simple budget breakdown\n3. Suggest specific steps with timelines\n4. Include relevant financial formulas or rules of thumb\n5. Recommend resources for further learning\n\nAlways include disclaimer: This is educational content and not personalized financial advice. Consult a certified financial planner for specific decisions.", userMessageTemplate: "Goal: {{financial_goal}}\nDetails: {{last_utterance}}", temperature: 0.3, maxTokens: 4096, stream: true });
+      const report = tNode("text_display", { x: 1280, y: 260 }, "Financial Report", { text: "## 📊 Your Financial Analysis\n\n{{ai_output}}\n\n---\n\n💡 *Remember: Small consistent steps lead to big financial wins!*\n\n⚠️ *This is for educational purposes only. Consult a licensed financial advisor for personalized advice.*", format: "markdown" });
+      const next = tNode("button_input", { x: 1580, y: 260 }, "Learn More", { prompt: "Want to explore more?", buttons: [{ label: "📚 Learn More", value: "learn" }, { label: "📧 Email Report", value: "email" }, { label: "✅ Got It", value: "done" }] });
+      const end = tNode("end", { x: 1880, y: 260 }, "Good Luck!", { message: "Great job taking control of your finances! 💰\n\nFinancial freedom is a marathon, not a sprint. Stay consistent!\n\n📈 Check back monthly to track your progress." });
+      return {
+        id: uuidv4(), name: "Financial Advisor",
+        nodes: [start, goal, details, aiAdvice, report, next, end],
+        connections: [conn(start, goal), conn(goal, details, 0), conn(details, aiAdvice), conn(aiAdvice, report), conn(report, next), conn(next, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "financial_goal", type: "string", defaultValue: "", description: "User's financial objective" },
+          { id: uuidv4(), name: "monthly_income", type: "string", defaultValue: "", description: "Monthly income range" },
+        ],
+      };
+    },
+  },
+
+  // ── Multi-Language Chatbot ────────────────────────
+  {
+    id: "multilanguage-bot",
+    name: "Multi-Language Concierge",
+    description: "Automatic language detection with localized responses, cultural awareness, and translation support.",
+    icon: "🌍",
+    tags: ["International", "AI", "Translation"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Welcome / Bienvenue", { greeting: "🌍 **Welcome / Bienvenue / Willkommen / Bienvenido / أهلاً**\n\nSpeak in any language — I'll detect and respond accordingly!" });
+      const input = tNode("user_input", { x: 380, y: 260 }, "Your Message", { prompt: "Type or speak in any language...", enableSTT: true });
+      const detectLang = tNode("ai_response", { x: 680, y: 260 }, "Detect & Respond", { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are a multilingual concierge. First detect the user's language, then respond fluently in that same language. If they ask for a translation, provide it. Always be culturally aware and appropriate. At the end of each response, include:\n\n🌐 Detected language: [language name]\n\nIf the user seems to struggle with a language, gently offer to switch.", userMessageTemplate: "{{last_utterance}}", temperature: 0.4, stream: true });
+      const display = tNode("text_display", { x: 980, y: 260 }, "Response", { text: "{{ai_output}}", format: "markdown" });
+      const action = tNode("button_input", { x: 1280, y: 260 }, "Options", { prompt: "What would you like to do?", buttons: [{ label: "💬 Continue Chat", value: "continue" }, { label: "🔄 Translate Last", value: "translate" }, { label: "🌐 Change Language", value: "change_lang" }, { label: "👋 Exit", value: "exit" }] });
+      const end = tNode("end", { x: 1580, y: 260 }, "Goodbye", { message: "Thank you for chatting! 🌍\n\nMerci • Danke • Gracias • شكراً • ありがとう\n\nCome back anytime! 👋" });
+      return {
+        id: uuidv4(), name: "Multi-Language Concierge",
+        nodes: [start, input, detectLang, display, action, end],
+        connections: [conn(start, input), conn(input, detectLang), conn(detectLang, display), conn(display, action), conn(action, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "detected_language", type: "string", defaultValue: "", description: "Auto-detected user language" },
+          { id: uuidv4(), name: "preferred_language", type: "string", defaultValue: "", description: "User's preferred language" },
+        ],
+      };
+    },
+  },
 ];
