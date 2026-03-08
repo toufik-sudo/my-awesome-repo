@@ -31,7 +31,7 @@ const GROUPS = ["Flow", "Integrations", "Logic"];
 
 export function NodePalette() {
   const [search, setSearch] = useState("");
-
+  const { t } = useI18n();
   const filtered = useMemo(() => {
     if (!search.trim()) return PALETTE_ITEMS;
     const q = search.toLowerCase();
