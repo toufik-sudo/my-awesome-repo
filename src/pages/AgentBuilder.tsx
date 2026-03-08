@@ -57,10 +57,10 @@ function VariablesModalButton() {
     <button
       onClick={openModal}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-      title="Global Variables"
+      title={t("toolbar.variables")}
     >
       <Variable className="w-3.5 h-3.5" />
-      Variables
+      {t("toolbar.variables")}
     </button>
   );
 }
