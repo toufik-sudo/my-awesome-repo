@@ -75,7 +75,7 @@ function VariablesContent() {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center"><Variable className="w-3.5 h-3.5 text-primary" /></div>
-          <h2 className="text-sm font-bold text-foreground">Global Variables</h2>
+          <h2 className="text-sm font-bold text-foreground">{t("variables.title")}</h2>
         </div>
         <button
           onClick={() => { addGlobalVariable({ name: "new_var", type: "string", defaultValue: "", description: "" }); setTick(t => t + 1); }}
