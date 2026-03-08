@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 import { marked } from "marked";
 import { useWorkflow } from "@/context/WorkflowContext";
+import { useI18n } from "@/context/I18nContext";
 import { DEFAULT_CHAT_CONFIG } from "@/types/workflow";
 import type { ChatMessage, WorkflowNode } from "@/types/workflow";
 
@@ -47,13 +48,14 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
-  const [inputPrompt, setInputPrompt] = useState("Type a message...");
+  const [inputPrompt, setInputPrompt] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const resolveInputRef = useRef<((value: string) => void) | null>(null);
   const stopRef = useRef(false);
   const varsRef = useRef<Record<string, string>>({});
   const { workflow, updateGlobalVariable, addGlobalVariable } = useWorkflow();
+  const { t } = useI18n();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -86,7 +88,10 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
       return;
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { alert("Speech recognition not supported."); return; }
+    if (!SR) {
+      alert(t("chat.speechNotSupported"));
+      return;
+    }
     const recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -100,17 +105,17 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening]);
+  }, [isListening, t]);
 
   // ─── Wait for user input (called during workflow execution) ──
   const waitForUserInput = useCallback((prompt: string): Promise<string> => {
-    setInputPrompt(prompt || "Type a message...");
+    setInputPrompt(prompt || t("chat.placeholder"));
     setWaitingForInput(true);
     setIsLoading(false);
     return new Promise((resolve) => {
       resolveInputRef.current = resolve;
     });
-  }, []);
+  }, [t]);
 
   // ─── Submit user input ──────────────────────────
   const submitInput = useCallback(() => {
@@ -180,7 +185,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
     const startNode = workflow.nodes.find((n) => n.type === "start");
     if (!startNode) {
-      addAssistantMessage("⚠️ No Start node found in the workflow.");
+      addAssistantMessage(t("chat.noStartNode"));
       setIsRunning(false);
       return;
     }
@@ -236,8 +241,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
           const prompt = compile(node.config.prompt || "Choose:");
           const buttons = node.config.buttons || [];
           addAssistantMessage(prompt, { type: "button_input", buttons, layout: node.config.layout || "horizontal" });
-          // Wait for button click
-          const selected = await waitForUserInput("Click a button above...");
+          const selected = await waitForUserInput(t("chat.clickButton"));
           varsRef.current["button_value"] = selected;
           break;
         }
@@ -246,13 +250,12 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
           setIsLoading(true);
           const url = compile(node.config.url || "");
           const method = node.config.method || "GET";
-          // Compile headers
           const rawHeaders = node.config.headers || {};
           const compiledHeaders: Record<string, string> = {};
           for (const [k, v] of Object.entries(rawHeaders)) {
             compiledHeaders[compile(k)] = compile(v as string);
           }
-          addAssistantMessage(`🔗 **API Call**: \`${method} ${url}\`\n\nHeaders: ${Object.keys(compiledHeaders).length > 0 ? Object.entries(compiledHeaders).map(([k, v]) => `\`${k}: ${v}\``).join(", ") : "none"}`);
+          addAssistantMessage(`${t("chat.apiCall")}: \`${method} ${url}\`\n\nHeaders: ${Object.keys(compiledHeaders).length > 0 ? Object.entries(compiledHeaders).map(([k, v]) => `\`${k}: ${v}\``).join(", ") : "none"}`);
           await new Promise((r) => setTimeout(r, 600));
           varsRef.current["api_response"] = '{"status": "ok", "data": {}}';
           setIsLoading(false);
@@ -265,7 +268,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
           try {
             result = new Function("vars", `with(vars) { return !!(${expr}); }`)(varsRef.current);
           } catch { result = true; }
-          addAssistantMessage(`🔀 **Condition**: \`${expr}\` → **${result ? "Yes" : "No"}**`);
+          addAssistantMessage(`${t("chat.condition")}: \`${expr}\` → **${result ? "Yes" : "No"}**`);
           await new Promise((r) => setTimeout(r, 300));
           currentNodeId = getNextNodeId(node, result ? "Yes" : "No");
           continue;
@@ -283,7 +286,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
         }
 
         case "action": {
-          addAssistantMessage(`⚡ **Action**: \`${node.config.functionName || "(unnamed)"}\``);
+          addAssistantMessage(`${t("chat.action")}: \`${node.config.functionName || "(unnamed)"}\``);
           await new Promise((r) => setTimeout(r, 300));
           break;
         }
@@ -291,7 +294,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
         case "db_query": {
           setIsLoading(true);
           const db = node.config.database || node.config.connectionString || "(no db)";
-          addAssistantMessage(`🗄️ **DB Query** on \`${db}\`:\n\`\`\`sql\n${compile(node.config.query || "")}\n\`\`\``);
+          addAssistantMessage(`${t("chat.dbQuery")} on \`${db}\`:\n\`\`\`sql\n${compile(node.config.query || "")}\n\`\`\``);
           await new Promise((r) => setTimeout(r, 500));
           varsRef.current["db_result"] = '[{"id": 1}]';
           setIsLoading(false);
@@ -299,7 +302,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
         }
 
         case "js_function": {
-          addAssistantMessage(`💻 **JS Function** executed`);
+          addAssistantMessage(t("chat.jsFunction"));
           await new Promise((r) => setTimeout(r, 300));
           break;
         }
@@ -321,7 +324,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
             imageHeight: node.config.imageHeight || 150,
           });
           if (selectable) {
-            const selected = await waitForUserInput("Select an image...");
+            const selected = await waitForUserInput(t("chat.selectImage"));
             varsRef.current["selected_image"] = selected;
           }
           await new Promise((r) => setTimeout(r, 300));
@@ -329,7 +332,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
         }
 
         case "email_sender": {
-          addAssistantMessage(`📧 **Email** sent to \`${compile(node.config.to || "")}\`\nSubject: ${compile(node.config.subject || "")}`);
+          addAssistantMessage(`${t("chat.emailSent")} \`${compile(node.config.to || "")}\`\nSubject: ${compile(node.config.subject || "")}`);
           await new Promise((r) => setTimeout(r, 400));
           break;
         }
@@ -349,9 +352,8 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
         case "random_choice": {
           const branches: string[] = node.config.branches || ["A", "B"];
           const idx = Math.floor(Math.random() * branches.length);
-          addAssistantMessage(`🎲 **Random**: picked "${branches[idx]}"`);
+          addAssistantMessage(`${t("chat.randomPicked")} "${branches[idx]}"`);
           await new Promise((r) => setTimeout(r, 300));
-          // Find output port for this branch
           const outPort = node.ports.outputs[idx] || node.ports.outputs[0];
           if (outPort) {
             const conn = workflow.connections.find(
@@ -372,17 +374,15 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
           for (let i = 0; i < iterations && !stopRef.current; i++) {
             varsRef.current[counterVar] = String(i);
-            addAssistantMessage(`🔁 **Loop** iteration ${i + 1}/${iterations}`);
-            // Execute body sub-chain
+            addAssistantMessage(`${t("chat.loopIteration")} ${i + 1}/${iterations}`);
             if (bodyPort) {
               const bodyConn = workflow.connections.find(
                 (c) => c.fromNodeId === node.id && c.fromPortId === bodyPort.id
               );
-              // Note: body nodes run inline (single step for now)
               if (bodyConn) {
                 const bodyNode = workflow.nodes.find((n) => n.id === bodyConn.toNodeId);
                 if (bodyNode) {
-                  addAssistantMessage(`  → Running: ${bodyNode.label}`);
+                  addAssistantMessage(`  → ${bodyNode.label}`);
                 }
               }
             }
@@ -420,9 +420,9 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
     setIsRunning(false);
     setWaitingForInput(false);
     if (!stopRef.current) {
-      addAssistantMessage("✅ *Workflow completed.*");
+      addAssistantMessage(t("chat.completed"));
     }
-  }, [workflow, initVars, addAssistantMessage, waitForUserInput, streamText, getNextNodeId]);
+  }, [workflow, initVars, addAssistantMessage, waitForUserInput, streamText, getNextNodeId, t]);
 
   const stopExecution = useCallback(() => {
     stopRef.current = true;
@@ -489,7 +489,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
     if (msg.type === "text_display") {
       return (
         <div className="space-y-1">
-          <span className="text-[9px] uppercase tracking-wider font-bold text-primary/60">📝 Text Display</span>
+          <span className="text-[9px] uppercase tracking-wider font-bold text-primary/60">{t("chat.textDisplay")}</span>
           <RenderContent content={msg.content} format={msg.format} className="text-xs" />
         </div>
       );
@@ -525,7 +525,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
       const h = msg.imageHeight || 150;
       return (
         <div className="space-y-1.5">
-          <span className="text-[9px] uppercase tracking-wider font-bold text-node-gallery/60">🖼️ Image Gallery</span>
+          <span className="text-[9px] uppercase tracking-wider font-bold text-node-gallery/60">{t("chat.imageGallery")}</span>
           <div
             className={cn(
               msg.layout === "grid"
@@ -583,8 +583,8 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
   return (
     <div
-      className="w-96 bg-card border-l border-border flex flex-col"
-      style={{ fontFamily: chatConfig.fontFamily || "Inter, system-ui, sans-serif" }}
+      className="w-96 bg-card border-border flex flex-col"
+      style={{ borderInlineStart: "1px solid hsl(var(--border))", fontFamily: chatConfig.fontFamily || "Inter, system-ui, sans-serif" }}
     >
       {/* Header */}
       <div
@@ -609,9 +609,9 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-sm font-bold text-foreground truncate">{chatConfig.headerTitle || "Agent Preview"}</h2>
+          <h2 className="text-sm font-bold text-foreground truncate">{chatConfig.headerTitle || t("chat.title")}</h2>
           <p className="text-[10px] text-muted-foreground truncate">
-            {isRunning ? (waitingForInput ? "Waiting for input..." : "Running workflow...") : chatConfig.headerSubtitle || "Click ▶ to run"}
+            {isRunning ? (waitingForInput ? t("chat.waitingInput") : t("chat.running")) : chatConfig.headerSubtitle || t("chat.welcome")}
           </p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -623,29 +623,29 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
                 background: chatConfig.primaryColor ? `${chatConfig.primaryColor}20` : "hsl(var(--primary) / 0.1)",
                 color: chatConfig.primaryColor || "hsl(var(--primary))",
               }}
-              title="Run workflow"
+              title={t("chat.run")}
             >
-              <Play className="w-3 h-3" /> Run
+              <Play className="w-3 h-3" /> {t("chat.run")}
             </button>
           ) : (
             <button
               onClick={stopExecution}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
             >
-              Stop
+              {t("chat.stop")}
             </button>
           )}
-          <button onClick={resetChat} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Reset">
+          <button onClick={resetChat} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title={t("chat.reset")}>
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
           {onMinimize && (
-            <button onClick={onMinimize} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="Minimize chat">
+            <button onClick={onMinimize} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title={t("chat.minimize")}>
               <X className="w-3.5 h-3.5" />
             </button>
           )}
           <div className="flex items-center gap-1.5">
             <span className={cn("w-2 h-2 rounded-full", isStreaming ? "bg-warning animate-pulse" : isRunning ? "bg-success animate-pulse" : "bg-muted-foreground/40")} />
-            <span className="text-[10px] text-muted-foreground">{isStreaming ? "Streaming" : isRunning ? "Running" : "Idle"}</span>
+            <span className="text-[10px] text-muted-foreground">{isStreaming ? t("chat.streaming") : isRunning ? t("chat.running") : t("chat.idle")}</span>
           </div>
         </div>
       </div>
@@ -670,9 +670,9 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">{chatConfig.headerTitle || "AI Assistant"}</p>
+              <p className="text-sm font-semibold text-foreground">{chatConfig.headerTitle || t("chat.title")}</p>
               <p className="text-[11px] text-muted-foreground mt-1 max-w-[200px]">
-                {chatConfig.welcomeMessage || "Click Run to start a conversation"}
+                {chatConfig.welcomeMessage || t("chat.welcome")}
               </p>
             </div>
           </div>
@@ -738,7 +738,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
         >
           <textarea
             className="flex-1 bg-transparent text-xs text-foreground resize-none focus:outline-none placeholder:text-muted-foreground min-h-[20px] max-h-[80px]"
-            placeholder={waitingForInput ? inputPrompt : "Run the workflow first..."}
+            placeholder={waitingForInput ? inputPrompt : t("chat.runFirst")}
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}

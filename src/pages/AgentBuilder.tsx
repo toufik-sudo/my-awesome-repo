@@ -19,6 +19,7 @@ import { useI18n } from "@/context/I18nContext";
 
 function VariablesModalButton() {
   const ctx = useWorkflow();
+  const { t } = useI18n();
 
   const openModal = () => {
     const container = document.createElement("div");
@@ -56,17 +57,17 @@ function VariablesModalButton() {
     <button
       onClick={openModal}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-      title="Global Variables"
+      title={t("toolbar.variables")}
     >
       <Variable className="w-3.5 h-3.5" />
-      Variables
+      {t("toolbar.variables")}
     </button>
   );
 }
 
 function VariablesContent() {
   const { workflow, addGlobalVariable, updateGlobalVariable, removeGlobalVariable } = useWorkflow();
-  // Force re-renders
+  const { t } = useI18n();
   const [, setTick] = useState(0);
 
   return (
@@ -74,16 +75,16 @@ function VariablesContent() {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center"><Variable className="w-3.5 h-3.5 text-primary" /></div>
-          <h2 className="text-sm font-bold text-foreground">Global Variables</h2>
+          <h2 className="text-sm font-bold text-foreground">{t("variables.title")}</h2>
         </div>
         <button
-          onClick={() => { addGlobalVariable({ name: "new_var", type: "string", defaultValue: "", description: "" }); setTick(t => t + 1); }}
+          onClick={() => { addGlobalVariable({ name: "new_var", type: "string", defaultValue: "", description: "" }); setTick(n => n + 1); }}
           className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
-        >+ Add</button>
+        >{t("variables.add")}</button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
         {(!workflow.globalVariables || workflow.globalVariables.length === 0) && (
-          <p className="text-xs text-muted-foreground text-center py-6">No global variables yet. Click <strong>+ Add</strong> to create one.</p>
+          <p className="text-xs text-muted-foreground text-center py-6">{t("variables.empty")}</p>
         )}
         {(workflow.globalVariables || []).map((v) => (
           <div key={v.id} className="bg-secondary/30 border border-border rounded-lg p-3 space-y-2">
@@ -93,7 +94,7 @@ function VariablesContent() {
               <select className="bg-muted border border-border rounded px-1.5 py-0.5 text-[10px] text-foreground focus:outline-none" value={v.type} onChange={(e) => updateGlobalVariable(v.id, { type: e.target.value as GlobalVariable["type"] })}>
                 <option value="string">string</option><option value="number">number</option><option value="boolean">boolean</option><option value="json">json</option>
               </select>
-              <button onClick={() => { removeGlobalVariable(v.id); setTick(t => t + 1); }} className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+              <button onClick={() => { removeGlobalVariable(v.id); setTick(n => n + 1); }} className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
                 <span className="text-xs">✕</span>
               </button>
             </div>
@@ -108,6 +109,7 @@ function VariablesContent() {
 
 function ChatStyleModalButton() {
   const ctx = useWorkflow();
+  const { t } = useI18n();
 
   const openModal = () => {
     const container = document.createElement("div");
@@ -131,7 +133,7 @@ function ChatStyleModalButton() {
             <div className="flex flex-col max-h-[70vh]">
               <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-gradient-to-r from-accent/5 to-transparent">
                 <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center"><MessageCircle className="w-3.5 h-3.5 text-accent" /></div>
-                <h2 className="text-sm font-bold text-foreground">Chat Appearance</h2>
+                <h2 className="text-sm font-bold text-foreground">{t("toolbar.chatStyle")}</h2>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
                 <ChatAppearancePanel />
@@ -152,17 +154,17 @@ function ChatStyleModalButton() {
     <button
       onClick={openModal}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-      title="Chat Style"
+      title={t("toolbar.chatStyle")}
     >
       <MessageCircle className="w-3.5 h-3.5" />
-      Chat Style
+      {t("toolbar.chatStyle")}
     </button>
   );
 }
 type ViewMode = "builder" | "chat" | "split";
 
 function AgentBuilderInner() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [chatMinimized, setChatMinimized] = useState(false);
   const [configModalNodeId, setConfigModalNodeId] = useState<string | null>(null);
@@ -270,7 +272,7 @@ function AgentBuilderInner() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background" dir={dir}>
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 py-2 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="flex items-center gap-3">
