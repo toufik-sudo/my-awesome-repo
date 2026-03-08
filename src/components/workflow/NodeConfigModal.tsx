@@ -116,7 +116,12 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
             {/* Type-specific configs */}
             {node.type === "start" && (
               <Field label="Greeting Message">
-                <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20" value={node.config.greeting || ""} onChange={(e) => updateConfig("greeting", e.target.value)} />
+                <div className="relative">
+                  <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 pr-8" value={node.config.greeting || ""} onChange={(e) => updateConfig("greeting", e.target.value)} />
+                  <div className="absolute top-1 right-1">
+                    <MicButton onTranscript={(text) => updateConfig("greeting", (node.config.greeting || "") + " " + text)} />
+                  </div>
+                </div>
               </Field>
             )}
 
@@ -135,7 +140,12 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
             {node.type === "user_input" && (
               <>
                 <Field label="Prompt Text">
-                  <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+                  <div className="relative">
+                    <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+                    <div className="absolute top-1/2 -translate-y-1/2 right-1">
+                      <MicButton onTranscript={(text) => updateConfig("prompt", (node.config.prompt || "") + " " + text)} />
+                    </div>
+                  </div>
                 </Field>
                 <Field label="Speech-to-Text">
                   <label className="flex items-center gap-2 text-xs text-foreground">
@@ -147,7 +157,12 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
             )}
             {node.type === "end" && (
               <Field label="Goodbye Message">
-                <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20" value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                <div className="relative">
+                  <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 pr-8" value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                  <div className="absolute top-1 right-1">
+                    <MicButton onTranscript={(text) => updateConfig("message", (node.config.message || "") + " " + text)} />
+                  </div>
+                </div>
               </Field>
             )}
             {node.type === "email_sender" && <EmailSenderConfig node={node} updateConfig={updateConfig} />}
@@ -185,7 +200,12 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
                   </div>
                 </Field>
                 <Field label="Display Message (optional)">
-                  <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Please wait..." value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                  <div className="relative">
+                    <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" placeholder="Please wait..." value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                    <div className="absolute top-1/2 -translate-y-1/2 right-1">
+                      <MicButton onTranscript={(text) => updateConfig("message", (node.config.message || "") + " " + text)} />
+                    </div>
+                  </div>
                 </Field>
               </>
             )}
@@ -386,7 +406,12 @@ function APICallConfig({ node, updateConfig }: { node: any; updateConfig: (k: st
         </div>
       </Field>
       <Field label="Request Body (JSON)">
-        <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 font-mono" placeholder='{"key": "{{variable}}"}' value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} />
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 font-mono pr-8" placeholder='{"key": "{{variable}}"}' value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("body", (node.config.body || "") + " " + text)} />
+          </div>
+        </div>
       </Field>
       <Field label="Response Mapping">
         <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="response.data.result" value={node.config.responseMapping || ""} onChange={(e) => updateConfig("responseMapping", e.target.value)} />
@@ -409,8 +434,22 @@ function EmailSenderConfig({ node, updateConfig }: { node: any; updateConfig: (k
       <Field label="API Key Variable"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="{{EMAIL_API_KEY}}" value={node.config.apiKeyVar || ""} onChange={(e) => updateConfig("apiKeyVar", e.target.value)} /></Field>
       <Field label="To"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="{{user_email}}" value={node.config.to || ""} onChange={(e) => updateConfig("to", e.target.value)} /></Field>
       <Field label="From"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="noreply@yourdomain.com" value={node.config.from || ""} onChange={(e) => updateConfig("from", e.target.value)} /></Field>
-      <Field label="Subject"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Welcome!" value={node.config.subject || ""} onChange={(e) => updateConfig("subject", e.target.value)} /></Field>
-      <Field label="Body (HTML)"><textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono" value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} /></Field>
+      <Field label="Subject">
+        <div className="relative">
+          <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" placeholder="Welcome!" value={node.config.subject || ""} onChange={(e) => updateConfig("subject", e.target.value)} />
+          <div className="absolute top-1/2 -translate-y-1/2 right-1">
+            <MicButton onTranscript={(text) => updateConfig("subject", (node.config.subject || "") + " " + text)} />
+          </div>
+        </div>
+      </Field>
+      <Field label="Body (HTML)">
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono pr-8" value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("body", (node.config.body || "") + " " + text)} />
+          </div>
+        </div>
+      </Field>
     </>
   );
 }
@@ -429,7 +468,14 @@ function DBQueryConfig({ node, updateConfig }: { node: any; updateConfig: (k: st
           {["select", "insert", "update", "delete", "raw"].map((t) => <option key={t}>{t}</option>)}
         </select>
       </Field>
-      <Field label="Query"><textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono" placeholder="SELECT * FROM users" value={node.config.query || ""} onChange={(e) => updateConfig("query", e.target.value)} /></Field>
+      <Field label="Query">
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono pr-8" placeholder="SELECT * FROM users" value={node.config.query || ""} onChange={(e) => updateConfig("query", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("query", (node.config.query || "") + " " + text)} />
+          </div>
+        </div>
+      </Field>
     </>
   );
 }
@@ -554,7 +600,12 @@ function ButtonInputConfig({ node, updateConfig }: { node: any; updateConfig: (k
   return (
     <>
       <Field label="Prompt">
-        <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+        <div className="relative">
+          <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+          <div className="absolute top-1/2 -translate-y-1/2 right-1">
+            <MicButton onTranscript={(text) => updateConfig("prompt", (node.config.prompt || "") + " " + text)} />
+          </div>
+        </div>
       </Field>
       <Field label="Layout">
         <select className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.layout || "horizontal"} onChange={(e) => updateConfig("layout", e.target.value)}>
