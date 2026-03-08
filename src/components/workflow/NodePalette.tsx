@@ -84,12 +84,12 @@ export function NodePalette() {
           </div>
         ))}
         {filtered.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-4">No blocks match "{search}"</p>
+          <p className="text-[10px] text-muted-foreground text-center py-4">{t("palette.noResults")} "{search}"</p>
         )}
       </div>
       <div className="px-4 py-3 border-t border-border">
         <p className="text-[10px] text-muted-foreground">
-          Drag blocks onto the canvas. Shift+click to multi-select.
+          {t("palette.hint")}
         </p>
       </div>
     </div>
