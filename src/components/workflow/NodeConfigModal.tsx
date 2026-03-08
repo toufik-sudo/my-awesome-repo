@@ -406,7 +406,12 @@ function APICallConfig({ node, updateConfig }: { node: any; updateConfig: (k: st
         </div>
       </Field>
       <Field label="Request Body (JSON)">
-        <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 font-mono" placeholder='{"key": "{{variable}}"}' value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} />
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 font-mono pr-8" placeholder='{"key": "{{variable}}"}' value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("body", (node.config.body || "") + " " + text)} />
+          </div>
+        </div>
       </Field>
       <Field label="Response Mapping">
         <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="response.data.result" value={node.config.responseMapping || ""} onChange={(e) => updateConfig("responseMapping", e.target.value)} />
