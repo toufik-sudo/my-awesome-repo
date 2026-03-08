@@ -46,7 +46,7 @@ export function NodePalette() {
     <div className="w-56 bg-card border-r border-border flex flex-col">
       <div className="px-3 py-3 border-b border-border space-y-2">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Blocks
+          {t("palette.title")}
         </h2>
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
@@ -54,7 +54,7 @@ export function NodePalette() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search blocks…"
+            placeholder={t("palette.search")}
             className="w-full pl-7 pr-2 py-1.5 text-[11px] rounded-md bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
