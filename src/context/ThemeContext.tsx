@@ -25,7 +25,10 @@ const THEMES: { id: Theme; label: string; icon: string }[] = [
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
-      return (localStorage.getItem("agent-builder-theme") as Theme) || "dark";
+      const saved = localStorage.getItem("agent-builder-theme") as Theme | null;
+      if (saved) return saved;
+      if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+      return "dark";
     } catch {
       return "dark";
     }
