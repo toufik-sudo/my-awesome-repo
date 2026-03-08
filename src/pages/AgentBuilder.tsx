@@ -109,6 +109,7 @@ function VariablesContent() {
 
 function ChatStyleModalButton() {
   const ctx = useWorkflow();
+  const { t } = useI18n();
 
   const openModal = () => {
     const container = document.createElement("div");
