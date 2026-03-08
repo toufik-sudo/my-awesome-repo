@@ -157,7 +157,12 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
             )}
             {node.type === "end" && (
               <Field label="Goodbye Message">
-                <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20" value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                <div className="relative">
+                  <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 pr-8" value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                  <div className="absolute top-1 right-1">
+                    <MicButton onTranscript={(text) => updateConfig("message", (node.config.message || "") + " " + text)} />
+                  </div>
+                </div>
               </Field>
             )}
             {node.type === "email_sender" && <EmailSenderConfig node={node} updateConfig={updateConfig} />}
