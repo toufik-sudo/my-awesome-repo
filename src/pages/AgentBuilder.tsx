@@ -13,6 +13,9 @@ import Swal from "sweetalert2";
 import ReactDOM from "react-dom/client";
 import { ChatAppearancePanel } from "@/components/workflow/ChatAppearancePanel";
 import { WorkflowContext } from "@/context/WorkflowContext";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/context/I18nContext";
 
 function VariablesModalButton() {
   const ctx = useWorkflow();
