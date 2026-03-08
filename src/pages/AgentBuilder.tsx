@@ -84,7 +84,7 @@ function VariablesContent() {
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
         {(!workflow.globalVariables || workflow.globalVariables.length === 0) && (
-          <p className="text-xs text-muted-foreground text-center py-6">No global variables yet. Click <strong>+ Add</strong> to create one.</p>
+          <p className="text-xs text-muted-foreground text-center py-6">{t("variables.empty")}</p>
         )}
         {(workflow.globalVariables || []).map((v) => (
           <div key={v.id} className="bg-secondary/30 border border-border rounded-lg p-3 space-y-2">
