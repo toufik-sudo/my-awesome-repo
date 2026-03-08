@@ -16,6 +16,10 @@ export type TranslationKeys =
   | "toolbar.executing"
   | "toolbar.done"
   | "toolbar.error"
+  | "toolbar.saved"
+  | "toolbar.savedDesc"
+  | "toolbar.importSuccess"
+  | "toolbar.importError"
   | "view.builder"
   | "view.split"
   | "view.chat"
@@ -39,10 +43,59 @@ export type TranslationKeys =
   | "chat.placeholder"
   | "chat.welcome"
   | "chat.completed"
+  | "chat.noStartNode"
+  | "chat.textDisplay"
+  | "chat.imageGallery"
+  | "chat.selectImage"
+  | "chat.clickButton"
+  | "chat.apiCall"
+  | "chat.condition"
+  | "chat.action"
+  | "chat.dbQuery"
+  | "chat.jsFunction"
+  | "chat.loopIteration"
+  | "chat.randomPicked"
+  | "chat.emailSent"
+  | "chat.speechNotSupported"
   | "config.configure"
   | "config.label"
   | "config.examples"
   | "config.block"
+  | "config.greeting"
+  | "config.prompt"
+  | "config.expression"
+  | "config.functionName"
+  | "config.voiceInput"
+  | "config.goodbye"
+  | "config.webhookUrl"
+  | "config.method"
+  | "config.secret"
+  | "config.variableName"
+  | "config.value"
+  | "config.operation"
+  | "config.duration"
+  | "config.displayMessage"
+  | "config.branches"
+  | "config.addBranch"
+  | "config.iterations"
+  | "config.counterVar"
+  | "config.apiKeyVar"
+  | "config.endpoint"
+  | "config.model"
+  | "config.headers"
+  | "config.addHeader"
+  | "config.systemPrompt"
+  | "config.userTemplate"
+  | "config.temperature"
+  | "config.maxTokens"
+  | "config.streaming"
+  | "config.to"
+  | "config.subject"
+  | "config.body"
+  | "config.provider"
+  | "config.database"
+  | "config.query"
+  | "config.outputVar"
   | "variables.title"
   | "variables.add"
   | "variables.empty"
@@ -86,6 +139,10 @@ const en: TranslationMap = {
   "toolbar.executing": "Executing…",
   "toolbar.done": "✓ Done",
   "toolbar.error": "✗ Error",
+  "toolbar.saved": "Workflow saved",
+  "toolbar.savedDesc": "saved to local storage",
+  "toolbar.importSuccess": "Workflow imported successfully",
+  "toolbar.importError": "Invalid JSON file",
   "view.builder": "Builder",
   "view.split": "Split",
   "view.chat": "Chat",
@@ -109,10 +166,59 @@ const en: TranslationMap = {
   "chat.placeholder": "Type a message...",
   "chat.welcome": "Click Run to start a conversation",
   "chat.completed": "✅ Workflow completed.",
+  "chat.noStartNode": "⚠️ No Start node found in the workflow.",
+  "chat.textDisplay": "📝 Text Display",
+  "chat.imageGallery": "🖼️ Image Gallery",
+  "chat.selectImage": "Select an image...",
+  "chat.clickButton": "Click a button above...",
+  "chat.apiCall": "🔗 API Call",
+  "chat.condition": "🔀 Condition",
+  "chat.action": "⚡ Action",
+  "chat.dbQuery": "🗄️ DB Query",
+  "chat.jsFunction": "💻 JS Function executed",
+  "chat.loopIteration": "🔁 Loop iteration",
+  "chat.randomPicked": "🎲 Random: picked",
+  "chat.emailSent": "📧 Email sent to",
+  "chat.speechNotSupported": "Speech recognition not supported.",
   "config.configure": "Configure",
   "config.label": "Label",
   "config.examples": "Examples",
   "config.block": "block",
+  "config.greeting": "Greeting Message",
+  "config.prompt": "Prompt Text",
+  "config.expression": "Expression",
+  "config.functionName": "Function Name",
+  "config.voiceInput": "Enable voice input",
+  "config.goodbye": "Goodbye Message",
+  "config.webhookUrl": "Webhook URL",
+  "config.method": "Method",
+  "config.secret": "Secret",
+  "config.variableName": "Variable Name",
+  "config.value": "Value",
+  "config.operation": "Operation",
+  "config.duration": "Duration",
+  "config.displayMessage": "Display Message (optional)",
+  "config.branches": "Branches",
+  "config.addBranch": "+ Add branch",
+  "config.iterations": "Iterations",
+  "config.counterVar": "Counter Variable",
+  "config.apiKeyVar": "API Key Variable",
+  "config.endpoint": "Endpoint URL",
+  "config.model": "Model",
+  "config.headers": "Headers",
+  "config.addHeader": "+ Add header",
+  "config.systemPrompt": "System Prompt",
+  "config.userTemplate": "User Message Template",
+  "config.temperature": "Temperature",
+  "config.maxTokens": "Max Tokens",
+  "config.streaming": "Enable streaming",
+  "config.to": "To (Email)",
+  "config.subject": "Subject",
+  "config.body": "Body",
+  "config.provider": "Provider",
+  "config.database": "Database / Connection String",
+  "config.query": "SQL Query",
+  "config.outputVar": "Output Variable",
   "variables.title": "Global Variables",
   "variables.add": "+ Add",
   "variables.empty": "No global variables yet. Click + Add to create one.",
@@ -155,6 +261,10 @@ const fr: TranslationMap = {
   "toolbar.executing": "Exécution…",
   "toolbar.done": "✓ Terminé",
   "toolbar.error": "✗ Erreur",
+  "toolbar.saved": "Workflow sauvegardé",
+  "toolbar.savedDesc": "sauvegardé dans le stockage local",
+  "toolbar.importSuccess": "Workflow importé avec succès",
+  "toolbar.importError": "Fichier JSON invalide",
   "view.builder": "Éditeur",
   "view.split": "Divisé",
   "view.chat": "Chat",
@@ -172,16 +282,65 @@ const fr: TranslationMap = {
   "chat.minimize": "Réduire le chat",
   "chat.idle": "Inactif",
   "chat.running": "En cours",
-  "chat.streaming": "Streaming",
+  "chat.streaming": "Diffusion",
   "chat.waitingInput": "En attente d'une saisie...",
   "chat.runFirst": "Lancez le workflow d'abord...",
   "chat.placeholder": "Tapez un message...",
   "chat.welcome": "Cliquez sur Lancer pour démarrer une conversation",
   "chat.completed": "✅ Workflow terminé.",
+  "chat.noStartNode": "⚠️ Aucun nœud de départ trouvé.",
+  "chat.textDisplay": "📝 Affichage Texte",
+  "chat.imageGallery": "🖼️ Galerie d'Images",
+  "chat.selectImage": "Sélectionnez une image...",
+  "chat.clickButton": "Cliquez sur un bouton ci-dessus...",
+  "chat.apiCall": "🔗 Appel API",
+  "chat.condition": "🔀 Condition",
+  "chat.action": "⚡ Action",
+  "chat.dbQuery": "🗄️ Requête BDD",
+  "chat.jsFunction": "💻 Fonction JS exécutée",
+  "chat.loopIteration": "🔁 Itération de boucle",
+  "chat.randomPicked": "🎲 Aléatoire : choisi",
+  "chat.emailSent": "📧 Email envoyé à",
+  "chat.speechNotSupported": "Reconnaissance vocale non supportée.",
   "config.configure": "Configurer",
   "config.label": "Libellé",
   "config.examples": "Exemples",
   "config.block": "bloc",
+  "config.greeting": "Message d'accueil",
+  "config.prompt": "Texte d'invite",
+  "config.expression": "Expression",
+  "config.functionName": "Nom de la fonction",
+  "config.voiceInput": "Activer la saisie vocale",
+  "config.goodbye": "Message d'au revoir",
+  "config.webhookUrl": "URL du Webhook",
+  "config.method": "Méthode",
+  "config.secret": "Secret",
+  "config.variableName": "Nom de la variable",
+  "config.value": "Valeur",
+  "config.operation": "Opération",
+  "config.duration": "Durée",
+  "config.displayMessage": "Message affiché (optionnel)",
+  "config.branches": "Branches",
+  "config.addBranch": "+ Ajouter une branche",
+  "config.iterations": "Itérations",
+  "config.counterVar": "Variable compteur",
+  "config.apiKeyVar": "Variable clé API",
+  "config.endpoint": "URL du point de terminaison",
+  "config.model": "Modèle",
+  "config.headers": "En-têtes",
+  "config.addHeader": "+ Ajouter un en-tête",
+  "config.systemPrompt": "Prompt système",
+  "config.userTemplate": "Modèle de message utilisateur",
+  "config.temperature": "Température",
+  "config.maxTokens": "Tokens maximum",
+  "config.streaming": "Activer le streaming",
+  "config.to": "Destinataire (Email)",
+  "config.subject": "Sujet",
+  "config.body": "Corps",
+  "config.provider": "Fournisseur",
+  "config.database": "Base de données / Chaîne de connexion",
+  "config.query": "Requête SQL",
+  "config.outputVar": "Variable de sortie",
   "variables.title": "Variables Globales",
   "variables.add": "+ Ajouter",
   "variables.empty": "Aucune variable globale. Cliquez sur + Ajouter pour en créer une.",
@@ -209,7 +368,7 @@ const fr: TranslationMap = {
 };
 
 const ar: TranslationMap = {
-  "app.title": "Agent Builder",
+  "app.title": "مُنشئ الوكيل",
   "app.subtitle": "محرر سير العمل المرئي بالذكاء الاصطناعي",
   "toolbar.save": "حفظ",
   "toolbar.export": "تصدير",
@@ -221,20 +380,24 @@ const ar: TranslationMap = {
   "toolbar.templates": "القوالب",
   "toolbar.variables": "المتغيرات",
   "toolbar.chatStyle": "نمط المحادثة",
-  "toolbar.executing": "جاري التنفيذ…",
-  "toolbar.done": "✓ تم",
+  "toolbar.executing": "جارٍ التنفيذ…",
+  "toolbar.done": "✓ تمّ",
   "toolbar.error": "✗ خطأ",
-  "view.builder": "المحرر",
-  "view.split": "مقسم",
+  "toolbar.saved": "تم حفظ سير العمل",
+  "toolbar.savedDesc": "تم الحفظ في التخزين المحلي",
+  "toolbar.importSuccess": "تم استيراد سير العمل بنجاح",
+  "toolbar.importError": "ملف JSON غير صالح",
+  "view.builder": "المُنشئ",
+  "view.split": "مُقسَّم",
   "view.chat": "محادثة",
-  "palette.title": "الكتل",
+  "palette.title": "الكُتَل",
   "palette.search": "البحث عن كتل…",
   "palette.hint": "اسحب الكتل إلى اللوحة. Shift+نقر للتحديد المتعدد.",
   "palette.noResults": "لا توجد كتل مطابقة",
   "palette.flow": "التدفق",
   "palette.logic": "المنطق",
   "palette.integrations": "التكاملات",
-  "chat.title": "معاينة العميل",
+  "chat.title": "معاينة الوكيل",
   "chat.run": "تشغيل",
   "chat.stop": "إيقاف",
   "chat.reset": "إعادة تعيين",
@@ -242,18 +405,67 @@ const ar: TranslationMap = {
   "chat.idle": "خامل",
   "chat.running": "قيد التشغيل",
   "chat.streaming": "بث مباشر",
-  "chat.waitingInput": "في انتظار الإدخال...",
+  "chat.waitingInput": "بانتظار الإدخال...",
   "chat.runFirst": "قم بتشغيل سير العمل أولاً...",
   "chat.placeholder": "اكتب رسالة...",
-  "chat.welcome": "انقر على تشغيل لبدء محادثة",
+  "chat.welcome": "اضغط على تشغيل لبدء المحادثة",
   "chat.completed": "✅ اكتمل سير العمل.",
-  "config.configure": "تكوين",
+  "chat.noStartNode": "⚠️ لم يتم العثور على عقدة بداية في سير العمل.",
+  "chat.textDisplay": "📝 عرض نصي",
+  "chat.imageGallery": "🖼️ معرض الصور",
+  "chat.selectImage": "اختر صورة...",
+  "chat.clickButton": "اضغط على زر أعلاه...",
+  "chat.apiCall": "🔗 استدعاء API",
+  "chat.condition": "🔀 شرط",
+  "chat.action": "⚡ إجراء",
+  "chat.dbQuery": "🗄️ استعلام قاعدة البيانات",
+  "chat.jsFunction": "💻 تم تنفيذ دالة جافاسكريبت",
+  "chat.loopIteration": "🔁 تكرار الحلقة",
+  "chat.randomPicked": "🎲 عشوائي: تم الاختيار",
+  "chat.emailSent": "📧 تم إرسال البريد إلى",
+  "chat.speechNotSupported": "التعرف على الصوت غير مدعوم.",
+  "config.configure": "إعداد",
   "config.label": "التسمية",
   "config.examples": "أمثلة",
   "config.block": "كتلة",
+  "config.greeting": "رسالة الترحيب",
+  "config.prompt": "نص المُوجِّه",
+  "config.expression": "التعبير",
+  "config.functionName": "اسم الدالة",
+  "config.voiceInput": "تفعيل الإدخال الصوتي",
+  "config.goodbye": "رسالة الوداع",
+  "config.webhookUrl": "رابط الـ Webhook",
+  "config.method": "الطريقة",
+  "config.secret": "المفتاح السري",
+  "config.variableName": "اسم المتغير",
+  "config.value": "القيمة",
+  "config.operation": "العملية",
+  "config.duration": "المدة",
+  "config.displayMessage": "رسالة العرض (اختياري)",
+  "config.branches": "الفروع",
+  "config.addBranch": "+ إضافة فرع",
+  "config.iterations": "التكرارات",
+  "config.counterVar": "متغير العداد",
+  "config.apiKeyVar": "متغير مفتاح API",
+  "config.endpoint": "رابط نقطة النهاية",
+  "config.model": "النموذج",
+  "config.headers": "الترويسات",
+  "config.addHeader": "+ إضافة ترويسة",
+  "config.systemPrompt": "مُوجِّه النظام",
+  "config.userTemplate": "قالب رسالة المستخدم",
+  "config.temperature": "درجة الحرارة",
+  "config.maxTokens": "الحد الأقصى للرموز",
+  "config.streaming": "تفعيل البث المباشر",
+  "config.to": "إلى (البريد الإلكتروني)",
+  "config.subject": "الموضوع",
+  "config.body": "المحتوى",
+  "config.provider": "المزود",
+  "config.database": "قاعدة البيانات / سلسلة الاتصال",
+  "config.query": "استعلام SQL",
+  "config.outputVar": "متغير الإخراج",
   "variables.title": "المتغيرات العامة",
   "variables.add": "+ إضافة",
-  "variables.empty": "لا توجد متغيرات عامة بعد. انقر على + إضافة لإنشاء واحدة.",
+  "variables.empty": "لا توجد متغيرات عامة بعد. اضغط على + إضافة لإنشاء واحدة.",
   "theme.title": "المظهر",
   "lang.title": "اللغة",
   "node.start": "البداية",
@@ -265,15 +477,15 @@ const ar: TranslationMap = {
   "node.condition": "شرط",
   "node.apiCall": "استدعاء API",
   "node.action": "إجراء",
-  "node.emailSender": "إرسال بريد",
+  "node.emailSender": "إرسال بريد إلكتروني",
   "node.webhook": "ويب هوك",
   "node.dbQuery": "استعلام قاعدة بيانات",
   "node.jsFunction": "دالة جافاسكريبت",
   "node.setVariable": "تعيين متغير",
-  "node.component": "مكون",
+  "node.component": "مُكوِّن",
   "node.timer": "مؤقت / تأخير",
   "node.randomChoice": "اختيار عشوائي",
-  "node.loop": "حلقة",
+  "node.loop": "حلقة تكرارية",
   "node.imageGallery": "معرض الصور",
 };
 

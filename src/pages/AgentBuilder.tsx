@@ -270,7 +270,7 @@ function AgentBuilderInner() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background" dir={dir}>
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 py-2 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="flex items-center gap-3">
