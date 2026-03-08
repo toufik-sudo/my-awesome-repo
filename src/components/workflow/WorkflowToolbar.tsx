@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
+import { useI18n } from "@/context/I18nContext";
 import { Download, Upload, Play, Square, Undo2, Redo2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TemplatePicker } from "./TemplatePicker";
@@ -14,6 +15,7 @@ interface Props {
 
 export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
   const { workflow, importWorkflow, undo, redo, canUndo, canRedo } = useWorkflow();
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -62,7 +64,7 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
         onClick={undo}
         disabled={!canUndo}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:pointer-events-none"
-        title="Undo (Ctrl+Z)"
+        title={t("toolbar.undo")}
       >
         <Undo2 className="w-3.5 h-3.5" />
       </button>
@@ -70,7 +72,7 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
         onClick={redo}
         disabled={!canRedo}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:pointer-events-none"
-        title="Redo (Ctrl+Shift+Z)"
+        title={t("toolbar.redo")}
       >
         <Redo2 className="w-3.5 h-3.5" />
       </button>
@@ -84,27 +86,27 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
       <button
         onClick={handleSave}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
-        title="Save workflow"
+        title={t("toolbar.save")}
       >
         <Save className="w-3.5 h-3.5" />
-        Save
+        {t("toolbar.save")}
       </button>
 
       <button
         onClick={handleExport}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        title="Export as JSON"
+        title={t("toolbar.export")}
       >
         <Download className="w-3.5 h-3.5" />
-        Export
+        {t("toolbar.export")}
       </button>
       <button
         onClick={() => fileInputRef.current?.click()}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        title="Import JSON"
+        title={t("toolbar.import")}
       >
         <Upload className="w-3.5 h-3.5" />
-        Import
+        {t("toolbar.import")}
       </button>
       <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
 
@@ -116,7 +118,7 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-destructive/20 text-destructive hover:bg-destructive/30 transition-colors"
         >
           <Square className="w-3.5 h-3.5" />
-          Stop
+          {t("toolbar.stop")}
         </button>
       ) : (
         <button
@@ -127,18 +129,18 @@ export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
           )}
         >
           <Play className="w-3.5 h-3.5" />
-          Run
+          {t("toolbar.run")}
         </button>
       )}
 
       {execution.status === "running" && execution.currentNodeId && (
-        <span className="text-[10px] text-warning animate-pulse ml-1">Executing…</span>
+        <span className="text-[10px] text-warning animate-pulse ml-1">{t("toolbar.executing")}</span>
       )}
       {execution.status === "completed" && (
-        <span className="text-[10px] text-success ml-1">✓ Done</span>
+        <span className="text-[10px] text-success ml-1">{t("toolbar.done")}</span>
       )}
       {execution.status === "error" && (
-        <span className="text-[10px] text-destructive ml-1">✗ Error</span>
+        <span className="text-[10px] text-destructive ml-1">{t("toolbar.error")}</span>
       )}
     </div>
   );

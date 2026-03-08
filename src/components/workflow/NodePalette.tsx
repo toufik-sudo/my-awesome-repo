@@ -3,6 +3,7 @@ import type { NodeType } from "@/types/workflow";
 import { NODE_ICONS, NODE_COLORS } from "./nodeConfig";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
   { type: "start", label: "Start", group: "Flow" },
@@ -30,7 +31,7 @@ const GROUPS = ["Flow", "Integrations", "Logic"];
 
 export function NodePalette() {
   const [search, setSearch] = useState("");
-
+  const { t } = useI18n();
   const filtered = useMemo(() => {
     if (!search.trim()) return PALETTE_ITEMS;
     const q = search.toLowerCase();
@@ -45,7 +46,7 @@ export function NodePalette() {
     <div className="w-56 bg-card border-r border-border flex flex-col">
       <div className="px-3 py-3 border-b border-border space-y-2">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-          Blocks
+          {t("palette.title")}
         </h2>
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
@@ -53,7 +54,7 @@ export function NodePalette() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search blocks…"
+            placeholder={t("palette.search")}
             className="w-full pl-7 pr-2 py-1.5 text-[11px] rounded-md bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
@@ -83,12 +84,12 @@ export function NodePalette() {
           </div>
         ))}
         {filtered.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-4">No blocks match "{search}"</p>
+          <p className="text-[10px] text-muted-foreground text-center py-4">{t("palette.noResults")} "{search}"</p>
         )}
       </div>
       <div className="px-4 py-3 border-t border-border">
         <p className="text-[10px] text-muted-foreground">
-          Drag blocks onto the canvas. Shift+click to multi-select.
+          {t("palette.hint")}
         </p>
       </div>
     </div>
