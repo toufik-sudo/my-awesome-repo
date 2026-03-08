@@ -339,10 +339,12 @@ function AgentBuilderInner() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative" dir="ltr">
         {viewMode !== "chat" && (
           <>
-            <NodePalette />
+            <div className="hidden md:flex">
+              <NodePalette />
+            </div>
             <div className="flex-1 flex flex-col relative">
               <WorkflowCanvas onNodeDoubleClick={handleNodeDoubleClick} />
               <ExecutionLog execution={execution} />

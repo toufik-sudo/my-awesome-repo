@@ -275,6 +275,7 @@ export function WorkflowCanvas({ onNodeDoubleClick }: WorkflowCanvasProps) {
   return (
     <div
       ref={canvasRef}
+      dir="ltr"
       className={cn(
         "relative flex-1 overflow-hidden cursor-grab canvas-grid",
         isPanning && "cursor-grabbing"
