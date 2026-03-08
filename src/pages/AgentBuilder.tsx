@@ -19,6 +19,7 @@ import { useI18n } from "@/context/I18nContext";
 
 function VariablesModalButton() {
   const ctx = useWorkflow();
+  const { t } = useI18n();
 
   const openModal = () => {
     const container = document.createElement("div");
