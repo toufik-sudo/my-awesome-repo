@@ -6,7 +6,7 @@ import { NodeConfigModal } from "@/components/workflow/NodeConfigModal";
 import { ChatPreview } from "@/components/chat/ChatPreview";
 import { WorkflowToolbar } from "@/components/workflow/WorkflowToolbar";
 import { ExecutionLog } from "@/components/workflow/ExecutionLog";
-import { Bot, Layout, MessageSquare, Variable, MessageCircle } from "lucide-react";
+import { Bot, Layout, MessageSquare, Variable, MessageCircle, Square, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ExecutionState, GlobalVariable } from "@/types/workflow";
 import Swal from "sweetalert2";
@@ -274,24 +274,37 @@ function AgentBuilderInner() {
   return (
     <div className="h-screen flex flex-col bg-background" dir={dir}>
       {/* Top bar */}
-      <header className="flex items-center justify-between px-5 py-2 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center shadow-lg shadow-primary/10">
-            <Bot className="w-5 h-5 text-primary" />
+      <header className="flex items-center justify-between px-3 md:px-5 py-2 border-b border-border bg-card/80 backdrop-blur-md gap-2 overflow-x-auto">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center shadow-lg shadow-primary/10">
+            <Bot className="w-4 h-4 md:w-5 md:h-5 text-primary" />
           </div>
-          <div>
+          <div className="hidden sm:block">
             <h1 className="text-sm font-bold text-foreground tracking-tight">{t("app.title")}</h1>
             <p className="text-[10px] text-muted-foreground">{t("app.subtitle")}</p>
           </div>
         </div>
 
-        <WorkflowToolbar execution={execution} onRun={runWorkflow} onStop={stopWorkflow} />
+        <div className="hidden lg:flex">
+          <WorkflowToolbar execution={execution} onRun={runWorkflow} onStop={stopWorkflow} />
+        </div>
 
-        <div className="flex items-center gap-2">
-          <VariablesModalButton />
-          <ChatStyleModalButton />
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+          {/* Mobile run/stop */}
+          <div className="flex lg:hidden items-center gap-1">
+            {execution.status === "running" ? (
+              <button onClick={stopWorkflow} className="p-1.5 rounded-md bg-destructive/20 text-destructive"><Square className="w-4 h-4" /></button>
+            ) : (
+              <button onClick={runWorkflow} className="p-1.5 rounded-md bg-success/20 text-success"><Play className="w-4 h-4" /></button>
+            )}
+          </div>
 
-          <div className="w-px h-5 bg-border" />
+          <div className="hidden md:flex items-center gap-2">
+            <VariablesModalButton />
+            <ChatStyleModalButton />
+          </div>
+
+          <div className="w-px h-5 bg-border hidden md:block" />
 
           {/* View mode toggle */}
           <div className="flex items-center gap-0.5 bg-muted/80 rounded-xl p-0.5 border border-border">
@@ -306,19 +319,19 @@ function AgentBuilderInner() {
                 key={mode}
                 onClick={() => setViewMode(mode as ViewMode)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+                  "flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-all duration-200",
                   viewMode === mode
                     ? "bg-primary/15 text-primary shadow-sm border border-primary/20"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
-                {label}
+                <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>
 
-          <div className="w-px h-5 bg-border" />
+          <div className="w-px h-5 bg-border hidden sm:block" />
 
           <ThemeSwitcher />
           <LanguageSwitcher />
@@ -326,10 +339,12 @@ function AgentBuilderInner() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative" dir="ltr">
         {viewMode !== "chat" && (
           <>
-            <NodePalette />
+            <div className="hidden md:flex">
+              <NodePalette />
+            </div>
             <div className="flex-1 flex flex-col relative">
               <WorkflowCanvas onNodeDoubleClick={handleNodeDoubleClick} />
               <ExecutionLog execution={execution} />
