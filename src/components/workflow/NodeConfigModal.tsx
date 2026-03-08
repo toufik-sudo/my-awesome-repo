@@ -434,8 +434,22 @@ function EmailSenderConfig({ node, updateConfig }: { node: any; updateConfig: (k
       <Field label="API Key Variable"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="{{EMAIL_API_KEY}}" value={node.config.apiKeyVar || ""} onChange={(e) => updateConfig("apiKeyVar", e.target.value)} /></Field>
       <Field label="To"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="{{user_email}}" value={node.config.to || ""} onChange={(e) => updateConfig("to", e.target.value)} /></Field>
       <Field label="From"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 font-mono" placeholder="noreply@yourdomain.com" value={node.config.from || ""} onChange={(e) => updateConfig("from", e.target.value)} /></Field>
-      <Field label="Subject"><input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Welcome!" value={node.config.subject || ""} onChange={(e) => updateConfig("subject", e.target.value)} /></Field>
-      <Field label="Body (HTML)"><textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono" value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} /></Field>
+      <Field label="Subject">
+        <div className="relative">
+          <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" placeholder="Welcome!" value={node.config.subject || ""} onChange={(e) => updateConfig("subject", e.target.value)} />
+          <div className="absolute top-1/2 -translate-y-1/2 right-1">
+            <MicButton onTranscript={(text) => updateConfig("subject", (node.config.subject || "") + " " + text)} />
+          </div>
+        </div>
+      </Field>
+      <Field label="Body (HTML)">
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono pr-8" value={node.config.body || ""} onChange={(e) => updateConfig("body", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("body", (node.config.body || "") + " " + text)} />
+          </div>
+        </div>
+      </Field>
     </>
   );
 }
