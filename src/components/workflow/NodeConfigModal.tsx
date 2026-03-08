@@ -468,7 +468,14 @@ function DBQueryConfig({ node, updateConfig }: { node: any; updateConfig: (k: st
           {["select", "insert", "update", "delete", "raw"].map((t) => <option key={t}>{t}</option>)}
         </select>
       </Field>
-      <Field label="Query"><textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono" placeholder="SELECT * FROM users" value={node.config.query || ""} onChange={(e) => updateConfig("query", e.target.value)} /></Field>
+      <Field label="Query">
+        <div className="relative">
+          <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-mono pr-8" placeholder="SELECT * FROM users" value={node.config.query || ""} onChange={(e) => updateConfig("query", e.target.value)} />
+          <div className="absolute top-1 right-1">
+            <MicButton onTranscript={(text) => updateConfig("query", (node.config.query || "") + " " + text)} />
+          </div>
+        </div>
+      </Field>
     </>
   );
 }
