@@ -15,6 +15,7 @@ interface Props {
 
 export function WorkflowToolbar({ execution, onRun, onStop }: Props) {
   const { workflow, importWorkflow, undo, redo, canUndo, canRedo } = useWorkflow();
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
