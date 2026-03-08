@@ -200,7 +200,13 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
                   </div>
                 </Field>
                 <Field label="Display Message (optional)">
-                  <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Please wait..." value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                  <div className="relative">
+                    <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" placeholder="Please wait..." value={node.config.message || ""} onChange={(e) => updateConfig("message", e.target.value)} />
+                    <div className="absolute top-1/2 -translate-y-1/2 right-1">
+                      <MicButton onTranscript={(text) => updateConfig("message", (node.config.message || "") + " " + text)} />
+                    </div>
+                  </div>
+                </Field>
                 </Field>
               </>
             )}
