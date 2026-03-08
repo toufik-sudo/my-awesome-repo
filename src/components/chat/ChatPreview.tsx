@@ -88,7 +88,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
       return;
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { alert(t("chat.speechNotSupported")); return; }
+    if (!SR) { alert(t("chat.speechNotSupported")rn; }
     const recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -106,8 +106,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
   // ─── Wait for user input (called during workflow execution) ──
   const waitForUserInput = useCallback((prompt: string): Promise<string> => {
-    setInputPrompt(prompt || "Type a message...");
-    setWaitingForInput(true);
+    setInputPrompt(prompt || "Type at("chat.placeholder")setWaitingForInput(true);
     setIsLoading(false);
     return new Promise((resolve) => {
       resolveInputRef.current = resolve;
