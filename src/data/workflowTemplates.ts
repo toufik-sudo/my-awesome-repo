@@ -580,4 +580,115 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
       };
     },
   },
+  // ── IT Helpdesk Bot ────────────────────────────────
+  {
+    id: "it-helpdesk",
+    name: "IT Helpdesk Bot",
+    description: "Automated IT support with troubleshooting flows, ticket creation, and knowledge base search.",
+    icon: "🖥️",
+    tags: ["IT", "Support", "Automation"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "IT Support", { greeting: "Welcome to **IT Helpdesk** 🖥️🔧\n\nI can help you troubleshoot common issues, reset passwords, and create support tickets." });
+      const category = tNode("button_input", { x: 380, y: 260 }, "Issue Category", { prompt: "What kind of issue are you experiencing?", buttons: [{ label: "🔐 Password / Access", value: "access", bgColor: "#ef4444", textColor: "#fff" }, { label: "🌐 Network / VPN", value: "network", bgColor: "#3b82f6", textColor: "#fff" }, { label: "💻 Software Issue", value: "software", bgColor: "#8b5cf6", textColor: "#fff" }, { label: "🖨️ Hardware / Printer", value: "hardware", bgColor: "#f59e0b", textColor: "#fff" }], layout: "vertical" });
+      const describe = tNode("user_input", { x: 680, y: 260 }, "Describe Issue", { prompt: "Please describe your issue in detail:\n• What were you trying to do?\n• When did it start?\n• Any error messages?\n• Device type (Windows/Mac/Mobile)", enableSTT: true });
+      const aiTriage = tNode("ai_response", { x: 980, y: 260 }, "AI Troubleshoot", { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are an expert IT support technician. Based on the user's issue:\n1. Identify the likely root cause\n2. Provide step-by-step troubleshooting instructions\n3. Include screenshots/keyboard shortcuts when relevant\n4. Rate urgency: 🟢 Low | 🟡 Medium | 🔴 High\n5. Suggest if the issue needs escalation to L2/L3 support\n\nBe clear, patient, and use numbered steps.", userMessageTemplate: "Category: {{issue_category}}\nDescription: {{last_utterance}}", temperature: 0.2, stream: true });
+      const solution = tNode("text_display", { x: 1280, y: 260 }, "Solution", { text: "## 🔧 Troubleshooting Guide\n\n{{ai_output}}\n\n---\n\n💡 If these steps don't resolve your issue, I can create a support ticket.", format: "markdown" });
+      const resolved = tNode("button_input", { x: 1580, y: 260 }, "Resolved?", { prompt: "Did this solve your issue?", buttons: [{ label: "✅ Yes, Fixed!", value: "resolved" }, { label: "❌ Still Broken", value: "escalate" }, { label: "📝 Create Ticket", value: "ticket" }] });
+      const ticketApi = tNode("api_call", { x: 1880, y: 160 }, "Create Ticket", { url: "https://api.company.com/helpdesk/tickets", method: "POST", body: '{"category": "{{issue_category}}", "description": "{{user_description}}", "priority": "{{priority}}", "user": "{{user_email}}"}' });
+      const end1 = tNode("end", { x: 1880, y: 360 }, "Resolved!", { message: "Glad I could help! 🎉\n\nIf the issue returns, don't hesitate to reach out.\n\n📊 Rate your experience to help us improve!" });
+      const end2 = tNode("end", { x: 2180, y: 160 }, "Ticket Created", { message: "Ticket #{{ticket_id}} has been created! 📋\n\nPriority: {{priority}}\nEstimated response: {{sla_time}}\n\n📧 You'll receive updates via email." });
+      return {
+        id: uuidv4(), name: "IT Helpdesk Bot",
+        nodes: [start, category, describe, aiTriage, solution, resolved, ticketApi, end1, end2],
+        connections: [conn(start, category), conn(category, describe, 0), conn(describe, aiTriage), conn(aiTriage, solution), conn(solution, resolved), conn(resolved, end1, 0), conn(resolved, ticketApi, 0), conn(ticketApi, end2, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "issue_category", type: "string", defaultValue: "", description: "IT issue category" },
+          { id: uuidv4(), name: "ticket_id", type: "string", defaultValue: "", description: "Support ticket ID" },
+          { id: uuidv4(), name: "priority", type: "string", defaultValue: "medium", description: "Issue priority level" },
+        ],
+      };
+    },
+  },
+
+  // ── Product Review Analyzer ───────────────────────
+  {
+    id: "review-analyzer",
+    name: "Product Review Analyzer",
+    description: "AI-powered review analysis with sentiment scoring, trend detection, and actionable insights.",
+    icon: "⭐",
+    tags: ["Analytics", "AI", "E-Commerce"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Review Analyzer", { greeting: "Welcome to **ReviewInsight AI** ⭐📊\n\nPaste your product reviews and I'll analyze sentiment, extract themes, and provide actionable insights." });
+      const inputReviews = tNode("user_input", { x: 380, y: 260 }, "Paste Reviews", { prompt: "Paste your product reviews (one per line or separated by ---)\n\nOr provide a product URL and I'll fetch the reviews.", enableSTT: false });
+      const aiAnalysis = tNode("ai_response", { x: 680, y: 260 }, "Analyze Sentiment", { model: "gemini-pro", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are an expert product analyst. Analyze the provided reviews and:\n1. Overall sentiment score (1-10) with emoji rating\n2. Sentiment breakdown: % positive, neutral, negative\n3. Top 5 praised features\n4. Top 5 complaints/concerns\n5. Common themes and keywords\n6. Competitive insights if mentioned\n7. Actionable recommendations for the product team\n\nUse tables and charts (text-based) for clarity. Be data-driven.", userMessageTemplate: "Reviews to analyze:\n{{last_utterance}}", temperature: 0.1, maxTokens: 8192, stream: true });
+      const report = tNode("text_display", { x: 980, y: 260 }, "Analysis Report", { text: "## ⭐ Review Analysis Report\n\n{{ai_output}}\n\n---\n\n📈 *Analysis powered by AI — verify key findings with raw data*", format: "markdown" });
+      const action = tNode("button_input", { x: 1280, y: 260 }, "Actions", { prompt: "What would you like to do next?", buttons: [{ label: "📧 Email Report", value: "email" }, { label: "📊 Compare Period", value: "compare" }, { label: "🔍 Deep Dive Topic", value: "deep_dive" }, { label: "✅ Done", value: "done" }] });
+      const end = tNode("end", { x: 1580, y: 260 }, "Complete", { message: "Your review analysis is complete! ⭐\n\nUse these insights to improve your product and customer experience.\n\n📊 Run this analysis weekly to track sentiment trends!" });
+      return {
+        id: uuidv4(), name: "Product Review Analyzer",
+        nodes: [start, inputReviews, aiAnalysis, report, action, end],
+        connections: [conn(start, inputReviews), conn(inputReviews, aiAnalysis), conn(aiAnalysis, report), conn(report, action), conn(action, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "product_name", type: "string", defaultValue: "", description: "Product being analyzed" },
+          { id: uuidv4(), name: "sentiment_score", type: "number", defaultValue: "0", description: "Overall sentiment score" },
+        ],
+      };
+    },
+  },
+
+  // ── Event Planning Assistant ──────────────────────
+  {
+    id: "event-planner",
+    name: "Event Planning Assistant",
+    description: "Complete event planning with venue suggestions, vendor coordination, budget tracking, and guest management.",
+    icon: "🎉",
+    tags: ["Events", "Planning", "AI"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Event Planner", { greeting: "Welcome to **EventPro AI** 🎉🎊\n\nI'll help you plan the perfect event — from intimate gatherings to grand celebrations!" });
+      const eventType = tNode("button_input", { x: 380, y: 260 }, "Event Type", { prompt: "What kind of event are you planning?", buttons: [{ label: "🎂 Birthday Party", value: "birthday", bgColor: "#ec4899", textColor: "#fff" }, { label: "💒 Wedding", value: "wedding", bgColor: "#f43f5e", textColor: "#fff" }, { label: "🏢 Corporate Event", value: "corporate", bgColor: "#3b82f6", textColor: "#fff" }, { label: "🎓 Graduation", value: "graduation", bgColor: "#8b5cf6", textColor: "#fff" }], layout: "vertical" });
+      const details = tNode("user_input", { x: 680, y: 260 }, "Event Details", { prompt: "Tell me about your event:\n• Date and time\n• Expected number of guests\n• Budget range\n• Location preference\n• Any special requirements or themes", enableSTT: true });
+      const aiPlan = tNode("ai_response", { x: 980, y: 260 }, "AI Event Planner", { model: "gemini-flash", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are a professional event planner. Create a comprehensive event plan including:\n1. Timeline and checklist (countdown format)\n2. Venue suggestions with pros/cons\n3. Catering and menu ideas\n4. Entertainment and activities\n5. Decoration theme and color palette\n6. Budget breakdown by category\n7. Vendor recommendations\n8. Day-of schedule\n\nBe creative and practical. Include estimated costs.", userMessageTemplate: "Event type: {{event_type}}\nDetails: {{last_utterance}}", temperature: 0.7, stream: true });
+      const plan = tNode("text_display", { x: 1280, y: 260 }, "Event Plan", { text: "## 🎉 Your Event Plan\n\n{{ai_output}}\n\n---\n\n📋 *Save this plan and share with your event team!*", format: "markdown" });
+      const next = tNode("button_input", { x: 1580, y: 260 }, "Next Steps", { prompt: "What would you like to focus on?", buttons: [{ label: "📋 Vendor List", value: "vendors" }, { label: "🎨 Theme Ideas", value: "theme" }, { label: "📧 Save & Share", value: "share" }, { label: "✅ All Set!", value: "done" }] });
+      const end = tNode("end", { x: 1880, y: 260 }, "Party Time!", { message: "Your event plan is ready! 🎉🎊\n\nRemember: Great events are about great memories.\nEnjoy every moment! 📸\n\n🗓️ Set reminders for key milestones!" });
+      return {
+        id: uuidv4(), name: "Event Planning Assistant",
+        nodes: [start, eventType, details, aiPlan, plan, next, end],
+        connections: [conn(start, eventType), conn(eventType, details, 0), conn(details, aiPlan), conn(aiPlan, plan), conn(plan, next), conn(next, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "event_type", type: "string", defaultValue: "", description: "Type of event" },
+          { id: uuidv4(), name: "event_date", type: "string", defaultValue: "", description: "Event date" },
+          { id: uuidv4(), name: "guest_count", type: "number", defaultValue: "0", description: "Number of guests" },
+          { id: uuidv4(), name: "budget", type: "string", defaultValue: "", description: "Event budget" },
+        ],
+      };
+    },
+  },
+
+  // ── Resume Builder ────────────────────────────────
+  {
+    id: "resume-builder",
+    name: "AI Resume Builder",
+    description: "Create ATS-optimized resumes with AI writing, formatting, and job-match scoring.",
+    icon: "📝",
+    tags: ["Career", "AI", "Documents"],
+    build() {
+      const start = tNode("start", { x: 80, y: 260 }, "Resume Builder", { greeting: "Welcome to **ResumeAI** 📝✨\n\nI'll help you create a professional, ATS-optimized resume that stands out!" });
+      const exp = tNode("user_input", { x: 380, y: 260 }, "Your Experience", { prompt: "Share your professional background:\n• Current/recent job title and company\n• Key responsibilities\n• Notable achievements (use numbers!)\n• Education\n• Skills", enableSTT: true });
+      const targetRole = tNode("user_input", { x: 680, y: 260 }, "Target Role", { prompt: "What role are you applying for?\n\nOptionally, paste the job description and I'll tailor your resume to match." });
+      const aiResume = tNode("ai_response", { x: 980, y: 260 }, "AI Resume Writer", { model: "gemini-pro", apiKey: "{{LOVABLE_API_KEY}}", endpoint: "https://ai.gateway.lovable.dev/v1/chat/completions", systemPrompt: "You are an expert resume writer and career coach. Create a professional resume that:\n1. Uses strong action verbs and quantified achievements\n2. Is optimized for ATS (Applicant Tracking Systems)\n3. Highlights relevant skills for the target role\n4. Follows modern resume best practices\n5. Includes a compelling professional summary\n6. Organizes experience in reverse chronological order\n\nFormat in clean markdown. Include a match score (1-100) against the job description if provided.", userMessageTemplate: "Experience: {{experience}}\n\nTarget role: {{last_utterance}}", temperature: 0.3, maxTokens: 4096, stream: true });
+      const preview = tNode("text_display", { x: 1280, y: 260 }, "Resume Preview", { text: "## 📄 Your Resume\n\n{{ai_output}}\n\n---\n\n💡 *Tip: Customize this for each application!*", format: "markdown" });
+      const action = tNode("button_input", { x: 1580, y: 260 }, "Options", { prompt: "What would you like to do?", buttons: [{ label: "✏️ Edit Section", value: "edit" }, { label: "💼 Cover Letter", value: "cover" }, { label: "📧 Email Resume", value: "email" }, { label: "✅ Download", value: "download" }] });
+      const end = tNode("end", { x: 1880, y: 260 }, "Good Luck!", { message: "Your resume is polished and ready! 📄✨\n\n🎯 Remember to customize for each application.\n💪 You've got this — good luck on your job search!" });
+      return {
+        id: uuidv4(), name: "AI Resume Builder",
+        nodes: [start, exp, targetRole, aiResume, preview, action, end],
+        connections: [conn(start, exp), conn(exp, targetRole), conn(targetRole, aiResume), conn(aiResume, preview), conn(preview, action), conn(action, end, 0)],
+        globalVariables: [
+          { id: uuidv4(), name: "experience", type: "string", defaultValue: "", description: "User's professional experience" },
+          { id: uuidv4(), name: "target_role", type: "string", defaultValue: "", description: "Desired job role" },
+        ],
+      };
+    },
+  },
 ];
