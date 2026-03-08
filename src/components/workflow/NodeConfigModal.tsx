@@ -600,7 +600,12 @@ function ButtonInputConfig({ node, updateConfig }: { node: any; updateConfig: (k
   return (
     <>
       <Field label="Prompt">
-        <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+        <div className="relative">
+          <input className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 pr-8" value={node.config.prompt || ""} onChange={(e) => updateConfig("prompt", e.target.value)} />
+          <div className="absolute top-1/2 -translate-y-1/2 right-1">
+            <MicButton onTranscript={(text) => updateConfig("prompt", (node.config.prompt || "") + " " + text)} />
+          </div>
+        </div>
       </Field>
       <Field label="Layout">
         <select className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" value={node.config.layout || "horizontal"} onChange={(e) => updateConfig("layout", e.target.value)}>
