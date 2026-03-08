@@ -3,6 +3,7 @@ import type { NodeType } from "@/types/workflow";
 import { NODE_ICONS, NODE_COLORS } from "./nodeConfig";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 const PALETTE_ITEMS: { type: NodeType; label: string; group: string }[] = [
   { type: "start", label: "Start", group: "Flow" },
