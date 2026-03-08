@@ -207,7 +207,6 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
                     </div>
                   </div>
                 </Field>
-                </Field>
               </>
             )}
             {node.type === "random_choice" && (
