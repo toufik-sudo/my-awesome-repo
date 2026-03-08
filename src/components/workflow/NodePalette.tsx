@@ -43,7 +43,7 @@ export function NodePalette() {
   const visibleGroups = GROUPS.filter((g) => filtered.some((i) => i.group === g));
 
   return (
-    <div className="w-56 bg-card ltr:border-r rtl:border-l border-border flex flex-col">
+    <div className="w-56 bg-card border-border flex flex-col" style={{ borderInlineEnd: "1px solid hsl(var(--border))" }}>
       <div className="px-3 py-3 border-b border-border space-y-2">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           {t("palette.title")}
