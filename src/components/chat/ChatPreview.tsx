@@ -583,7 +583,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
   return (
     <div
-      className="w-96 bg-card border-l border-border flex flex-col"
+      className="w-96 bg-card ltr:border-l rtl:border-r border-border flex flex-col"
       style={{ fontFamily: chatConfig.fontFamily || "Inter, system-ui, sans-serif" }}
     >
       {/* Header */}
