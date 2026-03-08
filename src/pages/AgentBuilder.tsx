@@ -162,7 +162,7 @@ function ChatStyleModalButton() {
 type ViewMode = "builder" | "chat" | "split";
 
 function AgentBuilderInner() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [chatMinimized, setChatMinimized] = useState(false);
   const [configModalNodeId, setConfigModalNodeId] = useState<string | null>(null);
