@@ -94,7 +94,7 @@ function VariablesContent() {
               <select className="bg-muted border border-border rounded px-1.5 py-0.5 text-[10px] text-foreground focus:outline-none" value={v.type} onChange={(e) => updateGlobalVariable(v.id, { type: e.target.value as GlobalVariable["type"] })}>
                 <option value="string">string</option><option value="number">number</option><option value="boolean">boolean</option><option value="json">json</option>
               </select>
-              <button onClick={() => { removeGlobalVariable(v.id); setTick(t => t + 1); }} className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
+              <button onClick={() => { removeGlobalVariable(v.id); setTick(n => n + 1); }} className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive">
                 <span className="text-xs">✕</span>
               </button>
             </div>
