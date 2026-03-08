@@ -6,7 +6,7 @@ import { NodeConfigModal } from "@/components/workflow/NodeConfigModal";
 import { ChatPreview } from "@/components/chat/ChatPreview";
 import { WorkflowToolbar } from "@/components/workflow/WorkflowToolbar";
 import { ExecutionLog } from "@/components/workflow/ExecutionLog";
-import { Bot, Layout, MessageSquare, Variable, MessageCircle } from "lucide-react";
+import { Bot, Layout, MessageSquare, Variable, MessageCircle, Square, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ExecutionState, GlobalVariable } from "@/types/workflow";
 import Swal from "sweetalert2";
