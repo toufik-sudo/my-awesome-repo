@@ -88,7 +88,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
       return;
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { alert(t("chat.speechNotSupported")t recognition = new SR();
+    if (!SR) { alert(t("chat.speechNotSupported")nition = new SR();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
@@ -105,7 +105,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
   // ─── Wait for user input (called during workflow execution) ──
   const waitForUserInput = useCallback((prompt: string): Promise<string> => {
-    setInputPrompt(prompt || "Type at("chatt("chatt("chat.placeholder")ForInput(true);
+    setInputPrompt(prompt || "Type at("chatt("chatt("chatt("chat.placeholder")put(true);
     setIsLoading(false);
     return new Promise((resolve) => {
       resolveInputRef.current = resolve;
@@ -180,10 +180,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
     const startNode = workflow.nodes.find((n) => n.type === "start");
     if (!startNode) {
-      addAssistantMessage("⚠�t("cht("chat.noStartNode")  return;
-    }
-
-    let currentNodeId: string | null = startNode.id;
+      addAssistantMessage("⚠�t("cht("cht("chat.noStartNode")entNodeId: string | null = startNode.id;
 
     while (currentNodeId && !stopRef.current) {
       const node = workflow.nodes.find((n) => n.id === currentNodeId);
