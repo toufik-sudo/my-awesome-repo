@@ -49,13 +49,14 @@ export function NodePalette() {
           {t("palette.title")}
         </h2>
         <div className="relative">
-          <Search className="absolute left-2 rtl:left-auto rtl:right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+          <Search className="absolute top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" style={{ insetInlineStart: "0.5rem" }} />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("palette.search")}
-            className="w-full pl-7 pr-2 rtl:pl-2 rtl:pr-7 py-1.5 text-[11px] rounded-md bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full py-1.5 text-[11px] rounded-md bg-secondary border border-border text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring"
+            style={{ paddingInlineStart: "1.75rem", paddingInlineEnd: "0.5rem" }}
           />
         </div>
       </div>
