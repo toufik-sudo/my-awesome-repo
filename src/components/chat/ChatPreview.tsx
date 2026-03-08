@@ -48,13 +48,14 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
-  const [inputPrompt, setInputPrompt] = useState("Type a message...");
+  const [inputPrompt, setInputPrompt] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const resolveInputRef = useRef<((value: string) => void) | null>(null);
   const stopRef = useRef(false);
   const varsRef = useRef<Record<string, string>>({});
   const { workflow, updateGlobalVariable, addGlobalVariable } = useWorkflow();
+  const { t } = useI18n();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
