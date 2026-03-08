@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 import { marked } from "marked";
 import { useWorkflow } from "@/context/WorkflowContext";
+import { useI18n } from "@/context/I18nContext";
 import { DEFAULT_CHAT_CONFIG } from "@/types/workflow";
 import type { ChatMessage, WorkflowNode } from "@/types/workflow";
 
