@@ -80,7 +80,7 @@ function VariablesContent() {
         <button
           onClick={() => { addGlobalVariable({ name: "new_var", type: "string", defaultValue: "", description: "" }); setTick(t => t + 1); }}
           className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
-        >+ Add</button>
+        >{t("variables.add")}</button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
         {(!workflow.globalVariables || workflow.globalVariables.length === 0) && (
