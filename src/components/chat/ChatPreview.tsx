@@ -88,7 +88,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
       return;
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { alert(t("chat.speechNotSupported")ous = false;
+    if (!SR) { alert(t("chat.speechNotSupported")alse;
     recognition.interimResults = true;
     recognition.lang = "en-US";
     recognition.onresult = (e: any) => {
@@ -104,7 +104,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
   // ─── Wait for user input (called during workflow execution) ──
   const waitForUserInput = useCallback((prompt: string): Promise<string> => {
-    setInputPrompt(prompt || "Type at("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chat.placeholder")lse);
+    setInputPrompt(prompt || "Type at("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chatt("chat.placeholder")
     return new Promise((resolve) => {
       resolveInputRef.current = resolve;
     });
@@ -178,9 +178,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
 
     const startNode = workflow.nodes.find((n) => n.type === "start");
     if (!startNode) {
-      addAssistantMessage("⚠�t("cht("cht("cht("cht("cht("cht("cht("cht("chat.noStartNode")de) break;
-
-      const compile = (t: string) => compileVariables(t, varsRef.current);
+      addAssistantMessage("⚠�t("cht("cht("cht("cht("cht("cht("cht("cht("cht("chat.noStartNode")le = (t: string) => compileVariables(t, varsRef.current);
 
       switch (node.type) {
         case "start": {
