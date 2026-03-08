@@ -278,44 +278,48 @@ function AgentBuilderInner() {
             <Bot className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-foreground tracking-tight">Agent Builder</h1>
-            <p className="text-[10px] text-muted-foreground">Visual AI workflow editor</p>
+            <h1 className="text-sm font-bold text-foreground tracking-tight">{t("app.title")}</h1>
+            <p className="text-[10px] text-muted-foreground">{t("app.subtitle")}</p>
           </div>
         </div>
 
         <WorkflowToolbar execution={execution} onRun={runWorkflow} onStop={stopWorkflow} />
 
         <div className="flex items-center gap-2">
-          {/* Variables & Chat Style modal buttons */}
           <VariablesModalButton />
           <ChatStyleModalButton />
 
           <div className="w-px h-5 bg-border" />
 
           {/* View mode toggle */}
-        <div className="flex items-center gap-0.5 bg-muted/80 rounded-xl p-0.5 border border-border">
-          {(
-            [
-              { mode: "builder", icon: Layout, label: "Builder" },
-              { mode: "split", icon: Bot, label: "Split" },
-              { mode: "chat", icon: MessageSquare, label: "Chat" },
-            ] as const
-          ).map(({ mode, icon: Icon, label }) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
-                viewMode === mode
-                  ? "bg-primary/15 text-primary shadow-sm border border-primary/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
+          <div className="flex items-center gap-0.5 bg-muted/80 rounded-xl p-0.5 border border-border">
+            {(
+              [
+                { mode: "builder", icon: Layout, label: t("view.builder") },
+                { mode: "split", icon: Bot, label: t("view.split") },
+                { mode: "chat", icon: MessageSquare, label: t("view.chat") },
+              ] as const
+            ).map(({ mode, icon: Icon, label }) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode as ViewMode)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+                  viewMode === mode
+                    ? "bg-primary/15 text-primary shadow-sm border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-px h-5 bg-border" />
+
+          <ThemeSwitcher />
+          <LanguageSwitcher />
         </div>
       </header>
 
