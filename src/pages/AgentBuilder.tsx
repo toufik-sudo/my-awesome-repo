@@ -133,7 +133,7 @@ function ChatStyleModalButton() {
             <div className="flex flex-col max-h-[70vh]">
               <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border bg-gradient-to-r from-accent/5 to-transparent">
                 <div className="w-7 h-7 rounded-lg bg-accent/15 flex items-center justify-center"><MessageCircle className="w-3.5 h-3.5 text-accent" /></div>
-                <h2 className="text-sm font-bold text-foreground">Chat Appearance</h2>
+                <h2 className="text-sm font-bold text-foreground">{t("toolbar.chatStyle")}</h2>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
                 <ChatAppearancePanel />
