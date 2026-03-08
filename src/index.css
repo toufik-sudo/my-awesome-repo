@@ -126,6 +126,21 @@
 /* RTL support */
 [dir="rtl"] .markdown-content ul, [dir="rtl"] .markdown-content ol { padding-right: 1.25em; padding-left: 0; }
 [dir="rtl"] .markdown-content blockquote { border-left: none; border-right: 3px solid hsl(var(--primary)); padding-left: 0; padding-right: 0.75em; }
+[dir="rtl"] .markdown-content th, [dir="rtl"] .markdown-content td { text-align: right; }
+
+/* RTL: Node palette */
+[dir="rtl"] .node-palette { border-right: none; border-left: 1px solid hsl(var(--border)); }
+
+/* RTL: Config modal & panels */
+[dir="rtl"] .config-modal-header { flex-direction: row-reverse; }
+[dir="rtl"] .swal-template-card { flex-direction: row-reverse; text-align: right; }
+[dir="rtl"] .swal-template-arrow { transform: scaleX(-1); }
+[dir="rtl"] .swal-template-card:hover .swal-template-arrow { transform: scaleX(-1) translateX(0); }
+[dir="rtl"] .swal-template-tags { direction: rtl; }
+
+/* RTL: General layout fixes */
+[dir="rtl"] .border-r { border-right: none; border-left: 1px solid hsl(var(--border)); }
+[dir="rtl"] .border-l { border-left: none; border-right: 1px solid hsl(var(--border)); }
 
 /* Cyberpunk glow effects */
 [data-theme="cyberpunk"] .canvas-grid {
