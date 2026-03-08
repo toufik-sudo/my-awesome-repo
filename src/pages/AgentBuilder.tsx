@@ -78,7 +78,7 @@ function VariablesContent() {
           <h2 className="text-sm font-bold text-foreground">{t("variables.title")}</h2>
         </div>
         <button
-          onClick={() => { addGlobalVariable({ name: "new_var", type: "string", defaultValue: "", description: "" }); setTick(t => t + 1); }}
+          onClick={() => { addGlobalVariable({ name: "new_var", type: "string", defaultValue: "", description: "" }); setTick(n => n + 1); }}
           className="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
         >{t("variables.add")}</button>
       </div>
