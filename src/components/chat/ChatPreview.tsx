@@ -88,7 +88,7 @@ export function ChatPreview({ onMinimize }: ChatPreviewProps) {
       return;
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { alert("Speech recognition not supported."); return; }
+    if (!SR) { alert(t("chat.speechNotSupported")); return; }
     const recognition = new SR();
     recognition.continuous = false;
     recognition.interimResults = true;
