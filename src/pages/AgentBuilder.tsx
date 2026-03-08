@@ -67,7 +67,7 @@ function VariablesModalButton() {
 
 function VariablesContent() {
   const { workflow, addGlobalVariable, updateGlobalVariable, removeGlobalVariable } = useWorkflow();
-  // Force re-renders
+  const { t } = useI18n();
   const [, setTick] = useState(0);
 
   return (
