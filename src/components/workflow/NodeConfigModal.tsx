@@ -116,7 +116,12 @@ export function NodeConfigModal({ nodeId, onClose }: NodeConfigModalProps) {
             {/* Type-specific configs */}
             {node.type === "start" && (
               <Field label="Greeting Message">
-                <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20" value={node.config.greeting || ""} onChange={(e) => updateConfig("greeting", e.target.value)} />
+                <div className="relative">
+                  <textarea className="w-full bg-muted border border-border rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 pr-8" value={node.config.greeting || ""} onChange={(e) => updateConfig("greeting", e.target.value)} />
+                  <div className="absolute top-1 right-1">
+                    <MicButton onTranscript={(text) => updateConfig("greeting", (node.config.greeting || "") + " " + text)} />
+                  </div>
+                </div>
               </Field>
             )}
 
