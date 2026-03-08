@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useWorkflow } from "@/context/WorkflowContext";
+import { useI18n } from "@/context/I18nContext";
 import { Download, Upload, Play, Square, Undo2, Redo2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TemplatePicker } from "./TemplatePicker";
