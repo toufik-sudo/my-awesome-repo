@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { favoritesApi, FavoriteItem } from '@/services/favorites.api';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 export const useFavorites = () => {
   const { isAuthenticated } = useAuth();

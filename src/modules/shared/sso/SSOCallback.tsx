@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { useAuth } from '@/contexts/AuthContext';
 import { ssoService } from './sso.service';
 import { AUTH_ROUTES } from '@/modules/auth/auth.constants';

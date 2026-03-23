@@ -13,6 +13,7 @@ import { NavigationProvider } from "@/contexts/NavigationContext";
 import { ErrorBoundary } from "@/modules/shared/components/ErrorBoundary";
 import { Routes } from "@/routes/Routes";
 import '@/i18n/config';
+import '@/modules/shared/styles/swal.css';
 
 const queryClient = new QueryClient();
 

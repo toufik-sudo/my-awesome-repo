@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi, type BookingResponse } from './bookings.api';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 export const useMyBookings = () => {
   return useQuery({

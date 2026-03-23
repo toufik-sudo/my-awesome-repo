@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 export const DynamicForm: React.FC<DynamicFormProps> = React.memo(({
   fields,

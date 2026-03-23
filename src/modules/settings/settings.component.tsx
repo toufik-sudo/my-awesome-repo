@@ -8,7 +8,7 @@ import { settingsService } from './settings.service';
 import { UserPreferences, NotificationSettings, AccountSettings } from './settings.types';
 import { LANGUAGE_OPTIONS, THEME_OPTIONS, DATE_FORMAT_OPTIONS, TIMEZONE_OPTIONS } from './settings.constants';
 import { DynamicFormField } from '@/types/component.types';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileForm } from './ProfileForm';
 import { NotificationPreferences } from './NotificationPreferences';

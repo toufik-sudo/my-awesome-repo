@@ -16,7 +16,7 @@ import { DynamicImageCropper } from '@/modules/shared/components/DynamicImageCro
 import { Button } from '@/components/ui/button';
 import { Home, Settings, Users, FileText, Filter, ArrowRight, Calendar, ImageIcon, Ticket, Search } from 'lucide-react';
 import { CalendarEvent, CalendarBooking } from '@/modules/shared/components/calendar/types/calendar.types';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { useTranslation } from 'react-i18next';
 import type { Property } from '@/types/property.types';
 import { AutocompleteOption } from '@/types/component.types';

@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Mail, Smartphone, Shield, Megaphone, Calendar, MessageSquare, TrendingUp, Clock } from 'lucide-react';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { settingsService } from './settings.service';
 import { NotificationSettings } from './settings.types';
 

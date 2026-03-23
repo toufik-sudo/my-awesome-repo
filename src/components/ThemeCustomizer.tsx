@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Settings2, RotateCcw, Save, Palette, Type, Sparkles, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 interface ColorPickerProps {
   label: string;

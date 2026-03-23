@@ -5,7 +5,7 @@ import { DynamicInput } from '@/modules/shared/components/DynamicInput';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { authService } from '@/modules/auth/auth.service';
 import { settingsService } from './settings.service';
 

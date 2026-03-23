@@ -27,7 +27,7 @@ import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { bookingsApi, type CreateBookingDto } from '@/modules/bookings/bookings.api';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { type PaymentMethodType } from '@/modules/shared/components/PricingBreakdownSection';
 
 interface BookingWidgetProps {

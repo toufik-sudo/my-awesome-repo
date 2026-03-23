@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { ErrorBoundary } from '@/modules/shared/components/ErrorBoundary';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import {
   ArrowRight, ArrowLeft, Check, Sparkles, User, PartyPopper,
   Eye, EyeOff, Mail, Phone, Lock, Camera, Heart, Star, Zap,

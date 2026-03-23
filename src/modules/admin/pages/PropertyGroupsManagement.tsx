@@ -6,7 +6,7 @@ import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { Plus, Pencil, Trash2, Building2, FolderPlus, X } from 'lucide-react';
 import { groupsApi } from '../admin.api';
 import type { PropertyGroup } from '../admin.types';

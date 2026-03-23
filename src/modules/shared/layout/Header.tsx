@@ -8,7 +8,7 @@ import { ThemeCustomizer } from '@/components/ThemeCustomizer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { useNavigate } from 'react-router-dom';
 import { Menu, LogOut } from 'lucide-react';
 import { clearJWT } from '@/utils/jwt';

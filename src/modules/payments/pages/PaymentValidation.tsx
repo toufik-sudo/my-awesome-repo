@@ -21,7 +21,7 @@ import { MainLayout } from '@/modules/shared/layout/MainLayout';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi, type PaymentReceipt, type TransferAccount } from '../payments.api';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 export const PaymentValidation: React.FC = () => {
   const navigate = useNavigate();

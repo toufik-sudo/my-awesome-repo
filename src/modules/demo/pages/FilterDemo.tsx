@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/components/DynamicFilter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { MapSearch } from '@/modules/shared/components/MapSearch';
 import { Property } from '@/types/property.types';
 import {

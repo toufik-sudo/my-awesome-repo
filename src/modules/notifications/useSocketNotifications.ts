@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { getStoredJWT } from '@/utils/jwt';
 import type { Notification } from './notifications.types';
 
@@ -175,10 +175,11 @@ export const useSocketNotifications = () => {
         metadata: { reviewId: payload.reviewId, propertyId: payload.propertyId },
       };
       addNotification(notification);
-      toast.warning('⚠️ Negative Review', {
+      toast('⚠️ Negative Review', {
         description: `${payload.rating}★ review on "${payload.propertyTitle}"`,
         action: { label: 'Respond', onClick: () => navigate(`/support/review/${payload.reviewId}`) },
         duration: 10000,
+        icon: 'warning',
       });
     });
 
