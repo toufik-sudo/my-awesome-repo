@@ -355,7 +355,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       });
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }
-  }, [properties, filters, onPropertySelect]);
+  }, [properties, filters, onPropertySelect, mapReady]);
 
   const handleCloseModal = () => {
     setShowModal(false);
