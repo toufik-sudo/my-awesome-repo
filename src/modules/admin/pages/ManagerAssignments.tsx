@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { Plus, Settings2, Trash2, Shield } from 'lucide-react';
 import { assignmentsApi } from '../admin.api';
 import type { ManagerAssignment, ManagerPermission, PermissionType, AssignmentScope } from '../admin.types';

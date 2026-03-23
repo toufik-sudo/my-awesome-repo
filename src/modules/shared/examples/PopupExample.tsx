@@ -2,7 +2,7 @@ import React from 'react';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { DynamicPopup } from '@/modules/shared/components/DynamicPopup';
 import { usePopup } from '@/hooks/usePopup';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 /**
  * Example component demonstrating the usage of DynamicPopup

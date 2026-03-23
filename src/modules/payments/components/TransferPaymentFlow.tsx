@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
 import { paymentsApi, type TransferAccount } from '../payments.api';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 interface TransferPaymentFlowProps {
   bookingId: string;

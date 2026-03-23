@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { Loader2, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, KeyRound, Building2, Shield, Star } from 'lucide-react';
 import { authConfig } from './auth.config';
 import { authService } from './auth.service';

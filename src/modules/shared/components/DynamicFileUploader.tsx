@@ -3,7 +3,7 @@ import { FileUploaderProps } from '@/types/component.types';
 import { buildComponentStyles } from '@/utils/styleBuilder';
 import { Button } from '@/components/ui/button';
 import { Upload, X, FileIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 export const DynamicFileUploader: React.FC<FileUploaderProps> = ({
   accept,

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Camera, X, User } from 'lucide-react';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { DynamicImageCropper } from '@/modules/shared/components/DynamicImageCropper';
 
 interface ProfilePhotoUploadProps {

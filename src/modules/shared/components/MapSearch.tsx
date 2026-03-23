@@ -11,7 +11,7 @@ import ReactDOM from 'react-dom/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import style from '@/styles/style.module.scss';
 import mapStyle from '../styles/MapSearch.module.scss';
 

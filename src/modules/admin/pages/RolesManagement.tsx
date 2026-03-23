@@ -5,7 +5,7 @@ import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { DynamicForm } from '@/modules/shared/components/DynamicForm';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { UserPlus, Shield, ShieldCheck, ShieldAlert, Trash2 } from 'lucide-react';
 import { rolesApi } from '../admin.api';
 import type { AppRole, UserWithRoles } from '../admin.types';

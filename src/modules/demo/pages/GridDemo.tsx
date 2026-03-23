@@ -4,7 +4,7 @@ import { DynamicGrid } from '@/modules/shared/components/DynamicGrid';
 import { GridColumn, GridBulkAction, GridPaginationConfig } from '@/types/component.types';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Download, Mail, Eye } from 'lucide-react';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 // Mock data generator
 const generateMockData = (page: number, pageSize: number) => {

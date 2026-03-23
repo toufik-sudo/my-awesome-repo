@@ -28,7 +28,7 @@ import {
   Settings,
   Sparkles
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 interface DynamicHeaderProps {
   className?: string;
