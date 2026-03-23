@@ -144,39 +144,46 @@ export const MapSearch: React.FC<MapSearchProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current) return;
 
-    map.current = new maplibregl.Map({
+    const mapInstance = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: center,
-      zoom: zoom,
+      center: initialCenter.current,
+      zoom: initialZoom.current,
     });
 
-    map.current.addControl(
+    map.current = mapInstance;
+
+    mapInstance.addControl(
       new maplibregl.NavigationControl({
         visualizePitch: true,
       }),
       'top-right'
     );
 
+    // Add geolocation control natively for better GPS support
+    mapInstance.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true,
+      }),
+      'top-right'
+    );
+
     // Close active popup when clicking on the map
-    map.current.on('click', (e) => {
-      // Check if click was on a marker
+    mapInstance.on('click', (e) => {
       const target = e.originalEvent.target as HTMLElement;
       if (!target.closest('.custom-marker')) {
-        if (activePopup) {
-          activePopup.remove();
-          // setActivePopup(null);
-        }
+        // Remove all active popups
+        document.querySelectorAll('.maplibregl-popup').forEach(pop => {
+          pop.classList.add('hidden-marker');
+        });
       }
 
       document.querySelectorAll('.custom-marker.active-marker').forEach(marker => {
         marker.classList.remove('active-marker');
-        document.querySelectorAll('.maplibregl-popup').forEach(pop => {
-          // pop.classList.remove('active-marker');
-          pop.classList.add('hidden-marker');
-        });
       });
     });
 
@@ -195,16 +202,21 @@ export const MapSearch: React.FC<MapSearchProps> = ({
         });
       }, 300);
     };
-    map.current.on('moveend', handleMoveEnd);
+    mapInstance.on('moveend', handleMoveEnd);
+
+    mapInstance.on('load', () => {
+      setMapReady(true);
+    });
 
     return () => {
       clearTimeout(moveTimeout);
       markers.current.forEach(marker => marker.remove());
       popups.current.forEach(popup => popup.remove());
       userMarker.current?.remove();
-      map.current?.remove();
+      map.current = null;
+      mapInstance.remove();
     };
-  }, [center, zoom]);
+  }, []); // Only initialize once
 
   useEffect(() => {
     if (!map.current) return;
