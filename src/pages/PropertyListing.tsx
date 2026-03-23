@@ -61,7 +61,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import logoImage from '@/assets/byootdz-logo.png';
+
 import { MapSearch, MapBounds } from '@/modules/shared/components/MapSearch';
 import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/components/DynamicFilter';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
