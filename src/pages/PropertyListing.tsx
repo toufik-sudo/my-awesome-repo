@@ -940,25 +940,27 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
   }
 
   return (
-    <Card className="overflow-hidden cursor-pointer hover:shadow-lg transition-all border-border/60 group" onClick={onClick}>
+    <Card className="overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border-border/40 group rounded-xl" onClick={onClick}>
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={property.images[0]}
           alt={property.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
           loading="lazy"
         />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-2.5 right-2.5 h-8 w-8 bg-card/80 backdrop-blur-sm hover:bg-card rounded-full"
+          className="absolute top-3 right-3 h-9 w-9 bg-card/90 backdrop-blur-md hover:bg-card shadow-sm rounded-full"
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
         >
-          <Heart className={cn('h-4 w-4', isFavorite ? 'fill-destructive text-destructive' : 'text-foreground')} />
+          <Heart className={cn('h-4 w-4 transition-colors', isFavorite ? 'fill-destructive text-destructive' : 'text-muted-foreground')} />
         </Button>
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {badgeLabel && (
-            <Badge className="bg-primary text-primary-foreground text-[10px]">
+            <Badge className="bg-primary text-primary-foreground text-[10px] shadow-sm">
               {badgeLabel}
             </Badge>
           )}
@@ -967,40 +969,40 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
             isVerified={property.isVerified}
             size="sm"
             showLabel={false}
-            className="shadow-custom bg-card/95 backdrop-blur-sm"
+            className="shadow-sm bg-card/95 backdrop-blur-md"
           />
         </div>
       </div>
-      <CardContent className="p-3.5">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="font-semibold text-foreground text-sm truncate group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-foreground text-[15px] truncate group-hover:text-primary transition-colors">
               {property.title}
             </h3>
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
               <MapPin className="h-3 w-3 shrink-0" /> {property.location}
             </p>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 bg-accent/50 px-2 py-1 rounded-lg">
             <Star className="h-3.5 w-3.5 fill-accent text-accent" />
-            <span className="text-sm font-semibold text-foreground">{property.rating}</span>
+            <span className="text-sm font-bold text-foreground">{property.rating}</span>
           </div>
         </div>
 
         {/* Discount Badges */}
         {(property.weeklyDiscount > 0 || property.monthlyDiscount > 0) && (
-          <div className="mt-1.5">
+          <div className="mt-2">
             <DiscountBadges weeklyDiscount={property.weeklyDiscount} monthlyDiscount={property.monthlyDiscount} />
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-2 mt-2.5 text-[11px] text-muted-foreground">
           <span>{property.bedrooms} {t('propertyDetail.bedrooms')}</span>
-          <span>•</span>
+          <span className="text-border">•</span>
           <span>{property.guests} {t('propertyDetail.guests')}</span>
         </div>
-        <div className="mt-2.5 pt-2.5 border-t border-border flex items-center justify-between">
-          <p className="text-base font-bold text-foreground">
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between">
+          <p className="text-base font-bold text-primary">
             {property.price.toLocaleString()} DA
             <span className="text-xs font-normal text-muted-foreground"> / {t('byootdz.perNight')}</span>
           </p>
