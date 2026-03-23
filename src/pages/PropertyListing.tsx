@@ -22,7 +22,7 @@ import {
   Grid3X3,
   List,
   Heart,
-  ArrowLeft,
+  
   Map,
   DollarSign,
   Bed,
