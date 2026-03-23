@@ -42,10 +42,10 @@ const PublicRoutes = () => (
 
 const PropertyRoutes = () => (
   <>
-    <Route path="/properties" element={<ProtectedRoute><ErrorBoundary><PropertyListing /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/property/:id" element={<ProtectedRoute><ErrorBoundary><PropertyDetail /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/properties/new" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/properties/:id/edit" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></ProtectedRoute>} />
+    <Route path="/properties" element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/property/:id" element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/properties/new" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/properties/:id/edit" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
