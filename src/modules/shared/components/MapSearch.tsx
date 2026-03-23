@@ -219,15 +219,11 @@ export const MapSearch: React.FC<MapSearchProps> = ({
   }, []); // Only initialize once
 
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapReady) return;
 
     // Remove existing markers and popups
-    if (markers && markers.current?.length > 0) {
-      markers.current.forEach(marker => marker.remove());
-    }
-    if (popups && popups.current?.length > 0) {
-      popups.current.forEach(popup => popup.remove());
-    }
+    markers.current.forEach(marker => marker.remove());
+    popups.current.forEach(popup => popup.remove());
 
     markers.current = [];
     popups.current = [];
