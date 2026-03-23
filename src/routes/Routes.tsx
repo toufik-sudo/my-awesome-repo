@@ -72,8 +72,8 @@ const AdminRoutes = () => (
 
 const DashboardRoutes = () => (
   <>
-    <Route path="/dashboard" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/settings" element={<ProtectedRoute><ErrorBoundary><Settings /></ErrorBoundary></ProtectedRoute>} />
+    <Route path="/dashboard" element={<ProtectedRoute><MainLayout><ErrorBoundary><Dashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/settings" element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
