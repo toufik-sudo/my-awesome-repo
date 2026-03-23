@@ -649,7 +649,7 @@ const PropertyListing = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="px-4 py-6">
         <div className="flex gap-6">
           {/* Desktop Sidebar Filters */}
           <aside className="hidden lg:block w-72 shrink-0">
