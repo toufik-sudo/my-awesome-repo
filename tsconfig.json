@@ -9,6 +9,7 @@
       "DOM.Iterable"
     ],
     "module": "ESNext",
+    "moduleDetection": "force",
     "moduleResolution": "bundler",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
@@ -19,7 +20,6 @@
         "./src/*"
       ]
     },
-    "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2020",
