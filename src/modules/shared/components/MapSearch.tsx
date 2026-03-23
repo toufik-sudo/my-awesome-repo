@@ -31,26 +31,33 @@ interface MapSearchProps {
   className?: string;
 }
 
+const DEFAULT_CENTER: [number, number] = [-74.006, 40.7128];
+const DEFAULT_ZOOM = 12;
+
 export const MapSearch: React.FC<MapSearchProps> = ({
   properties,
-  center = [-74.006, 40.7128],
-  zoom = 12,
+  center,
+  zoom,
   onPropertySelect,
   onBoundsChange,
   className = '',
 }) => {
-  const mapContainer = useRef < HTMLDivElement > (null);
-  const map = useRef < maplibregl.Map | null > (null);
-  const markers = useRef < maplibregl.Marker[] > ([]);
-  const popups = useRef < maplibregl.Popup[] > ([]);
-  const userMarker = useRef < maplibregl.Marker | null > (null);
-  const [selectedProperty, setSelectedProperty] = useState < Property | null > (null);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<maplibregl.Marker[]>([]);
+  const popups = useRef<maplibregl.Popup[]>([]);
+  const userMarker = useRef<maplibregl.Marker | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState < MapSearchFilters > ({});
+  const [filters, setFilters] = useState<MapSearchFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [activePopup, setActivePopup] = useState < maplibregl.Popup | null > (null);
+  const [mapReady, setMapReady] = useState(false);
+
+  // Stabilize center/zoom to avoid re-initializing map on every render
+  const initialCenter = useRef(center || DEFAULT_CENTER);
+  const initialZoom = useRef(zoom ?? DEFAULT_ZOOM);
 
   const handleSearch = async () => {
     if (!searchQuery || !map.current) return;
