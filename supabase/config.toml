@@ -1,4 +1,0 @@
-project_id = "mutqjgeigzexkernianm"
-
-[functions.diagnose]
-verify_jwt = false
