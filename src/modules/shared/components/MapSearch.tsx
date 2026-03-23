@@ -167,8 +167,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
-        showUserHeading: true,
-      }),
+      } as any),
       'top-right'
     );
 
