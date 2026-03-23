@@ -1,0 +1,132 @@
+/* SweetAlert2 Custom Theme — matches design system tokens */
+
+/* Toast popup */
+.swal-toast-popup {
+  font-family: inherit !important;
+  font-size: 0.875rem !important;
+  border-radius: 0.75rem !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 8px 30px -12px hsl(var(--foreground) / 0.15) !important;
+}
+
+.swal-toast-popup .swal2-title {
+  color: hsl(var(--foreground)) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+}
+
+.swal-toast-popup .swal2-html-container {
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 0.8rem !important;
+}
+
+.swal-toast-popup .swal2-timer-progress-bar {
+  background: hsl(var(--primary)) !important;
+}
+
+/* Alert popup (centered) */
+.swal-alert-popup {
+  font-family: inherit !important;
+  border-radius: 1rem !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 20px 60px -15px hsl(var(--foreground) / 0.2) !important;
+  padding: 1.5rem !important;
+}
+
+.swal-alert-popup .swal2-title {
+  color: hsl(var(--foreground)) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+}
+
+.swal-alert-popup .swal2-html-container,
+.swal-alert-popup .swal2-content {
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 0.875rem !important;
+}
+
+/* Buttons */
+.swal-confirm-btn {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 1.25rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s !important;
+  margin: 0 0.25rem !important;
+}
+
+.swal-confirm-btn:hover {
+  opacity: 0.9 !important;
+}
+
+.swal-cancel-btn {
+  background: hsl(var(--muted)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 1.25rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
+  margin: 0 0.25rem !important;
+}
+
+.swal-cancel-btn:hover {
+  background: hsl(var(--accent)) !important;
+}
+
+.swal-delete-btn {
+  background: hsl(var(--destructive)) !important;
+  color: hsl(var(--destructive-foreground)) !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem 1.25rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s !important;
+  margin: 0 0.25rem !important;
+}
+
+.swal-delete-btn:hover {
+  opacity: 0.9 !important;
+}
+
+/* Backdrop */
+.swal2-container {
+  backdrop-filter: blur(4px) !important;
+}
+
+/* RTL support */
+[dir="rtl"] .swal-toast-popup,
+[dir="rtl"] .swal-alert-popup {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+[dir="rtl"] .swal2-actions {
+  flex-direction: row-reverse !important;
+}
+
+/* Icon adjustments */
+.swal-toast-popup .swal2-icon,
+.swal-alert-popup .swal2-icon {
+  border-color: hsl(var(--border)) !important;
+}
+
+.swal-toast-popup .swal2-icon.swal2-success .swal2-success-ring {
+  border-color: hsl(142 76% 36% / 0.3) !important;
+}
+
+.swal-toast-popup .swal2-icon.swal2-error {
+  border-color: hsl(var(--destructive) / 0.3) !important;
+}
