@@ -383,6 +383,36 @@ const PropertyListing = () => {
       {/* Price Range */}
       <div>
         <h3 className="text-sm font-semibold text-foreground mb-3">{t('listing.filters.priceRange')}</h3>
+        <div className="flex gap-2 mb-3">
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+            <Input
+              type="number"
+              min={0}
+              max={filters.priceRange[1]}
+              value={filters.priceRange[0]}
+              onChange={(e) => {
+                const val = Math.min(Number(e.target.value) || 0, filters.priceRange[1]);
+                updateFilter('priceRange', [val, filters.priceRange[1]]);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+            <Input
+              type="number"
+              min={filters.priceRange[0]}
+              max={30000}
+              value={filters.priceRange[1]}
+              onChange={(e) => {
+                const val = Math.max(Number(e.target.value) || 0, filters.priceRange[0]);
+                updateFilter('priceRange', [filters.priceRange[0], val]);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
         <Slider
           value={filters.priceRange}
           min={0}
