@@ -1,0 +1,117 @@
+{
+  "expo": {
+    "name": "HuggitHub",
+    "slug": "huggit-hub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "scheme": "huggithub",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.lovable.huggithub",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos and videos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select photos and videos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs permission to save photos and videos to your library.",
+        "NSMicrophoneUsageDescription": "This app needs access to your microphone for video recording and voice input.",
+        "NSLocationWhenInUseUsageDescription": "This app needs your location for nearby features and map services.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses your location for continuous location-based services.",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication.",
+        "NSDocumentsFolderUsageDescription": "This app needs access to your documents folder to upload files.",
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "app.lovable.huggithub",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_MEDIA_AUDIO",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_MEDIA_LOCATION",
+        "INTERNET",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow HuggitHub to access your camera for taking photos and videos.",
+          "microphonePermission": "Allow HuggitHub to access your microphone for video recording.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow HuggitHub to access your photos for sharing and uploads.",
+          "cameraPermission": "Allow HuggitHub to access your camera to take photos."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow HuggitHub to access your photos and videos.",
+          "savePhotosPermission": "Allow HuggitHub to save photos and videos to your device.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow HuggitHub to use your location for nearby features."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff"
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow HuggitHub to use Face ID for secure authentication."
+        }
+      ]
+    ]
+  }
+}

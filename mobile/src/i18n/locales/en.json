@@ -1,0 +1,324 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "search": "Search",
+    "retry": "Retry",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "email": "Email",
+    "phone": "Phone",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "loginSuccess": "Login successful",
+    "loginError": "Login failed",
+    "signupError": "Signup failed",
+    "logoutSuccess": "Logged out successfully",
+    "emailRequired": "Email is required",
+    "phoneRequired": "Phone number is required",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "invalidEmail": "Invalid email address",
+    "invalidPhone": "Invalid phone number",
+    "otpSent": "OTP sent successfully",
+    "otpRequired": "Please enter the OTP",
+    "otpInvalid": "Invalid OTP",
+    "otpResent": "OTP resent",
+    "enterOtp": "Enter OTP",
+    "verificationEmailSent": "Verification email sent",
+    "verificationOtpSent": "Verification OTP sent",
+    "verificationSuccess": "Verification successful",
+    "verificationError": "Verification failed",
+    "verificationCodeRequired": "Enter verification code",
+    "selectMethod": "Select login method",
+    "socialLogin": "Or continue with",
+    "resetCodeSentEmail": "Reset code sent to your email",
+    "resetCodeSentPhone": "Reset code sent to your phone",
+    "resetError": "Reset failed",
+    "resetSuccess": "Password reset successful",
+    "invalidResetCode": "Invalid reset code",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSubtitle": "Welcome back! Please login to your account.",
+    "signupSubtitle": "Create a new account to get started."
+  },
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "explore": "Explore",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "properties": "Properties"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "about": "About",
+    "version": "Version",
+    "preferences": "Preferences",
+    "account": "Account",
+    "pushNotifications": "Push Notifications",
+    "darkMode": "Dark Mode",
+    "locationServices": "Location Services",
+    "email": "Email",
+    "password": "Password",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "change": "Change",
+    "view": "View",
+    "languageChanged": "Language changed"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "markAllRead": "Mark all read",
+    "delete": "Delete",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "comments": {
+    "placeholder": "Write a comment...",
+    "send": "Send",
+    "reply": "Reply",
+    "edited": "edited",
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "showReplies": "Show replies ({{count}})",
+    "hideReplies": "Hide replies",
+    "noComments": "No comments yet",
+    "deleteConfirm": "Delete this comment?"
+  },
+  "ranking": {
+    "title": "Rankings",
+    "you": "You",
+    "name": "Name",
+    "score": "Score",
+    "trend": "Trend",
+    "empty": "No rankings available"
+  },
+  "reactions": {
+    "like": "Like",
+    "love": "Love",
+    "haha": "Haha",
+    "wow": "Wow",
+    "sad": "Sad",
+    "angry": "Angry"
+  },
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit Profile",
+    "followers": "Followers",
+    "following": "Following",
+    "posts": "Posts",
+    "verificationReview": "Verification Review"
+  },
+  "byootdz": {
+    "nav": {
+      "explore": "Explore",
+      "howItWorks": "How It Works",
+      "listProperty": "List Your Property"
+    },
+    "hero": {
+      "badge": "Algeria's #1 Rental Platform",
+      "title": "Find Your Perfect Stay in Algeria",
+      "subtitle": "Discover unique homes, apartments, villas, and more across all 48 wilayas."
+    },
+    "search": {
+      "where": "Where",
+      "wherePlaceholder": "Search destinations...",
+      "when": "When",
+      "addDates": "Add dates",
+      "search": "Search"
+    },
+    "stats": {
+      "properties": "Properties",
+      "wilayas": "Wilayas Covered",
+      "happyGuests": "Happy Guests"
+    },
+    "categories": {
+      "title": "Browse by Property Type",
+      "subtitle": "From cozy apartments to luxurious villas",
+      "houses": "Houses",
+      "apartments": "Apartments",
+      "hotels": "Hotels",
+      "villas": "Villas",
+      "chalets": "Chalets",
+      "riads": "Riads"
+    },
+    "featured": {
+      "title": "Featured Properties",
+      "subtitle": "Handpicked homes loved by our guests",
+      "viewAll": "View All"
+    },
+    "badges": {
+      "superhost": "Superhost",
+      "popular": "Popular",
+      "new": "New"
+    },
+    "perNight": "night",
+    "destinations": {
+      "title": "Popular Destinations",
+      "subtitle": "Explore Algeria's most sought-after locations",
+      "properties": "properties"
+    },
+    "cta": {
+      "title": "Ready to Host?",
+      "subtitle": "Join thousands of hosts earning extra income by sharing their space.",
+      "listProperty": "List Your Property",
+      "learnMore": "Learn More"
+    },
+    "footer": {
+      "description": "The premier platform for property rentals across Algeria.",
+      "company": "Company",
+      "about": "About Us",
+      "careers": "Careers",
+      "press": "Press",
+      "support": "Support",
+      "helpCenter": "Help Center",
+      "safety": "Safety Information",
+      "cancellation": "Cancellation Options",
+      "legal": "Legal",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy",
+      "rights": "All rights reserved.",
+      "madeIn": "Made with ❤️ in Algeria"
+    }
+  },
+  "propertyDetail": {
+    "share": "Share",
+    "save": "Save",
+    "morePhotos": "more photos",
+    "viewAllPhotos": "View all photos",
+    "reviews": "reviews",
+    "hostedBy": "Hosted by",
+    "hostSince": "Host since",
+    "guests": "Guests",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "area": "Area",
+    "aboutProperty": "About this property",
+    "amenitiesTitle": "What this place offers",
+    "amenities": {
+      "wifi": "Free WiFi",
+      "parking": "Free parking",
+      "ac": "Air conditioning",
+      "tv": "Smart TV",
+      "kitchen": "Fully equipped kitchen",
+      "washer": "Washing machine",
+      "security": "24/7 Security",
+      "pool": "Private pool",
+      "garden": "Garden view",
+      "breakfast": "Breakfast included"
+    },
+    "locationTitle": "Where you'll be",
+    "showAllReviews": "Show all reviews",
+    "houseRules": "House rules",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "cancellation": "Cancellation",
+    "bookNow": "Book Now",
+    "nights": "nights",
+    "serviceFee": "Service fee",
+    "total": "Total",
+    "noChargeYet": "You won't be charged yet"
+  },
+  "listing": {
+    "searchPlaceholder": "Search by city, region, or property name...",
+    "allProperties": "All Properties",
+    "resultsIn": "Properties in {{location}}",
+    "resultCount": "{{count}} properties found",
+    "noResults": "No properties found",
+    "noResultsHint": "Try adjusting your filters or search for a different location",
+    "filters": {
+      "title": "Filters",
+      "priceRange": "Price Range",
+      "propertyType": "Property Type",
+      "guests": "Guests",
+      "anyGuests": "Any number of guests",
+      "dates": "Dates",
+      "checkIn": "Check-in date",
+      "checkOut": "Check-out date",
+      "amenities": "Amenities",
+      "clearAll": "Clear all",
+      "trustLevel": "Trust Level",
+      "anyTrust": "Any"
+    },
+    "sort": {
+      "recommended": "Recommended",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "rating": "Top Rated",
+      "newest": "Newest"
+    }
+  },
+  "verification": {
+    "title": "Verification Review",
+    "pendingDocuments": "Pending Documents",
+    "approve": "Approve",
+    "reject": "Reject",
+    "noDocuments": "No documents to review",
+    "documentType": "Document Type",
+    "submittedBy": "Submitted by",
+    "submittedAt": "Submitted at",
+    "aiAnalysis": "AI Analysis",
+    "confidence": "Confidence",
+    "status": "Status"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your properties, bookings, and performance",
+    "error": "Failed to load dashboard",
+    "retry": "Try Again",
+    "viewAll": "View All",
+    "myProperties": "My Properties",
+    "noProperties": "You haven't listed any properties yet",
+    "recentBookings": "Recent Bookings",
+    "noBookings": "No bookings yet",
+    "stats": {
+      "properties": "Properties",
+      "totalRevenue": "Total Revenue",
+      "bookings": "Bookings",
+      "favorites": "Favorites"
+    },
+    "actions": {
+      "browseProperties": "Browse Properties",
+      "settings": "Settings"
+    },
+    "charts": {
+      "revenueTitle": "Revenue Overview"
+    },
+    "verification": {
+      "title": "Verification Status",
+      "approved": "Approved",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    }
+  }
+}

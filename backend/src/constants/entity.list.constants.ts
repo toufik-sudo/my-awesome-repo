@@ -1,0 +1,41 @@
+import { User } from '../user/entity/user.entity';
+import { UserRole } from '../user/entity/user-role.entity';
+import { UserAddress } from '../user/entity/user.userAddress.entity';
+import { ManagerAssignment } from '../user/entity/manager-assignment.entity';
+import { ManagerPermission } from '../user/entity/manager-permission.entity';
+import { Property } from '../properties/entity/property.entity';
+import { PropertyImage } from '../properties/entity/property-image.entity';
+import { PropertyAvailability } from '../properties/entity/property-availability.entity';
+import { PropertyGroup } from '../properties/entity/property-group.entity';
+import { PropertyGroupMembership } from '../properties/entity/property-group-membership.entity';
+import { VerificationDocument } from '../properties/entity/verification-document.entity';
+import { Booking } from '../bookings/entity/booking.entity';
+import { Review } from '../reviews/entity/review.entity';
+import { Favorite } from '../favorites/entity/favorite.entity';
+import { Comment } from '../comments/entity/comment.entity';
+import { Reaction } from '../reactions/entity/reaction.entity';
+import { Ranking } from '../rankings/entity/ranking.entity';
+import { Profile } from '../profiles/entity/profile.entity';
+import { Notification } from '../notification/entity/notification.entity';
+
+export const entityList = [
+  User,
+  UserRole,
+  UserAddress,
+  ManagerAssignment,
+  ManagerPermission,
+  Property,
+  PropertyImage,
+  PropertyAvailability,
+  PropertyGroup,
+  PropertyGroupMembership,
+  VerificationDocument,
+  Booking,
+  Review,
+  Favorite,
+  Comment,
+  Reaction,
+  Ranking,
+  Profile,
+  Notification,
+];

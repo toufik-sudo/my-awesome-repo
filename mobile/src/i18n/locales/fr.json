@@ -1,0 +1,324 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "retry": "Réessayer",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "auth": {
+    "login": "Connexion",
+    "signup": "Inscription",
+    "logout": "Déconnexion",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "loginSuccess": "Connexion réussie",
+    "loginError": "Échec de la connexion",
+    "signupError": "Échec de l'inscription",
+    "logoutSuccess": "Déconnexion réussie",
+    "emailRequired": "L'e-mail est requis",
+    "phoneRequired": "Le numéro de téléphone est requis",
+    "passwordRequired": "Le mot de passe est requis",
+    "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "invalidEmail": "Adresse e-mail invalide",
+    "invalidPhone": "Numéro de téléphone invalide",
+    "otpSent": "OTP envoyé avec succès",
+    "otpRequired": "Veuillez entrer l'OTP",
+    "otpInvalid": "OTP invalide",
+    "otpResent": "OTP renvoyé",
+    "enterOtp": "Entrer l'OTP",
+    "verificationEmailSent": "E-mail de vérification envoyé",
+    "verificationOtpSent": "OTP de vérification envoyé",
+    "verificationSuccess": "Vérification réussie",
+    "verificationError": "Échec de la vérification",
+    "verificationCodeRequired": "Entrez le code de vérification",
+    "selectMethod": "Sélectionner la méthode de connexion",
+    "socialLogin": "Ou continuer avec",
+    "resetCodeSentEmail": "Code envoyé à votre e-mail",
+    "resetCodeSentPhone": "Code envoyé à votre téléphone",
+    "resetError": "Échec de la réinitialisation",
+    "resetSuccess": "Mot de passe réinitialisé avec succès",
+    "invalidResetCode": "Code de réinitialisation invalide",
+    "noAccount": "Pas de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "loginSubtitle": "Bon retour ! Connectez-vous à votre compte.",
+    "signupSubtitle": "Créez un nouveau compte pour commencer."
+  },
+  "tabs": {
+    "home": "Accueil",
+    "search": "Rechercher",
+    "explore": "Explorer",
+    "notifications": "Notifications",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "properties": "Propriétés"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "notifications": "Notifications",
+    "privacy": "Confidentialité",
+    "about": "À propos",
+    "version": "Version",
+    "preferences": "Préférences",
+    "account": "Compte",
+    "pushNotifications": "Notifications push",
+    "darkMode": "Mode sombre",
+    "locationServices": "Services de localisation",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "termsOfService": "Conditions d'utilisation",
+    "privacyPolicy": "Politique de confidentialité",
+    "change": "Modifier",
+    "view": "Voir",
+    "languageChanged": "Langue modifiée"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification",
+    "markAllRead": "Tout marquer comme lu",
+    "delete": "Supprimer",
+    "justNow": "À l'instant",
+    "minutesAgo": "il y a {{count}} min",
+    "hoursAgo": "il y a {{count}} h",
+    "daysAgo": "il y a {{count}} j"
+  },
+  "comments": {
+    "placeholder": "Écrire un commentaire...",
+    "send": "Envoyer",
+    "reply": "Répondre",
+    "edited": "modifié",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{count}}min",
+    "hoursAgo": "il y a {{count}}h",
+    "daysAgo": "il y a {{count}}j",
+    "showReplies": "Voir les réponses ({{count}})",
+    "hideReplies": "Masquer les réponses",
+    "noComments": "Aucun commentaire",
+    "deleteConfirm": "Supprimer ce commentaire ?"
+  },
+  "ranking": {
+    "title": "Classements",
+    "you": "Vous",
+    "name": "Nom",
+    "score": "Score",
+    "trend": "Tendance",
+    "empty": "Aucun classement disponible"
+  },
+  "reactions": {
+    "like": "J'aime",
+    "love": "Amour",
+    "haha": "Haha",
+    "wow": "Wow",
+    "sad": "Triste",
+    "angry": "En colère"
+  },
+  "profile": {
+    "title": "Profil",
+    "edit": "Modifier le profil",
+    "followers": "Abonnés",
+    "following": "Abonnements",
+    "posts": "Publications",
+    "verificationReview": "Vérification des documents"
+  },
+  "byootdz": {
+    "nav": {
+      "explore": "Explorer",
+      "howItWorks": "Comment ça marche",
+      "listProperty": "Mettre en location"
+    },
+    "hero": {
+      "badge": "Plateforme #1 de location en Algérie",
+      "title": "Trouvez votre séjour parfait en Algérie",
+      "subtitle": "Découvrez des maisons, appartements, villas uniques à travers les 48 wilayas."
+    },
+    "search": {
+      "where": "Où",
+      "wherePlaceholder": "Rechercher des destinations...",
+      "when": "Quand",
+      "addDates": "Ajouter des dates",
+      "search": "Rechercher"
+    },
+    "stats": {
+      "properties": "Propriétés",
+      "wilayas": "Wilayas couvertes",
+      "happyGuests": "Clients satisfaits"
+    },
+    "categories": {
+      "title": "Parcourir par type de propriété",
+      "subtitle": "Des appartements cosy aux villas luxueuses",
+      "houses": "Maisons",
+      "apartments": "Appartements",
+      "hotels": "Hôtels",
+      "villas": "Villas",
+      "chalets": "Chalets",
+      "riads": "Riads"
+    },
+    "featured": {
+      "title": "Propriétés en vedette",
+      "subtitle": "Sélection de logements adorés par nos clients",
+      "viewAll": "Voir tout"
+    },
+    "badges": {
+      "superhost": "Superhôte",
+      "popular": "Populaire",
+      "new": "Nouveau"
+    },
+    "perNight": "nuit",
+    "destinations": {
+      "title": "Destinations populaires",
+      "subtitle": "Explorez les destinations les plus recherchées d'Algérie",
+      "properties": "propriétés"
+    },
+    "cta": {
+      "title": "Prêt à héberger ?",
+      "subtitle": "Rejoignez des milliers d'hôtes qui gagnent un revenu supplémentaire.",
+      "listProperty": "Mettre en location",
+      "learnMore": "En savoir plus"
+    },
+    "footer": {
+      "description": "La plateforme de référence pour la location en Algérie.",
+      "company": "Entreprise",
+      "about": "À propos",
+      "careers": "Carrières",
+      "press": "Presse",
+      "support": "Support",
+      "helpCenter": "Centre d'aide",
+      "safety": "Informations de sécurité",
+      "cancellation": "Options d'annulation",
+      "legal": "Légal",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "cookies": "Politique des cookies",
+      "rights": "Tous droits réservés.",
+      "madeIn": "Fait avec ❤️ en Algérie"
+    }
+  },
+  "propertyDetail": {
+    "share": "Partager",
+    "save": "Enregistrer",
+    "morePhotos": "plus de photos",
+    "viewAllPhotos": "Voir toutes les photos",
+    "reviews": "avis",
+    "hostedBy": "Hébergé par",
+    "hostSince": "Hôte depuis",
+    "guests": "Voyageurs",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bain",
+    "area": "Surface",
+    "aboutProperty": "À propos de ce logement",
+    "amenitiesTitle": "Ce que propose ce logement",
+    "amenities": {
+      "wifi": "WiFi gratuit",
+      "parking": "Parking gratuit",
+      "ac": "Climatisation",
+      "tv": "Smart TV",
+      "kitchen": "Cuisine équipée",
+      "washer": "Lave-linge",
+      "security": "Sécurité 24/7",
+      "pool": "Piscine privée",
+      "garden": "Vue jardin",
+      "breakfast": "Petit-déjeuner inclus"
+    },
+    "locationTitle": "Où vous serez",
+    "showAllReviews": "Afficher tous les avis",
+    "houseRules": "Règles de la maison",
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "cancellation": "Annulation",
+    "bookNow": "Réserver",
+    "nights": "nuits",
+    "serviceFee": "Frais de service",
+    "total": "Total",
+    "noChargeYet": "Aucun montant ne vous sera débité pour le moment"
+  },
+  "listing": {
+    "searchPlaceholder": "Rechercher par ville, région ou nom...",
+    "allProperties": "Toutes les propriétés",
+    "resultsIn": "Propriétés à {{location}}",
+    "resultCount": "{{count}} propriétés trouvées",
+    "noResults": "Aucune propriété trouvée",
+    "noResultsHint": "Essayez d'ajuster vos filtres ou recherchez un autre lieu",
+    "filters": {
+      "title": "Filtres",
+      "priceRange": "Fourchette de prix",
+      "propertyType": "Type de propriété",
+      "guests": "Voyageurs",
+      "anyGuests": "Nombre de voyageurs",
+      "dates": "Dates",
+      "checkIn": "Date d'arrivée",
+      "checkOut": "Date de départ",
+      "amenities": "Équipements",
+      "clearAll": "Tout effacer",
+      "trustLevel": "Niveau de confiance",
+      "anyTrust": "Tous"
+    },
+    "sort": {
+      "recommended": "Recommandé",
+      "priceAsc": "Prix : croissant",
+      "priceDesc": "Prix : décroissant",
+      "rating": "Mieux notés",
+      "newest": "Plus récents"
+    }
+  },
+  "verification": {
+    "title": "Vérification des documents",
+    "pendingDocuments": "Documents en attente",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "noDocuments": "Aucun document à vérifier",
+    "documentType": "Type de document",
+    "submittedBy": "Soumis par",
+    "submittedAt": "Soumis le",
+    "aiAnalysis": "Analyse IA",
+    "confidence": "Confiance",
+    "status": "Statut"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Vue d'ensemble de vos propriétés, réservations et performances",
+    "error": "Échec du chargement",
+    "retry": "Réessayer",
+    "viewAll": "Voir tout",
+    "myProperties": "Mes propriétés",
+    "noProperties": "Vous n'avez encore listé aucune propriété",
+    "recentBookings": "Réservations récentes",
+    "noBookings": "Aucune réservation",
+    "stats": {
+      "properties": "Propriétés",
+      "totalRevenue": "Revenu total",
+      "bookings": "Réservations",
+      "favorites": "Favoris"
+    },
+    "actions": {
+      "browseProperties": "Parcourir les propriétés",
+      "settings": "Paramètres"
+    },
+    "charts": {
+      "revenueTitle": "Aperçu des revenus"
+    },
+    "verification": {
+      "title": "Statut de vérification",
+      "approved": "Approuvés",
+      "pending": "En attente",
+      "rejected": "Rejetés"
+    }
+  }
+}

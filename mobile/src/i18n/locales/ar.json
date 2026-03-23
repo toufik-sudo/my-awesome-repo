@@ -1,0 +1,324 @@
+{
+  "common": {
+    "loading": "جار التحميل...",
+    "error": "حدث خطأ",
+    "success": "نجاح",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "submit": "إرسال",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي",
+    "close": "إغلاق",
+    "search": "بحث",
+    "retry": "إعادة المحاولة",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "loginError": "فشل تسجيل الدخول",
+    "signupError": "فشل إنشاء الحساب",
+    "logoutSuccess": "تم تسجيل الخروج بنجاح",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "phoneRequired": "رقم الهاتف مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordMinLength": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين",
+    "invalidEmail": "عنوان البريد الإلكتروني غير صالح",
+    "invalidPhone": "رقم الهاتف غير صالح",
+    "otpSent": "تم إرسال رمز OTP بنجاح",
+    "otpRequired": "يرجى إدخال رمز OTP",
+    "otpInvalid": "رمز OTP غير صالح",
+    "otpResent": "تمت إعادة إرسال رمز OTP",
+    "enterOtp": "أدخل رمز OTP",
+    "verificationEmailSent": "تم إرسال بريد التحقق",
+    "verificationOtpSent": "تم إرسال رمز التحقق",
+    "verificationSuccess": "تم التحقق بنجاح",
+    "verificationError": "فشل التحقق",
+    "verificationCodeRequired": "أدخل رمز التحقق",
+    "selectMethod": "اختر طريقة تسجيل الدخول",
+    "socialLogin": "أو تابع باستخدام",
+    "resetCodeSentEmail": "تم إرسال رمز الاسترداد إلى بريدك الإلكتروني",
+    "resetCodeSentPhone": "تم إرسال رمز الاسترداد إلى هاتفك",
+    "resetError": "فشل إعادة التعيين",
+    "resetSuccess": "تمت إعادة تعيين كلمة المرور بنجاح",
+    "invalidResetCode": "رمز الاسترداد غير صالح",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "loginSubtitle": "مرحباً بعودتك! يرجى تسجيل الدخول إلى حسابك.",
+    "signupSubtitle": "أنشئ حساباً جديداً للبدء."
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "search": "بحث",
+    "explore": "استكشاف",
+    "notifications": "الإشعارات",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "properties": "العقارات"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "notifications": "الإشعارات",
+    "privacy": "الخصوصية",
+    "about": "حول التطبيق",
+    "version": "الإصدار",
+    "preferences": "التفضيلات",
+    "account": "الحساب",
+    "pushNotifications": "الإشعارات الفورية",
+    "darkMode": "الوضع الداكن",
+    "locationServices": "خدمات الموقع",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "termsOfService": "شروط الخدمة",
+    "privacyPolicy": "سياسة الخصوصية",
+    "change": "تغيير",
+    "view": "عرض",
+    "languageChanged": "تم تغيير اللغة"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "empty": "لا توجد إشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "delete": "حذف",
+    "justNow": "الآن",
+    "minutesAgo": "منذ {{count}} دقيقة",
+    "hoursAgo": "منذ {{count}} ساعة",
+    "daysAgo": "منذ {{count}} يوم"
+  },
+  "comments": {
+    "placeholder": "اكتب تعليقاً...",
+    "send": "إرسال",
+    "reply": "رد",
+    "edited": "تم التعديل",
+    "justNow": "الآن",
+    "minutesAgo": "منذ {{count}} دقيقة",
+    "hoursAgo": "منذ {{count}} ساعة",
+    "daysAgo": "منذ {{count}} يوم",
+    "showReplies": "عرض الردود ({{count}})",
+    "hideReplies": "إخفاء الردود",
+    "noComments": "لا توجد تعليقات بعد",
+    "deleteConfirm": "حذف هذا التعليق؟"
+  },
+  "ranking": {
+    "title": "التصنيفات",
+    "you": "أنت",
+    "name": "الاسم",
+    "score": "النقاط",
+    "trend": "الاتجاه",
+    "empty": "لا توجد تصنيفات"
+  },
+  "reactions": {
+    "like": "إعجاب",
+    "love": "حب",
+    "haha": "هههه",
+    "wow": "واو",
+    "sad": "حزين",
+    "angry": "غاضب"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "edit": "تعديل الملف",
+    "followers": "المتابعون",
+    "following": "يتابع",
+    "posts": "المنشورات",
+    "verificationReview": "مراجعة التحقق"
+  },
+  "byootdz": {
+    "nav": {
+      "explore": "استكشف",
+      "howItWorks": "كيف يعمل",
+      "listProperty": "أضف عقارك"
+    },
+    "hero": {
+      "badge": "منصة الإيجار رقم 1 في الجزائر",
+      "title": "اعثر على إقامتك المثالية في الجزائر",
+      "subtitle": "اكتشف منازل وشققًا وفيللاً فريدة عبر جميع الولايات الـ 48."
+    },
+    "search": {
+      "where": "أين",
+      "wherePlaceholder": "ابحث عن وجهات...",
+      "when": "متى",
+      "addDates": "أضف تواريخ",
+      "search": "بحث"
+    },
+    "stats": {
+      "properties": "عقار",
+      "wilayas": "ولاية مغطاة",
+      "happyGuests": "ضيف سعيد"
+    },
+    "categories": {
+      "title": "تصفح حسب نوع العقار",
+      "subtitle": "من الشقق المريحة إلى الفيلل الفاخرة",
+      "houses": "منازل",
+      "apartments": "شقق",
+      "hotels": "فنادق",
+      "villas": "فيلل",
+      "chalets": "شاليهات",
+      "riads": "رياض"
+    },
+    "featured": {
+      "title": "عقارات مميزة",
+      "subtitle": "منازل مختارة بعناية يحبها ضيوفنا",
+      "viewAll": "عرض الكل"
+    },
+    "badges": {
+      "superhost": "مضيف متميز",
+      "popular": "شائع",
+      "new": "جديد"
+    },
+    "perNight": "ليلة",
+    "destinations": {
+      "title": "الوجهات الشائعة",
+      "subtitle": "استكشف أكثر المواقع المطلوبة في الجزائر",
+      "properties": "عقار"
+    },
+    "cta": {
+      "title": "مستعد للاستضافة؟",
+      "subtitle": "انضم إلى آلاف المضيفين الذين يكسبون دخلاً إضافيًا.",
+      "listProperty": "أضف عقارك",
+      "learnMore": "اعرف المزيد"
+    },
+    "footer": {
+      "description": "المنصة الرائدة لتأجير العقارات في الجزائر.",
+      "company": "الشركة",
+      "about": "من نحن",
+      "careers": "الوظائف",
+      "press": "الصحافة",
+      "support": "الدعم",
+      "helpCenter": "مركز المساعدة",
+      "safety": "معلومات السلامة",
+      "cancellation": "خيارات الإلغاء",
+      "legal": "قانوني",
+      "terms": "شروط الخدمة",
+      "privacy": "سياسة الخصوصية",
+      "cookies": "سياسة ملفات تعريف الارتباط",
+      "rights": "جميع الحقوق محفوظة.",
+      "madeIn": "صنع بـ ❤️ في الجزائر"
+    }
+  },
+  "propertyDetail": {
+    "share": "مشاركة",
+    "save": "حفظ",
+    "morePhotos": "صور إضافية",
+    "viewAllPhotos": "عرض جميع الصور",
+    "reviews": "تقييم",
+    "hostedBy": "مستضاف بواسطة",
+    "hostSince": "مضيف منذ",
+    "guests": "ضيوف",
+    "bedrooms": "غرف نوم",
+    "bathrooms": "حمامات",
+    "area": "المساحة",
+    "aboutProperty": "حول هذا العقار",
+    "amenitiesTitle": "ما يقدمه هذا المكان",
+    "amenities": {
+      "wifi": "واي فاي مجاني",
+      "parking": "موقف سيارات مجاني",
+      "ac": "تكييف هواء",
+      "tv": "تلفزيون ذكي",
+      "kitchen": "مطبخ مجهز بالكامل",
+      "washer": "غسالة ملابس",
+      "security": "أمن على مدار الساعة",
+      "pool": "مسبح خاص",
+      "garden": "إطلالة على الحديقة",
+      "breakfast": "فطور مشمول"
+    },
+    "locationTitle": "أين ستقيم",
+    "showAllReviews": "عرض جميع التقييمات",
+    "houseRules": "قواعد المنزل",
+    "checkIn": "الوصول",
+    "checkOut": "المغادرة",
+    "cancellation": "الإلغاء",
+    "bookNow": "احجز الآن",
+    "nights": "ليالي",
+    "serviceFee": "رسوم الخدمة",
+    "total": "المجموع",
+    "noChargeYet": "لن يتم تحصيل أي مبلغ منك الآن"
+  },
+  "listing": {
+    "searchPlaceholder": "ابحث حسب المدينة أو المنطقة أو اسم العقار...",
+    "allProperties": "جميع العقارات",
+    "resultsIn": "عقارات في {{location}}",
+    "resultCount": "{{count}} عقار",
+    "noResults": "لم يتم العثور على عقارات",
+    "noResultsHint": "حاول تعديل الفلاتر أو البحث في موقع آخر",
+    "filters": {
+      "title": "الفلاتر",
+      "priceRange": "نطاق السعر",
+      "propertyType": "نوع العقار",
+      "guests": "الضيوف",
+      "anyGuests": "أي عدد من الضيوف",
+      "dates": "التواريخ",
+      "checkIn": "تاريخ الوصول",
+      "checkOut": "تاريخ المغادرة",
+      "amenities": "المرافق",
+      "clearAll": "مسح الكل",
+      "trustLevel": "مستوى الثقة",
+      "anyTrust": "الكل"
+    },
+    "sort": {
+      "recommended": "موصى به",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "priceDesc": "السعر: من الأعلى إلى الأقل",
+      "rating": "الأعلى تقييمًا",
+      "newest": "الأحدث"
+    }
+  },
+  "verification": {
+    "title": "مراجعة التحقق",
+    "pendingDocuments": "المستندات المعلقة",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "noDocuments": "لا توجد مستندات للمراجعة",
+    "documentType": "نوع المستند",
+    "submittedBy": "مقدم من",
+    "submittedAt": "تاريخ التقديم",
+    "aiAnalysis": "تحليل الذكاء الاصطناعي",
+    "confidence": "الثقة",
+    "status": "الحالة"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "subtitle": "نظرة عامة على عقاراتك وحجوزاتك وأدائك",
+    "error": "فشل تحميل لوحة التحكم",
+    "retry": "إعادة المحاولة",
+    "viewAll": "عرض الكل",
+    "myProperties": "عقاراتي",
+    "noProperties": "لم تقم بإدراج أي عقارات بعد",
+    "recentBookings": "الحجوزات الأخيرة",
+    "noBookings": "لا توجد حجوزات",
+    "stats": {
+      "properties": "العقارات",
+      "totalRevenue": "إجمالي الإيرادات",
+      "bookings": "الحجوزات",
+      "favorites": "المفضلة"
+    },
+    "actions": {
+      "browseProperties": "تصفح العقارات",
+      "settings": "الإعدادات"
+    },
+    "charts": {
+      "revenueTitle": "نظرة عامة على الإيرادات"
+    },
+    "verification": {
+      "title": "حالة التحقق",
+      "approved": "معتمدة",
+      "pending": "قيد الانتظار",
+      "rejected": "مرفوضة"
+    }
+  }
+}
