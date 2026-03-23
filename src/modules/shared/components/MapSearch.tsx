@@ -31,26 +31,33 @@ interface MapSearchProps {
   className?: string;
 }
 
+const DEFAULT_CENTER: [number, number] = [-74.006, 40.7128];
+const DEFAULT_ZOOM = 12;
+
 export const MapSearch: React.FC<MapSearchProps> = ({
   properties,
-  center = [-74.006, 40.7128],
-  zoom = 12,
+  center,
+  zoom,
   onPropertySelect,
   onBoundsChange,
   className = '',
 }) => {
-  const mapContainer = useRef < HTMLDivElement > (null);
-  const map = useRef < maplibregl.Map | null > (null);
-  const markers = useRef < maplibregl.Marker[] > ([]);
-  const popups = useRef < maplibregl.Popup[] > ([]);
-  const userMarker = useRef < maplibregl.Marker | null > (null);
-  const [selectedProperty, setSelectedProperty] = useState < Property | null > (null);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const markers = useRef<maplibregl.Marker[]>([]);
+  const popups = useRef<maplibregl.Popup[]>([]);
+  const userMarker = useRef<maplibregl.Marker | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState < MapSearchFilters > ({});
+  const [filters, setFilters] = useState<MapSearchFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
-  const [activePopup, setActivePopup] = useState < maplibregl.Popup | null > (null);
+  const [mapReady, setMapReady] = useState(false);
+
+  // Stabilize center/zoom to avoid re-initializing map on every render
+  const initialCenter = useRef(center || DEFAULT_CENTER);
+  const initialZoom = useRef(zoom ?? DEFAULT_ZOOM);
 
   const handleSearch = async () => {
     if (!searchQuery || !map.current) return;
@@ -137,39 +144,45 @@ export const MapSearch: React.FC<MapSearchProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || map.current) return;
 
-    map.current = new maplibregl.Map({
+    const mapInstance = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty',
-      center: center,
-      zoom: zoom,
+      center: initialCenter.current,
+      zoom: initialZoom.current,
     });
 
-    map.current.addControl(
+    map.current = mapInstance;
+
+    mapInstance.addControl(
       new maplibregl.NavigationControl({
         visualizePitch: true,
       }),
       'top-right'
     );
 
+    // Add geolocation control natively for better GPS support
+    mapInstance.addControl(
+      new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+      } as any),
+      'top-right'
+    );
+
     // Close active popup when clicking on the map
-    map.current.on('click', (e) => {
-      // Check if click was on a marker
+    mapInstance.on('click', (e) => {
       const target = e.originalEvent.target as HTMLElement;
       if (!target.closest('.custom-marker')) {
-        if (activePopup) {
-          activePopup.remove();
-          // setActivePopup(null);
-        }
+        // Remove all active popups
+        document.querySelectorAll('.maplibregl-popup').forEach(pop => {
+          pop.classList.add('hidden-marker');
+        });
       }
 
       document.querySelectorAll('.custom-marker.active-marker').forEach(marker => {
         marker.classList.remove('active-marker');
-        document.querySelectorAll('.maplibregl-popup').forEach(pop => {
-          // pop.classList.remove('active-marker');
-          pop.classList.add('hidden-marker');
-        });
       });
     });
 
@@ -188,27 +201,28 @@ export const MapSearch: React.FC<MapSearchProps> = ({
         });
       }, 300);
     };
-    map.current.on('moveend', handleMoveEnd);
+    mapInstance.on('moveend', handleMoveEnd);
+
+    mapInstance.on('load', () => {
+      setMapReady(true);
+    });
 
     return () => {
       clearTimeout(moveTimeout);
       markers.current.forEach(marker => marker.remove());
       popups.current.forEach(popup => popup.remove());
       userMarker.current?.remove();
-      map.current?.remove();
+      map.current = null;
+      mapInstance.remove();
     };
-  }, [center, zoom]);
+  }, []); // Only initialize once
 
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapReady) return;
 
     // Remove existing markers and popups
-    if (markers && markers.current?.length > 0) {
-      markers.current.forEach(marker => marker.remove());
-    }
-    if (popups && popups.current?.length > 0) {
-      popups.current.forEach(popup => popup.remove());
-    }
+    markers.current.forEach(marker => marker.remove());
+    popups.current.forEach(popup => popup.remove());
 
     markers.current = [];
     popups.current = [];
@@ -341,7 +355,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       });
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }
-  }, [properties, filters, onPropertySelect]);
+  }, [properties, filters, onPropertySelect, mapReady]);
 
   const handleCloseModal = () => {
     setShowModal(false);

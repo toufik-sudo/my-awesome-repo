@@ -22,7 +22,7 @@ import {
   Grid3X3,
   List,
   Heart,
-  ArrowLeft,
+  
   Map,
   DollarSign,
   Bed,
@@ -61,7 +61,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import logoImage from '@/assets/byootdz-logo.png';
+
 import { MapSearch, MapBounds } from '@/modules/shared/components/MapSearch';
 import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/components/DynamicFilter';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
@@ -383,6 +383,36 @@ const PropertyListing = () => {
       {/* Price Range */}
       <div>
         <h3 className="text-sm font-semibold text-foreground mb-3">{t('listing.filters.priceRange')}</h3>
+        <div className="flex gap-2 mb-3">
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground mb-1 block">Min</Label>
+            <Input
+              type="number"
+              min={0}
+              max={filters.priceRange[1]}
+              value={filters.priceRange[0]}
+              onChange={(e) => {
+                const val = Math.min(Number(e.target.value) || 0, filters.priceRange[1]);
+                updateFilter('priceRange', [val, filters.priceRange[1]]);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="flex-1">
+            <Label className="text-xs text-muted-foreground mb-1 block">Max</Label>
+            <Input
+              type="number"
+              min={filters.priceRange[0]}
+              max={30000}
+              value={filters.priceRange[1]}
+              onChange={(e) => {
+                const val = Math.max(Number(e.target.value) || 0, filters.priceRange[0]);
+                updateFilter('priceRange', [filters.priceRange[0], val]);
+              }}
+              className="h-8 text-xs"
+            />
+          </div>
+        </div>
         <Slider
           value={filters.priceRange}
           min={0}
@@ -550,51 +580,28 @@ const PropertyListing = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border/50 shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <img
-              src={logoImage}
-              alt="ByootDZ"
-              className="h-7 w-auto hidden sm:block cursor-pointer"
-              onClick={() => navigate('/')}
-            />
-          </div>
-
-          {/* Search bar */}
-          <div className="flex-1 max-w-2xl">
-            <div className="flex items-center bg-muted/60 rounded-full border border-border px-4 py-2 gap-3">
-              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
-              <Input
-                value={filters.location}
-                onChange={(e) => updateFilter('location', e.target.value)}
-                placeholder={t('listing.searchPlaceholder')}
-                className="border-0 bg-transparent h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
-              />
-              {filters.location && (
-                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => updateFilter('location', '')}>
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
-              {t('auth.login')}
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Category bar */}
       <div className="border-b border-border bg-card">
-        <div className="container mx-auto px-4">
+        <div className="px-4">
           <div className="flex items-center gap-1 overflow-x-auto py-3 scrollbar-hide">
+            {/* Search bar inline */}
+            <div className="flex-1 min-w-[200px] max-w-md mr-2">
+              <div className="flex items-center bg-muted/60 rounded-full border border-border px-3 py-1.5 gap-2">
+                <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Input
+                  value={filters.location}
+                  onChange={(e) => updateFilter('location', e.target.value)}
+                  placeholder={t('listing.searchPlaceholder')}
+                  className="border-0 bg-transparent h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+                />
+                {filters.location && (
+                  <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0" onClick={() => updateFilter('location', '')}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
             {PROPERTY_TYPES.map(({ id, icon: Icon, labelKey }) => (
               <Button
                 key={id}
@@ -642,7 +649,7 @@ const PropertyListing = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="px-4 py-6">
         <div className="flex gap-6">
           {/* Desktop Sidebar Filters */}
           <aside className="hidden lg:block w-72 shrink-0">

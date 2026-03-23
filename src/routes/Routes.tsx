@@ -42,22 +42,22 @@ const PublicRoutes = () => (
 
 const PropertyRoutes = () => (
   <>
-    <Route path="/properties" element={<ProtectedRoute><ErrorBoundary><PropertyListing /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/property/:id" element={<ProtectedRoute><ErrorBoundary><PropertyDetail /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/properties/new" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/properties/:id/edit" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></ProtectedRoute>} />
+    <Route path="/properties" element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/property/:id" element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/properties/new" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/properties/:id/edit" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
 const BookingRoutes = () => (
   <>
-    <Route path="/bookings" element={<ProtectedRoute><ErrorBoundary><MyBookings /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/bookings/host" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager']}><ErrorBoundary><HostBookings /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/bookings/history" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><ErrorBoundary><BookingHistory /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/chat/:bookingId" element={<ProtectedRoute><ErrorBoundary><BookingChat /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/support" element={<ProtectedRoute><ErrorBoundary><SupportInbox /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/support/:threadId" element={<ProtectedRoute><ErrorBoundary><SupportThreadChat /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/support/review/:reviewId" element={<ProtectedRoute><ErrorBoundary><SupportInbox /></ErrorBoundary></ProtectedRoute>} />
+    <Route path="/bookings" element={<ProtectedRoute><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/bookings/host" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager']}><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/bookings/history" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/chat/:bookingId" element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/support" element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/support/:threadId" element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportThreadChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/support/review/:reviewId" element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
@@ -72,8 +72,8 @@ const AdminRoutes = () => (
 
 const DashboardRoutes = () => (
   <>
-    <Route path="/dashboard" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-    <Route path="/settings" element={<ProtectedRoute><ErrorBoundary><Settings /></ErrorBoundary></ProtectedRoute>} />
+    <Route path="/dashboard" element={<ProtectedRoute><MainLayout><ErrorBoundary><Dashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/settings" element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
