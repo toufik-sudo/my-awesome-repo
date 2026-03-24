@@ -16,7 +16,12 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Créer l'application NestJS
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Serve static media files (property images, avatars, etc.)
+  app.useStaticAssets(join(__dirname, '..', 'media'), {
+    prefix: '/media/',
+  });
 
   // Validation globale automatique pour tous les DTO
   app.useGlobalPipes(new ValidationPipe());
