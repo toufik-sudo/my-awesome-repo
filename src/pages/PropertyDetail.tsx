@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   MapPin,
@@ -38,97 +39,17 @@ import { BookingWidget } from '@/modules/bookings/components/BookingWidget';
 import { PricingBreakdownSection, PaymentMethodType } from '@/modules/shared/components/PricingBreakdownSection';
 import logoImage from '@/assets/byootdz-logo.png';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
+import { BackendImage, resolveImageUrl } from '@/modules/shared/components/BackendImage';
+import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
+import { ReviewForm } from '@/modules/reviews/components/ReviewForm';
+import { usePropertyReviews } from '@/modules/reviews/reviews.hooks';
+import { propertiesApi } from '@/modules/properties/properties.api';
 
-// Mock property data - will be replaced with API call
-const MOCK_PROPERTY = {
-  id: '1',
-  title: 'Villa Vue Mer avec Piscine Privée',
-  description: `Magnifique villa moderne située sur les hauteurs de Tipaza avec une vue imprenable sur la mer Méditerranée. Cette propriété d'exception offre un cadre idyllique pour des vacances en famille ou entre amis.
-
-La villa dispose de grands espaces de vie lumineux, d'une cuisine entièrement équipée et d'une terrasse panoramique parfaite pour admirer les couchers de soleil. La piscine privée et le jardin paysager complètent cette propriété de rêve.
-
-À seulement 10 minutes en voiture des plages et du centre-ville, vous pourrez profiter à la fois du calme de la campagne et de la proximité des commodités.`,
-  location: 'Tipaza, Algeria',
-  address: '23 Rue des Oliviers, Tipaza 42000',
-  price: 15000,
-  pricing: {
-    pricePerWeek: 90000, // 15000 * 7 = 105000 -> 90000 is ~14% off
-    pricePerMonth: 350000, // 15000 * 30 = 450000 -> 350000 is ~22% off
-    customDiscount: 10,
-    customDiscountMinNights: 10,
-    acceptedPaymentMethods: ['visa_master', 'dahabia', 'postal_bank_transfer', 'hand_to_hand'] as PaymentMethodType[],
-  },
-  rating: 4.9,
-  reviewCount: 127,
-  maxGuests: 8,
-  bedrooms: 4,
-  beds: 5,
-  bathrooms: 3,
-  area: 280,
-  images: [
-    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-  ],
-  amenities: [
-    { id: 'wifi', icon: Wifi, label: 'propertyDetail.amenities.wifi' },
-    { id: 'parking', icon: Car, label: 'propertyDetail.amenities.parking' },
-    { id: 'ac', icon: Wind, label: 'propertyDetail.amenities.ac' },
-    { id: 'tv', icon: Tv, label: 'propertyDetail.amenities.tv' },
-    { id: 'kitchen', icon: UtensilsCrossed, label: 'propertyDetail.amenities.kitchen' },
-    { id: 'washer', icon: WashingMachine, label: 'propertyDetail.amenities.washer' },
-    { id: 'security', icon: Shield, label: 'propertyDetail.amenities.security' },
-    { id: 'pool', icon: Waves, label: 'propertyDetail.amenities.pool' },
-    { id: 'garden', icon: Mountain, label: 'propertyDetail.amenities.garden' },
-    { id: 'breakfast', icon: Coffee, label: 'propertyDetail.amenities.breakfast' },
-  ],
-  host: {
-    id: 'h1',
-    name: 'Karim B.',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop',
-    isSuperhost: true,
-    joinedYear: 2019,
-    responseRate: 98,
-    responseTime: '1 hour',
-  },
-  reviews: [
-    {
-      id: 'r1',
-      author: 'Sarah M.',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop',
-      rating: 5,
-      date: '2024-01-15',
-      comment: 'Séjour exceptionnel! La villa est encore plus belle en vrai. Karim est un hôte très attentionné. Je recommande vivement!',
-    },
-    {
-      id: 'r2',
-      author: 'Mohamed A.',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop',
-      rating: 5,
-      date: '2024-01-08',
-      comment: 'Vue magnifique, piscine parfaite, tout était impeccable. Nous reviendrons certainement!',
-    },
-    {
-      id: 'r3',
-      author: 'Amina K.',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&auto=format&fit=crop',
-      rating: 4,
-      date: '2023-12-20',
-      comment: 'Très belle propriété, bien équipée. Petit bémol sur la route d\'accès un peu difficile mais ça vaut le détour!',
-    },
-  ],
-  coordinates: { latitude: 36.5944, longitude: 2.4508 },
-  policies: {
-    checkIn: '15:00',
-    checkOut: '11:00',
-    cancellation: 'flexible',
-  },
-  verification: {
-    trustStars: 5,
-    isVerified: true,
-  },
+// Amenity icon map
+const AMENITY_ICONS: Record<string, React.ElementType> = {
+  wifi: Wifi, parking: Car, ac: Wind, tv: Tv,
+  kitchen: UtensilsCrossed, washer: WashingMachine,
+  security: Shield, pool: Waves, garden: Mountain, breakfast: Coffee,
 };
 
 const PropertyDetail = () => {
@@ -141,25 +62,88 @@ const PropertyDetail = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
-  const property = MOCK_PROPERTY; // Will be fetched by ID
+  // Fetch property from API
+  const { data: property, isLoading, isError } = useQuery({
+    queryKey: ['property', id],
+    queryFn: () => propertiesApi.getById(id!),
+    enabled: !!id,
+    retry: 1,
+  });
+
+  // Fetch reviews from API
+  const { data: reviews = [], isLoading: reviewsLoading } = usePropertyReviews(id || '');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSpinner size="lg" text={t('common.loading', 'Loading...')} />
+      </div>
+    );
+  }
+
+  if (isError || !property) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">{t('common.error', 'Something went wrong')}</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          {t('common.goBack', 'Go Back')}
+        </Button>
+      </div>
+    );
+  }
+
+  // Normalize property data from API
+  const images: string[] = property.images || [];
+  const amenities: string[] = property.amenities || [];
+  const pricePerNight = (property as any).pricePerNight ?? property.price ?? 0;
+  const rating = (property as any).averageRating ?? property.rating ?? 0;
+  const reviewCount = (property as any).reviewCount ?? property.reviewCount ?? 0;
+  const maxGuests = (property as any).maxGuests ?? property.guests ?? 0;
+  const bedrooms = property.bedrooms ?? 0;
+  const bathrooms = property.bathrooms ?? 0;
+  const beds = (property as any).beds ?? bedrooms;
+  const title = property.title ?? '';
+  const description = property.description ?? '';
+  const location = (property as any).city
+    ? `${(property as any).city}, ${(property as any).wilaya || (property as any).country || ''}`
+    : property.location?.city
+      ? `${property.location.city}, ${property.location.country}`
+      : '';
+  const address = (property as any).address ?? property.location?.address ?? '';
+  const latitude = (property as any).latitude ?? property.location?.latitude ?? 36.7538;
+  const longitude = (property as any).longitude ?? property.location?.longitude ?? 3.0588;
+  const trustStars = (property as any).trustStars ?? property.trustStars ?? 0;
+  const isVerified = (property as any).isVerified ?? property.isVerified ?? false;
+  const host = (property as any).host ?? null;
+  const hostName = host?.firstName ? `${host.firstName} ${host.lastName || ''}`.trim() : property.hostName || 'Host';
+  const hostAvatar = host?.avatar ? resolveImageUrl(host.avatar) : property.hostAvatar || '';
+  const checkInTime = (property as any).checkInTime ?? '14:00';
+  const checkOutTime = (property as any).checkOutTime ?? '11:00';
+  const cancellationPolicy = (property as any).cancellationPolicy ?? 'flexible';
+  const pricePerWeek = (property as any).pricePerWeek ?? null;
+  const pricePerMonth = (property as any).pricePerMonth ?? null;
+  const customDiscount = (property as any).customDiscount ?? 0;
+  const customDiscountMinNights = (property as any).customDiscountMinNights ?? 0;
+  const acceptedPaymentMethods = ((property as any).acceptedPaymentMethods ?? ['hand_to_hand']) as PaymentMethodType[];
 
   const handlePrevImage = () => {
     setSelectedImageIndex((prev) =>
-      prev === 0 ? property.images.length - 1 : prev - 1
+      prev === 0 ? images.length - 1 : prev - 1
     );
   };
 
   const handleNextImage = () => {
     setSelectedImageIndex((prev) =>
-      prev === property.images.length - 1 ? 0 : prev + 1
+      prev === images.length - 1 ? 0 : prev + 1
     );
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
+      <header className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -208,26 +192,32 @@ const PropertyDetail = () => {
             className="md:col-span-2 md:row-span-2 relative cursor-pointer group"
             onClick={() => { setSelectedImageIndex(0); setIsGalleryOpen(true); }}
           >
-            <img
-              src={property.images[0]}
-              alt={property.title}
-              className="w-full h-64 md:h-full object-cover group-hover:brightness-90 transition-all"
-            />
+            {images[0] ? (
+              <BackendImage
+                src={images[0]}
+                alt={title}
+                className="w-full h-64 md:h-full object-cover group-hover:brightness-90 transition-all"
+              />
+            ) : (
+              <div className="w-full h-64 md:h-full bg-muted flex items-center justify-center">
+                <span className="text-muted-foreground">{t('common.noImage', 'No image')}</span>
+              </div>
+            )}
           </div>
-          {property.images.slice(1, 5).map((img, idx) => (
+          {images.slice(1, 5).map((img, idx) => (
             <div
               key={idx}
               className="hidden md:block relative cursor-pointer group"
               onClick={() => { setSelectedImageIndex(idx + 1); setIsGalleryOpen(true); }}
             >
-              <img
+              <BackendImage
                 src={img}
-                alt={`${property.title} ${idx + 2}`}
+                alt={`${title} ${idx + 2}`}
                 className="w-full h-full object-cover group-hover:brightness-90 transition-all"
               />
-              {idx === 3 && property.images.length > 5 && (
+              {idx === 3 && images.length > 5 && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold">
-                  +{property.images.length - 5} {t('propertyDetail.morePhotos')}
+                  +{images.length - 5} {t('propertyDetail.morePhotos')}
                 </div>
               )}
             </div>
@@ -239,7 +229,7 @@ const PropertyDetail = () => {
           className="mt-4 md:hidden"
           onClick={() => setIsGalleryOpen(true)}
         >
-          {t('propertyDetail.viewAllPhotos')} ({property.images.length})
+          {t('propertyDetail.viewAllPhotos')} ({images.length})
         </Button>
       </section>
 
@@ -252,27 +242,25 @@ const PropertyDetail = () => {
             <div>
               <div className="flex flex-wrap items-center gap-3 mb-2">
                 <h1 className="text-2xl md:text-3xl font-heading font-bold">
-                  {property.title}
+                  {title}
                 </h1>
-                {property.verification && (
-                  <TrustBadge
-                    trustStars={property.verification.trustStars}
-                    isVerified={property.verification.isVerified}
-                    size="lg"
-                    showLabel
-                  />
-                )}
+                <TrustBadge
+                  trustStars={trustStars}
+                  isVerified={isVerified}
+                  size="lg"
+                  showLabel
+                />
               </div>
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-accent text-accent" />
-                  <span className="font-semibold text-foreground">{property.rating}</span>
-                  <span>({property.reviewCount} {t('propertyDetail.reviews')})</span>
+                  <span className="font-semibold text-foreground">{rating}</span>
+                  <span>({reviewCount} {t('propertyDetail.reviews')})</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
-                  {property.location}
+                  {location}
                 </div>
               </div>
             </div>
@@ -283,24 +271,15 @@ const PropertyDetail = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Avatar className="h-14 w-14">
-                  <AvatarImage src={property.host.avatar} />
-                  <AvatarFallback>{property.host.name.charAt(0)}</AvatarFallback>
+                  <AvatarImage src={hostAvatar} />
+                  <AvatarFallback>{hostName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
                   <p className="font-semibold">
-                    {t('propertyDetail.hostedBy')} {property.host.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {t('propertyDetail.hostSince')} {property.host.joinedYear}
+                    {t('propertyDetail.hostedBy')} {hostName}
                   </p>
                 </div>
               </div>
-              {property.host.isSuperhost && (
-                <Badge variant="secondary" className="gap-1">
-                  <Shield className="h-3 w-3" />
-                  {t('byootdz.badges.superhost')}
-                </Badge>
-              )}
             </div>
 
             <Separator />
@@ -312,7 +291,7 @@ const PropertyDetail = () => {
                   <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{property.maxGuests}</p>
+                  <p className="font-semibold">{maxGuests}</p>
                   <p className="text-xs text-muted-foreground">{t('propertyDetail.guests')}</p>
                 </div>
               </div>
@@ -321,7 +300,7 @@ const PropertyDetail = () => {
                   <BedDouble className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{property.bedrooms}</p>
+                  <p className="font-semibold">{bedrooms}</p>
                   <p className="text-xs text-muted-foreground">{t('propertyDetail.bedrooms')}</p>
                 </div>
               </div>
@@ -330,17 +309,17 @@ const PropertyDetail = () => {
                   <Bath className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{property.bathrooms}</p>
+                  <p className="font-semibold">{bathrooms}</p>
                   <p className="text-xs text-muted-foreground">{t('propertyDetail.bathrooms')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Maximize className="h-5 w-5 text-primary" />
+                  <BedDouble className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{property.area}m²</p>
-                  <p className="text-xs text-muted-foreground">{t('propertyDetail.area')}</p>
+                  <p className="font-semibold">{beds}</p>
+                  <p className="text-xs text-muted-foreground">{t('propertyDetail.beds', 'Beds')}</p>
                 </div>
               </div>
             </div>
@@ -353,7 +332,7 @@ const PropertyDetail = () => {
                 {t('propertyDetail.aboutProperty')}
               </h2>
               <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
-                {property.description}
+                {description}
               </p>
             </div>
 
@@ -365,12 +344,12 @@ const PropertyDetail = () => {
                 {t('propertyDetail.amenitiesTitle')}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {property.amenities.map((amenity) => {
-                  const Icon = amenity.icon;
+                {amenities.map((amenityId) => {
+                  const Icon = AMENITY_ICONS[amenityId] || Check;
                   return (
-                    <div key={amenity.id} className="flex items-center gap-3">
+                    <div key={amenityId} className="flex items-center gap-3">
                       <Icon className="h-5 w-5 text-muted-foreground" />
-                      <span>{t(amenity.label)}</span>
+                      <span>{t(`propertyDetail.amenities.${amenityId}`, amenityId)}</span>
                     </div>
                   );
                 })}
@@ -384,14 +363,14 @@ const PropertyDetail = () => {
               <h2 className="text-xl font-heading font-semibold mb-4">
                 {t('propertyDetail.locationTitle')}
               </h2>
-              <p className="text-muted-foreground mb-4">{property.address}</p>
+              <p className="text-muted-foreground mb-4">{address}</p>
               <div className="aspect-video rounded-xl overflow-hidden bg-muted">
                 <iframe
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
                   loading="lazy"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.longitude - 0.02}%2C${property.coordinates.latitude - 0.01}%2C${property.coordinates.longitude + 0.02}%2C${property.coordinates.latitude + 0.01}&layer=mapnik&marker=${property.coordinates.latitude}%2C${property.coordinates.longitude}`}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.02}%2C${latitude - 0.01}%2C${longitude + 0.02}%2C${latitude + 0.01}&layer=mapnik&marker=${latitude}%2C${longitude}`}
                 />
               </div>
             </div>
@@ -403,40 +382,88 @@ const PropertyDetail = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-heading font-semibold flex items-center gap-2">
                   <Star className="h-5 w-5 fill-accent text-accent" />
-                  {property.rating} · {property.reviewCount} {t('propertyDetail.reviews')}
+                  {rating} · {reviewCount} {t('propertyDetail.reviews')}
                 </h2>
+                {user && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowReviewForm(!showReviewForm)}
+                  >
+                    {showReviewForm
+                      ? t('common.cancel', 'Cancel')
+                      : t('reviews.writeReview', 'Write a Review')}
+                  </Button>
+                )}
               </div>
 
-              <div className="space-y-6">
-                {property.reviews.map((review) => (
-                  <div key={review.id} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={review.avatar} />
-                          <AvatarFallback>{review.author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold">{review.author}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(review.date).toLocaleDateString()}
-                          </p>
+              {/* Review Form */}
+              {showReviewForm && (
+                <div className="mb-8">
+                  <ReviewForm
+                    propertyId={id!}
+                    bookingId=""
+                    onSuccess={() => setShowReviewForm(false)}
+                    onCancel={() => setShowReviewForm(false)}
+                  />
+                </div>
+              )}
+
+              {reviewsLoading ? (
+                <LoadingSpinner size="sm" text={t('common.loading', 'Loading...')} />
+              ) : reviews.length > 0 ? (
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarImage src={review.guest?.avatar ? resolveImageUrl(review.guest.avatar) : undefined} />
+                            <AvatarFallback>
+                              {(review.guest?.firstName || review.guest?.email || 'U').charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold">
+                              {review.guest?.firstName
+                                ? `${review.guest.firstName} ${review.guest.lastName || ''}`.trim()
+                                : t('reviews.anonymous', 'Guest')}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: review.overallRating }).map((_, i) => (
+                              <Star key={i} className="h-4 w-4 fill-accent text-accent" />
+                            ))}
+                          </div>
+                          {review.hostRating && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {t('reviews.host', 'Host')}: {review.hostRating}/5
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-accent text-accent" />
-                        ))}
-                      </div>
+                      <p className="text-muted-foreground">{review.comment}</p>
+                      {review.hostReply && (
+                        <div className="ml-8 p-3 bg-muted rounded-lg">
+                          <p className="text-xs font-semibold text-foreground mb-1">
+                            {t('reviews.hostReply', 'Host Reply')}:
+                          </p>
+                          <p className="text-sm text-muted-foreground">{review.hostReply}</p>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-muted-foreground">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
-
-              <Button variant="outline" className="w-full mt-6">
-                {t('propertyDetail.showAllReviews')} ({property.reviewCount})
-              </Button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  {t('reviews.noReviews', 'No reviews yet. Be the first to review!')}
+                </p>
+              )}
             </div>
 
             <Separator />
@@ -451,21 +478,21 @@ const PropertyDetail = () => {
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="font-medium">{t('propertyDetail.checkIn')}</p>
-                    <p className="text-sm text-muted-foreground">{property.policies.checkIn}</p>
+                    <p className="text-sm text-muted-foreground">{checkInTime}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="font-medium">{t('propertyDetail.checkOut')}</p>
-                    <p className="text-sm text-muted-foreground">{property.policies.checkOut}</p>
+                    <p className="text-sm text-muted-foreground">{checkOutTime}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="font-medium">{t('propertyDetail.cancellation')}</p>
-                    <p className="text-sm text-muted-foreground capitalize">{property.policies.cancellation}</p>
+                    <p className="text-sm text-muted-foreground capitalize">{cancellationPolicy}</p>
                   </div>
                 </div>
               </div>
@@ -476,12 +503,12 @@ const PropertyDetail = () => {
             {/* Pricing Options */}
             <div className="pt-4">
               <PricingBreakdownSection
-                pricePerNight={property.price}
-                pricePerWeek={property.pricing.pricePerWeek}
-                pricePerMonth={property.pricing.pricePerMonth}
-                customDiscount={property.pricing.customDiscount}
-                customDiscountMinNights={property.pricing.customDiscountMinNights}
-                acceptedPaymentMethods={property.pricing.acceptedPaymentMethods}
+                pricePerNight={pricePerNight}
+                pricePerWeek={pricePerWeek}
+                pricePerMonth={pricePerMonth}
+                customDiscount={customDiscount}
+                customDiscountMinNights={customDiscountMinNights}
+                acceptedPaymentMethods={acceptedPaymentMethods}
                 currency="DZD"
               />
             </div>
@@ -490,16 +517,16 @@ const PropertyDetail = () => {
           {/* Right Column - Booking Widget */}
           <div className="lg:col-span-1">
             <BookingWidget
-              propertyId={property.id}
-              pricePerNight={property.price}
-              pricePerWeek={property.pricing.pricePerWeek}
-              pricePerMonth={property.pricing.pricePerMonth}
-              customDiscount={property.pricing.customDiscount}
-              customDiscountMinNights={property.pricing.customDiscountMinNights}
-              acceptedPaymentMethods={property.pricing.acceptedPaymentMethods}
-              maxGuests={property.maxGuests}
-              rating={property.rating}
-              reviewCount={property.reviewCount}
+              propertyId={String(property.id)}
+              pricePerNight={pricePerNight}
+              pricePerWeek={pricePerWeek}
+              pricePerMonth={pricePerMonth}
+              customDiscount={customDiscount}
+              customDiscountMinNights={customDiscountMinNights}
+              acceptedPaymentMethods={acceptedPaymentMethods}
+              maxGuests={maxGuests}
+              rating={rating}
+              reviewCount={reviewCount}
             />
           </div>
         </div>
@@ -510,7 +537,7 @@ const PropertyDetail = () => {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-lg font-bold text-primary">
-              {property.price.toLocaleString()} DA
+              {pricePerNight.toLocaleString()} DA
             </span>
             <span className="text-muted-foreground text-sm">/{t('byootdz.perNight')}</span>
           </div>
@@ -542,11 +569,13 @@ const PropertyDetail = () => {
               <ChevronLeft className="h-8 w-8" />
             </Button>
 
-            <img
-              src={property.images[selectedImageIndex]}
-              alt={`${property.title} ${selectedImageIndex + 1}`}
-              className="max-h-full max-w-full object-contain"
-            />
+            {images[selectedImageIndex] && (
+              <BackendImage
+                src={images[selectedImageIndex]}
+                alt={`${title} ${selectedImageIndex + 1}`}
+                className="max-h-full max-w-full object-contain"
+              />
+            )}
 
             <Button
               variant="ghost"
@@ -558,7 +587,7 @@ const PropertyDetail = () => {
             </Button>
 
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">
-              {selectedImageIndex + 1} / {property.images.length}
+              {selectedImageIndex + 1} / {images.length}
             </div>
           </div>
         </DialogContent>
