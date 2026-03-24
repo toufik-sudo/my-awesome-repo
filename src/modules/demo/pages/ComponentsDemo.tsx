@@ -26,11 +26,11 @@ export const ComponentsDemo = () => {
   const [inputValue, setInputValue] = useState('');
   const [dropdownValue, setDropdownValue] = useState('');
   const [multiSelectValues, setMultiSelectValues] = useState<(string | number)[]>([]);
-  
+
   // Booking Modal state
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedEventForBooking, setSelectedEventForBooking] = useState<CalendarEvent | null>(null);
-  
+
   // Image Cropper state
   const [cropperOpen, setCropperOpen] = useState(false);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
@@ -109,8 +109,8 @@ export const ComponentsDemo = () => {
       price: 250,
       currency: '$',
       location: {
-        lat: 40.7128,
-        lng: -74.006,
+        latitude: 40.7128,
+        longitude: -74.006,
         address: '123 Main St',
         city: 'New York',
         country: 'USA',
@@ -134,8 +134,8 @@ export const ComponentsDemo = () => {
       price: 180,
       currency: '$',
       location: {
-        lat: 40.7829,
-        lng: -73.9654,
+        latitude: 40.7829,
+        longitude: -73.9654,
         address: '456 Park Ave',
         city: 'New York',
         country: 'USA',
@@ -159,8 +159,8 @@ export const ComponentsDemo = () => {
       price: 450,
       currency: '$',
       location: {
-        lat: 40.7489,
-        lng: -73.9680,
+        latitude: 40.7489,
+        longitude: -73.9680,
         address: '789 Madison Ave',
         city: 'New York',
         country: 'USA',

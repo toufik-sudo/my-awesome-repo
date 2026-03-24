@@ -18,7 +18,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    lng: 'en',
+    longitude: 'en',
     interpolation: {
       escapeValue: false,
     },
@@ -29,10 +29,10 @@ i18n
   });
 
 // Handle RTL for Arabic
-i18n.on('languageChanged', (lng) => {
-  const dir = lng === 'ar' ? 'rtl' : 'ltr';
+i18n.on('languageChanged', (longitude) => {
+  const dir = longitude === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.dir = dir;
-  document.documentElement.lang = lng;
+  document.documentElement.lang = longitude;
 });
 
 export default i18n;

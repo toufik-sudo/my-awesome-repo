@@ -69,9 +69,9 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       const data = await response.json();
 
       if (data && data.length > 0) {
-        const { lon, lat } = data[0];
+        const { lon, latitude } = data[0];
         map.current.flyTo({
-          center: [parseFloat(lon), parseFloat(lat)],
+          center: [parseFloat(lon), parseFloat(latitude)],
           zoom: 13,
           duration: 2000,
         });
@@ -308,7 +308,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       `;
 
       const marker = new maplibregl.Marker({ element: markerEl })
-        .setLngLat([property.location.lng, property.location.lat])
+        .setLngLat([property.location.longitude, property.location.latitude])
         .addTo(map.current!);
 
       // Open popup on click
@@ -323,7 +323,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
           });
         });
 
-        popup.setLngLat([property.location.lng, property.location.lat]).addTo(map.current!);
+        popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
         markerEl.className = 'custom-marker active-marker';
         // setActivePopup(popup);
       });
@@ -339,7 +339,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
           });
         });
 
-        popup.setLngLat([property.location.lng, property.location.lat]).addTo(map.current!);
+        popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
         markerEl.className = 'custom-marker active-marker';
         // setActivePopup(popup);
       });
@@ -351,7 +351,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
     if (filteredProperties.length > 0) {
       const bounds = new maplibregl.LngLatBounds();
       filteredProperties.forEach(property => {
-        bounds.extend([property.location.lng, property.location.lat]);
+        bounds.extend([property.location.longitude, property.location.latitude]);
       });
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }

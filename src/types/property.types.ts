@@ -5,8 +5,8 @@ export interface Property {
   price: number;
   currency: string;
   location: {
-    lat: number;
-    lng: number;
+    latitude: number;
+    longitude: number;
     address: string;
     city: string;
     country: string;

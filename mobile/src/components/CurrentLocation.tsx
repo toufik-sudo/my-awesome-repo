@@ -50,7 +50,7 @@ export const CurrentLocation: React.FC<CurrentLocationProps> = ({
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setPermissionStatus(status === 'granted' ? 'granted' : 'denied');
-      
+
       if (status === 'granted') {
         getCurrentLocation();
       } else {
@@ -81,7 +81,7 @@ export const CurrentLocation: React.FC<CurrentLocationProps> = ({
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
         });
-        
+
         if (addressResults.length > 0) {
           const addr = addressResults[0];
           setAddress(`${addr.street || ''}, ${addr.city || ''}, ${addr.region || ''}`);
@@ -95,8 +95,8 @@ export const CurrentLocation: React.FC<CurrentLocationProps> = ({
     }
   };
 
-  const formatCoordinates = (lat: number, lng: number) => {
-    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  const formatCoordinates = (latitude: number, longitude: number) => {
+    return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
   };
 
   if (permissionStatus === 'denied') {

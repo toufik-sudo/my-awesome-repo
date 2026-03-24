@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  MapPin, 
-  Star, 
+import {
+  MapPin,
+  Star,
   Heart,
   Share2,
   ChevronLeft,
@@ -119,7 +119,7 @@ La villa dispose de grands espaces de vie lumineux, d'une cuisine entièrement �
       comment: 'Très belle propriété, bien équipée. Petit bémol sur la route d\'accès un peu difficile mais ça vaut le détour!',
     },
   ],
-  coordinates: { lat: 36.5944, lng: 2.4508 },
+  coordinates: { latitude: 36.5944, longitude: 2.4508 },
   policies: {
     checkIn: '15:00',
     checkOut: '11:00',
@@ -137,21 +137,21 @@ const PropertyDetail = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const canEdit = user?.roles?.some((r: string) => ['admin', 'manager', 'hyper_manager', 'hyper_admin'].includes(r));
-  
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
-  
+
   const property = MOCK_PROPERTY; // Will be fetched by ID
 
   const handlePrevImage = () => {
-    setSelectedImageIndex((prev) => 
+    setSelectedImageIndex((prev) =>
       prev === 0 ? property.images.length - 1 : prev - 1
     );
   };
 
   const handleNextImage = () => {
-    setSelectedImageIndex((prev) => 
+    setSelectedImageIndex((prev) =>
       prev === property.images.length - 1 ? 0 : prev + 1
     );
   };
@@ -165,10 +165,10 @@ const PropertyDetail = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <img 
-              src={logoImage} 
-              alt="ByootDZ" 
-              className="h-7 w-auto cursor-pointer" 
+            <img
+              src={logoImage}
+              alt="ByootDZ"
+              className="h-7 w-auto cursor-pointer"
               onClick={() => navigate('/')}
             />
           </div>
@@ -188,9 +188,9 @@ const PropertyDetail = () => {
               <Share2 className="h-4 w-4" />
               <span className="hidden sm:inline">{t('propertyDetail.share')}</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="gap-2"
               onClick={() => setIsFavorite(!isFavorite)}
             >
@@ -204,24 +204,24 @@ const PropertyDetail = () => {
       {/* Photo Gallery */}
       <section className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2 rounded-2xl overflow-hidden">
-          <div 
+          <div
             className="md:col-span-2 md:row-span-2 relative cursor-pointer group"
             onClick={() => { setSelectedImageIndex(0); setIsGalleryOpen(true); }}
           >
-            <img 
-              src={property.images[0]} 
+            <img
+              src={property.images[0]}
               alt={property.title}
               className="w-full h-64 md:h-full object-cover group-hover:brightness-90 transition-all"
             />
           </div>
           {property.images.slice(1, 5).map((img, idx) => (
-            <div 
+            <div
               key={idx}
               className="hidden md:block relative cursor-pointer group"
               onClick={() => { setSelectedImageIndex(idx + 1); setIsGalleryOpen(true); }}
             >
-              <img 
-                src={img} 
+              <img
+                src={img}
                 alt={`${property.title} ${idx + 2}`}
                 className="w-full h-full object-cover group-hover:brightness-90 transition-all"
               />
@@ -233,9 +233,9 @@ const PropertyDetail = () => {
             </div>
           ))}
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           className="mt-4 md:hidden"
           onClick={() => setIsGalleryOpen(true)}
         >
@@ -255,11 +255,11 @@ const PropertyDetail = () => {
                   {property.title}
                 </h1>
                 {property.verification && (
-                  <TrustBadge 
-                    trustStars={property.verification.trustStars} 
-                    isVerified={property.verification.isVerified} 
-                    size="lg" 
-                    showLabel 
+                  <TrustBadge
+                    trustStars={property.verification.trustStars}
+                    isVerified={property.verification.isVerified}
+                    size="lg"
+                    showLabel
                   />
                 )}
               </div>
@@ -391,7 +391,7 @@ const PropertyDetail = () => {
                   height="100%"
                   style={{ border: 0 }}
                   loading="lazy"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.lng - 0.02}%2C${property.coordinates.lat - 0.01}%2C${property.coordinates.lng + 0.02}%2C${property.coordinates.lat + 0.01}&layer=mapnik&marker=${property.coordinates.lat}%2C${property.coordinates.lng}`}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${property.coordinates.longitude - 0.02}%2C${property.coordinates.latitude - 0.01}%2C${property.coordinates.longitude + 0.02}%2C${property.coordinates.latitude + 0.01}&layer=mapnik&marker=${property.coordinates.latitude}%2C${property.coordinates.longitude}`}
                 />
               </div>
             </div>
@@ -406,7 +406,7 @@ const PropertyDetail = () => {
                   {property.rating} · {property.reviewCount} {t('propertyDetail.reviews')}
                 </h2>
               </div>
-              
+
               <div className="space-y-6">
                 {property.reviews.map((review) => (
                   <div key={review.id} className="space-y-3">
@@ -433,7 +433,7 @@ const PropertyDetail = () => {
                   </div>
                 ))}
               </div>
-              
+
               <Button variant="outline" className="w-full mt-6">
                 {t('propertyDetail.showAllReviews')} ({property.reviewCount})
               </Button>
@@ -475,7 +475,7 @@ const PropertyDetail = () => {
 
             {/* Pricing Options */}
             <div className="pt-4">
-              <PricingBreakdownSection 
+              <PricingBreakdownSection
                 pricePerNight={property.price}
                 pricePerWeek={property.pricing.pricePerWeek}
                 pricePerMonth={property.pricing.pricePerMonth}
@@ -532,7 +532,7 @@ const PropertyDetail = () => {
             >
               <X className="h-6 w-6" />
             </Button>
-            
+
             <Button
               variant="ghost"
               size="icon"
@@ -541,13 +541,13 @@ const PropertyDetail = () => {
             >
               <ChevronLeft className="h-8 w-8" />
             </Button>
-            
+
             <img
               src={property.images[selectedImageIndex]}
               alt={`${property.title} ${selectedImageIndex + 1}`}
               className="max-h-full max-w-full object-contain"
             />
-            
+
             <Button
               variant="ghost"
               size="icon"
@@ -556,7 +556,7 @@ const PropertyDetail = () => {
             >
               <ChevronRight className="h-8 w-8" />
             </Button>
-            
+
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">
               {selectedImageIndex + 1} / {property.images.length}
             </div>

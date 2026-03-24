@@ -31,7 +31,7 @@ import { DynamicCharts } from '@/modules/shared/components/DynamicCharts';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { ErrorBoundary } from '@/modules/shared/components/ErrorBoundary';
-import { MainLayout } from '@/modules/shared/layout/MainLayout';
+// MainLayout removed — provided by Routes
 import { useDashboard } from './useDashboard';
 import { format, parseISO } from 'date-fns';
 
@@ -110,23 +110,19 @@ export const Dashboard = memo(() => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
     );
   }
 
   if (error || !data) {
     return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <AlertCircle className="h-12 w-12 text-destructive" />
-          <p className="text-muted-foreground">{error || t('dashboard.error')}</p>
-          <Button onClick={refetch}>{t('dashboard.retry')}</Button>
-        </div>
-      </MainLayout>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <p className="text-muted-foreground">{error || t('dashboard.error')}</p>
+        <Button onClick={refetch}>{t('dashboard.retry')}</Button>
+      </div>
     );
   }
 
@@ -235,207 +231,205 @@ export const Dashboard = memo(() => {
   );
 
   return (
-    <MainLayout>
-      <DashboardLayout
-        title={t('dashboard.title')}
-        subtitle={t('dashboard.subtitle')}
-        stats={stats}
-        quickActions={quickActions}
-        sidebar={sidebar}
-        sidebarPosition="right"
-        gridCols={2}
-      >
-        {/* Revenue Chart */}
+    <DashboardLayout
+      title={t('dashboard.title')}
+      subtitle={t('dashboard.subtitle')}
+      stats={stats}
+      quickActions={quickActions}
+      sidebar={sidebar}
+      sidebarPosition="right"
+      gridCols={2}
+    >
+      {/* Revenue Chart */}
+      <ErrorBoundary>
+        <DynamicCharts
+          data={revenueChartData}
+          type="area"
+          series={[
+            { dataKey: 'revenue', name: t('dashboard.charts.revenue'), color: 'hsl(var(--primary))' },
+            { dataKey: 'bookings', name: t('dashboard.charts.bookings'), color: 'hsl(var(--secondary))' },
+          ]}
+          title={t('dashboard.charts.revenueTitle')}
+          description={t('dashboard.charts.revenueDesc')}
+          withCard
+          chartHeight={280}
+        />
+      </ErrorBoundary>
+
+      {/* Property Type Distribution */}
+      {propertyTypeData.length > 0 && (
         <ErrorBoundary>
           <DynamicCharts
-            data={revenueChartData}
-            type="area"
-            series={[
-              { dataKey: 'revenue', name: t('dashboard.charts.revenue'), color: 'hsl(var(--primary))' },
-              { dataKey: 'bookings', name: t('dashboard.charts.bookings'), color: 'hsl(var(--secondary))' },
-            ]}
-            title={t('dashboard.charts.revenueTitle')}
-            description={t('dashboard.charts.revenueDesc')}
+            data={propertyTypeData}
+            type="pie"
+            series={[{ dataKey: 'value' }]}
+            title={t('dashboard.charts.propertyTypes')}
+            description={t('dashboard.charts.propertyTypesDesc')}
             withCard
             chartHeight={280}
+            labelKey="name"
+            valueKey="value"
           />
         </ErrorBoundary>
+      )}
 
-        {/* Property Type Distribution */}
-        {propertyTypeData.length > 0 && (
-          <ErrorBoundary>
-            <DynamicCharts
-              data={propertyTypeData}
-              type="pie"
-              series={[{ dataKey: 'value' }]}
-              title={t('dashboard.charts.propertyTypes')}
-              description={t('dashboard.charts.propertyTypesDesc')}
-              withCard
-              chartHeight={280}
-              labelKey="name"
-              valueKey="value"
-            />
-          </ErrorBoundary>
-        )}
-
-        {/* My Properties */}
-        <Card className="col-span-full">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">{t('dashboard.myProperties')}</CardTitle>
-                <CardDescription>{data.stats.totalProperties} {t('dashboard.total')}</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/properties')} className="gap-1">
-                {t('dashboard.viewAll')}
-                <ArrowRight className="h-4 w-4" />
+      {/* My Properties */}
+      <Card className="col-span-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">{t('dashboard.myProperties')}</CardTitle>
+              <CardDescription>{data.stats.totalProperties} {t('dashboard.total')}</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/properties')} className="gap-1">
+              {t('dashboard.viewAll')}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {data.properties.length === 0 ? (
+            <div className="text-center py-8">
+              <Home className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-3">{t('dashboard.noProperties')}</p>
+              <Button size="sm" onClick={() => navigate('/properties/new')}>
+                <Plus className="h-4 w-4 mr-1" />
+                {t('dashboard.actions.addProperty')}
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            {data.properties.length === 0 ? (
-              <div className="text-center py-8">
-                <Home className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground mb-3">{t('dashboard.noProperties')}</p>
-                <Button size="sm" onClick={() => navigate('/properties/new')}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  {t('dashboard.actions.addProperty')}
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data.properties.map(property => (
-                  <div
-                    key={property.id}
-                    className="group flex gap-3 p-3 rounded-lg border border-border/60 hover:shadow-md transition-all cursor-pointer"
-                    onClick={() => navigate(`/property/${property.id}`)}
-                  >
-                    <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={property.image}
-                        alt={property.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {data.properties.map(property => (
+                <div
+                  key={property.id}
+                  className="group flex gap-3 p-3 rounded-lg border border-border/60 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => navigate(`/property/${property.id}`)}
+                >
+                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={property.image}
+                      alt={property.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                      {property.title}
+                    </h4>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3 w-3" />
+                      {property.location}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <TrustBadge trustStars={property.trustStars} isVerified={property.isVerified} size="sm" showLabel={false} />
+                      <span className="text-xs text-muted-foreground">
+                        <Star className="h-3 w-3 inline fill-accent text-accent" /> {property.rating}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                        {property.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="h-3 w-3" />
-                        {property.location}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <TrustBadge trustStars={property.trustStars} isVerified={property.isVerified} size="sm" showLabel={false} />
-                        <span className="text-xs text-muted-foreground">
-                          <Star className="h-3 w-3 inline fill-accent text-accent" /> {property.rating}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs font-semibold text-primary">{property.price.toLocaleString()} DA</span>
-                        <Badge variant={property.status === 'published' ? 'secondary' : 'outline'} className="text-[10px] px-1.5 py-0">
-                          {property.status}
-                        </Badge>
-                      </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs font-semibold text-primary">{property.price.toLocaleString()} DA</span>
+                      <Badge variant={property.status === 'published' ? 'secondary' : 'outline'} className="text-[10px] px-1.5 py-0">
+                        {property.status}
+                      </Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Bookings */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">{t('dashboard.recentBookings')}</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/bookings')} className="gap-1">
-                {t('dashboard.viewAll')}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+                </div>
+              ))}
             </div>
-          </CardHeader>
-          <CardContent>
-            {data.recentBookings.length === 0 ? (
-              <div className="text-center py-6">
-                <Calendar className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">{t('dashboard.noBookings')}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {data.recentBookings.map(booking => {
-                  const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
-                  const StatusIcon = cfg.icon;
-                  return (
-                    <div
-                      key={booking.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/property/${booking.id}`)}
-                    >
-                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={booking.propertyImage} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{booking.propertyTitle}</p>
-                        <p className="text-xs text-muted-foreground">{booking.location}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className={`flex items-center gap-1 text-xs ${cfg.color}`}>
-                          <StatusIcon className="h-3 w-3" />
-                          {booking.status}
-                        </div>
-                        <p className="text-xs font-medium">{Number(booking.totalPrice).toLocaleString()} DA</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Host Requests */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{t('dashboard.hostRequests')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.recentHostRequests.length === 0 ? (
-              <div className="text-center py-6">
-                <Users className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">{t('dashboard.noHostRequests')}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {data.recentHostRequests.map(req => {
-                  const cfg = STATUS_CONFIG[req.status] || STATUS_CONFIG.pending;
-                  const StatusIcon = cfg.icon;
-                  return (
-                    <div key={req.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="p-2 rounded-full bg-muted">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{req.guestName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{req.propertyTitle}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className={`flex items-center gap-1 text-xs ${cfg.color}`}>
-                          <StatusIcon className="h-3 w-3" />
-                          {req.status}
-                        </div>
-                        <p className="text-xs font-medium">{Number(req.totalPrice).toLocaleString()} DA</p>
-                      </div>
+      {/* Recent Bookings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">{t('dashboard.recentBookings')}</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/bookings')} className="gap-1">
+              {t('dashboard.viewAll')}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {data.recentBookings.length === 0 ? (
+            <div className="text-center py-6">
+              <Calendar className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">{t('dashboard.noBookings')}</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {data.recentBookings.map(booking => {
+                const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
+                const StatusIcon = cfg.icon;
+                return (
+                  <div
+                    key={booking.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/property/${booking.id}`)}
+                  >
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                      <img src={booking.propertyImage} alt="" className="w-full h-full object-cover" />
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </DashboardLayout>
-    </MainLayout>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{booking.propertyTitle}</p>
+                      <p className="text-xs text-muted-foreground">{booking.location}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className={`flex items-center gap-1 text-xs ${cfg.color}`}>
+                        <StatusIcon className="h-3 w-3" />
+                        {booking.status}
+                      </div>
+                      <p className="text-xs font-medium">{Number(booking.totalPrice).toLocaleString()} DA</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Host Requests */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{t('dashboard.hostRequests')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.recentHostRequests.length === 0 ? (
+            <div className="text-center py-6">
+              <Users className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">{t('dashboard.noHostRequests')}</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {data.recentHostRequests.map(req => {
+                const cfg = STATUS_CONFIG[req.status] || STATUS_CONFIG.pending;
+                const StatusIcon = cfg.icon;
+                return (
+                  <div key={req.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="p-2 rounded-full bg-muted">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{req.guestName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{req.propertyTitle}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className={`flex items-center gap-1 text-xs ${cfg.color}`}>
+                        <StatusIcon className="h-3 w-3" />
+                        {req.status}
+                      </div>
+                      <p className="text-xs font-medium">{Number(req.totalPrice).toLocaleString()} DA</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </DashboardLayout>
   );
 });
 

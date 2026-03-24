@@ -28,8 +28,8 @@ const fakeProperties: Property[] = [
     price: 250,
     currency: '$',
     location: {
-      lat: 40.7580,
-      lng: -73.9855,
+      latitude: 40.7580,
+      longitude: -73.9855,
       address: '123 Times Square',
       city: 'New York',
       country: 'USA'
@@ -58,8 +58,8 @@ const fakeProperties: Property[] = [
     price: 120,
     currency: '$',
     location: {
-      lat: 40.6782,
-      lng: -73.9442,
+      latitude: 40.6782,
+      longitude: -73.9442,
       address: '456 Bedford Ave',
       city: 'Brooklyn',
       country: 'USA'
@@ -86,8 +86,8 @@ const fakeProperties: Property[] = [
     price: 450,
     currency: '$',
     location: {
-      lat: 40.7829,
-      lng: -73.9654,
+      latitude: 40.7829,
+      longitude: -73.9654,
       address: '789 Central Park West',
       city: 'New York',
       country: 'USA'
@@ -115,8 +115,8 @@ const fakeProperties: Property[] = [
     price: 320,
     currency: '$',
     location: {
-      lat: 40.7233,
-      lng: -74.0020,
+      latitude: 40.7233,
+      longitude: -74.0020,
       address: '321 Spring Street',
       city: 'New York',
       country: 'USA'
@@ -143,8 +143,8 @@ const fakeProperties: Property[] = [
     price: 380,
     currency: '$',
     location: {
-      lat: 40.7081,
-      lng: -73.9571,
+      latitude: 40.7081,
+      longitude: -73.9571,
       address: '567 N 6th Street',
       city: 'Brooklyn',
       country: 'USA'
@@ -172,8 +172,8 @@ const fakeProperties: Property[] = [
     price: 175,
     currency: '$',
     location: {
-      lat: 40.7465,
-      lng: -74.0014,
+      latitude: 40.7465,
+      longitude: -74.0014,
       address: '234 W 22nd Street',
       city: 'New York',
       country: 'USA'
@@ -197,7 +197,7 @@ const fakeProperties: Property[] = [
 
 export const FilterDemo = () => {
   const { t } = useTranslation();
-  const [appliedFilters, setAppliedFilters] = useState < ActiveFilter[] > ([]);
+  const [appliedFilters, setAppliedFilters] = useState<ActiveFilter[]>([]);
 
   // Sample filter configurations for property search
   const propertyFilters: FilterConfig[] = [

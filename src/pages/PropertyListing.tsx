@@ -22,7 +22,7 @@ import {
   Grid3X3,
   List,
   Heart,
-  
+
   Map,
   DollarSign,
   Bed,
@@ -230,10 +230,10 @@ const PropertyListing = () => {
     // Filter by visible map bounds when in map mode
     if (viewMode === 'map' && mapBounds) {
       source = source.filter(p =>
-        p.lat >= mapBounds.south &&
-        p.lat <= mapBounds.north &&
-        p.lng >= mapBounds.west &&
-        p.lng <= mapBounds.east
+        p.latitude >= mapBounds.south &&
+        p.latitude <= mapBounds.north &&
+        p.longitude >= mapBounds.west &&
+        p.longitude <= mapBounds.east
       );
     }
 
@@ -244,11 +244,11 @@ const PropertyListing = () => {
       price: p.price,
       currency: 'DA',
       location: {
-        lat: p.lat,
-        lng: p.lng,
+        latitude: p.latitude,
+        longitude: p.longitude,
         address: p.location,
         city: p.city,
-        country: 'Algeria',
+        country: p.country,
       },
       images: p.images,
       bedrooms: p.bedrooms,
@@ -799,10 +799,13 @@ const PropertyListing = () => {
                 <div className="rounded-xl overflow-hidden border border-border">
                   <MapSearch
                     properties={mapProperties}
-                    center={[3.0588, 36.7538]}
+                    center={(() => {
+                      const top = [...mapProperties].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
+                      return top ? [top.location.longitude, top.location.latitude] as [number, number] : [3.0588, 36.7538] as [number, number];
+                    })()}
                     zoom={6}
                     onPropertySelect={(property) => navigate(`/property/${property.id}`)}
-                    onBoundsChange={setMapBounds}
+                    // onBoundsChange={setMapBounds}
                     className="h-[calc(100vh-16rem)]"
                   />
                 </div>
