@@ -886,7 +886,7 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
       <Card className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow border-border/60 group" onClick={onClick}>
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-72 h-48 sm:h-auto shrink-0">
-            <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" loading="lazy" />
+            <BackendImage src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
             <Button
               variant="ghost"
               size="icon"
