@@ -65,6 +65,7 @@ import { format } from 'date-fns';
 import { MapSearch, MapBounds } from '@/modules/shared/components/MapSearch';
 import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/components/DynamicFilter';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
+import { BackendImage } from '@/modules/shared/components/BackendImage';
 import { Property } from '@/types/property.types';
 
 // Property type config
@@ -885,7 +886,7 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
       <Card className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow border-border/60 group" onClick={onClick}>
         <div className="flex flex-col sm:flex-row">
           <div className="relative w-full sm:w-72 h-48 sm:h-auto shrink-0">
-            <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" loading="lazy" />
+            <BackendImage src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
             <Button
               variant="ghost"
               size="icon"
@@ -945,11 +946,10 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
   return (
     <Card className="overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border-border/40 group rounded-xl" onClick={onClick}>
       <div className="relative aspect-[4/3] overflow-hidden">
-        <img
+        <BackendImage
           src={property.images[0]}
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          loading="lazy"
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

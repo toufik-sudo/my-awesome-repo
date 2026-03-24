@@ -2,6 +2,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as bodyParser from 'body-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { ValidationPipe, Logger } from '@nestjs/common';
@@ -14,7 +16,12 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Créer l'application NestJS
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Serve static media files (property images, avatars, etc.)
+  app.useStaticAssets(join(__dirname, '..', 'media'), {
+    prefix: '/media/',
+  });
 
   // Validation globale automatique pour tous les DTO
   app.useGlobalPipes(new ValidationPipe());

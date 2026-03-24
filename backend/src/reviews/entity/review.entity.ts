@@ -47,6 +47,9 @@ export class Review {
   overallRating: number;
 
   @Column({ type: 'int', nullable: true })
+  hostRating: number;
+
+  @Column({ type: 'int', nullable: true })
   cleanlinessRating: number;
 
   @Column({ type: 'int', nullable: true })
