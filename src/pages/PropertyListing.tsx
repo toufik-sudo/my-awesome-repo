@@ -946,11 +946,10 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
   return (
     <Card className="overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border-border/40 group rounded-xl" onClick={onClick}>
       <div className="relative aspect-[4/3] overflow-hidden">
-        <img
+        <BackendImage
           src={property.images[0]}
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          loading="lazy"
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
