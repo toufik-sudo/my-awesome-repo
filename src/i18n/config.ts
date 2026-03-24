@@ -18,7 +18,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    longitude: 'en',
+    lng: 'en',
     interpolation: {
       escapeValue: false,
     },
