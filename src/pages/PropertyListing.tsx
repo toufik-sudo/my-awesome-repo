@@ -65,6 +65,7 @@ import { format } from 'date-fns';
 import { MapSearch, MapBounds } from '@/modules/shared/components/MapSearch';
 import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/components/DynamicFilter';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
+import { BackendImage } from '@/modules/shared/components/BackendImage';
 import { Property } from '@/types/property.types';
 
 // Property type config
