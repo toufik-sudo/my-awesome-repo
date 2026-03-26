@@ -83,20 +83,22 @@ const DashboardRoutes = () => (
   </>
 );
 
-/** Smart dashboard: shows role-appropriate content */
+/** Smart dashboard: shows role-appropriate content or redirects */
 const DashboardWithRedirect: React.FC = memo(() => {
-  // Import dynamically to avoid circular deps
-  const { DashboardRedirect } = React.useMemo(() => require('@/modules/admin/pages/DashboardRedirect'), []);
-  
+  return <DashboardRedirectWrapper />;
+});
+DashboardWithRedirect.displayName = 'DashboardWithRedirect';
+
+// Separated to avoid circular dep issues
+const DashboardRedirectWrapper: React.FC = () => {
+  const { DashboardRedirect } = require('@/modules/admin/pages/DashboardRedirect');
   return (
     <>
       <DashboardRedirect />
-      {/* Fallback: regular user dashboard renders if DashboardRedirect returns null */}
       <Dashboard />
     </>
   );
-});
-DashboardWithRedirect.displayName = 'DashboardWithRedirect';
+};
 
 const DemoRoutes = () => (
   <>
