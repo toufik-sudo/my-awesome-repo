@@ -29,10 +29,10 @@ i18n
   });
 
 // Handle RTL for Arabic
-i18n.on('languageChanged', (longitude) => {
-  const dir = longitude === 'ar' ? 'rtl' : 'ltr';
+i18n.on('languageChanged', (lng) => {
+  const dir = lng === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.dir = dir;
-  document.documentElement.lang = longitude;
+  document.documentElement.lang = lng;
 });
 
 export default i18n;

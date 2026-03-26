@@ -12,12 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-export type PaymentMethodType = 
+export type PaymentMethodType =
   | 'visa_master'
   | 'dahabia'
   | 'algiers_bank'
   | 'postal_bank_transfer'
-  | 'hand_to_hand';
+  | 'hand_to_hand'
+  | 'baridi_mob'
+  | 'ccp'
+  | 'cib'
+  | 'bank_transfer';
 
 export interface PricingBreakdownProps {
   pricePerNight: number;
@@ -60,6 +64,26 @@ const PAYMENT_METHOD_CONFIG: Record<PaymentMethodType, {
     label: 'Hand to Hand (Cash)', 
     icon: HandCoins, 
     description: 'Cash payment on arrival' 
+  },
+  baridi_mob: {
+    label: 'Baridi Mob',
+    icon: Smartphone,
+    description: 'Mobile payment via Algérie Poste app'
+  },
+  ccp: {
+    label: 'CCP',
+    icon: Banknote,
+    description: 'Compte CCP (Algérie Poste)'
+  },
+  cib: {
+    label: 'CIB',
+    icon: CreditCard,
+    description: 'Carte Interbancaire (Algérie)'
+  },
+  bank_transfer: {
+    label: 'Bank Transfer',
+    icon: Banknote,
+    description: 'Domestic or international bank transfer'
   },
 };
 
@@ -171,7 +195,7 @@ export const PricingBreakdownSection: React.FC<PricingBreakdownProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {acceptedPaymentMethods.map((method) => {
               const config = PAYMENT_METHOD_CONFIG[method];
-              const Icon = config.icon;
+              const Icon = config?.icon;
               
               return (
                 <div
@@ -198,10 +222,10 @@ export const PricingBreakdownSection: React.FC<PricingBreakdownProps> = ({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
-                      {config.label}
+                      {config?.label}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {config.description}
+                      {config?.description}
                     </p>
                   </div>
                   {method === 'hand_to_hand' && (

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 import { 
   Search, 
   MapPin, 
-  Calendar, 
+  CalendarIcon, 
   Home, 
   Building2, 
   Hotel, 
@@ -16,12 +17,16 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import heroImage from '@/assets/hero-coastal.jpg';
 import logoImage from '@/assets/byootdz-logo.png';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
+import { AddressAutocomplete, NominatimSuggestion } from '@/modules/shared/components/AddressAutocomplete';
+import { DateRange } from 'react-day-picker';
 
 const PROPERTY_CATEGORIES = [
   { id: 'houses', icon: Home, translationKey: 'byootdz.categories.houses' },
@@ -68,6 +73,23 @@ const Index = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const isSearchReady = searchQuery.trim().length > 0 && dateRange?.from && dateRange?.to;
+
+  const handleSearch = () => {
+    if (!isSearchReady) return;
+    const params = new URLSearchParams();
+    params.set('location', searchQuery);
+    if (dateRange?.from) params.set('checkIn', dateRange.from.toISOString());
+    if (dateRange?.to) params.set('checkOut', dateRange.to.toISOString());
+    navigate(`/properties?${params.toString()}`);
+  };
+
+  const handleAddressSelect = (suggestion: NominatimSuggestion) => {
+    // searchQuery is updated by AddressAutocomplete's onChange
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,15 +100,15 @@ const Index = () => {
             <img src={logoImage} alt="ByootDZ" className="h-8 w-auto" />
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => navigate('/properties')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               {t('byootdz.nav.explore')}
-            </a>
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </button>
+            <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               {t('byootdz.nav.howItWorks')}
             </a>
-            <a href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <button onClick={() => navigate('/login')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               {t('byootdz.nav.listProperty')}
-            </a>
+            </button>
           </nav>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
@@ -124,37 +146,70 @@ const Index = () => {
 
             {/* Search Box */}
             <div className="bg-white rounded-2xl p-4 shadow-2xl mt-8">
-            <div className="grid md:grid-cols-4 gap-4">
+              <div className="grid md:grid-cols-4 gap-4">
                 <div className="md:col-span-2">
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">
                     {t('byootdz.search.where')}
                   </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t('byootdz.search.wherePlaceholder')}
-                      className="pl-10 border-0 bg-muted/50 focus:bg-muted"
-                    />
-                  </div>
+                  <AddressAutocomplete
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    onSelect={handleAddressSelect}
+                    placeholder={t('byootdz.search.wherePlaceholder') || 'Search any address worldwide...'}
+                    className="[&_input]:border-0 [&_input]:bg-muted/50 [&_input]:focus:bg-muted"
+                  />
                 </div>
                 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">
                     {t('byootdz.search.when')}
                   </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder={t('byootdz.search.addDates')}
-                      className="pl-10 border-0 bg-muted/50 focus:bg-muted"
-                    />
-                  </div>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          'w-full justify-start text-left font-normal h-10 bg-muted/50 hover:bg-muted',
+                          !dateRange?.from && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {dateRange?.from ? (
+                          dateRange.to ? (
+                            <span className="text-sm">
+                              {format(dateRange.from, 'MMM d')} – {format(dateRange.to, 'MMM d')}
+                            </span>
+                          ) : (
+                            <span className="text-sm">{format(dateRange.from, 'MMM d')}</span>
+                          )
+                        ) : (
+                          <span className="text-sm">{t('byootdz.search.addDates')}</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={(range) => {
+                          setDateRange(range);
+                          if (range?.from && range?.to) setCalendarOpen(false);
+                        }}
+                        numberOfMonths={2}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="flex items-end">
-                  <Button className="w-full h-11 gap-2" onClick={() => navigate(`/properties${searchQuery ? `?location=${encodeURIComponent(searchQuery)}` : ''}`)}>
+                  <Button
+                    className="w-full h-11 gap-2"
+                    disabled={!isSearchReady}
+                    onClick={handleSearch}
+                  >
                     <Search className="h-4 w-4" />
                     {t('byootdz.search.search')}
                   </Button>
@@ -303,7 +358,7 @@ const Index = () => {
           </div>
 
           <div className="text-center mt-8 md:hidden">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => navigate('/properties')}>
               {t('byootdz.featured.viewAll')}
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -330,6 +385,7 @@ const Index = () => {
                 className={`group relative rounded-2xl overflow-hidden cursor-pointer ${
                   idx === 0 ? 'md:col-span-2 md:row-span-2' : ''
                 }`}
+                onClick={() => navigate(`/properties?location=${encodeURIComponent(destination.name)}`)}
               >
                 <div className={`aspect-[4/3] ${idx === 0 ? 'md:aspect-auto md:h-full' : ''}`}>
                   <img 
@@ -366,6 +422,7 @@ const Index = () => {
             <Button 
               size="lg"
               className="bg-white text-primary hover:bg-white/90 gap-2"
+              onClick={() => navigate('/login')}
             >
               {t('byootdz.cta.listProperty')}
               <ArrowRight className="h-5 w-5" />
@@ -374,6 +431,7 @@ const Index = () => {
               variant="outline" 
               size="lg"
               className="border-white text-white hover:bg-white/10"
+              onClick={() => navigate('/properties')}
             >
               {t('byootdz.cta.learnMore')}
             </Button>

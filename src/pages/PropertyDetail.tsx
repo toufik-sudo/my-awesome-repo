@@ -112,8 +112,8 @@ const PropertyDetail = () => {
       ? `${property.location.city}, ${property.location.country}`
       : '';
   const address = (property as any).address ?? property.location?.address ?? '';
-  const latitude = (property as any).latitude ?? property.location?.latitude ?? 36.7538;
-  const longitude = (property as any).longitude ?? property.location?.longitude ?? 3.0588;
+  const latitude = Number((property as any).latitude ?? property.location?.latitude ?? 36.7538);
+  const longitude = Number((property as any).longitude ?? property.location?.longitude ?? 3.0588);
   const trustStars = (property as any).trustStars ?? property.trustStars ?? 0;
   const isVerified = (property as any).isVerified ?? property.isVerified ?? false;
   const host = (property as any).host ?? null;

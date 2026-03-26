@@ -7,7 +7,7 @@ import { MOCK_PROPERTIES, type MockProperty } from './properties.mock';
  * so the rest of the UI stays unchanged.
  */
 const apiToMockShape = (p: any): MockProperty => ({
-  id: Number(p.id) || 0,
+  id: p.id,
   title: p.title ?? '',
   location: p.location?.address ?? p.location ?? '',
   city: p.location?.city ?? p.city ?? '',

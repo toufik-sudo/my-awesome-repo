@@ -82,6 +82,30 @@ const PAYMENT_METHOD_CONFIG: Record<PaymentMethodType, {
     apiValue: 'cash',
     description: 'Cash payment on arrival'
   },
+  baridi_mob: {
+    label: 'Baridi Mob',
+    icon: Smartphone,
+    apiValue: 'ccp',
+    description: 'Mobile payment via Algérie Poste app'
+  },
+  ccp: {
+    label: 'CCP',
+    icon: Banknote,
+    apiValue: 'ccp',
+    description: 'Compte CCP (Algérie Poste)'
+  },
+  cib: {
+    label: 'CIB',
+    icon: CreditCard,
+    apiValue: 'cib',
+    description: 'Carte Interbancaire (Algérie)'
+  },
+  bank_transfer: {
+    label: 'Bank Transfer',
+    icon: Banknote,
+    apiValue: 'ccp',
+    description: 'Domestic or international bank transfer'
+  },
 };
 
 export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({

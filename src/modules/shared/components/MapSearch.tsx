@@ -6,7 +6,7 @@ import { PropertyCard } from './PropertyCard';
 import { DynamicModal } from './DynamicModal';
 import { DynamicButton } from './DynamicButton';
 import { DynamicInput } from './DynamicInput';
-import { Search, SlidersHorizontal, Locate, X } from 'lucide-react';
+import { SlidersHorizontal, Locate } from 'lucide-react';
 import ReactDOM from 'react-dom/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import style from '@/styles/style.module.scss';
 import mapStyle from '../styles/MapSearch.module.scss';
+import { AddressAutocomplete, type NominatimSuggestion } from './AddressAutocomplete';
 
 export interface MapBounds {
   north: number;
@@ -59,27 +60,16 @@ export const MapSearch: React.FC<MapSearchProps> = ({
   const initialCenter = useRef(center || DEFAULT_CENTER);
   const initialZoom = useRef(zoom ?? DEFAULT_ZOOM);
 
-  const handleSearch = async () => {
-    if (!searchQuery || !map.current) return;
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
-      );
-      const data = await response.json();
-
-      if (data && data.length > 0) {
-        const { lon, latitude } = data[0];
-        map.current.flyTo({
-          center: [parseFloat(lon), parseFloat(latitude)],
-          zoom: 13,
-          duration: 2000,
-        });
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-    }
-  };
+  const handleAddressSelect = useCallback((suggestion: NominatimSuggestion) => {
+    if (!map.current) return;
+    const lat = parseFloat(suggestion.lat);
+    const lon = parseFloat(suggestion.lon);
+    map.current.flyTo({
+      center: [lon, lat],
+      zoom: 14,
+      duration: 2000,
+    });
+  }, []);
 
   const handleGeolocation = useCallback(() => {
     if (!map.current) return;
@@ -171,14 +161,36 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       'top-right'
     );
 
-    // Close active popup when clicking on the map
-    mapInstance.on('click', (e) => {
+    // Close active popup when clicking on the map & reverse geocode
+    mapInstance.on('click', async (e) => {
       const target = e.originalEvent.target as HTMLElement;
       if (!target.closest('.custom-marker')) {
         // Remove all active popups
         document.querySelectorAll('.maplibregl-popup').forEach(pop => {
           pop.classList.add('hidden-marker');
         });
+
+        // Reverse geocode the clicked location
+        const { lng, lat } = e.lngLat;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await res.json();
+          if (data?.display_name) {
+            const shortName = data.display_name.split(',').slice(0, 3).join(',').trim();
+            setSearchQuery(shortName);
+
+            // Show a temporary popup at clicked location
+            new maplibregl.Popup({ closeButton: true, closeOnClick: true, className: 'reverse-geocode-popup' })
+              .setLngLat([lng, lat])
+              .setHTML(`<div class="p-2 text-sm max-w-[250px]"><strong>📍 ${shortName}</strong><p class="text-xs opacity-70 mt-1">${data.display_name}</p></div>`)
+              .addTo(mapInstance);
+          }
+        } catch {
+          // silently ignore reverse geocode errors
+        }
       }
 
       document.querySelectorAll('.custom-marker.active-marker').forEach(marker => {
@@ -374,24 +386,13 @@ export const MapSearch: React.FC<MapSearchProps> = ({
       <div className="space-y-4">
         {/* Search and Filters Bar */}
         <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search location (e.g., New York, Manhattan, etc.)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="pl-10"
-            />
-          </div>
-          <DynamicButton
-            variant="primary"
-            onClick={handleSearch}
-            disabled={!searchQuery}
-          >
-            Search
-          </DynamicButton>
+          <AddressAutocomplete
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSelect={handleAddressSelect}
+            placeholder="Search any address worldwide..."
+            className="flex-1"
+          />
           <DynamicButton
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}

@@ -2,7 +2,7 @@
  * Mock properties data — used as fallback when the API is unavailable.
  */
 export interface MockProperty {
-  id: number;
+  id: number | string;
   title: string;
   location: string;
   city: string;

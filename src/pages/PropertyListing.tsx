@@ -116,8 +116,8 @@ const PropertyListing = () => {
 
   const [filters, setFilters] = useState<Filters>({
     location: searchParams.get('location') || '',
-    checkIn: undefined,
-    checkOut: undefined,
+    checkIn: searchParams.get('checkIn') ? new Date(searchParams.get('checkIn')!) : undefined,
+    checkOut: searchParams.get('checkOut') ? new Date(searchParams.get('checkOut')!) : undefined,
     guests: Number(searchParams.get('guests')) || 0,
     priceRange: [0, 30000],
     propertyTypes: searchParams.get('type') ? [searchParams.get('type')!] : [],
@@ -217,7 +217,7 @@ const PropertyListing = () => {
       case 'price_asc': result.sort((a, b) => a.price - b.price); break;
       case 'price_desc': result.sort((a, b) => b.price - a.price); break;
       case 'rating': result.sort((a, b) => b.rating - a.rating); break;
-      case 'newest': result.sort((a, b) => b.id - a.id); break;
+      case 'newest': result.sort((a, b) => String(b.id).localeCompare(String(a.id))); break;
       default: sortWithTrust(result);
     }
 
