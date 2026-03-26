@@ -24,6 +24,7 @@ import { AdminDashboard } from "@/modules/admin/pages/AdminDashboard";
 import { HyperManagerDashboard } from "@/modules/admin/pages/HyperManagerDashboard";
 import { ManagerDashboard } from "@/modules/admin/pages/ManagerDashboard";
 import { VerificationReview } from "@/modules/admin/pages/VerificationReview";
+import { DashboardRedirect } from "@/modules/admin/pages/DashboardRedirect";
 import { HostBookings } from "@/modules/bookings/pages/HostBookings";
 import { BookingHistory } from "@/modules/bookings/pages/BookingHistory";
 import { BookingChat } from "@/modules/chat/pages/BookingChat";
