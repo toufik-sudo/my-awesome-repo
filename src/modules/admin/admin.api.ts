@@ -139,3 +139,45 @@ export const trustApi = {
   recalculate: (propertyId: string) =>
     api.put<TrustRecalculationResponse>(`${PROPERTIES_BASE}/${propertyId}/recalculate-trust`).then(r => r.data),
 };
+
+// ─── Invitations ────────────────────────────────────────────────────────────
+
+export interface Invitation {
+  id: string;
+  method: 'email' | 'phone';
+  email?: string;
+  phone?: string;
+  role: string;
+  status: string;
+  invitedBy: number;
+  message?: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export const invitationsApi = {
+  create: (data: {
+    method: 'email' | 'phone';
+    email?: string;
+    phone?: string;
+    role: string;
+    message?: string;
+  }) => api.post<Invitation>(`${ROLES_BASE}/invitations`, data).then(r => r.data),
+
+  getAll: () =>
+    api.get<Invitation[]>(`${ROLES_BASE}/invitations`).then(r => r.data),
+
+  cancel: (invitationId: string) =>
+    api.delete(`${ROLES_BASE}/invitations/${invitationId}`),
+
+  resend: (invitationId: string) =>
+    api.post(`${ROLES_BASE}/invitations/${invitationId}/resend`).then(r => r.data),
+
+  /** Update user status (pause/disable/activate) */
+  updateUserStatus: (userId: number, status: string) =>
+    api.put(`${ROLES_BASE}/users/${userId}/status`, { status }).then(r => r.data),
+
+  /** Delete a user entirely */
+  deleteUser: (userId: number) =>
+    api.delete(`${ROLES_BASE}/users/${userId}`),
+};
