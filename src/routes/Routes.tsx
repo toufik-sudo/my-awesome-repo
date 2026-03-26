@@ -21,6 +21,8 @@ import { ChartsDemo } from "@/modules/demo/pages/ChartsDemo";
 import { Settings } from "@/modules/settings/settings.component";
 import { SSOCallback, SSO_ROUTES } from "@/modules/shared/sso";
 import { AdminDashboard } from "@/modules/admin/pages/AdminDashboard";
+import { HyperManagerDashboard } from "@/modules/admin/pages/HyperManagerDashboard";
+import { ManagerDashboard } from "@/modules/admin/pages/ManagerDashboard";
 import { VerificationReview } from "@/modules/admin/pages/VerificationReview";
 import { HostBookings } from "@/modules/bookings/pages/HostBookings";
 import { BookingHistory } from "@/modules/bookings/pages/BookingHistory";
@@ -29,6 +31,7 @@ import { SupportInbox } from "@/modules/support/pages/SupportInbox";
 import { SupportThreadChat } from "@/modules/support/pages/SupportThreadChat";
 import { PaymentValidation } from "@/modules/payments/pages/PaymentValidation";
 import { useSocketNotifications } from "@/modules/notifications/useSocketNotifications";
+import { ADMIN_ROUTES } from "@/modules/admin/admin.constants";
 
 // Route groups for cleaner organization
 const PublicRoutes = () => (
@@ -63,19 +66,37 @@ const BookingRoutes = () => (
 
 const AdminRoutes = () => (
   <>
-    <Route path="/admin" element={<ProtectedRoute requiredRoles={['hyper_manager', 'admin']}><MainLayout><ErrorBoundary><AdminDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/admin/verification-review" element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/admin/document-validation" element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/admin/payment-validation" element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><PaymentValidation /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    {/* Role-specific dashboards */}
+    <Route path={ADMIN_ROUTES.HYPER_DASHBOARD} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><HyperManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.ADMIN_DASHBOARD} element={<ProtectedRoute requiredRoles={['hyper_manager', 'admin']}><MainLayout><ErrorBoundary><AdminDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.MANAGER_DASHBOARD} element={<ProtectedRoute requiredRoles={['hyper_manager', 'admin', 'manager']}><MainLayout><ErrorBoundary><ManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.VERIFICATION_REVIEW} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.DOCUMENT_VALIDATION} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.PAYMENT_VALIDATION} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><PaymentValidation /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
 const DashboardRoutes = () => (
   <>
-    <Route path="/dashboard" element={<ProtectedRoute><MainLayout><ErrorBoundary><Dashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/dashboard" element={<ProtectedRoute><MainLayout><ErrorBoundary><DashboardWithRedirect /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
+
+/** Smart dashboard: shows role-appropriate content */
+const DashboardWithRedirect: React.FC = memo(() => {
+  // Import dynamically to avoid circular deps
+  const { DashboardRedirect } = React.useMemo(() => require('@/modules/admin/pages/DashboardRedirect'), []);
+  
+  return (
+    <>
+      <DashboardRedirect />
+      {/* Fallback: regular user dashboard renders if DashboardRedirect returns null */}
+      <Dashboard />
+    </>
+  );
+});
+DashboardWithRedirect.displayName = 'DashboardWithRedirect';
 
 const DemoRoutes = () => (
   <>
