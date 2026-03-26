@@ -64,6 +64,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const navItems: NavItem[] = [
     { path: '/', label: t('nav.home') || 'Home', icon: Home },
     { path: '/dashboard', label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true },
+    { path: '/hyper-admin', label: t('nav.hyperAdmin') || 'Hyper Admin', icon: Shield, requireAuth: true, roles: ['hyper_manager'] },
+    { path: '/admin', label: t('nav.admin') || 'Admin Panel', icon: Shield, requireAuth: true, roles: ['admin'] },
+    { path: '/manager', label: t('nav.managerPanel') || 'Manager Panel', icon: Shield, requireAuth: true, roles: ['manager'] },
     { path: '/properties', label: t('nav.properties') || 'Properties', icon: Building2 },
     { path: '/properties/new', label: t('nav.addProperty') || 'Add Property', icon: PlusCircle, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
     { path: '/bookings', label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true },
@@ -71,8 +74,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     { path: '/bookings/history', label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
     { path: '/settings', label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true },
     { path: '/support', label: t('nav.support') || 'Support', icon: Headphones, requireAuth: true },
-    { path: '/admin', label: t('nav.admin') || 'Admin', icon: Shield, requireAuth: true, roles: ['admin', 'hyper_manager'] },
-    { path: '/admin/verification-review', label: t('nav.verificationReview') || 'Verification', icon: ClipboardCheck, requireAuth: true, roles: ['admin', 'hyper_manager'] },
     { path: '/demo', label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true },
   ];
 
