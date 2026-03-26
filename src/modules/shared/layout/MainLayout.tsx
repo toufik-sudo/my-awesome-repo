@@ -15,7 +15,6 @@ import {
   CalendarCheck,
   Settings,
   Shield,
-  ClipboardCheck,
   Palette,
   History,
   MessageSquare,
