@@ -17,6 +17,7 @@ const POINT_VALUES: Record<PointAction, number> = {
   event_participation: 15,
   photo_upload: 10,
   social_share: 5,
+  property_shared: 5,
   loyalty_milestone: 200,
   admin_bonus: 0, // variable
   penalty: 0,     // variable
