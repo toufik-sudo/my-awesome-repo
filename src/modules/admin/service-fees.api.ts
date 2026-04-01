@@ -9,9 +9,10 @@ export interface ServiceFeeRule {
   targetHostId?: number;
   targetPropertyGroupId?: string;
   targetPropertyId?: string;
-  calculationType: 'percentage' | 'fixed' | 'percentage_plus_fixed';
+  calculationType: 'percentage' | 'fixed' | 'percentage_plus_fixed' | 'fixed_then_percentage';
   percentageRate: number;
   fixedAmount: number;
+  fixedThreshold?: number;
   minFee?: number;
   maxFee?: number;
   isDefault: boolean;
@@ -21,6 +22,18 @@ export interface ServiceFeeRule {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Calculation types explained:
+ * - percentage: fee = amount × rate%
+ * - fixed: fee = fixedAmount (constant)
+ * - percentage_plus_fixed: fee = amount × rate% + fixedAmount
+ * - fixed_then_percentage: fee = fixedAmount if amount ≤ threshold,
+ *   otherwise fixedAmount + (amount - threshold) × rate%, capped at maxFee
+ *
+ * Priority: lower number = higher priority. When multiple rules match,
+ * the one with the lowest priority number wins.
+ */
 
 export const serviceFeesApi = {
   getAll: () =>
