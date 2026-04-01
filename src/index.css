@@ -838,4 +838,51 @@ All colors MUST be HSL.
   .glow-effect {
     box-shadow: 0 0 15px hsl(var(--primary) / 0.2);
   }
+
+  /* ── Map Marker Styles ── */
+  .custom-marker {
+    cursor: pointer;
+    z-index: 1;
+    transition: transform 0.2s ease, z-index 0.2s;
+  }
+  .custom-marker:hover,
+  .custom-marker.active-marker {
+    transform: scale(1.15);
+    z-index: 10 !important;
+  }
+
+  .marker-content {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* Property markers: primary blue */
+  .marker-property {
+    background: hsl(198, 80%, 48%);
+    color: white;
+  }
+  .custom-marker.active-marker .marker-property {
+    background: hsl(198, 80%, 38%);
+  }
+
+  /* Service markers: accent orange */
+  .marker-service {
+    background: hsl(16, 85%, 62%);
+    color: white;
+  }
+  .custom-marker.active-marker .marker-service {
+    background: hsl(16, 85%, 52%);
+  }
+
+  .hidden-marker {
+    display: none !important;
+  }
 }

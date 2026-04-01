@@ -15,12 +15,33 @@ export interface PointsRule {
   maxPointsPerPeriod: number;
   period?: string;
   multiplier: number;
+  minNights?: number;
+  validFrom?: string;
+  validTo?: string;
   isDefault: boolean;
   isActive: boolean;
   description?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+/** Actions available for points rules */
+export const POINTS_ACTIONS = [
+  'booking_completed',
+  'review_submitted',
+  'referral_signup',
+  'first_booking',
+  'profile_completed',
+  'property_verified',
+  'service_created',
+  'five_star_review',
+  'monthly_bonus',
+  'event_participation',
+  'photo_upload',
+  'social_share',
+  'property_shared',
+  'loyalty_milestone',
+] as const;
 
 export const pointsRulesApi = {
   getAll: () =>

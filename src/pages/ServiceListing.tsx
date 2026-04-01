@@ -40,10 +40,28 @@ const ServiceListing: React.FC = () => {
     navigate(`/services/${service.id}`);
   }, [navigate]);
 
+  // Apply client-side category filtering for both views
+  const filteredServices = useMemo(() => {
+    let services = data?.data || [];
+    // Apply category filter client-side if API doesn't handle it
+    if (selectedCategories.length > 0) {
+      services = services.filter(s => selectedCategories.includes(s.category));
+    }
+    // Apply search filter client-side
+    if (searchInput) {
+      const q = searchInput.toLowerCase();
+      services = services.filter(s => {
+        const title = typeof s.title === 'string' ? s.title : Object.values(s.title).join(' ');
+        return title.toLowerCase().includes(q) || s.city?.toLowerCase().includes(q) || s.wilaya?.toLowerCase().includes(q);
+      });
+    }
+    return services;
+  }, [data, selectedCategories, searchInput]);
+
   // Filter services for map (only those with coordinates)
   const mapServices = useMemo(() => {
-    return data?.data?.filter(s => s.latitude && s.longitude) || [];
-  }, [data]);
+    return filteredServices.filter(s => s.latitude && s.longitude);
+  }, [filteredServices]);
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -122,10 +140,10 @@ const ServiceListing: React.FC = () => {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            {t('common.showing')} {data?.data?.length || 0} / {data?.total || 0} {t('services.results')}
+            {t('common.showing')} {filteredServices.length} / {data?.total || 0} {t('services.results')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data?.data?.map(service => (
+            {filteredServices.map(service => (
               <ServiceCard
                 key={service.id}
                 service={service}
@@ -134,7 +152,7 @@ const ServiceListing: React.FC = () => {
               />
             ))}
           </div>
-          {(!data?.data || data.data.length === 0) && (
+          {filteredServices.length === 0 && (
             <div className="text-center py-20 text-muted-foreground">
               <p className="text-lg">{t('services.noResults')}</p>
               <p className="text-sm">{t('services.noResultsHint')}</p>

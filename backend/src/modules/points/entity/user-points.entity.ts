@@ -17,6 +17,7 @@ export type PointAction =
   | 'event_participation'
   | 'photo_upload'
   | 'social_share'
+  | 'property_shared'
   | 'loyalty_milestone'
   | 'admin_bonus'
   | 'penalty';
