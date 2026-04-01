@@ -1048,6 +1048,115 @@ async function seedPaymentReceipts(ds: DataSource, bookingIds: string[], guestId
   console.log(`✅ Created ${receipts.length} payment receipts`);
 }
 
+// ─── Points Rules Seed ──────────────────────────────────────────────────────
+
+async function seedPointsRules(ds: DataSource, hyperAdminId: number) {
+  const qr = ds.createQueryRunner();
+
+  const rules = [
+    // Earning rules
+    { ruleType: 'earning', targetRole: 'guest', action: 'booking_completed', pointsAmount: 50, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: 1, validFrom: null, validTo: null, isDefault: true, description: 'Points pour chaque réservation complétée' },
+    { ruleType: 'earning', targetRole: 'guest', action: 'review_submitted', pointsAmount: 20, multiplier: 1.0, maxPointsPerPeriod: 100, period: 'monthly', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour chaque avis soumis' },
+    { ruleType: 'earning', targetRole: 'guest', action: 'referral_signup', pointsAmount: 100, multiplier: 1.5, maxPointsPerPeriod: 500, period: 'monthly', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points de parrainage quand un filleul s\'inscrit' },
+    { ruleType: 'earning', targetRole: 'guest', action: 'first_booking', pointsAmount: 75, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus première réservation' },
+    { ruleType: 'earning', targetRole: 'guest', action: 'profile_completed', pointsAmount: 30, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus profil complété' },
+    { ruleType: 'earning', targetRole: 'guest', action: 'property_shared', pointsAmount: 5, multiplier: 1.0, maxPointsPerPeriod: 50, period: 'daily', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour partage de propriété' },
+    { ruleType: 'earning', targetRole: 'guest', action: 'five_star_review', pointsAmount: 30, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus avis 5 étoiles' },
+    // Seasonal earning rule
+    { ruleType: 'earning', targetRole: 'guest', action: 'booking_completed', pointsAmount: 100, multiplier: 2.0, maxPointsPerPeriod: 0, period: null, minNights: 3, validFrom: '2026-06-01', validTo: '2026-08-31', isDefault: false, description: 'Double points été 2026 (min 3 nuits)' },
+    // Manager earning rules
+    { ruleType: 'earning', targetRole: 'manager', action: 'property_verified', pointsAmount: 40, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour propriété vérifiée' },
+    { ruleType: 'earning', targetRole: 'manager', action: 'service_created', pointsAmount: 35, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour service créé' },
+    // Conversion rules
+    { ruleType: 'conversion', targetRole: 'guest', action: 'points_to_currency', pointsAmount: 0, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Conversion points en DZD pour les invités', conversionRate: 10.0, currency: 'DZD', minPointsForConversion: 500 },
+    { ruleType: 'conversion', targetRole: 'manager', action: 'points_to_currency', pointsAmount: 0, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Conversion points en DZD pour les managers', conversionRate: 15.0, currency: 'DZD', minPointsForConversion: 1000 },
+  ];
+
+  for (const r of rules) {
+    await qr.query(
+      `INSERT INTO points_rules (id, createdByUserId, ruleType, targetRole, action, pointsAmount, multiplier, maxPointsPerPeriod, period, minNights, validFrom, validTo, isDefault, isActive, description, conversionRate, currency, minPointsForConversion)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+      [
+        uuidv4(), hyperAdminId, r.ruleType, r.targetRole, r.action, r.pointsAmount,
+        r.multiplier, r.maxPointsPerPeriod, r.period, r.minNights, r.validFrom, r.validTo,
+        r.isDefault, r.description,
+        (r as any).conversionRate || null, (r as any).currency || 'DZD', (r as any).minPointsForConversion || null,
+      ]
+    );
+  }
+  await qr.release();
+  console.log(`✅ Created ${rules.length} points rules`);
+}
+
+// ─── Service Fee Rules Seed ────────────────────────────────────────────────
+
+async function seedServiceFeeRules(ds: DataSource, hyperAdminId: number) {
+  const qr = ds.createQueryRunner();
+
+  const feeRules = [
+    { scope: 'global', calculationType: 'percentage', percentageRate: 10.0, fixedAmount: 0, fixedThreshold: null, minFee: 500, maxFee: null, isDefault: true, priority: 100, description: 'Frais de service global 10%' },
+    { scope: 'global', calculationType: 'fixed', percentageRate: 0, fixedAmount: 1000, fixedThreshold: null, minFee: null, maxFee: null, isDefault: false, priority: 90, description: 'Frais fixe 1000 DZD pour petites réservations' },
+    { scope: 'global', calculationType: 'percentage_plus_fixed', percentageRate: 5.0, fixedAmount: 500, fixedThreshold: null, minFee: 600, maxFee: 5000, isDefault: false, priority: 80, description: '5% + 500 DZD (min 600, max 5000)' },
+    { scope: 'global', calculationType: 'fixed_then_percentage', percentageRate: 8.0, fixedAmount: 1500, fixedThreshold: 20000, minFee: 1500, maxFee: 10000, isDefault: false, priority: 70, description: '1500 DZD fixe jusqu\'à 20000, puis 8% au-delà (max 10000)' },
+  ];
+
+  for (const f of feeRules) {
+    await qr.query(
+      `INSERT INTO service_fee_rules (id, createdByUserId, scope, calculationType, percentageRate, fixedAmount, fixedThreshold, minFee, maxFee, isDefault, isActive, priority, description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+      [
+        uuidv4(), hyperAdminId, f.scope, f.calculationType, f.percentageRate, f.fixedAmount,
+        f.fixedThreshold, f.minFee, f.maxFee, f.isDefault, f.priority, f.description,
+      ]
+    );
+  }
+  await qr.release();
+  console.log(`✅ Created ${feeRules.length} service fee rules`);
+}
+
+// ─── Referrals Seed ─────────────────────────────────────────────────────────
+
+async function seedReferrals(ds: DataSource, userIds: number[], propertyIds: string[]) {
+  const qr = ds.createQueryRunner();
+
+  const referrals = [
+    { referrerId: userIds[6], referredUserId: userIds[7], code: 'REF-A1B2C3D4', method: 'email', status: 'completed', referrerPts: 100, referredPts: 50, inviteeContact: 'sara@yopmail.com' },
+    { referrerId: userIds[6], referredUserId: userIds[8], code: 'REF-E5F6G7H8', method: 'whatsapp', status: 'signed_up', referrerPts: 0, referredPts: 0, inviteeContact: '+213550000008' },
+    { referrerId: userIds[7], referredUserId: null, code: 'REF-I9J0K1L2', method: 'link', status: 'pending', referrerPts: 0, referredPts: 0, inviteeContact: null },
+    { referrerId: userIds[2], referredUserId: userIds[9], code: 'REF-M3N4O5P6', method: 'email', status: 'completed', referrerPts: 100, referredPts: 50, inviteeContact: 'nadia@yopmail.com' },
+  ];
+
+  for (const r of referrals) {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
+    await qr.query(
+      `INSERT INTO referrals (id, referrerId, referredUserId, code, method, status, referrerPointsAwarded, referredPointsAwarded, inviteeContact, expiresAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [uuidv4(), r.referrerId, r.referredUserId, r.code, r.method, r.status, r.referrerPts, r.referredPts, r.inviteeContact, expiresAt]
+    );
+  }
+
+  // Property shares
+  const shares = [
+    { userId: userIds[6], propertyId: propertyIds[0], method: 'facebook' },
+    { userId: userIds[7], propertyId: propertyIds[0], method: 'whatsapp' },
+    { userId: userIds[8], propertyId: propertyIds[4], method: 'email', recipient: 'friend@yopmail.com' },
+    { userId: userIds[6], propertyId: propertyIds[9], method: 'copy_link' },
+    { userId: userIds[9], propertyId: propertyIds[6], method: 'twitter' },
+  ];
+
+  for (const s of shares) {
+    await qr.query(
+      `INSERT INTO property_shares (id, userId, propertyId, method, recipient)
+       VALUES (?, ?, ?, ?, ?)`,
+      [uuidv4(), s.userId, s.propertyId, s.method, (s as any).recipient || null]
+    );
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${referrals.length} referrals and ${shares.length} property shares`);
+}
+
 // ─── Main Runner ────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1092,6 +1201,11 @@ async function main() {
     await seedRankings(AppDataSource, adminIds);
     await seedComments(AppDataSource, propertyIds, userIds);
 
+    // 9. Points rules, service fee rules, referrals
+    await seedPointsRules(AppDataSource, userIds[0]);
+    await seedServiceFeeRules(AppDataSource, userIds[0]);
+    await seedReferrals(AppDataSource, userIds, propertyIds);
+
     console.log('\n═══════════════════════════════════════════');
     console.log('  ✅ Seeding complete!');
     console.log('═══════════════════════════════════════════');
@@ -1104,6 +1218,9 @@ async function main() {
     console.log(`   Reviews:            8`);
     console.log(`   Transfer Accounts:  ${transferAccountIds.length}`);
     console.log(`   Payment Receipts:   6`);
+    console.log(`   Points Rules:       12`);
+    console.log(`   Service Fee Rules:  4`);
+    console.log(`   Referrals:          4`);
     console.log('\n🔑 Default password: Password123!');
     console.log('   Hyper Admin:      hyper_admin_byootdz@yopmail.com');
     console.log('   Hyper Manager:    hyper_manager_byootdz@yopmail.com');
