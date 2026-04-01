@@ -133,7 +133,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
 
     const allCoords: [number, number][] = [];
 
-    // ── Property Markers ──
+    // ── Property Markers (Blue/Primary) ──
     if (activeLayer === 'all' || activeLayer === 'properties') {
       const filteredProps = properties.filter(p => {
         if (!p.location?.latitude || !p.location?.longitude) return false;
@@ -154,22 +154,23 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
               <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold">
                 ⭐ {property.rating || 'N/A'}
               </div>
-              <div className="absolute top-2 right-2 bg-primary/90 text-primary-foreground px-2 py-1 rounded-full text-[10px] font-bold">
+              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'hsl(198 80% 48% / 0.9)', color: 'white' }}>
                 🏠 Propriété
               </div>
             </div>
             <div className="p-3 space-y-2">
-              <h3 className="font-semibold text-foreground text-sm line-clamp-1">{property.title}</h3>
-              <p className="text-xs text-muted-foreground">{property.location.address}</p>
+              <h3 className="font-semibold text-sm line-clamp-1">{property.title}</h3>
+              <p className="text-xs text-gray-500">{property.location.address}</p>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-primary">
-                  {property.currency}{property.price}<span className="text-xs font-normal text-muted-foreground">/nuit</span>
+                <span className="text-sm font-bold" style={{ color: 'hsl(198 80% 48%)' }}>
+                  {property.currency}{property.price}<span className="text-xs font-normal text-gray-500">/nuit</span>
                 </span>
-                <span className="text-xs text-muted-foreground">{property.bedrooms} ch • {property.guests} pers</span>
+                <span className="text-xs text-gray-500">{property.bedrooms} ch • {property.guests} pers</span>
               </div>
               <button
                 onClick={() => onPropertySelect?.(property)}
-                className="w-full mt-2 py-2 px-4 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                className="w-full mt-2 py-2 px-4 text-white text-sm font-medium rounded-lg transition-colors"
+                style={{ background: 'hsl(198 80% 48%)' }}
               >
                 Voir détails
               </button>
@@ -189,12 +190,25 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
           .setLngLat([property.location.longitude, property.location.latitude])
           .addTo(map.current!);
 
+        // Hover to show popup
+        markerEl.addEventListener('mouseenter', () => {
+          popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
+          markerEl.classList.add('active-marker');
+        });
+        markerEl.addEventListener('mouseleave', () => {
+          // Delay removal to allow interaction with popup
+          setTimeout(() => {
+            const popupEl = popup.getElement();
+            if (popupEl && !popupEl.matches(':hover')) {
+              popup.remove();
+              markerEl.classList.remove('active-marker');
+            }
+          }, 300);
+        });
+
         markerEl.addEventListener('click', (e) => {
           e.stopPropagation();
-          document.querySelectorAll('.maplibregl-popup').forEach(p => p.classList.add('hidden-marker'));
-          document.querySelectorAll('.custom-marker.active-marker').forEach(m => m.classList.remove('active-marker'));
-          popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
-          markerEl.className = 'custom-marker property-marker active-marker';
+          onPropertySelect?.(property);
         });
 
         markers.current.push(marker);
@@ -202,7 +216,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
       });
     }
 
-    // ── Service Markers ──
+    // ── Service Markers (Orange/Accent) ──
     if (activeLayer === 'all' || activeLayer === 'services') {
       const filteredServices = services.filter(s => {
         if (!s.latitude || !s.longitude) return false;
@@ -222,29 +236,30 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
           <div className="w-72 p-0">
             <div className="relative">
               {service.images?.[0] && (
-                <img src={service.images[0]} alt={title} className="w-full h-36 object-cover rounded-t-xl" />
+                <img src={resolveImageUrl(service.images[0])} alt={title} className="w-full h-36 object-cover rounded-t-xl" />
               )}
               <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold">
                 ⭐ {service.averageRating}
               </div>
-              <div className="absolute top-2 right-2 bg-secondary/90 text-secondary-foreground px-2 py-1 rounded-full text-[10px] font-bold">
+              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'hsl(16 85% 62% / 0.9)', color: 'white' }}>
                 {icon} Service
               </div>
             </div>
             <div className="p-3 space-y-2">
-              <h3 className="font-semibold text-foreground text-sm line-clamp-1">{icon} {title}</h3>
-              <p className="text-xs text-muted-foreground">{service.city}, {service.wilaya}</p>
+              <h3 className="font-semibold text-sm line-clamp-1">{icon} {title}</h3>
+              <p className="text-xs text-gray-500">{service.city}, {service.wilaya}</p>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-primary">
+                <span className="text-sm font-bold" style={{ color: 'hsl(16 85% 62%)' }}>
                   {service.price.toLocaleString()} {service.currency}
                 </span>
                 {service.duration && (
-                  <span className="text-xs text-muted-foreground">{service.duration}h</span>
+                  <span className="text-xs text-gray-500">{service.duration}h</span>
                 )}
               </div>
               <button
                 onClick={() => onServiceSelect?.(service)}
-                className="w-full mt-2 py-2 px-4 bg-secondary text-secondary-foreground text-sm font-medium rounded-lg hover:bg-secondary/90 transition-colors"
+                className="w-full mt-2 py-2 px-4 text-white text-sm font-medium rounded-lg transition-colors"
+                style={{ background: 'hsl(16 85% 62%)' }}
               >
                 Voir détails
               </button>
@@ -264,12 +279,24 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
           .setLngLat([service.longitude!, service.latitude!])
           .addTo(map.current!);
 
+        // Hover to show popup
+        markerEl.addEventListener('mouseenter', () => {
+          popup.setLngLat([service.longitude!, service.latitude!]).addTo(map.current!);
+          markerEl.classList.add('active-marker');
+        });
+        markerEl.addEventListener('mouseleave', () => {
+          setTimeout(() => {
+            const popupEl = popup.getElement();
+            if (popupEl && !popupEl.matches(':hover')) {
+              popup.remove();
+              markerEl.classList.remove('active-marker');
+            }
+          }, 300);
+        });
+
         markerEl.addEventListener('click', (e) => {
           e.stopPropagation();
-          document.querySelectorAll('.maplibregl-popup').forEach(p => p.classList.add('hidden-marker'));
-          document.querySelectorAll('.custom-marker.active-marker').forEach(m => m.classList.remove('active-marker'));
-          popup.setLngLat([service.longitude!, service.latitude!]).addTo(map.current!);
-          markerEl.className = 'custom-marker service-marker active-marker';
+          onServiceSelect?.(service);
         });
 
         markers.current.push(marker);
@@ -378,7 +405,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
           Propriétés
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-secondary" />
+          <div className="w-3 h-3 rounded-full" style={{ background: 'hsl(16 85% 62%)' }} />
           Services
         </div>
       </div>

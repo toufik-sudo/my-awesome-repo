@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, Clock, Users, MapPin } from 'lucide-react';
 import { CATEGORY_ICONS } from '../services.constants';
+import { BackendImage } from '@/modules/shared/components/BackendImage';
 import type { TourismService } from '@/types/tourism-service.types';
 
 const getLocalizedText = (obj: Record<string, string> | string | undefined, lang: string): string => {
@@ -31,7 +32,11 @@ export const ServiceCard = memo<ServiceCardProps>(({ service, lang, onClick }) =
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {image ? (
-          <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          <BackendImage
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl">{icon}</div>
         )}
