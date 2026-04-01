@@ -180,10 +180,10 @@ const PropertyDetail = () => {
                 </Button>
               </>
             )}
-            <Button variant="ghost" size="sm" className="gap-2">
-              <Share2 className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('propertyDetail.share')}</span>
-            </Button>
+            <PropertyShareButton
+              propertyId={id!}
+              propertyTitle={property.title}
+            />
             <Button
               variant="ghost"
               size="sm"
