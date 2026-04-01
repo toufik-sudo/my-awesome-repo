@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PropertyShare as PropertyShareButton } from '@/modules/referrals/components/PropertyShare';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
