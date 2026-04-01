@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 
 export type FeeScope = 'global' | 'host' | 'property_group' | 'property';
-export type FeeCalculation = 'percentage' | 'fixed' | 'percentage_plus_fixed';
+export type FeeCalculation = 'percentage' | 'fixed' | 'percentage_plus_fixed' | 'fixed_then_percentage';
 
 @Entity('service_fee_rules')
 export class ServiceFeeRule {
@@ -44,6 +44,13 @@ export class ServiceFeeRule {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   fixedAmount: number;
 
+  /**
+   * Threshold for fixed_then_percentage: fixed fee applies up to this amount,
+   * then percentage applies on the remainder up to maxFee
+   */
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  fixedThreshold: number;
+
   /** Min fee cap */
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   minFee: number;
@@ -62,7 +69,13 @@ export class ServiceFeeRule {
   @Column({ nullable: true })
   description: string;
 
-  /** Priority – lower = higher priority, used when multiple rules match */
+  /**
+   * Priority – lower number = higher priority.
+   * When multiple rules match (e.g. a property has both a host-level and property-level rule),
+   * the rule with the LOWEST priority number is applied first.
+   * Example: priority=1 beats priority=100.
+   * Use this to override global rules for specific hosts/properties.
+   */
   @Column({ default: 100 })
   priority: number;
 
