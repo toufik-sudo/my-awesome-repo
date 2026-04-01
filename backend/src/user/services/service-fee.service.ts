@@ -82,7 +82,16 @@ export class ServiceFeeService {
       fee = amount * (Number(rule.percentageRate) / 100);
     } else if (rule.calculationType === 'fixed') {
       fee = Number(rule.fixedAmount);
+    } else if (rule.calculationType === 'fixed_then_percentage') {
+      // Fixed fee up to threshold, then percentage on the remainder
+      const threshold = Number(rule.fixedThreshold) || 0;
+      if (amount <= threshold) {
+        fee = Number(rule.fixedAmount);
+      } else {
+        fee = Number(rule.fixedAmount) + (amount - threshold) * (Number(rule.percentageRate) / 100);
+      }
     } else {
+      // percentage_plus_fixed
       fee = amount * (Number(rule.percentageRate) / 100) + Number(rule.fixedAmount);
     }
 
