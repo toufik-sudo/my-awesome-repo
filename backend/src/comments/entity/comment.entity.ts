@@ -9,7 +9,7 @@ export class Comment {
   @Column({ type: 'text' })
   content: string;
 
-  @Index('IDX_comments_userId')
+  @Index('IDX_comments_userId', ['userId'])
   @Column({ nullable: false })
   userId: number;
 

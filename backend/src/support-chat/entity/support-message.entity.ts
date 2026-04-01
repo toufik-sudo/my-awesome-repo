@@ -10,7 +10,7 @@ export class SupportMessage {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_support_message_thread')
+  @Index('IDX_support_message_thread', ['threadId'])
   @Column()
   threadId: string;
 

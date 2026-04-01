@@ -22,7 +22,7 @@ export class SupportThread {
   status: SupportThreadStatus;
 
   /** The user who initiated the thread (host or guest) */
-  @Index('IDX_support_thread_initiator')
+  @Index('IDX_support_thread_initiator', ['initiatorId'])
   @Column()
   initiatorId: number;
 

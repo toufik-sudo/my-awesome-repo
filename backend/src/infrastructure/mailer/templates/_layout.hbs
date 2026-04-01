@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>{{appName}}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <!-- Preheader (hidden preview text) -->
+  {{#if preheader}}
+  <div style="display:none;font-size:1px;color:#f4f6f9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+    {{preheader}}
+  </div>
+  {{/if}}
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <!-- Logo / Header -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          <tr>
+            <td align="center" style="padding:24px 0 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background:linear-gradient(135deg,#0891b2,#06b6d4);border-radius:12px;padding:10px 20px;">
+                    <span style="font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">{{appName}}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Main Content Card -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+          <!-- Accent bar -->
+          <tr>
+            <td style="height:4px;background:linear-gradient(90deg,#0891b2,#06b6d4,#22d3ee);"></td>
+          </tr>
+          <tr>
+            <td style="padding:40px 44px;">
+              {{{content}}}
+            </td>
+          </tr>
+        </table>
+
+        <!-- Footer -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          <tr>
+            <td style="padding:28px 44px;text-align:center;">
+              <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">
+                © {{currentYear}} {{appName}}. All rights reserved.
+              </p>
+              <p style="margin:0;font-size:12px;color:#cbd5e1;">
+                You're receiving this because you have an account with {{appName}}.
+                <br/>
+                <a href="{{appUrl}}" style="color:#0891b2;text-decoration:none;">Visit {{appName}}</a>
+                {{#if supportEmail}}
+                  &nbsp;·&nbsp;
+                  <a href="mailto:{{supportEmail}}" style="color:#0891b2;text-decoration:none;">Contact Support</a>
+                {{/if}}
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

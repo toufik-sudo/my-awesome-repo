@@ -26,7 +26,7 @@ export class VerificationDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_verification_docs_propertyId')
+  @Index('IDX_verification_docs_propertyId', ['propertyId'])
   @Column()
   propertyId: string;
 

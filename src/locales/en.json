@@ -380,6 +380,7 @@
     "verificationReview": "Verification",
     "addProperty": "Add Property",
     "support": "Support",
+    "services": "Services",
     "demo": "Components"
   },
   "propertyWizard": {
@@ -1170,6 +1171,7 @@
     },
     "actions": {
       "addProperty": "Add Property",
+      "addService": "Add Service",
       "browseProperties": "Browse Properties",
       "myBookings": "My Bookings",
       "settings": "Settings"
@@ -1188,6 +1190,80 @@
       "pending": "Pending",
       "rejected": "Rejected",
       "rate": "approval rate"
+    }
+  },
+  "services": {
+    "title": "Tourism Services",
+    "subtitle": "Discover experiences and activities for your trip",
+    "searchPlaceholder": "Search services...",
+    "allCategories": "All",
+    "results": "services",
+    "noResults": "No services found",
+    "noResultsHint": "Try adjusting your search or filters",
+    "verified": "Verified",
+    "instantBooking": "Instant Booking",
+    "sortDefault": "Recommended",
+    "sortRating": "Top Rated",
+    "categories": {
+      "restaurant": "Restaurant",
+      "walking_tour": "Walking Tour",
+      "cycling_tour": "Cycling Tour",
+      "car_tour": "Car Tour",
+      "bus_tour": "Bus Tour",
+      "horse_tour": "Horse Tour",
+      "boat_tour": "Boat Tour",
+      "beauty_salon": "Beauty Salon",
+      "massage": "Massage",
+      "hammam": "Hammam",
+      "tourist_guide": "Tourist Guide",
+      "photography": "Photography",
+      "park_visit": "Parks",
+      "beach_visit": "Beaches",
+      "nature_excursion": "Nature Excursion",
+      "regional_event": "Local Events",
+      "cooking_class": "Cooking Class",
+      "art_class": "Art Class",
+      "drawing_class": "Drawing Class",
+      "sport_activity": "Sports",
+      "spa": "Spa",
+      "shopping_tour": "Shopping Tour",
+      "cultural_visit": "Cultural Visit",
+      "nightlife": "Nightlife",
+      "other": "Other"
+    },
+    "pricingTypes": {
+      "per_person": "person",
+      "per_group": "group",
+      "per_hour": "hour",
+      "fixed": "fixed"
+    },
+    "durationUnits": {
+      "minutes": "min",
+      "hours": "h",
+      "days": "days"
+    }
+  },
+  "points": {
+    "title": "Points & Rewards",
+    "totalPoints": "Total Points",
+    "available": "Available",
+    "tier": "Tier",
+    "lifetime": "Lifetime Points",
+    "recentActivity": "Recent Activity",
+    "leaderboard": "Leaderboard",
+    "nextTier": "Next Tier",
+    "remaining": "pts remaining",
+    "tierProgress": "Progress",
+    "spend": "Spend",
+    "earn": "Earn",
+    "history": "History",
+    "badges": "Badges",
+    "pageTitle": "Points & Rewards",
+    "tabs": {
+      "overview": "Overview",
+      "badges": "Badges",
+      "history": "History",
+      "leaderboard": "Leaderboard"
     }
   }
 }

@@ -5,7 +5,7 @@ export class Ranking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_rankings_userId')
+  @Index('IDX_rankings_userId', ['userId'])
   @Column({ nullable: false })
   userId: number;
 

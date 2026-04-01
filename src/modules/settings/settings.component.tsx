@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-// MainLayout removed — provided by Routes
 import { DynamicForm } from '@/modules/shared/components/DynamicForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProfileForm } from './ProfileForm';
 import { NotificationPreferences } from './NotificationPreferences';
+import { AlertsSettings } from './AlertsSettings';
 
 export const Settings: React.FC = () => {
   const { t } = useTranslation();
@@ -160,10 +160,11 @@ export const Settings: React.FC = () => {
         <h1 className="text-3xl font-bold mb-6">{t('settings.title')}</h1>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">{t('settings.tabs.profile')}</TabsTrigger>
             <TabsTrigger value="preferences">{t('settings.tabs.preferences')}</TabsTrigger>
             <TabsTrigger value="notifications">{t('settings.tabs.notifications')}</TabsTrigger>
+            <TabsTrigger value="alerts">{t('settings.tabs.alerts', 'Alertes')}</TabsTrigger>
             <TabsTrigger value="account">{t('settings.tabs.account')}</TabsTrigger>
           </TabsList>
 
@@ -201,6 +202,10 @@ export const Settings: React.FC = () => {
               notifications={notifications}
               onUpdate={(updated) => setNotifications(updated)}
             />
+          </TabsContent>
+
+          <TabsContent value="alerts">
+            <AlertsSettings />
           </TabsContent>
 
           <TabsContent value="account">

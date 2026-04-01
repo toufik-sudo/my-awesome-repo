@@ -17,7 +17,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
-import { MainLayout } from '@/modules/shared/layout/MainLayout';
+import { resolveImageUrl } from '@/modules/shared/components/BackendImage';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostBookings } from '../bookings.hooks';
 import type { BookingResponse } from '../bookings.api';
@@ -115,16 +116,14 @@ export const BookingHistory: React.FC = () => {
 
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
     );
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -282,7 +281,7 @@ export const BookingHistory: React.FC = () => {
                       {booking.property?.images?.[0] && (
                         <div className="sm:w-44 h-36 sm:h-auto relative flex-shrink-0 overflow-hidden">
                           <img
-                            src={booking.property.images[0]}
+                            src={resolveImageUrl(booking.property.images[0])}
                             alt={booking.property.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
@@ -408,7 +407,7 @@ export const BookingHistory: React.FC = () => {
           </div>
         )}
       </div>
-    </MainLayout>
+    </>
   );
 };
 

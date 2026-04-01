@@ -8,6 +8,7 @@ export const API_BASE = {
   API_USER: '/user',
   API_SETTINGS: '/settings',
   NOTIFICATIONS: '/notifications',
+  SERVICES: '/services',
 } as const;
 
 export const API_METHODS = {

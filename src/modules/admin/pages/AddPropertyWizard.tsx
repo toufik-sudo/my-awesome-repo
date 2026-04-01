@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Plus,
   Banknote,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,7 +91,10 @@ interface PropertyFormData {
   checkInTime: string;
   checkOutTime: string;
   instantBooking: boolean;
+  allowPets: boolean;
   minNights: string;
+  maxNights: string;
+  houseRules: string[];
 }
 
 interface UploadedFile {
@@ -102,17 +106,51 @@ interface UploadedFile {
 const STEPS = [
   { id: 'details', label: 'Property Details', icon: Home },
   { id: 'pricing', label: 'Pricing & Payment', icon: Banknote },
+  { id: 'availability', label: 'Availability & Promos', icon: Star },
   { id: 'photos', label: 'Photos', icon: ImageIcon },
   { id: 'documents', label: 'Verification', icon: ShieldCheck },
 ];
 
+const WIZARD_STORAGE_KEY = 'property_wizard_draft';
+
+interface WizardDraft {
+  formData: PropertyFormData;
+  pricingData: PricingData;
+  blockedDates: Array<{ date: string; reason?: string }>;
+  promos: Array<{ startDate: string; endDate: string; discountPercent: string; fixedPrice: string; label: string }>;
+  currentStep: number;
+  existingImages: string[];
+}
+
+const loadDraft = (): WizardDraft | null => {
+  try {
+    const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
+const saveDraft = (draft: WizardDraft) => {
+  try { localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(draft)); } catch {}
+};
+
+const clearDraft = () => {
+  try { localStorage.removeItem(WIZARD_STORAGE_KEY); } catch {}
+};
+
 export const AddPropertyWizard: React.FC = () => {
   const navigate = useNavigate();
   const { id: propertyId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const duplicateFromId = searchParams.get('duplicateFrom');
   const isEditMode = !!propertyId;
+  const isDuplicateMode = !!duplicateFromId;
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [currentStep, setCurrentStep] = useState(0);
+
+  // Load draft from localStorage for new properties (not edit mode)
+  const draft = useMemo(() => (!isEditMode && !isDuplicateMode) ? loadDraft() : null, []);
+
+  const [currentStep, setCurrentStep] = useState(draft?.currentStep || 0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,14 +161,14 @@ export const AddPropertyWizard: React.FC = () => {
 
   // Fetch existing property for edit mode
   const { data: existingProperty, isLoading: isLoadingProperty } = useQuery({
-    queryKey: ['property', propertyId],
-    queryFn: () => propertiesApi.getById(propertyId!),
-    enabled: isEditMode,
+    queryKey: ['property', propertyId || duplicateFromId],
+    queryFn: () => propertiesApi.getById((propertyId || duplicateFromId)!),
+    enabled: isEditMode || isDuplicateMode,
     retry: false,
   });
 
   // Step 1: Property details
-  const [formData, setFormData] = useState<PropertyFormData>({
+  const [formData, setFormData] = useState<PropertyFormData>(draft?.formData || {
     title: '',
     description: '',
     propertyType: '',
@@ -144,11 +182,24 @@ export const AddPropertyWizard: React.FC = () => {
     checkInTime: '14:00',
     checkOutTime: '11:00',
     instantBooking: false,
+    allowPets: false,
     minNights: '1',
+    maxNights: '365',
+    houseRules: [],
   });
 
+  // Step 3: Availability — blocked dates & promos
+  const [blockedDates, setBlockedDates] = useState<Array<{ date: string; reason?: string }>>(draft?.blockedDates || []);
+  const [promos, setPromos] = useState<Array<{
+    startDate: string;
+    endDate: string;
+    discountPercent: string;
+    fixedPrice: string;
+    label: string;
+  }>>(draft?.promos || []);
+
   // Step 2: Pricing & Payment
-  const [pricingData, setPricingData] = useState<PricingData>(INITIAL_PRICING_DATA);
+  const [pricingData, setPricingData] = useState<PricingData>(draft?.pricingData || INITIAL_PRICING_DATA);
 
   // Step 2: Photos
   const [photos, setPhotos] = useState<UploadedFile[]>([]);
@@ -165,12 +216,12 @@ export const AddPropertyWizard: React.FC = () => {
     management_declaration: [],
   });
 
-  // Populate form when editing
+  // Populate form when editing or duplicating
   useEffect(() => {
-    if (existingProperty && isEditMode) {
+    if (existingProperty && (isEditMode || isDuplicateMode)) {
       const p = existingProperty as any;
       setFormData({
-        title: p.title || '',
+        title: isDuplicateMode ? `${p.title || ''} (Copy)` : (p.title || ''),
         description: p.description || '',
         propertyType: p.propertyType || '',
         address: p.location?.address || p.address || '',
@@ -183,7 +234,10 @@ export const AddPropertyWizard: React.FC = () => {
         checkInTime: p.checkInTime || '14:00',
         checkOutTime: p.checkOutTime || '11:00',
         instantBooking: p.instantBooking || false,
+        allowPets: p.allowPets || false,
         minNights: String(p.minNights || '1'),
+        maxNights: String(p.maxNights || '365'),
+        houseRules: p.houseRules || [],
       });
       setPricingData(prev => ({
         ...prev,
@@ -199,12 +253,22 @@ export const AddPropertyWizard: React.FC = () => {
         setExistingImages(p.images);
       }
     }
-  }, [existingProperty, isEditMode]);
+  }, [existingProperty, isEditMode, isDuplicateMode]);
+
+  // Auto-save draft to localStorage (only for new properties, not edit/duplicate)
+  useEffect(() => {
+    if (isEditMode || isDuplicateMode) return;
+    const timeout = setTimeout(() => {
+      saveDraft({ formData, pricingData, blockedDates, promos, currentStep, existingImages });
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [formData, pricingData, blockedDates, promos, currentStep, existingImages, isEditMode, isDuplicateMode]);
 
   // Create/Update mutations
   const createMutation = useMutation({
     mutationFn: (payload: PropertyCreatePayload) => propertiesApi.create(payload),
     onSuccess: () => {
+      clearDraft();
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       toast.success(t('propertyWizard.createSuccess', 'Property submitted successfully!'));
       navigate('/properties');
@@ -293,10 +357,11 @@ export const AddPropertyWizard: React.FC = () => {
     formData.address && formData.city && formData.wilaya && 
     formData.maxGuests && formData.bedrooms && formData.bathrooms;
   const isStep2Valid = !!pricingData.pricePerNight && pricingData.paymentMethods.length > 0;
-  const isStep3Valid = photos.length >= 1 || existingImages.length >= 1;
-  const isStep4Valid = true; // Documents are optional but affect ranking
+  const isStep3Valid = true; // Availability config is optional
+  const isStep4Valid = photos.length >= 1 || existingImages.length >= 1;
+  const isStep5Valid = true; // Documents are optional but affect ranking
 
-  const stepValid = [isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid];
+  const stepValid = [isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, isStep5Valid];
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
@@ -328,7 +393,10 @@ export const AddPropertyWizard: React.FC = () => {
     checkInTime: formData.checkInTime,
     checkOutTime: formData.checkOutTime,
     instantBooking: formData.instantBooking,
+    allowPets: formData.allowPets,
     minNights: parseInt(formData.minNights) || 1,
+    maxNights: parseInt(formData.maxNights) || 365,
+    houseRules: formData.houseRules,
     pricePerNight: parseFloat(pricingData.pricePerNight) || 0,
     pricePerWeek: parseFloat(pricingData.pricePerWeek) || undefined,
     pricePerMonth: parseFloat(pricingData.pricePerMonth) || undefined,
@@ -339,7 +407,7 @@ export const AddPropertyWizard: React.FC = () => {
     currency: pricingData.currency,
     acceptedPaymentMethods: pricingData.paymentMethods,
     serviceFeePercent: pricingData.serviceFeePercent,
-    images: existingImages, // New photo uploads would need a file upload API
+    images: existingImages,
     status: 'draft',
   }), [formData, pricingData, existingImages]);
 
@@ -364,7 +432,7 @@ export const AddPropertyWizard: React.FC = () => {
     docCameraInputRef.current?.click();
   };
 
-  if (isEditMode && isLoadingProperty) {
+  if ((isEditMode || isDuplicateMode) && isLoadingProperty) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
@@ -382,7 +450,11 @@ export const AddPropertyWizard: React.FC = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-heading font-bold text-foreground">
-              {isEditMode ? t('propertyWizard.editTitle', 'Edit Property') : t('propertyWizard.addTitle', 'Add New Property')}
+              {isEditMode
+                ? t('propertyWizard.editTitle', 'Edit Property')
+                : isDuplicateMode
+                  ? t('propertyWizard.duplicateTitle', 'Duplicate Property')
+                  : t('propertyWizard.addTitle', 'Add New Property')}
             </h1>
           </div>
           <Badge variant="outline" className="text-xs">
@@ -604,6 +676,27 @@ export const AddPropertyWizard: React.FC = () => {
                     Enable instant booking
                   </Label>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="allow-pets"
+                    checked={formData.allowPets}
+                    onCheckedChange={(checked) => updateField('allowPets', !!checked)}
+                  />
+                  <Label htmlFor="allow-pets" className="text-sm cursor-pointer">
+                    🐾 Accept pets / domestic animals
+                  </Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-foreground">Max Nights</Label>
+                  <Input
+                    type="number"
+                    value={formData.maxNights}
+                    onChange={(e) => updateField('maxNights', e.target.value)}
+                    min={1}
+                  />
+                </div>
               </CardContent>
             </Card>
           )}
@@ -616,8 +709,156 @@ export const AddPropertyWizard: React.FC = () => {
             />
           )}
 
-          {/* Step 3: Photos */}
+          {/* Step 3: Availability & Promos */}
           {currentStep === 2 && (
+            <div className="space-y-6">
+              {/* Blocked Dates */}
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle className="text-foreground">Dates bloquées / réservées</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Bloquez des dates pour lesquelles la propriété n'est pas disponible (réservations admin, maintenance, etc.)
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {blockedDates.map((bd, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Input
+                        type="date"
+                        value={bd.date}
+                        onChange={e => {
+                          const updated = [...blockedDates];
+                          updated[i] = { ...updated[i], date: e.target.value };
+                          setBlockedDates(updated);
+                        }}
+                        className="flex-1"
+                      />
+                      <Input
+                        value={bd.reason || ''}
+                        onChange={e => {
+                          const updated = [...blockedDates];
+                          updated[i] = { ...updated[i], reason: e.target.value };
+                          setBlockedDates(updated);
+                        }}
+                        placeholder="Raison (optionnel)"
+                        className="flex-1"
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => setBlockedDates(prev => prev.filter((_, idx) => idx !== i))}>
+                        <X className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setBlockedDates(prev => [...prev, { date: '', reason: '' }])}
+                  >
+                    <Plus className="h-4 w-4" /> Ajouter une date bloquée
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Promos */}
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Star className="h-5 w-5 text-accent" />
+                    Promotions sur des plages de dates
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Appliquez des réductions ou prix fixes sur des périodes spécifiques. Les utilisateurs inscrits aux alertes seront notifiés.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {promos.map((promo, i) => (
+                    <Card key={i} className="p-4 bg-muted/30">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Date début</Label>
+                          <Input
+                            type="date"
+                            value={promo.startDate}
+                            onChange={e => {
+                              const updated = [...promos];
+                              updated[i] = { ...updated[i], startDate: e.target.value };
+                              setPromos(updated);
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Date fin</Label>
+                          <Input
+                            type="date"
+                            value={promo.endDate}
+                            onChange={e => {
+                              const updated = [...promos];
+                              updated[i] = { ...updated[i], endDate: e.target.value };
+                              setPromos(updated);
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Réduction (%)</Label>
+                          <Input
+                            type="number"
+                            value={promo.discountPercent}
+                            onChange={e => {
+                              const updated = [...promos];
+                              updated[i] = { ...updated[i], discountPercent: e.target.value };
+                              setPromos(updated);
+                            }}
+                            placeholder="ex: 20"
+                            min={0}
+                            max={90}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Ou prix fixe (DA)</Label>
+                          <Input
+                            type="number"
+                            value={promo.fixedPrice}
+                            onChange={e => {
+                              const updated = [...promos];
+                              updated[i] = { ...updated[i], fixedPrice: e.target.value };
+                              setPromos(updated);
+                            }}
+                            placeholder="Prix fixe"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          value={promo.label}
+                          onChange={e => {
+                            const updated = [...promos];
+                            updated[i] = { ...updated[i], label: e.target.value };
+                            setPromos(updated);
+                          }}
+                          placeholder="Libellé promo (ex: Promo été 2025)"
+                          className="flex-1"
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => setPromos(prev => prev.filter((_, idx) => idx !== i))}>
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setPromos(prev => [...prev, { startDate: '', endDate: '', discountPercent: '', fixedPrice: '', label: '' }])}
+                  >
+                    <Plus className="h-4 w-4" /> Ajouter une promotion
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 3: Photos */}
+          {currentStep === 3 && (
             <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">Property Photos</CardTitle>
@@ -715,7 +956,7 @@ export const AddPropertyWizard: React.FC = () => {
           )}
 
           {/* Step 4: Documents & Verification */}
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <div className="space-y-6">
               {/* Trust Stars Preview */}
               <Card className="border-border bg-gradient-to-br from-card to-muted/30">

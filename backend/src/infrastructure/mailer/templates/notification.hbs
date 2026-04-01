@@ -1,0 +1,30 @@
+{{!-- General notification email template --}}
+<h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0f172a;line-height:1.3;">
+  {{title}}
+</h1>
+
+<p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.7;">
+  {{{message}}}
+</p>
+
+{{#if actionUrl}}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+  <tr>
+    <td align="center">
+      {{> button url=actionUrl label=(or actionLabel "View Details")}}
+    </td>
+  </tr>
+</table>
+{{/if}}
+
+{{#if details}}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+  <tr>
+    <td style="padding:16px 20px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
+      {{#each details}}
+      {{> info-row label=this.label value=this.value}}
+      {{/each}}
+    </td>
+  </tr>
+</table>
+{{/if}}

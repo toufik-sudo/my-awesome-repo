@@ -358,6 +358,7 @@
     "verificationReview": "التحقق",
     "addProperty": "إضافة عقار",
     "support": "الدعم",
+    "services": "الخدمات",
     "demo": "المكونات"
   },
   "propertyWizard": {
@@ -1132,5 +1133,71 @@
       "rejected": "مرفوضة",
       "rate": "معدل الموافقة"
     }
+  },
+  "services": {
+    "title": "الخدمات السياحية",
+    "subtitle": "اكتشف تجارب وأنشطة لرحلتك",
+    "searchPlaceholder": "البحث في الخدمات...",
+    "allCategories": "الكل",
+    "results": "خدمات",
+    "noResults": "لم يتم العثور على خدمات",
+    "noResultsHint": "حاول تعديل البحث أو الفلاتر",
+    "verified": "موثق",
+    "instantBooking": "حجز فوري",
+    "sortDefault": "الموصى بها",
+    "sortRating": "الأعلى تقييمًا",
+    "categories": {
+      "restaurant": "مطعم",
+      "walking_tour": "جولة سيرًا",
+      "cycling_tour": "جولة بالدراجة",
+      "car_tour": "جولة بالسيارة",
+      "bus_tour": "جولة بالحافلة",
+      "horse_tour": "جولة بالحصان",
+      "boat_tour": "جولة بالقارب",
+      "beauty_salon": "صالون تجميل",
+      "massage": "مساج",
+      "hammam": "حمام",
+      "tourist_guide": "مرشد سياحي",
+      "photography": "تصوير",
+      "park_visit": "حدائق ومتنزهات",
+      "beach_visit": "شواطئ",
+      "nature_excursion": "رحلة طبيعية",
+      "regional_event": "أحداث محلية",
+      "cooking_class": "دروس طبخ",
+      "art_class": "دروس فنية",
+      "drawing_class": "دروس رسم",
+      "sport_activity": "رياضة",
+      "spa": "سبا",
+      "shopping_tour": "جولة تسوق",
+      "cultural_visit": "زيارة ثقافية",
+      "nightlife": "حياة ليلية",
+      "other": "أخرى"
+    },
+    "pricingTypes": {
+      "per_person": "شخص",
+      "per_group": "مجموعة",
+      "per_hour": "ساعة",
+      "fixed": "ثابت"
+    },
+    "durationUnits": {
+      "minutes": "دقيقة",
+      "hours": "ساعة",
+      "days": "أيام"
+    }
+  },
+  "points": {
+    "title": "النقاط والمكافآت",
+    "totalPoints": "إجمالي النقاط",
+    "available": "المتاحة",
+    "tier": "المستوى",
+    "lifetime": "النقاط المكتسبة",
+    "recentActivity": "النشاط الأخير",
+    "leaderboard": "لوحة المتصدرين",
+    "nextTier": "المستوى التالي",
+    "remaining": "نقطة متبقية",
+    "tierProgress": "التقدم",
+    "spend": "إنفاق",
+    "earn": "كسب",
+    "history": "السجل"
   }
 }

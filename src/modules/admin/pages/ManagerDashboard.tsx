@@ -6,27 +6,28 @@ import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { GlassCard, GlassStat } from '../components/GlassCard';
-import { assignmentsApi } from '../admin.api';
+import { assignmentsApi, statsApi, type AdminStats } from '../admin.api';
 import type { ManagerAssignment, ManagerPermission, PermissionType } from '../admin.types';
 import { PERMISSION_LABELS, PERMISSION_CATEGORIES } from '../admin.types';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Building2,
   Shield,
-  Settings2,
   CalendarCheck,
   MessageSquare,
   Eye,
   DollarSign,
-  ArrowRight,
   Lock,
   Unlock,
   Activity,
+  Home,
+  Calendar,
+  TrendingUp,
+  Users,
+  FileCheck2,
 } from 'lucide-react';
 
 export const ManagerDashboard: React.FC = React.memo(() => {
@@ -35,31 +36,40 @@ export const ManagerDashboard: React.FC = React.memo(() => {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState<ManagerAssignment[]>([]);
   const [permissionsMap, setPermissionsMap] = useState<Record<string, ManagerPermission[]>>({});
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
-      const data = await assignmentsApi.getAll();
-      // Filter to only the current manager's assignments
-      const myAssignments = data.filter(a => a.managerId === Number(user?.id));
-      setAssignments(myAssignments);
+      const [assignData, statsData] = await Promise.allSettled([
+        assignmentsApi.getAll(),
+        statsApi.getDashboardStats(),
+      ]);
 
-      // Load permissions for each assignment
-      const permMap: Record<string, ManagerPermission[]> = {};
-      await Promise.all(
-        myAssignments.map(async (a) => {
-          try {
-            const perms = await assignmentsApi.getPermissions(a.id);
-            permMap[a.id] = perms;
-          } catch {
-            permMap[a.id] = [];
-          }
-        })
-      );
-      setPermissionsMap(permMap);
+      if (assignData.status === 'fulfilled') {
+        const myAssignments = assignData.value.filter(a => a.managerId === Number(user?.id));
+        setAssignments(myAssignments);
+
+        // Load permissions for each assignment
+        const permMap: Record<string, ManagerPermission[]> = {};
+        await Promise.all(
+          myAssignments.map(async (a) => {
+            try {
+              const perms = await assignmentsApi.getPermissions(a.id);
+              permMap[a.id] = perms;
+            } catch {
+              permMap[a.id] = [];
+            }
+          })
+        );
+        setPermissionsMap(permMap);
+      }
+
+      if (statsData.status === 'fulfilled') {
+        setStats(statsData.value);
+      }
     } catch {
-      toast.error('Failed to load assignments');
+      toast.error('Failed to load dashboard');
     } finally {
       setLoading(false);
     }
@@ -74,7 +84,7 @@ export const ManagerDashboard: React.FC = React.memo(() => {
 
   const totalProperties = useMemo(() => {
     return assignments.reduce((count, a) => {
-      if (a.scope === 'all') return count + 999; // indicates all
+      if (a.scope === 'all') return count + 999;
       return count + 1;
     }, 0);
   }, [assignments]);
@@ -110,8 +120,8 @@ export const ManagerDashboard: React.FC = React.memo(() => {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Primary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <GlassStat
           title="Assigned Properties"
           value={totalProperties > 900 ? 'All' : totalProperties}
@@ -129,6 +139,40 @@ export const ManagerDashboard: React.FC = React.memo(() => {
           value={assignments.length}
           icon={<Activity className="h-5 w-5" />}
           color="accent"
+        />
+        <GlassStat
+          title="Total Bookings"
+          value={stats?.totalBookings ?? 0}
+          icon={<Calendar className="h-5 w-5" />}
+          color="amber"
+        />
+      </div>
+
+      {/* Extended Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <GlassStat
+          title="Total Properties"
+          value={stats?.totalProperties ?? 0}
+          icon={<Home className="h-5 w-5" />}
+          color="primary"
+        />
+        <GlassStat
+          title="Pending Bookings"
+          value={stats?.pendingBookings ?? 0}
+          icon={<CalendarCheck className="h-5 w-5" />}
+          color="secondary"
+        />
+        <GlassStat
+          title="Pending Verifications"
+          value={stats?.pendingVerifications ?? 0}
+          icon={<FileCheck2 className="h-5 w-5" />}
+          color="accent"
+        />
+        <GlassStat
+          title="Revenue"
+          value={`${(stats?.totalRevenue ?? 0).toLocaleString()} DA`}
+          icon={<TrendingUp className="h-5 w-5" />}
+          color="amber"
         />
       </div>
 

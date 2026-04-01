@@ -1,0 +1,38 @@
+{{!-- Welcome email template --}}
+<h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#0f172a;line-height:1.3;">
+  Welcome to {{appName}}! 👋
+</h1>
+<p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
+  Hi{{#if name}} <strong>{{name}}</strong>{{/if}}, we're thrilled to have you on board.
+</p>
+
+<p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.7;">
+  {{appName}} makes it easy to discover and book amazing properties across Algeria — from cozy apartments to luxurious villas and unique experiences.
+</p>
+
+<!-- Feature highlights -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+  <tr>
+    <td style="padding:16px 20px;background:#f0f9ff;border-radius:10px;border-left:4px solid #0891b2;">
+      <p style="margin:0 0 12px;font-size:14px;color:#0f172a;font-weight:600;">Here's what you can do:</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;">🏠 Browse unique stays & experiences</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;">⭐ Save your favorites for later</p>
+      <p style="margin:0 0 8px;font-size:14px;color:#475569;">📅 Book instantly with secure payments</p>
+      <p style="margin:0;font-size:14px;color:#475569;">💬 Chat directly with hosts</p>
+    </td>
+  </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+  <tr>
+    <td align="center">
+      {{> button url=exploreUrl label="Start Exploring"}}
+    </td>
+  </tr>
+</table>
+
+{{> divider}}
+
+<p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
+  Need help? Reply to this email or visit our help center. We're here for you!
+</p>

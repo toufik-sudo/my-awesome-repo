@@ -6,7 +6,7 @@ export class Reaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_reactions_userId')
+  @Index('IDX_reactions_userId', ['userId'])
   @Column({ nullable: false })
   userId: number;
 

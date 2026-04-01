@@ -358,6 +358,7 @@
     "verificationReview": "Vérification",
     "addProperty": "Ajouter un bien",
     "support": "Support",
+    "services": "Services",
     "demo": "Composants"
   },
   "propertyWizard": {
@@ -1088,6 +1089,7 @@
     },
     "actions": {
       "addProperty": "Ajouter une propriété",
+      "addService": "Ajouter Service",
       "browseProperties": "Parcourir les propriétés",
       "myBookings": "Mes réservations",
       "settings": "Paramètres"
@@ -1106,6 +1108,80 @@
       "pending": "En attente",
       "rejected": "Rejetés",
       "rate": "taux d'approbation"
+    }
+  },
+  "services": {
+    "title": "Services Touristiques",
+    "subtitle": "Découvrez des expériences et activités pour votre voyage",
+    "searchPlaceholder": "Rechercher des services...",
+    "allCategories": "Tout",
+    "results": "services",
+    "noResults": "Aucun service trouvé",
+    "noResultsHint": "Essayez d'ajuster votre recherche ou vos filtres",
+    "verified": "Vérifié",
+    "instantBooking": "Réservation instantanée",
+    "sortDefault": "Recommandés",
+    "sortRating": "Les mieux notés",
+    "categories": {
+      "restaurant": "Restaurant",
+      "walking_tour": "Balade à pied",
+      "cycling_tour": "Balade à vélo",
+      "car_tour": "Balade en voiture",
+      "bus_tour": "Balade en bus",
+      "horse_tour": "Balade à cheval",
+      "boat_tour": "Balade en bateau",
+      "beauty_salon": "Coiffure & Beauté",
+      "massage": "Massage",
+      "hammam": "Hammam",
+      "tourist_guide": "Guide touristique",
+      "photography": "Photographe",
+      "park_visit": "Parcs & Jardins",
+      "beach_visit": "Plages",
+      "nature_excursion": "Excursion nature",
+      "regional_event": "Événements locaux",
+      "cooking_class": "Cours de cuisine",
+      "art_class": "Cours artistique",
+      "drawing_class": "Cours de dessin",
+      "sport_activity": "Sport",
+      "spa": "Spa",
+      "shopping_tour": "Shopping & Artisanat",
+      "cultural_visit": "Visite culturelle",
+      "nightlife": "Vie nocturne",
+      "other": "Autre"
+    },
+    "pricingTypes": {
+      "per_person": "personne",
+      "per_group": "groupe",
+      "per_hour": "heure",
+      "fixed": "fixe"
+    },
+    "durationUnits": {
+      "minutes": "min",
+      "hours": "h",
+      "days": "jours"
+    }
+  },
+  "points": {
+    "title": "Points & Récompenses",
+    "totalPoints": "Points totaux",
+    "available": "Disponibles",
+    "tier": "Niveau",
+    "lifetime": "Points cumulés",
+    "recentActivity": "Activité récente",
+    "leaderboard": "Classement",
+    "nextTier": "Prochain niveau",
+    "remaining": "pts restants",
+    "tierProgress": "Progression",
+    "spend": "Dépenser",
+    "earn": "Gagner",
+    "history": "Historique",
+    "badges": "Badges",
+    "pageTitle": "Points & Récompenses",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "badges": "Badges",
+      "history": "Historique",
+      "leaderboard": "Classement"
     }
   }
 }

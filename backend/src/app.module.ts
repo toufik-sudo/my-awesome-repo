@@ -29,11 +29,15 @@ import { DashboardModule } from './modules/dashboard.module';
 import { PaymentsModule } from './payments/payments.module';
 import { SettingsModule } from './settings/modules/settings.module';
 import { SupportChatModule } from './support-chat/modules/support-chat.module';
+import { TourismServicesModule } from './services/modules/tourism-services.module';
+import { PointsModule } from './modules/points/points.module';
 import ssoConfig from './sso/config/sso.config';
 import { RedisModule } from './infrastructure/redis';
 import { JobsModule } from './infrastructure/jobs';
 import { WsModule } from './infrastructure/websocket';
 import { ObservabilityModule } from './infrastructure/observability';
+import { MailerModule } from './infrastructure/mailer';
+import { EmailTrackingModule } from './infrastructure/email-tracking';
 
 @Module({
   imports: [
@@ -69,6 +73,8 @@ import { ObservabilityModule } from './infrastructure/observability';
     JobsModule,
     WsModule,
     ObservabilityModule,
+    MailerModule,
+    EmailTrackingModule,
     // Domain
     UserModule,
     RolesModule,
@@ -87,6 +93,8 @@ import { ObservabilityModule } from './infrastructure/observability';
     SettingsModule,
     PaymentsModule,
     SupportChatModule,
+    TourismServicesModule,
+    PointsModule,
   ],
   controllers: [AppController],
   providers: [

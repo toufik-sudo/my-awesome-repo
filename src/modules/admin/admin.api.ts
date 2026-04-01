@@ -24,7 +24,7 @@ export const rolesApi = {
     api.post<UserRole>(`${ROLES_BASE}/assign`, { userId, role }).then(r => r.data),
 
   removeRole: (userId: number, role: AppRole) =>
-    api.delete(`${ROLES_BASE}/remove`, { data: { userId, role } }),
+    api.delete(`${ROLES_BASE}/user/${userId}/${role}`),
 
   getAllUsers: () =>
     api.get<UserWithRoles[]>(`${ROLES_BASE}/users`).then(r => r.data),
@@ -42,16 +42,16 @@ export const assignmentsApi = {
     propertyId?: string;
     propertyGroupId?: string;
   }) =>
-    api.post<ManagerAssignment>(`${ROLES_BASE}/assignments`, data).then(r => r.data),
+    api.post<ManagerAssignment>(`${ROLES_BASE}/manager/assign`, data).then(r => r.data),
 
   remove: (assignmentId: string) =>
     api.delete(`${ROLES_BASE}/assignments/${assignmentId}`),
 
   getPermissions: (assignmentId: string) =>
-    api.get<ManagerPermission[]>(`${ROLES_BASE}/assignments/${assignmentId}/permissions`).then(r => r.data),
+    api.get<ManagerPermission[]>(`${ROLES_BASE}/manager/${assignmentId}/permissions`).then(r => r.data),
 
   setPermissions: (assignmentId: string, permissions: { permission: PermissionType; isGranted: boolean }[]) =>
-    api.put<ManagerPermission[]>(`${ROLES_BASE}/assignments/${assignmentId}/permissions`, { permissions }).then(r => r.data),
+    api.post<ManagerPermission[]>(`${ROLES_BASE}/manager/permissions`, { assignmentId, permissions }).then(r => r.data),
 };
 
 // ─── Stats ──────────────────────────────────────────────────────────────────
@@ -62,6 +62,17 @@ export interface AdminStats {
   activeManagers: number;
   totalAssignments: number;
   pendingVerifications: number;
+  // Extended stats
+  totalAdmins?: number;
+  totalManagers?: number;
+  totalRegularUsers?: number;
+  approvedVerifications?: number;
+  rejectedVerifications?: number;
+  totalProperties?: number;
+  publishedProperties?: number;
+  totalBookings?: number;
+  pendingBookings?: number;
+  totalRevenue?: number;
 }
 
 export const statsApi = {

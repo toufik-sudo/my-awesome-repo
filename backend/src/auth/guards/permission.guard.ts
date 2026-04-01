@@ -8,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { RolesService } from '../../user/services/roles.service';
 import { PERMISSION_KEY } from '../decorators/require-permission.decorator';
 import { ROLES_KEY } from '../decorators/require-role.decorator';
-import { IS_PUBLIC_KEY } from '../public.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { PermissionType } from '../../user/entity/manager-permission.entity';
 import { AppRole } from '../../user/entity/user-role.entity';
 
@@ -36,8 +36,8 @@ export class PermissionGuard implements CanActivate {
     // Get user roles
     const userRoles = await this.rolesService.getUserRoles(userId);
 
-    // Hyper managers always pass
-    if (userRoles.includes('hyper_manager')) return true;
+    // Hyper admins and hyper managers always pass
+    if (userRoles.includes('hyper_admin') || userRoles.includes('hyper_manager')) return true;
 
     // ─── Role check ─────────────────────────────────────────────────────
     const requiredRoles = this.reflector.getAllAndOverride<AppRole[]>(ROLES_KEY, [

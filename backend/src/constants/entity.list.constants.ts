@@ -17,6 +17,9 @@ import { Reaction } from '../reactions/entity/reaction.entity';
 import { Ranking } from '../rankings/entity/ranking.entity';
 import { Profile } from '../profiles/entity/profile.entity';
 import { Notification } from '../notification/entity/notification.entity';
+import { TourismService } from '../services/entity/tourism-service.entity';
+import { UserPoints, PointTransaction } from '../modules/points/entity/user-points.entity';
+import { Badge, UserBadge } from '../modules/points/entity/badge.entity';
 
 export const entityList = [
   User,
@@ -38,4 +41,9 @@ export const entityList = [
   Ranking,
   Profile,
   Notification,
+  TourismService,
+  UserPoints,
+  PointTransaction,
+  Badge,
+  UserBadge,
 ];

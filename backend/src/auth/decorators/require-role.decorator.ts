@@ -5,6 +5,6 @@ export const ROLES_KEY = 'required_roles';
 
 /**
  * Decorator to restrict endpoint access to specific roles.
- * Hyper managers always pass. Multiple roles = OR logic.
+ * Hyper admins and hyper managers always pass. Multiple roles = OR logic.
  */
 export const RequireRole = (...roles: AppRole[]) => SetMetadata(ROLES_KEY, roles);

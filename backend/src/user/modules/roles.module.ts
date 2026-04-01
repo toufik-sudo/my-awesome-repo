@@ -5,24 +5,36 @@ import { InvitationController } from '../controllers/invitation.controller';
 import { RolesService } from '../services/roles.service';
 import { InvitationService } from '../services/invitation.service';
 import { UserRole } from '../entity/user-role.entity';
+import { User } from '../entity/user.entity';
 import { ManagerAssignment } from '../entity/manager-assignment.entity';
 import { ManagerPermission } from '../entity/manager-permission.entity';
 import { Invitation } from '../entity/invitation.entity';
 import { PropertyGroupMembership } from '../../properties/entity/property-group-membership.entity';
+import { ServiceFeeRule } from '../entity/service-fee-rule.entity';
+import { PointsRule } from '../entity/points-rule.entity';
+import { ServiceFeeController } from '../controllers/service-fee.controller';
+import { PointsRuleController } from '../controllers/points-rule.controller';
+import { ServiceFeeService } from '../services/service-fee.service';
+import { PointsRuleService } from '../services/points-rule.service';
+import { JobsModule } from 'src/infrastructure/jobs/jobs.module';
 
 @Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       UserRole,
+      User,
       ManagerAssignment,
       ManagerPermission,
       Invitation,
       PropertyGroupMembership,
+      ServiceFeeRule,
+      PointsRule,
     ]),
+    JobsModule,
   ],
-  controllers: [RolesController, InvitationController],
-  providers: [RolesService, InvitationService],
-  exports: [RolesService, InvitationService],
+  controllers: [RolesController, InvitationController, ServiceFeeController, PointsRuleController],
+  providers: [RolesService, InvitationService, ServiceFeeService, PointsRuleService],
+  exports: [RolesService, InvitationService, ServiceFeeService, PointsRuleService],
 })
 export class RolesModule {}

@@ -1,19 +1,21 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format, differenceInDays, addDays, addMonths, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Star, 
-  Minus, 
-  Plus, 
   Loader2, 
   CreditCard, 
   Banknote, 
   Smartphone, 
   Shield, 
   HandCoins,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -22,11 +24,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DynamicDatePicker } from '@/modules/shared/components/DynamicDatePicker';
 import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
+import { GuestSelector, type GuestBreakdown } from './GuestSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { bookingsApi, type CreateBookingDto } from '@/modules/bookings/bookings.api';
+import { propertiesApi } from '@/modules/properties/properties.api';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { type PaymentMethodType } from '@/modules/shared/components/PricingBreakdownSection';
 
@@ -43,6 +48,7 @@ interface BookingWidgetProps {
   rating: number;
   reviewCount: number;
   acceptedPaymentMethods?: PaymentMethodType[];
+  allowPets?: boolean;
 }
 
 // Payment method configuration with mapping to API values
@@ -120,23 +126,105 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
   maxGuests,
   rating,
   reviewCount,
-  acceptedPaymentMethods = ['dahabia', 'algiers_bank', 'postal_bank_transfer'], // Default methods
+  acceptedPaymentMethods = ['dahabia', 'algiers_bank', 'postal_bank_transfer'],
+  allowPets = false,
 }) => {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [guests, setGuests] = useState(2);
+  const [guestBreakdown, setGuestBreakdown] = useState<GuestBreakdown>({
+    adults: 2, children: 0, babies: 0, pets: 0,
+  });
+  const guests = guestBreakdown.adults + guestBreakdown.children;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(() => {
-    // Use first accepted payment method as default
     return (acceptedPaymentMethods.length > 0 ? acceptedPaymentMethods[0] : 'dahabia') as PaymentMethodType;
   });
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [promoNotifOpen, setPromoNotifOpen] = useState(false);
+  const [notifEmail, setNotifEmail] = useState(true);
+  const [notifPhone, setNotifPhone] = useState(false);
+
+  // Windowed availability fetching — 3-month chunks
+  const [availWindow, setAvailWindow] = useState(() => {
+    const now = new Date();
+    return {
+      from: format(now, 'yyyy-MM-dd'),
+      to: format(addMonths(now, 3), 'yyyy-MM-dd'),
+    };
+  });
+
+  const { data: availabilityData = [] } = useQuery({
+    queryKey: ['property-availability', propertyId, availWindow.from, availWindow.to],
+    queryFn: () => propertiesApi.getAvailability(propertyId, availWindow.from, availWindow.to),
+    enabled: !!propertyId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Track all loaded availability across windows
+  const [allAvailability, setAllAvailability] = useState<typeof availabilityData>([]);
+
+  useEffect(() => {
+    if (availabilityData.length > 0) {
+      setAllAvailability(prev => {
+        const existingDates = new Set(prev.map(a => a.date));
+        const newEntries = availabilityData.filter(a => !existingDates.has(a.date));
+        return [...prev, ...newEntries];
+      });
+    }
+  }, [availabilityData]);
+
+  /** Called when user scrolls calendar past current window */
+  const handleCalendarMonthChange = useCallback((month: Date) => {
+    const windowEnd = parseISO(availWindow.to);
+    if (month > windowEnd || differenceInDays(month, windowEnd) > -30) {
+      // Load next 3-month chunk
+      const newFrom = format(addMonths(windowEnd, 0), 'yyyy-MM-dd');
+      const newTo = format(addMonths(windowEnd, 3), 'yyyy-MM-dd');
+      setAvailWindow({ from: newFrom, to: newTo });
+    }
+  }, [availWindow.to]);
+
+  // Blocked/booked dates
+  const disabledDates = useMemo(() => {
+    return allAvailability
+      .filter(a => a.isBlocked)
+      .map(a => parseISO(a.date));
+  }, [allAvailability]);
+
+  // Promo dates (dates with custom lower price)
+  const promoDates = useMemo(() => {
+    return allAvailability
+      .filter(a => a.customPrice !== null && a.customPrice < pricePerNight && !a.isBlocked)
+      .map(a => ({ date: parseISO(a.date), price: a.customPrice! }));
+  }, [allAvailability, pricePerNight]);
+
+  const hasPromos = promoDates.length > 0;
+
+  const handleGoToPromo = useCallback(() => {
+    if (promoDates.length === 0) return;
+    // Set date range to first promo date
+    const firstPromo = promoDates[0].date;
+    setDateRange({ from: firstPromo, to: addDays(firstPromo, 1) });
+  }, [promoDates]);
+
+  const handleSubscribePromo = useCallback(async () => {
+    try {
+      await propertiesApi.subscribePromoAlert(propertyId, {
+        notifyEmail: notifEmail,
+        notifyPhone: notifPhone,
+      });
+      toast.success(t('propertyDetail.promoSubscribed', 'Vous serez notifié des promotions!'));
+    } catch {
+      toast.error(t('propertyDetail.promoSubscribeError', 'Erreur lors de l\'inscription'));
+    }
+    setPromoNotifOpen(false);
+  }, [t, propertyId, notifEmail, notifPhone]);
 
   const nights = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return 0;
@@ -145,23 +233,31 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
 
   // Calculate effective rate and discounts
   const pricing = useMemo(() => {
-    if (nights === 0) return { effectiveRate: pricePerNight, discount: 0, discountType: '' };
+    const ppn = Number(pricePerNight) || 0;
+    const ppw = Number(pricePerWeek) || 0;
+    const ppm = Number(pricePerMonth) || 0;
+    const wd = Number(weeklyDiscount) || 0;
+    const md = Number(monthlyDiscount) || 0;
+    const cd = Number(customDiscount) || 0;
+    const cdMin = Number(customDiscountMinNights) || 0;
+
+    if (nights === 0) return { effectiveRate: ppn, discount: 0, discountType: '' };
 
     // Monthly rate (28+ nights)
     if (nights >= 28) {
-      if (pricePerMonth) {
-        const monthlyRate = pricePerMonth / 30;
+      if (ppm > 0) {
+        const monthlyRate = ppm / 30;
         return {
           effectiveRate: monthlyRate,
-          discount: ((pricePerNight - monthlyRate) / pricePerNight) * 100,
+          discount: ((ppn - monthlyRate) / ppn) * 100,
           discountType: 'Monthly rate'
         };
       }
-      if (monthlyDiscount) {
-        const discountedRate = pricePerNight * (1 - monthlyDiscount / 100);
+      if (md > 0) {
+        const discountedRate = ppn * (1 - md / 100);
         return {
           effectiveRate: discountedRate,
-          discount: monthlyDiscount,
+          discount: md,
           discountType: 'Monthly discount'
         };
       }
@@ -169,41 +265,54 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
 
     // Weekly rate (7+ nights)
     if (nights >= 7) {
-      if (pricePerWeek) {
-        const weeklyRate = pricePerWeek / 7;
+      if (ppw > 0) {
+        const weeklyRate = ppw / 7;
         return {
           effectiveRate: weeklyRate,
-          discount: ((pricePerNight - weeklyRate) / pricePerNight) * 100,
+          discount: ((ppn - weeklyRate) / ppn) * 100,
           discountType: 'Weekly rate'
         };
       }
-      if (weeklyDiscount) {
-        const discountedRate = pricePerNight * (1 - weeklyDiscount / 100);
+      if (wd > 0) {
+        const discountedRate = ppn * (1 - wd / 100);
         return {
           effectiveRate: discountedRate,
-          discount: weeklyDiscount,
+          discount: wd,
           discountType: 'Weekly discount'
         };
       }
     }
 
     // Custom discount
-    if (customDiscount && customDiscountMinNights && nights >= customDiscountMinNights) {
-      const discountedRate = pricePerNight * (1 - customDiscount / 100);
+    if (cd > 0 && cdMin > 0 && nights >= cdMin) {
+      const discountedRate = ppn * (1 - cd / 100);
       return {
         effectiveRate: discountedRate,
-        discount: customDiscount,
-        discountType: `${customDiscountMinNights}+ nights discount`
+        discount: cd,
+        discountType: `${cdMin}+ nights discount`
       };
     }
 
-    return { effectiveRate: pricePerNight, discount: 0, discountType: '' };
+    return { effectiveRate: ppn, discount: 0, discountType: '' };
   }, [nights, pricePerNight, pricePerWeek, pricePerMonth, weeklyDiscount, monthlyDiscount, customDiscount, customDiscountMinNights]);
 
   const subtotal = Math.round(nights * pricing.effectiveRate);
-  const serviceFeeRate = paymentMethod === 'hand_to_hand' ? 2.5 : 5; // Split fee for cash
-  const serviceFee = Math.round(subtotal * (serviceFeeRate / 100));
-  const total = subtotal + serviceFee;
+  const cleaningFee = 0; // Could be set per property
+
+  // Use backend fee calculation if available, fallback to local calculation
+  const { data: feeCalcData } = useQuery({
+    queryKey: ['service-fee-calc', propertyId, subtotal],
+    queryFn: () => import('@/modules/admin/service-fees.api').then(m => 
+      m.serviceFeesApi.calculate({ hostId: 0, propertyId, amount: subtotal })
+    ),
+    enabled: subtotal > 0,
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const serviceFeeRate = paymentMethod === 'hand_to_hand' ? 2.5 : 5;
+  const serviceFee = feeCalcData?.fee ?? Math.round(subtotal * (serviceFeeRate / 100));
+  const total = subtotal + serviceFee + cleaningFee;
 
   // Filter available payment methods
   const availablePaymentMethods = acceptedPaymentMethods
@@ -287,43 +396,45 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
               onDateChange={(d) => setDateRange(d as DateRange | undefined)}
               placeholder={t('propertyDetail.selectDates', 'Sélectionner les dates')}
               minDate={new Date()}
+              disabledDates={disabledDates}
             />
+            {/* Promo & Notification Buttons */}
+            <div className="flex gap-2 mt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5 text-xs"
+                disabled={!hasPromos}
+                onClick={handleGoToPromo}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {hasPromos
+                  ? t('propertyDetail.viewPromos', 'Voir les promos')
+                  : t('propertyDetail.noPromos', 'Pas de promos')}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5 text-xs"
+                onClick={() => setPromoNotifOpen(true)}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                {t('propertyDetail.promoAlert', 'Alerte promo')}
+              </Button>
+            </div>
           </div>
 
           {/* Guest Selection */}
           <div>
             <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-              {t('propertyDetail.guests')}
+              {t('propertyDetail.guests', 'Voyageurs')}
             </Label>
-            <div className="flex items-center justify-between px-3 py-2 border rounded-lg bg-background">
-              <span className="text-sm">
-                {guests} {guests > 1 ? t('propertyDetail.guests') : t('propertyDetail.guest', 'voyageur')}
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setGuests(Math.max(1, guests - 1))}
-                  disabled={guests <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="w-6 text-center text-sm font-medium">{guests}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setGuests(Math.min(maxGuests, guests + 1))}
-                  disabled={guests >= maxGuests}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('propertyDetail.maxGuests', 'Maximum')} {maxGuests} {t('propertyDetail.guests')}
-            </p>
+            <GuestSelector
+              value={guestBreakdown}
+              onChange={setGuestBreakdown}
+              maxGuests={maxGuests}
+              allowPets={allowPets}
+            />
           </div>
 
           {/* Book Button */}
@@ -517,6 +628,44 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
             </div>
           </div>
         )}
+      </DynamicModal>
+
+      {/* Promo Notification Modal */}
+      <DynamicModal
+        open={promoNotifOpen}
+        onOpenChange={setPromoNotifOpen}
+        title={t('propertyDetail.promoNotifTitle', 'Alertes promotions')}
+        size="sm"
+      >
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-muted-foreground">
+            {t('propertyDetail.promoNotifDesc', 'Recevez une notification dès qu\'une promotion est disponible sur cette propriété.')}
+          </p>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={notifEmail}
+                onCheckedChange={(c) => setNotifEmail(!!c)}
+              />
+              <span className="text-sm">{t('propertyDetail.notifByEmail', 'Par email')}</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox
+                checked={notifPhone}
+                onCheckedChange={(c) => setNotifPhone(!!c)}
+              />
+              <span className="text-sm">{t('propertyDetail.notifByPhone', 'Par téléphone (SMS)')}</span>
+            </label>
+          </div>
+          <Button
+            className="w-full gap-2"
+            onClick={handleSubscribePromo}
+            disabled={!notifEmail && !notifPhone}
+          >
+            <Bell className="h-4 w-4" />
+            {t('propertyDetail.subscribePromo', 'Activer les alertes')}
+          </Button>
+        </div>
       </DynamicModal>
     </>
   );

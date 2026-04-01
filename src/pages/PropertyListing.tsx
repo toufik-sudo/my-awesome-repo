@@ -4,6 +4,7 @@ import type { MockProperty } from '@/modules/properties/properties.mock';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Search,
   MapPin,
@@ -32,6 +33,7 @@ import {
   ShieldX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +65,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 import { MapSearch, MapBounds } from '@/modules/shared/components/MapSearch';
+import { UnifiedMapSearch } from '@/modules/shared/components/UnifiedMapSearch';
+import { useServices } from '@/modules/services/services.hooks';
 import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/components/DynamicFilter';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
 import { BackendImage } from '@/modules/shared/components/BackendImage';
@@ -107,12 +111,20 @@ const PropertyListing = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+
+  const canAddProperty = useMemo(() => {
+    if (!user?.roles) return false;
+    return user.roles.some(r => ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(r));
+  }, [user]);
 
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const { isFavorite, toggleFavorite } = useFavorites();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const { data: allProperties = [], isLoading: propertiesLoading } = useProperties();
+  const { data: servicesData } = useServices({ page: 1, limit: 100 });
+  const mapServicesData = useMemo(() => servicesData?.data?.filter(s => s.latitude && s.longitude) || [], [servicesData]);
 
   const [filters, setFilters] = useState<Filters>({
     location: searchParams.get('location') || '',
@@ -681,6 +693,12 @@ const PropertyListing = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                {canAddProperty && (
+                  <Button size="sm" onClick={() => navigate('/properties/new')} className="gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    {t('dashboard.actions.addProperty', 'Add Property')}
+                  </Button>
+                )}
                 <Select value={filters.sortBy} onValueChange={(v) => updateFilter('sortBy', v)}>
                   <SelectTrigger className="w-44 h-9 text-xs">
                     <SelectValue />
@@ -798,15 +816,16 @@ const PropertyListing = () => {
                   )}
                 </div>
                 <div className="rounded-xl overflow-hidden border border-border">
-                  <MapSearch
+                  <UnifiedMapSearch
                     properties={mapProperties}
+                    services={mapServicesData}
                     center={(() => {
                       const top = [...mapProperties].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
                       return top ? [top.location.longitude, top.location.latitude] as [number, number] : [3.0588, 36.7538] as [number, number];
                     })()}
                     zoom={6}
                     onPropertySelect={(property) => navigate(`/property/${property.id}`)}
-                    // onBoundsChange={setMapBounds}
+                    onServiceSelect={(service) => navigate(`/services/${service.id}`)}
                     className="h-[calc(100vh-16rem)]"
                   />
                 </div>

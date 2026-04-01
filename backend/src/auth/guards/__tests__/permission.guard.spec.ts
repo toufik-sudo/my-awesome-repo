@@ -5,7 +5,7 @@ import { PermissionGuard } from '../permission.guard';
 import { RolesService } from '../../../user/services/roles.service';
 import { PERMISSION_KEY } from '../../decorators/require-permission.decorator';
 import { ROLES_KEY } from '../../decorators/require-role.decorator';
-import { IS_PUBLIC_KEY } from '../../public.decorator';
+import { IS_PUBLIC_KEY } from '../../decorators/public.decorator';
 
 describe('PermissionGuard', () => {
   let guard: PermissionGuard;

@@ -17,7 +17,7 @@ export class Favorite {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_favorites_userId')
+  @Index('IDX_favorites_userId', ['userId'])
   @Column()
   userId: number;
 
@@ -25,7 +25,7 @@ export class Favorite {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Index('IDX_favorites_propertyId')
+  @Index('IDX_favorites_propertyId', ['propertyId'])
   @Column()
   propertyId: string;
 

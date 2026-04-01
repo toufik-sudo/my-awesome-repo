@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Body,
   Param,
@@ -98,6 +99,50 @@ export class RolesController {
   @RequireRole('admin', 'manager')
   async getManagerProperties(@Param('managerId') managerId: string) {
     return this.rolesService.getManagerProperties(parseInt(managerId, 10));
+  }
+
+  // ─── Missing endpoints: /roles/users and /roles/assignments ──────────
+
+  @Get('users')
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
+  async getAllUsers() {
+    return this.rolesService.getAllUsersWithRoles();
+  }
+
+  @Put('users/:userId/status')
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
+  async updateUserStatus(
+    @Request() req,
+    @Param('userId') userId: string,
+    @Body() body: { status: string },
+  ) {
+    return this.rolesService.updateUserStatus(req.user.id, parseInt(userId, 10), body.status);
+  }
+
+  @Delete('users/:userId')
+  @RequireRole('hyper_admin', 'hyper_manager')
+  async deleteUser(
+    @Request() req,
+    @Param('userId') userId: string,
+  ) {
+    await this.rolesService.deleteUser(req.user.id, parseInt(userId, 10));
+    return { success: true };
+  }
+
+  @Get('assignments')
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
+  async getAllAssignments() {
+    return this.rolesService.getAllAssignments();
+  }
+
+  @Delete('assignments/:assignmentId')
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
+  async removeAssignment(
+    @Request() req,
+    @Param('assignmentId') assignmentId: string,
+  ) {
+    await this.rolesService.removeAssignment(req.user.id, assignmentId);
+    return { success: true };
   }
 
   @Get('check/:userId/property/:propertyId/:permission')

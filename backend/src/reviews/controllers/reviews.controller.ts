@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { ReviewsService } from '../services/reviews.service';
-import { Public } from '../../auth/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 import { RequirePermission } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 
 @Controller('reviews')
 @UseGuards(PermissionGuard)
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(private readonly reviewsService: ReviewsService) { }
 
   @Public()
   @Get('property/:propertyId')

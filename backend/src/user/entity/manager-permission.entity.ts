@@ -10,23 +10,51 @@ import {
 } from 'typeorm';
 import { ManagerAssignment } from './manager-assignment.entity';
 
-// All configurable permissions for managers
+// All configurable permissions for managers and hyper_managers
 export type PermissionType =
-  | 'answer_demands'
-  | 'accept_demands'
-  | 'decline_demands'
-  | 'refund_users'
-  | 'reply_reviews'
-  | 'reply_comments'
-  | 'manage_reactions'
+  // Property management
+  | 'create_property'
+  | 'modify_property'
+  | 'delete_property'
+  | 'pause_property'
   | 'modify_prices'
   | 'modify_photos'
-  | 'modify_offers'
   | 'modify_title'
   | 'modify_description'
-  | 'view_analytics'
   | 'manage_availability'
-  | 'send_messages';
+  | 'manage_amenities'
+  // Booking management
+  | 'view_bookings'
+  | 'accept_bookings'
+  | 'reject_bookings'
+  | 'pause_bookings'
+  | 'refund_users'
+  | 'answer_demands'
+  | 'decline_demands'
+  | 'accept_demands'
+  // Communication
+  | 'reply_chat'
+  | 'reply_reviews'
+  | 'reply_comments'
+  | 'send_messages'
+  | 'contact_guests'
+  // Social & engagement
+  | 'manage_reactions'
+  | 'manage_likes'
+  // Business & analytics
+  | 'view_analytics'
+  | 'manage_promotions'
+  | 'modify_offers'
+  // Service management
+  | 'create_service'
+  | 'modify_service'
+  | 'delete_service'
+  | 'pause_service'
+  // User management (hyper level)
+  | 'manage_users'
+  | 'manage_admins'
+  | 'manage_managers';
+  
 
 @Entity('manager_permissions')
 @Unique(['assignmentId', 'permission'])

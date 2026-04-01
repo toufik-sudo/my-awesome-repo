@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { CustomCsrfInterceptor } from 'src/services/interceptors/custom.csrf.interceptor';
-import { Public } from 'src/auth/public.decorator';
+import { Public } from 'src/auth/decorators/public.decorator';
 import { SsoOnly } from '../decorators/sso-only.decorator';
 import { SsoEnabledGuard } from '../guards/sso-enabled.guard';
 import { SSOService } from '../services/sso.service';

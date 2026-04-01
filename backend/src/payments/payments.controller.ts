@@ -14,13 +14,13 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaymentsService } from './payments.service';
 import { RequireRole } from '../auth/decorators/require-role.decorator';
-import { Public } from '../auth/public.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   // ─── Transfer Accounts ───────────────────────────────────────────────
 

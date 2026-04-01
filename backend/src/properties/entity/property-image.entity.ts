@@ -14,7 +14,7 @@ export class PropertyImage {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_property_images_propertyId')
+  @Index('IDX_property_images_propertyId', ['propertyId'])
   @Column()
   propertyId: string;
 

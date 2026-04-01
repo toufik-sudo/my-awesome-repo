@@ -9,6 +9,7 @@ import { DynamicInput } from './DynamicInput';
 import { SlidersHorizontal, Locate } from 'lucide-react';
 import ReactDOM from 'react-dom/client';
 import { Input } from '@/components/ui/input';
+import { resolveImageUrl } from './BackendImage';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
@@ -263,7 +264,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
           <div className="relative">
             {property.images[0] && (
               <img
-                src={property.images[0]}
+                src={resolveImageUrl(property.images[0])}
                 alt={property.title}
                 className="w-full h-36 object-cover rounded-t-xl"
               />
@@ -502,12 +503,14 @@ export const MapSearch: React.FC<MapSearchProps> = ({
               <DynamicButton
                 variant="primary"
                 onClick={() => {
-                  // Handle booking action
-                  console.log('Book property:', selectedProperty.id);
+                  if (onPropertySelect) {
+                    onPropertySelect(selectedProperty);
+                  }
+                  handleCloseModal();
                 }}
                 styleClass="flex-1"
               >
-                Book Now - {selectedProperty.currency}{selectedProperty.price}/night
+                Voir les détails
               </DynamicButton>
             </div>
           }
@@ -518,7 +521,7 @@ export const MapSearch: React.FC<MapSearchProps> = ({
               {selectedProperty.images.slice(0, 4).map((image, idx) => (
                 <img
                   key={idx}
-                  src={image}
+                  src={resolveImageUrl(image)}
                   alt={`${selectedProperty.title} - ${idx + 1}`}
                   className={`rounded-lg object-cover ${idx === 0 ? 'col-span-2 h-64' : 'h-32'
                     }`}

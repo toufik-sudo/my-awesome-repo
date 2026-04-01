@@ -19,7 +19,7 @@ import { CustomCsrfInterceptor } from 'src/services/interceptors/custom.csrf.int
 import { CreateUserRequestDto } from '../dtos/requests/create.user.request.dto';
 import { SessionService } from '../../services/session/session.service';
 import { ActivateUserRequestDto } from '../dtos/requests/activate.user.request.dto';
-import { Public } from '../../auth/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller('auth')
 @UseInterceptors(CustomCsrfInterceptor)

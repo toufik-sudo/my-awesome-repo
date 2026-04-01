@@ -22,7 +22,7 @@ export interface Property {
   amenities: string[];
   hostName: string;
   hostAvatar?: string;
-  propertyType: 'apartment' | 'house' | 'villa' | 'studio' | 'condo';
+  propertyType: 'apartment' | 'house' | 'villa' | 'studio' | 'condo' | 'hotel' | 'chalet' | 'riad';
   available: boolean;
 }
 

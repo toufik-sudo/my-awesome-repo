@@ -19,7 +19,7 @@ export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_reviews_propertyId')
+  @Index('IDX_reviews_propertyId', ['propertyId'])
   @Column()
   propertyId: string;
 
@@ -27,7 +27,7 @@ export class Review {
   @JoinColumn({ name: 'propertyId' })
   property: Property;
 
-  @Index('IDX_reviews_guestId')
+  @Index('IDX_reviews_guestId', ['guestId'])
   @Column()
   guestId: number;
 

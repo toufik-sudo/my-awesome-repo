@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { QUEUE_EMAIL, QUEUE_NOTIFICATION, QUEUE_IMAGE } from './jobs.constant';
+import { QUEUE_EMAIL, QUEUE_NOTIFICATION, QUEUE_IMAGE, QUEUE_ALERTS } from './jobs.constant';
 
 export interface EmailJobData {
   to: string;
@@ -36,6 +36,7 @@ export class JobProducerService {
     @InjectQueue(QUEUE_EMAIL) private readonly emailQueue: Queue,
     @InjectQueue(QUEUE_NOTIFICATION) private readonly notificationQueue: Queue,
     @InjectQueue(QUEUE_IMAGE) private readonly imageQueue: Queue,
+    @InjectQueue(QUEUE_ALERTS) private readonly alertsQueue: Queue,
   ) {}
 
   async sendEmail(data: EmailJobData, priority = 0) {
@@ -75,6 +76,26 @@ export class JobProducerService {
       backoff: { type: 'fixed', delay: 5000 },
     });
     this.logger.log(`Image job queued: ${job.id} → ${data.filePath}`);
+    return job;
+  }
+
+  /** Trigger saved search alerts processing */
+  async processSavedSearchAlerts() {
+    const job = await this.alertsQueue.add('process-saved-searches', {}, {
+      attempts: 2,
+      backoff: { type: 'exponential', delay: 5000 },
+    });
+    this.logger.log(`Saved search alerts job queued: ${job.id}`);
+    return job;
+  }
+
+  /** Trigger promo alerts for a specific property */
+  async processPromoAlerts(propertyId: string, promoLabel?: string) {
+    const job = await this.alertsQueue.add('process-promo-alerts', {
+      propertyId,
+      promoLabel,
+    });
+    this.logger.log(`Promo alerts job queued: ${job.id} → property:${propertyId}`);
     return job;
   }
 }

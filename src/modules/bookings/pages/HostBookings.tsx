@@ -22,7 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
-import { MainLayout } from '@/modules/shared/layout/MainLayout';
+
 import { useHostBookings, useAcceptBooking, useDeclineBooking, useCounterOfferBooking } from '../bookings.hooks';
 import type { BookingResponse } from '../bookings.api';
 
@@ -92,16 +92,14 @@ export const HostBookings: React.FC = () => {
 
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
     );
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center gap-3 mb-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -348,7 +346,7 @@ export const HostBookings: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </MainLayout>
+    </>
   );
 };
 

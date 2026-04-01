@@ -1,8 +1,7 @@
 export interface User {
   id: string;
   email: string;
-  name?: string;
-  role?: string;
+  username?: string;  
   language?: string;
   roles?: string[];
   [key: string]: any;

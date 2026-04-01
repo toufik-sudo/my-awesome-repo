@@ -348,6 +348,16 @@ export const defaultMenuGroups: NavMenuGroup[] = [
         roles: ['hyper_manager', 'admin']
       },
       {
+        id: 'admin-chat',
+        label: 'Support Chat',
+        translationKey: 'navigation.supportChat',
+        url: '/support',
+        icon: MessageSquare,
+        roles: ['hyper_admin', 'hyper_manager', 'admin'],
+        badge: 'Live',
+        badgeVariant: 'success'
+      },
+      {
         id: 'users',
         label: 'Users',
         translationKey: 'navigation.users',

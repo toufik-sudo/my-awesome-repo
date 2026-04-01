@@ -19,6 +19,7 @@ export interface DatePickerProps extends BaseComponentProps {
   maxDate?: Date;
   disabled?: boolean;
   dateFormat?: string;
+  disabledDates?: Date[];
 }
 
 export const DynamicDatePicker: React.FC<DatePickerProps> = ({
@@ -30,6 +31,7 @@ export const DynamicDatePicker: React.FC<DatePickerProps> = ({
   maxDate,
   disabled = false,
   dateFormat = 'PPP',
+  disabledDates = [],
   ...baseProps
 }) => {
   const { t } = useTranslation();
@@ -67,6 +69,10 @@ export const DynamicDatePicker: React.FC<DatePickerProps> = ({
   const isDateDisabled = (date: Date) => {
     if (minDate && date < minDate) return true;
     if (maxDate && date > maxDate) return true;
+    if (disabledDates.length > 0) {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      return disabledDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
+    }
     return false;
   };
 

@@ -12,6 +12,7 @@ import type { AppRole, UserWithRoles } from '../admin.types';
 import type { GridColumn, DynamicFormField } from '@/types/component.types';
 
 const ROLE_COLORS: Record<AppRole, string> = {
+  hyper_admin: 'destructive',
   hyper_manager: 'destructive',
   admin: 'default',
   manager: 'secondary',
@@ -19,6 +20,7 @@ const ROLE_COLORS: Record<AppRole, string> = {
 };
 
 const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  hyper_admin: <ShieldAlert className="h-3 w-3" />,
   hyper_manager: <ShieldAlert className="h-3 w-3" />,
   admin: <ShieldCheck className="h-3 w-3" />,
   manager: <Shield className="h-3 w-3" />,

@@ -195,7 +195,8 @@ export const PricingBreakdownSection: React.FC<PricingBreakdownProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {acceptedPaymentMethods.map((method) => {
               const config = PAYMENT_METHOD_CONFIG[method];
-              const Icon = config?.icon;
+              if (!config) return null;
+              const Icon = config.icon;
               
               return (
                 <div
@@ -222,10 +223,10 @@ export const PricingBreakdownSection: React.FC<PricingBreakdownProps> = ({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
-                      {config?.label}
+                      {config.label}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {config?.description}
+                      {config.description}
                     </p>
                   </div>
                   {method === 'hand_to_hand' && (

@@ -1,0 +1,39 @@
+{{!-- Document verification status email template --}}
+{{#ifCond status '===' 'approved'}}
+<h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#059669;line-height:1.3;">
+  Verification Approved ✅
+</h1>
+<p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
+  Great news! Your documents have been reviewed and approved. Your account is now fully verified.
+</p>
+{{else}}
+<h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#dc2626;line-height:1.3;">
+  Verification Update ⚠️
+</h1>
+<p style="margin:0 0 24px;font-size:15px;color:#64748b;line-height:1.6;">
+  We've reviewed your submitted documents and unfortunately couldn't verify them at this time.
+</p>
+{{/ifCond}}
+
+{{#if reason}}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+  <tr>
+    <td style="padding:16px 20px;background:#f8fafc;border-radius:10px;border-left:4px solid {{#ifCond status '===' 'approved'}}#059669{{else}}#f59e0b{{/ifCond}};">
+      <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#334155;">Details:</p>
+      <p style="margin:0;font-size:14px;color:#475569;line-height:1.6;">{{reason}}</p>
+    </td>
+  </tr>
+</table>
+{{/if}}
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+  <tr>
+    <td align="center">
+      {{#ifCond status '===' 'approved'}}
+      {{> button url=dashboardUrl label="Go to Dashboard"}}
+      {{else}}
+      {{> button url=resubmitUrl label="Resubmit Documents"}}
+      {{/ifCond}}
+    </td>
+  </tr>
+</table>

@@ -9,7 +9,8 @@ import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { GlassCard, GlassStat } from '../components/GlassCard';
@@ -19,7 +20,7 @@ import { RolesManagement } from './RolesManagement';
 import { PropertyGroupsManagement } from './PropertyGroupsManagement';
 import { ManagerAssignments } from './ManagerAssignments';
 import { VerificationReview } from './VerificationReview';
-import { statsApi, rolesApi, invitationsApi, type AdminStats, type Invitation } from '../admin.api';
+import { statsApi, rolesApi, assignmentsApi, invitationsApi, type AdminStats, type Invitation } from '../admin.api';
 import type { AppRole, UserWithRoles } from '../admin.types';
 import type { GridColumn } from '@/types/component.types';
 import {
@@ -41,6 +42,8 @@ import {
   Activity,
   Zap,
   Bell,
+  Home,
+  Calendar,
 } from 'lucide-react';
 
 export const HyperManagerDashboard: React.FC = React.memo(() => {
@@ -53,12 +56,11 @@ export const HyperManagerDashboard: React.FC = React.memo(() => {
   const [invitationsLoading, setInvitationsLoading] = useState(false);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
       const data = await statsApi.getDashboardStats();
       setStats(data);
     } catch {
-      // non-critical
+      // non-critical — use empty stats
     } finally {
       setLoading(false);
     }
@@ -76,7 +78,10 @@ export const HyperManagerDashboard: React.FC = React.memo(() => {
     }
   }, []);
 
-  useEffect(() => { loadData(); loadInvitations(); }, [loadData, loadInvitations]);
+  useEffect(() => {
+    loadData();
+    loadInvitations();
+  }, [loadData, loadInvitations]);
 
   const invitationColumns = useMemo<GridColumn[]>(() => [
     {
@@ -146,14 +151,8 @@ export const HyperManagerDashboard: React.FC = React.memo(() => {
       content: (
         <ErrorBoundary>
           <div className="space-y-6">
-            {/* Stats Grid */}
+            {/* Main Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <GlassStat
-                title="Pending Verifications"
-                value={stats?.pendingVerifications ?? 0}
-                icon={<FileCheck2 className="h-5 w-5" />}
-                color="amber"
-              />
               <GlassStat
                 title="Total Users"
                 value={stats?.totalUsers ?? 0}
@@ -172,6 +171,122 @@ export const HyperManagerDashboard: React.FC = React.memo(() => {
                 icon={<ShieldCheck className="h-5 w-5" />}
                 color="accent"
               />
+              <GlassStat
+                title="Pending Verifications"
+                value={stats?.pendingVerifications ?? 0}
+                icon={<FileCheck2 className="h-5 w-5" />}
+                color="amber"
+              />
+            </div>
+
+            {/* Extended Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <GlassStat
+                title="Total Properties"
+                value={stats?.totalProperties ?? 0}
+                icon={<Home className="h-5 w-5" />}
+                color="primary"
+              />
+              <GlassStat
+                title="Published Properties"
+                value={stats?.publishedProperties ?? 0}
+                icon={<Building2 className="h-5 w-5" />}
+                color="secondary"
+              />
+              <GlassStat
+                title="Total Bookings"
+                value={stats?.totalBookings ?? 0}
+                icon={<Calendar className="h-5 w-5" />}
+                color="accent"
+              />
+              <GlassStat
+                title="Total Revenue"
+                value={`${(stats?.totalRevenue ?? 0).toLocaleString()} DA`}
+                icon={<TrendingUp className="h-5 w-5" />}
+                color="amber"
+              />
+            </div>
+
+            {/* Role Distribution */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <GlassCard className="p-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <Shield className="h-5 w-5 text-primary" /> Role Distribution
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="h-4 w-4 text-destructive" />
+                      <span className="text-sm">Hyper Admins</span>
+                    </div>
+                    <Badge variant="destructive">{stats?.totalAdmins != null ? '—' : '—'}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      <span className="text-sm">Admins</span>
+                    </div>
+                    <Badge>{stats?.totalAdmins ?? 0}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-secondary-foreground" />
+                      <span className="text-sm">Managers</span>
+                    </div>
+                    <Badge variant="secondary">{stats?.totalManagers ?? stats?.activeManagers ?? 0}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Regular Users</span>
+                    </div>
+                    <Badge variant="outline">{stats?.totalRegularUsers ?? 0}</Badge>
+                  </div>
+                </div>
+              </GlassCard>
+
+              <GlassCard className="p-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                  <FileCheck2 className="h-5 w-5 text-primary" /> Verification Overview
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Pending</span>
+                    <Badge variant="outline" className="text-amber-600 border-amber-600">
+                      {stats?.pendingVerifications ?? 0}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Approved</span>
+                    <Badge className="bg-emerald-600 hover:bg-emerald-700">
+                      {stats?.approvedVerifications ?? 0}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Rejected</span>
+                    <Badge variant="destructive">
+                      {stats?.rejectedVerifications ?? 0}
+                    </Badge>
+                  </div>
+                  {(stats?.pendingVerifications ?? 0) + (stats?.approvedVerifications ?? 0) + (stats?.rejectedVerifications ?? 0) > 0 && (
+                    <>
+                      <Progress
+                        value={((stats?.approvedVerifications ?? 0) / Math.max(
+                          (stats?.pendingVerifications ?? 0) + (stats?.approvedVerifications ?? 0) + (stats?.rejectedVerifications ?? 0),
+                          1
+                        )) * 100}
+                        className="h-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {Math.round(((stats?.approvedVerifications ?? 0) / Math.max(
+                          (stats?.pendingVerifications ?? 0) + (stats?.approvedVerifications ?? 0) + (stats?.rejectedVerifications ?? 0),
+                          1
+                        )) * 100)}% approval rate
+                      </p>
+                    </>
+                  )}
+                </div>
+              </GlassCard>
             </div>
 
             {/* Quick Actions */}

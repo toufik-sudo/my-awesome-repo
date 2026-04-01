@@ -67,8 +67,8 @@ async function bootstrap() {
   // Rate limiting global
   app.use(
     rateLimit({
-      windowMs: 5 * 60 * 1000, // 15 minutes
-      max: 100, // 100 requêtes par IP
+      windowMs: 1 * 60 * 1000, // 1 minutes
+      max: 1000, // 100 requêtes par IP
       standardHeaders: true,
       legacyHeaders: false,
       message: 'Too many requests from this IP, please try again later.',

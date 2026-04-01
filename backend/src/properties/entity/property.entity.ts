@@ -19,7 +19,7 @@ export class Property {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_properties_hostId')
+  @Index('IDX_properties_hostId', ['hostId'])
   @Column()
   hostId: number;
 
@@ -150,6 +150,9 @@ export class Property {
 
   @Column({ default: false })
   instantBooking: boolean;
+
+  @Column({ default: false })
+  allowPets: boolean;
 
   @Column({ type: 'int', default: 1 })
   minNights: number;

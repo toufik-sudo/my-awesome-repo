@@ -17,6 +17,8 @@ export type NotificationType =
   | 'doc_pending_review'
   | 'doc_admin_approved'
   | 'doc_admin_rejected'
+  | 'saved_search_match'
+  | 'promo_alert'
   | 'general';
 
 export type NotificationChannel = 'in_app' | 'email' | 'both';
@@ -26,7 +28,7 @@ export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_notifications_userId')
+  @Index('IDX_notifications_userId', ['userId'])
   @Column()
   userId: number;
 

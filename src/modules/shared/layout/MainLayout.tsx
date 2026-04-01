@@ -20,6 +20,8 @@ import {
   MessageSquare,
   PlusCircle,
   Headphones,
+  Compass,
+  Trophy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -63,12 +65,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const navItems: NavItem[] = [
     { path: '/', label: t('nav.home') || 'Home', icon: Home },
     { path: '/dashboard', label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true },
-    { path: '/hyper-admin', label: t('nav.hyperAdmin') || 'Hyper Admin', icon: Shield, requireAuth: true, roles: ['hyper_manager'] },
-    { path: '/admin', label: t('nav.admin') || 'Admin Panel', icon: Shield, requireAuth: true, roles: ['admin'] },
-    { path: '/manager', label: t('nav.managerPanel') || 'Manager Panel', icon: Shield, requireAuth: true, roles: ['manager'] },
     { path: '/properties', label: t('nav.properties') || 'Properties', icon: Building2 },
-    { path: '/properties/new', label: t('nav.addProperty') || 'Add Property', icon: PlusCircle, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
+    { path: '/services', label: t('nav.services') || 'Services', icon: Compass },
     { path: '/bookings', label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true },
+    { path: '/points', label: t('nav.points', 'Points') || 'Points', icon: Trophy, requireAuth: true },
     { path: '/bookings/host', label: t('nav.bookingRequests') || 'Requests', icon: MessageSquare, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager'] },
     { path: '/bookings/history', label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
     { path: '/settings', label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true },
@@ -87,6 +87,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
+    if (path === '/bookings') return location.pathname === '/bookings';
     return location.pathname.startsWith(path);
   };
 

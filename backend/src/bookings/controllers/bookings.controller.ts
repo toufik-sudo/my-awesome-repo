@@ -3,12 +3,12 @@ import { BookingsService } from '../services/bookings.service';
 import { CreateBookingDto } from '../dtos/create-booking.dto';
 import { RequirePermission } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
-import { Public } from '../../auth/public.decorator';
+import { Public } from '../../auth/decorators/public.decorator';
 
 @Controller('bookings')
 @UseGuards(PermissionGuard)
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingsService: BookingsService) { }
 
   @Get()
   @RequirePermission('answer_demands', 'propertyId', 'query')

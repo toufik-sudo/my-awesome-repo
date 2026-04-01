@@ -2,9 +2,8 @@
  * Database Seed Script
  * 
  * Creates sample users, profiles, properties, bookings, reviews,
- * verification documents, notifications, favorites, rankings, and comments.
- * 
- * Properties match the frontend MOCK_PROPERTIES data exactly.
+ * verification documents, notifications, favorites, rankings, comments,
+ * tourism services, manager assignments, and permissions.
  * 
  * Usage: npm run seed
  */
@@ -70,17 +69,21 @@ async function seedUsers(ds: DataSource): Promise<number[]> {
   const pwd = await hashPassword('Password123!');
   const token = 'seed-token-placeholder';
 
+  // Role logic:
+  // - hyper_admin / hyper_manager keep their role in users.roles
+  // - admin / manager / guest all have 'user' in users.roles (actual roles in user_roles table)
   const users = [
-    { email: 'admin@byootdz.com', phoneNbr: '+213550000001', cardId: 'CID0001', passportId: 'P001', roles: 'hyper_manager', firstName: 'Karim', lastName: 'Bensalah', title: 'Mr', city: 'Alger', country: 'Algeria' },
-    { email: 'manager@byootdz.com', phoneNbr: '+213550000002', cardId: 'CID0002', passportId: 'P002', roles: 'admin', firstName: 'Amina', lastName: 'Mebarki', title: 'Mme', city: 'Oran', country: 'Algeria' },
-    { email: 'host1@byootdz.com', phoneNbr: '+213550000003', cardId: 'CID0003', passportId: 'P003', roles: 'user', firstName: 'Yacine', lastName: 'Khelifi', title: 'Mr', city: 'Tipaza', country: 'Algeria' },
-    { email: 'host2@byootdz.com', phoneNbr: '+213550000004', cardId: 'CID0004', passportId: 'P004', roles: 'user', firstName: 'Lina', lastName: 'Bouaziz', title: 'Mme', city: 'Constantine', country: 'Algeria' },
-    { email: 'host3@byootdz.com', phoneNbr: '+213550000005', cardId: 'CID0005', passportId: 'P005', roles: 'user', firstName: 'Omar', lastName: 'Touati', title: 'Mr', city: 'Ghardaïa', country: 'Algeria' },
-    { email: 'host4@byootdz.com', phoneNbr: '+213550000006', cardId: 'CID0006', passportId: 'P006', roles: 'user', firstName: 'Fatima', lastName: 'Zeroual', title: 'Mme', city: 'Béjaïa', country: 'Algeria' },
-    { email: 'guest1@byootdz.com', phoneNbr: '+213550000007', cardId: 'CID0007', passportId: 'P007', roles: 'user', firstName: 'Sara', lastName: 'Hadj', title: 'Mme', city: 'Annaba', country: 'Algeria' },
-    { email: 'guest2@byootdz.com', phoneNbr: '+213550000008', cardId: 'CID0008', passportId: 'P008', roles: 'user', firstName: 'Raouf', lastName: 'Brahimi', title: 'Mr', city: 'Tizi Ouzou', country: 'Algeria' },
-    { email: 'guest3@byootdz.com', phoneNbr: '+213550000009', cardId: 'CID0009', passportId: 'P009', roles: 'user', firstName: 'Nadia', lastName: 'Ferhat', title: 'Mme', city: 'Bouira', country: 'Algeria' },
-    { email: 'guest4@byootdz.com', phoneNbr: '+213550000010', cardId: 'CID0010', passportId: 'P010', roles: 'user', firstName: 'Mehdi', lastName: 'Ziani', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'hyper_admin_byootdz@yopmail.com', phoneNbr: '+213550000000', cardId: 'CID0000', passportId: 'P000', roles: 'hyper_admin', firstName: 'Sofiane', lastName: 'Hamidi', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'hyper_manager_byootdz@yopmail.com', phoneNbr: '+213550000001', cardId: 'CID0001', passportId: 'P001', roles: 'hyper_manager', firstName: 'Karim', lastName: 'Bensalah', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'admin1_byootdz@yopmail.com', phoneNbr: '+213550000002', cardId: 'CID0002', passportId: 'P002', roles: 'user', firstName: 'Amina', lastName: 'Mebarki', title: 'Mme', city: 'Oran', country: 'Algeria' },
+    { email: 'admin2_byootdz@yopmail.com', phoneNbr: '+213550000003', cardId: 'CID0003', passportId: 'P003', roles: 'user', firstName: 'Yacine', lastName: 'Khelifi', title: 'Mr', city: 'Tipaza', country: 'Algeria' },
+    { email: 'manager1_byootdz@yopmail.com', phoneNbr: '+213550000004', cardId: 'CID0004', passportId: 'P004', roles: 'user', firstName: 'Lina', lastName: 'Bouaziz', title: 'Mme', city: 'Constantine', country: 'Algeria' },
+    { email: 'manager2_byootdz@yopmail.com', phoneNbr: '+213550000005', cardId: 'CID0005', passportId: 'P005', roles: 'user', firstName: 'Omar', lastName: 'Touati', title: 'Mr', city: 'Ghardaïa', country: 'Algeria' },
+    { email: 'guest1_byootdz@yopmail.com', phoneNbr: '+213550000006', cardId: 'CID0006', passportId: 'P006', roles: 'user', firstName: 'Fatima', lastName: 'Zeroual', title: 'Mme', city: 'Béjaïa', country: 'Algeria' },
+    { email: 'guest2_byootdz@yopmail.com', phoneNbr: '+213550000007', cardId: 'CID0007', passportId: 'P007', roles: 'user', firstName: 'Sara', lastName: 'Hadj', title: 'Mme', city: 'Annaba', country: 'Algeria' },
+    { email: 'guest3_byootdz@yopmail.com', phoneNbr: '+213550000008', cardId: 'CID0008', passportId: 'P008', roles: 'user', firstName: 'Raouf', lastName: 'Brahimi', title: 'Mr', city: 'Tizi Ouzou', country: 'Algeria' },
+    { email: 'guest4_byootdz@yopmail.com', phoneNbr: '+213550000009', cardId: 'CID0009', passportId: 'P009', roles: 'user', firstName: 'Nadia', lastName: 'Ferhat', title: 'Mme', city: 'Bouira', country: 'Algeria' },
+    { email: 'guest5_byootdz@yopmail.com', phoneNbr: '+213550000010', cardId: 'CID0010', passportId: 'P010', roles: 'user', firstName: 'Mehdi', lastName: 'Ziani', title: 'Mr', city: 'Alger', country: 'Algeria' },
   ];
 
   const userIds: number[] = [];
@@ -99,19 +102,30 @@ async function seedUsers(ds: DataSource): Promise<number[]> {
 
 async function seedUserRoles(ds: DataSource, userIds: number[]) {
   const qr = ds.createQueryRunner();
+  // Roles in user_roles table reflect actual business roles
+  // hyper_admin/hyper_manager: their role + user
+  // admin: owns properties, can assign managers
+  // manager: manages assigned properties from admins
+  // guests: just 'user' role
+  // Note: an admin/manager can also be a guest (book other properties)
   const roles = [
-    { userId: userIds[0], role: 'hyper_manager' },
-    { userId: userIds[0], role: 'admin' },
-    { userId: userIds[1], role: 'admin' },
-    { userId: userIds[1], role: 'manager' },
-    { userId: userIds[2], role: 'user' },
-    { userId: userIds[3], role: 'user' },
-    { userId: userIds[4], role: 'user' },
-    { userId: userIds[5], role: 'user' },
-    { userId: userIds[6], role: 'user' },
-    { userId: userIds[7], role: 'user' },
-    { userId: userIds[8], role: 'user' },
-    { userId: userIds[9], role: 'user' },
+    { userId: userIds[0], role: 'hyper_admin' },
+    { userId: userIds[0], role: 'user' },
+    { userId: userIds[1], role: 'hyper_manager' },
+    { userId: userIds[1], role: 'user' },
+    { userId: userIds[2], role: 'admin' },    // admin1 - owns properties
+    { userId: userIds[2], role: 'user' },     // can also be a guest
+    { userId: userIds[3], role: 'admin' },    // admin2 - owns properties  
+    { userId: userIds[3], role: 'user' },     // can also be a guest
+    { userId: userIds[4], role: 'manager' },  // manager1 - manages for admin1
+    { userId: userIds[4], role: 'user' },     // can also be a guest
+    { userId: userIds[5], role: 'manager' },  // manager2 - manages for admin2 & admin1
+    { userId: userIds[5], role: 'user' },     // can also be a guest
+    { userId: userIds[6], role: 'user' },     // guest only
+    { userId: userIds[7], role: 'user' },     // guest only
+    { userId: userIds[8], role: 'user' },     // guest only
+    { userId: userIds[9], role: 'user' },     // guest only
+    { userId: userIds[10], role: 'user' },    // guest only
   ];
   for (const r of roles) {
     await qr.query(
@@ -125,23 +139,24 @@ async function seedUserRoles(ds: DataSource, userIds: number[]) {
 
 async function seedProfiles(ds: DataSource, userIds: number[]) {
   const qr = ds.createQueryRunner();
-  const wilayas = ['Alger', 'Oran', 'Tipaza', 'Constantine', 'Ghardaïa', 'Béjaïa', 'Annaba', 'Tizi Ouzou', 'Bouira', 'Alger'];
-  const names = ['Karim B.', 'Amina M.', 'Yacine K.', 'Lina B.', 'Omar T.', 'Fatima Z.', 'Sara H.', 'Raouf B.', 'Nadia F.', 'Mehdi Z.'];
+  const wilayas = ['Alger', 'Alger', 'Oran', 'Tipaza', 'Constantine', 'Ghardaïa', 'Béjaïa', 'Annaba', 'Tizi Ouzou', 'Bouira', 'Alger'];
+  const names = ['Sofiane H.', 'Karim B.', 'Amina M.', 'Yacine K.', 'Lina B.', 'Omar T.', 'Fatima Z.', 'Sara H.', 'Raouf B.', 'Nadia F.', 'Mehdi Z.'];
   const bios = [
-    'Platform administrator and travel enthusiast.',
-    'Property manager with 5 years experience.',
-    'Superhost in Tipaza, villa specialist with sea views.',
-    'Host in Constantine, traditional homes expert.',
-    'Riad and desert property specialist in Ghardaïa.',
-    'Seaside property host in Béjaïa and Annaba.',
-    'Frequent traveler across Algeria.',
-    'Mountain and nature enthusiast from Tizi Ouzou.',
-    'Nature photographer and guest reviewer.',
-    'City explorer and penthouse lover.',
+    'Hyper Admin — full platform oversight and control.',
+    'Hyper Manager — global property management.',
+    'Admin — owns and manages properties in Oran region.',
+    'Admin — owns and manages properties in Tipaza region.',
+    'Manager — manages assigned properties for admins.',
+    'Manager — manages assigned properties for multiple admins.',
+    'Guest — frequent traveler across Algeria.',
+    'Guest — mountain and nature enthusiast.',
+    'Guest — city explorer and reviewer.',
+    'Guest — nature photographer.',
+    'Guest — penthouse lover.',
   ];
 
   for (let i = 0; i < userIds.length; i++) {
-    const isHost = i >= 2 && i <= 5;
+    const isHost = i >= 2 && i <= 5; // admins and managers are hosts
     await qr.query(
       `INSERT INTO profiles (id, userId, displayName, avatarUrl, bio, city, wilaya, country, languages, isHost, isSuperhost, identityVerified, preferredLanguage, preferredCurrency)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -151,7 +166,7 @@ async function seedProfiles(ds: DataSource, userIds: number[]) {
         bios[i],
         wilayas[i], wilayas[i], 'Algeria',
         JSON.stringify(['fr', 'ar', ...(i % 2 === 0 ? ['en'] : [])]),
-        isHost, isHost && (i === 2 || i === 4), i < 6,
+        isHost, isHost && (i === 2 || i === 3), i < 6,
         i % 3 === 0 ? 'ar' : 'fr', 'DZD',
       ]
     );
@@ -160,19 +175,19 @@ async function seedProfiles(ds: DataSource, userIds: number[]) {
   console.log(`✅ Created ${userIds.length} profiles`);
 }
 
-async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string[]> {
+async function seedProperties(ds: DataSource, adminIds: number[]): Promise<string[]> {
   const qr = ds.createQueryRunner();
   const propertyIds: string[] = [];
 
-  // Properties matching frontend MOCK_PROPERTIES exactly
+  // admin1 (index 2) owns properties 0-5, admin2 (index 3) owns properties 6-11
   const properties = [
     {
-      hostId: hostIds[0],
+      hostId: adminIds[0], // admin1
       title: 'Villa Vue Mer Luxueuse',
       desc: JSON.stringify({
-        fr: `Magnifique villa moderne située sur les hauteurs de Tipaza avec une vue imprenable sur la mer Méditerranée. Cette propriété d'exception offre un cadre idyllique pour des vacances en famille ou entre amis.\n\nLa villa dispose de grands espaces de vie lumineux, d'une cuisine entièrement équipée et d'une terrasse panoramique parfaite pour admirer les couchers de soleil. La piscine privée et le jardin paysager complètent cette propriété de rêve.\n\nÀ seulement 10 minutes en voiture des plages et du centre-ville, vous pourrez profiter à la fois du calme de la campagne et de la proximité des commodités.`,
-        en: `Magnificent modern villa perched on the heights of Tipaza with breathtaking views of the Mediterranean Sea. This exceptional property offers an idyllic setting for family or friends vacations.\n\nThe villa features bright, spacious living areas, a fully equipped kitchen, and a panoramic terrace perfect for watching sunsets. The private pool and landscaped garden complete this dream property.\n\nJust 10 minutes by car from the beaches and town center, you can enjoy both the tranquility of the countryside and the convenience of nearby amenities.`,
-        ar: `فيلا عصرية رائعة تقع على مرتفعات تيبازة مع إطلالة خلابة على البحر الأبيض المتوسط. هذا العقار الاستثنائي يوفر إطارًا مثاليًا لقضاء عطلة مع العائلة أو الأصدقاء.\n\nتتميز الفيلا بمساحات معيشة واسعة ومشرقة، ومطبخ مجهز بالكامل، وشرفة بانورامية مثالية للاستمتاع بغروب الشمس. المسبح الخاص والحديقة المنسقة يكملان هذا العقار الحلم.\n\nتبعد 10 دقائق فقط بالسيارة عن الشواطئ ووسط المدينة، مما يتيح لك الاستمتاع بهدوء الريف وقرب المرافق في آن واحد.`,
+        fr: `Magnifique villa moderne située sur les hauteurs de Tipaza avec une vue imprenable sur la mer Méditerranée.`,
+        en: `Magnificent modern villa perched on the heights of Tipaza with breathtaking views of the Mediterranean Sea.`,
+        ar: `فيلا عصرية رائعة تقع على مرتفعات تيبازة مع إطلالة خلابة على البحر الأبيض المتوسط.`,
       }),
       type: 'villa', wilaya: 'Tipaza', city: 'Tipaza',
       latitude: 36.5903, longitude: 2.4483, price: 15000,
@@ -185,18 +200,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
         'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[0],
+      hostId: adminIds[0], // admin1
       title: 'Appartement Moderne Centre-Ville',
       desc: JSON.stringify({
-        fr: 'Appartement moderne et lumineux au cœur d\'Alger Centre. Entièrement rénové avec des finitions haut de gamme. Proche de toutes commodités, restaurants et transports.',
-        en: 'Modern and bright apartment in the heart of Algiers city center. Fully renovated with high-end finishes. Close to all amenities, restaurants, and public transport.',
-        ar: 'شقة عصرية ومشرقة في قلب وسط مدينة الجزائر. مجددة بالكامل بتشطيبات راقية. قريبة من جميع المرافق والمطاعم ووسائل النقل.',
+        fr: 'Appartement moderne et lumineux au cœur d\'Alger Centre.',
+        en: 'Modern and bright apartment in the heart of Algiers city center.',
+        ar: 'شقة عصرية ومشرقة في قلب وسط مدينة الجزائر.',
       }),
       type: 'apartment', wilaya: 'Alger', city: 'Alger Centre',
       latitude: 36.7538, longitude: 3.0588, price: 8000,
@@ -208,18 +220,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[1],
+      hostId: adminIds[0], // admin1
       title: 'Maison Traditionnelle Casbah',
       desc: JSON.stringify({
-        fr: 'Magnifique maison traditionnelle au cœur de la vieille ville de Constantine. Architecture authentique préservée avec confort moderne. Vue imprenable sur les gorges.',
-        en: 'Magnificent traditional house in the heart of Constantine\'s old city. Preserved authentic architecture with modern comfort. Stunning views of the gorges.',
-        ar: 'منزل تقليدي رائع في قلب المدينة القديمة بقسنطينة. هندسة معمارية أصيلة محفوظة مع راحة عصرية. إطلالة خلابة على الأخاديد.',
+        fr: 'Magnifique maison traditionnelle au cœur de la vieille ville de Constantine.',
+        en: 'Magnificent traditional house in the heart of Constantine\'s old city.',
+        ar: 'منزل تقليدي رائع في قلب المدينة القديمة بقسنطينة.',
       }),
       type: 'house', wilaya: 'Constantine', city: 'Constantine',
       latitude: 36.3650, longitude: 6.6147, price: 12000,
@@ -231,18 +240,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[2],
+      hostId: adminIds[0], // admin1
       title: 'Chalet de Montagne Panoramique',
       desc: JSON.stringify({
-        fr: 'Chalet en bois confortable au cœur de la forêt de Tikjda. Cheminée, terrasse avec vue panoramique sur les montagnes. Idéal pour se ressourcer.',
-        en: 'Comfortable wooden chalet in the heart of Tikjda forest. Fireplace, terrace with panoramic mountain views. Perfect for recharging and relaxation.',
-        ar: 'شاليه خشبي مريح في قلب غابة تيكجدة. مدفأة وشرفة مع إطلالة بانورامية على الجبال. مثالي للاسترخاء وتجديد النشاط.',
+        fr: 'Chalet en bois confortable au cœur de la forêt de Tikjda.',
+        en: 'Comfortable wooden chalet in the heart of Tikjda forest.',
+        ar: 'شاليه خشبي مريح في قلب غابة تيكجدة.',
       }),
       type: 'chalet', wilaya: 'Bouira', city: 'Tikjda',
       latitude: 36.4266, longitude: 3.9911, price: 10000,
@@ -254,18 +260,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1470770841497-7b3200c37e1b?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[2],
+      hostId: adminIds[0], // admin1
       title: 'Riad Authentique avec Patio',
       desc: JSON.stringify({
-        fr: 'Riad traditionnel du M\'zab avec patio intérieur et fontaine. Décoration artisanale authentique, petit-déjeuner traditionnel inclus. Une expérience unique au cœur du patrimoine mondial UNESCO.',
-        en: 'Traditional M\'zab riad with interior patio and fountain. Authentic handcrafted décor, traditional breakfast included. A unique experience in the heart of a UNESCO World Heritage site.',
-        ar: 'رياض تقليدي من وادي ميزاب مع فناء داخلي ونافورة. ديكور حرفي أصيل، فطور تقليدي مشمول. تجربة فريدة في قلب موقع تراث عالمي لليونسكو.',
+        fr: 'Riad traditionnel du M\'zab avec patio intérieur et fontaine.',
+        en: 'Traditional M\'zab riad with interior patio and fountain.',
+        ar: 'رياض تقليدي من وادي ميزاب مع فناء داخلي ونافورة.',
       }),
       type: 'riad', wilaya: 'Ghardaïa', city: 'Ghardaïa',
       latitude: 32.4912, longitude: 3.6734, price: 9500,
@@ -277,18 +280,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1590490360182-c33d8f568e3f?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[3],
+      hostId: adminIds[0], // admin1
       title: 'Hôtel Boutique Front de Mer',
       desc: JSON.stringify({
-        fr: 'Hôtel boutique charmant avec vue directe sur la mer à Oran. Chambres élégantes, petit-déjeuner continental, piscine sur le toit. Service hôtelier 5 étoiles.',
-        en: 'Charming boutique hotel with direct sea views in Oran. Elegant rooms, continental breakfast, rooftop pool. Five-star hotel service.',
-        ar: 'فندق بوتيكي ساحر مع إطلالة مباشرة على البحر في وهران. غرف أنيقة، فطور قاري، مسبح على السطح. خدمة فندقية 5 نجوم.',
+        fr: 'Hôtel boutique charmant avec vue directe sur la mer à Oran.',
+        en: 'Charming boutique hotel with direct sea views in Oran.',
+        ar: 'فندق بوتيكي ساحر مع إطلالة مباشرة على البحر في وهران.',
       }),
       type: 'hotel', wilaya: 'Oran', city: 'Oran',
       latitude: 35.6969, longitude: -0.6331, price: 6500,
@@ -300,18 +300,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[3],
+      hostId: adminIds[1], // admin2
       title: 'Villa Jardin Exotique',
       desc: JSON.stringify({
-        fr: 'Villa spacieuse avec jardin tropical luxuriant à Béjaïa. Piscine chauffée, terrasse panoramique, cuisine d\'été. Parfaite pour grandes familles ou groupes d\'amis.',
-        en: 'Spacious villa with lush tropical garden in Béjaïa. Heated pool, panoramic terrace, summer kitchen. Perfect for large families or groups of friends.',
-        ar: 'فيلا واسعة مع حديقة استوائية خضراء في بجاية. مسبح مدفأ، شرفة بانورامية، مطبخ صيفي. مثالية للعائلات الكبيرة أو مجموعات الأصدقاء.',
+        fr: 'Villa spacieuse avec jardin tropical luxuriant à Béjaïa.',
+        en: 'Spacious villa with lush tropical garden in Béjaïa.',
+        ar: 'فيلا واسعة مع حديقة استوائية خضراء في بجاية.',
       }),
       type: 'villa', wilaya: 'Béjaïa', city: 'Béjaïa',
       latitude: 36.7509, longitude: 5.0567, price: 18000,
@@ -323,19 +320,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[3],
+      hostId: adminIds[1], // admin2
       title: 'Studio Cosy Centre Historique',
       desc: JSON.stringify({
-        fr: 'Studio moderne et fonctionnel au cœur du centre historique d\'Annaba. Idéal pour voyageurs solo ou couples. Proche de la basilique et des plages.',
-        en: 'Modern and functional studio in the heart of Annaba\'s historic center. Ideal for solo travelers or couples. Close to the basilica and beaches.',
-        ar: 'ستوديو عصري وعملي في قلب المركز التاريخي لعنابة. مثالي للمسافرين المنفردين أو الأزواج. قريب من الكنيسة والشواطئ.',
+        fr: 'Studio moderne et fonctionnel au cœur du centre historique d\'Annaba.',
+        en: 'Modern and functional studio in the heart of Annaba\'s historic center.',
+        ar: 'ستوديو عصري وعملي في قلب المركز التاريخي لعنابة.',
       }),
       type: 'apartment', wilaya: 'Annaba', city: 'Annaba',
       latitude: 36.9000, longitude: 7.7667, price: 4500,
@@ -347,18 +340,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[1],
+      hostId: adminIds[1], // admin2
       title: 'Maison Kabyle Authentique',
       desc: JSON.stringify({
-        fr: 'Maison kabyle traditionnelle rénovée avec goût à Tizi Ouzou. Architecture locale préservée, jardin d\'oliviers et terrasse avec vue sur les montagnes du Djurdjura.',
-        en: 'Tastefully renovated traditional Kabyle house in Tizi Ouzou. Preserved local architecture, olive garden, and terrace with views of the Djurdjura mountains.',
-        ar: 'منزل قبائلي تقليدي مُجدد بذوق رفيع في تيزي وزو. هندسة معمارية محلية محفوظة، بستان زيتون وشرفة مطلة على جبال جرجرة.',
+        fr: 'Maison kabyle traditionnelle rénovée avec goût à Tizi Ouzou.',
+        en: 'Tastefully renovated traditional Kabyle house in Tizi Ouzou.',
+        ar: 'منزل قبائلي تقليدي مُجدد بذوق رفيع في تيزي وزو.',
       }),
       type: 'house', wilaya: 'Tizi Ouzou', city: 'Tizi Ouzou',
       latitude: 36.7169, longitude: 4.0497, price: 7000,
@@ -370,18 +360,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1575517111478-7f6afd0973db?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[0],
+      hostId: adminIds[1], // admin2
       title: 'Penthouse Vue Panoramique',
       desc: JSON.stringify({
-        fr: 'Penthouse de standing exceptionnel avec terrasse rooftop offrant une vue panoramique à 360° sur la baie d\'Alger. Finitions luxueuses, domotique intégrée.',
-        en: 'Exceptional luxury penthouse with rooftop terrace offering 360° panoramic views of Algiers Bay. Luxurious finishes, integrated smart home system.',
-        ar: 'بنتهاوس فاخر استثنائي مع شرفة على السطح توفر إطلالة بانورامية 360 درجة على خليج الجزائر. تشطيبات فاخرة ونظام منزل ذكي متكامل.',
+        fr: 'Penthouse de standing exceptionnel avec terrasse rooftop à Alger.',
+        en: 'Exceptional luxury penthouse with rooftop terrace in Algiers.',
+        ar: 'بنتهاوس فاخر استثنائي مع شرفة على السطح في الجزائر.',
       }),
       type: 'apartment', wilaya: 'Alger', city: 'Alger',
       latitude: 36.7630, longitude: 3.0506, price: 22000,
@@ -393,19 +380,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1616137466211-f939a420be84?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[2],
+      hostId: adminIds[1], // admin2
       title: 'Chalet Bord de Lac',
       desc: JSON.stringify({
-        fr: 'Chalet rustique au bord du lac Tonga à El Kala. Entouré de nature sauvage, idéal pour randonnées et observation d\'oiseaux. Parc national à proximité.',
-        en: 'Rustic chalet on the shores of Lake Tonga in El Kala. Surrounded by wild nature, ideal for hiking and birdwatching. National park nearby.',
-        ar: 'شاليه ريفي على ضفاف بحيرة طونقا في القالة. محاط بالطبيعة البرية، مثالي للمشي لمسافات طويلة ومراقبة الطيور. حديقة وطنية قريبة.',
+        fr: 'Chalet rustique au bord du lac Tonga à El Kala.',
+        en: 'Rustic chalet on the shores of Lake Tonga in El Kala.',
+        ar: 'شاليه ريفي على ضفاف بحيرة طونقا في القالة.',
       }),
       type: 'chalet', wilaya: 'El Tarf', city: 'El Kala',
       latitude: 36.8956, longitude: 8.4431, price: 11000,
@@ -417,18 +400,15 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1470770841497-7b3200c37e1b?w=1200&auto=format&fit=crop',
       ],
     },
     {
-      hostId: hostIds[2],
+      hostId: adminIds[1], // admin2
       title: 'Riad Luxueux Sahara',
       desc: JSON.stringify({
-        fr: 'Riad luxueux aux portes du Sahara à Tamanrasset. Architecture touareg authentique, piscine intérieure, excursions dans le Hoggar organisées. Petit-déjeuner saharien inclus.',
-        en: 'Luxurious riad at the gates of the Sahara in Tamanrasset. Authentic Tuareg architecture, indoor pool, organized Hoggar excursions. Saharan breakfast included.',
-        ar: 'رياض فاخر عند بوابات الصحراء في تمنراست. هندسة معمارية طوارقية أصيلة، مسبح داخلي، رحلات منظمة في الهقار. فطور صحراوي مشمول.',
+        fr: 'Riad luxueux aux portes du Sahara à Tamanrasset.',
+        en: 'Luxurious riad at the gates of the Sahara in Tamanrasset.',
+        ar: 'رياض فاخر عند بوابات الصحراء في تمنراست.',
       }),
       type: 'riad', wilaya: 'Tamanrasset', city: 'Tamanrasset',
       latitude: 22.7850, longitude: 5.5228, price: 14000,
@@ -440,10 +420,6 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
       images: [
         'https://images.unsplash.com/photo-1590490360182-c33d8f568e3f?w=1200&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&auto=format&fit=crop',
       ],
     },
   ];
@@ -454,12 +430,8 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
     const rules = HOUSE_RULES.sort(() => 0.5 - Math.random()).slice(0, randomBetween(2, 5));
     const payments = PAYMENT_METHODS.sort(() => 0.5 - Math.random()).slice(0, randomBetween(2, 4));
 
-    const pricePerWeek = p.weeklyDiscount > 0
-      ? Math.round(p.price * 7 * (1 - p.weeklyDiscount / 100))
-      : null;
-    const pricePerMonth = p.monthlyDiscount > 0
-      ? Math.round(p.price * 30 * (1 - p.monthlyDiscount / 100))
-      : null;
+    const pricePerWeek = p.weeklyDiscount > 0 ? Math.round(p.price * 7 * (1 - p.weeklyDiscount / 100)) : null;
+    const pricePerMonth = p.monthlyDiscount > 0 ? Math.round(p.price * 30 * (1 - p.monthlyDiscount / 100)) : null;
 
     await qr.query(
       `INSERT INTO properties (id, hostId, title, description, propertyType, status, pricePerNight, currency,
@@ -491,126 +463,329 @@ async function seedProperties(ds: DataSource, hostIds: number[]): Promise<string
   return propertyIds;
 }
 
-async function seedPropertyImages(ds: DataSource, propertyIds: string[]) {
+async function seedManagerAssignments(ds: DataSource, userIds: number[], propertyIds: string[]) {
+  const qr = ds.createQueryRunner();
+  const assignmentIds: string[] = [];
+
+  // admin1 = userIds[2], admin2 = userIds[3]
+  // manager1 = userIds[4], manager2 = userIds[5]
+  // admin1 owns properties 0-5, admin2 owns properties 6-11
+
+  const assignments = [
+    // manager1 manages some of admin1's properties
+    { managerId: userIds[4], adminId: userIds[2], scope: 'property', propertyId: propertyIds[0], groupId: null },
+    { managerId: userIds[4], adminId: userIds[2], scope: 'property', propertyId: propertyIds[1], groupId: null },
+    { managerId: userIds[4], adminId: userIds[2], scope: 'property', propertyId: propertyIds[2], groupId: null },
+    // manager2 manages all of admin2's properties
+    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[6], groupId: null },
+    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[7], groupId: null },
+    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[8], groupId: null },
+    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[9], groupId: null },
+    // manager2 also manages some of admin1's properties (cross-admin)
+    { managerId: userIds[5], adminId: userIds[2], scope: 'property', propertyId: propertyIds[3], groupId: null },
+    // hyper_manager gets assigned by hyper_admin with 'all' scope
+    { managerId: userIds[1], adminId: userIds[0], scope: 'all', propertyId: null, groupId: null },
+  ];
+
+  for (const a of assignments) {
+    const id = uuidv4();
+    await qr.query(
+      `INSERT INTO manager_assignments (id, managerId, assignedByAdminId, scope, propertyId, propertyGroupId, isActive)
+       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+      [id, a.managerId, a.adminId, a.scope, a.propertyId, a.groupId]
+    );
+    assignmentIds.push(id);
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${assignmentIds.length} manager assignments`);
+  return assignmentIds;
+}
+
+async function seedManagerPermissions(ds: DataSource, assignmentIds: string[]) {
   const qr = ds.createQueryRunner();
   let count = 0;
 
-  // Curated gallery images per property (matching property types)
-  const propertyGalleries: string[][] = [
-    // 1: Villa Vue Mer (Tipaza) - luxury villa
-    [
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1200&auto=format&fit=crop',
-    ],
-    // 2: Appartement Moderne (Alger)
-    [
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1200&auto=format&fit=crop',
-    ],
-    // 3: Maison Traditionnelle (Constantine)
-    [
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&auto=format&fit=crop',
-    ],
-    // 4: Chalet Montagne (Tikjda)
-    [
-      'https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1470770841497-7b3200c37e1b?w=1200&auto=format&fit=crop',
-    ],
-    // 5: Riad Authentique (Ghardaïa)
-    [
-      'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1590490360182-c33d8f568e3f?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200&auto=format&fit=crop',
-    ],
-    // 6: Hôtel Boutique (Oran)
-    [
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&auto=format&fit=crop',
-    ],
-    // 7: Villa Jardin (Béjaïa)
-    [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&auto=format&fit=crop',
-    ],
-    // 8: Studio Cosy (Annaba)
-    [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=1200&auto=format&fit=crop',
-    ],
-    // 9: Maison Kabyle (Tizi Ouzou)
-    [
-      'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1575517111478-7f6afd0973db?w=1200&auto=format&fit=crop',
-    ],
-    // 10: Penthouse (Alger)
-    [
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1616137466211-f939a420be84?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?w=1200&auto=format&fit=crop',
-    ],
-    // 11: Chalet Bord de Lac (El Kala)
-    [
-      'https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1470770841497-7b3200c37e1b?w=1200&auto=format&fit=crop',
-    ],
-    // 12: Riad Sahara (Tamanrasset)
-    [
-      'https://images.unsplash.com/photo-1590490360182-c33d8f568e3f?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200&auto=format&fit=crop',
-    ],
+  // Full permissions for hyper_manager (last assignment)
+  const allPermissions = [
+    'create_property', 'modify_property', 'delete_property', 'pause_property',
+    'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
+    'manage_availability', 'manage_amenities',
+    'view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users',
+    'reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests',
+    'manage_reactions', 'manage_likes',
+    'view_analytics', 'manage_promotions', 'modify_offers',
+    'create_service', 'modify_service', 'delete_service', 'pause_service',
+    'manage_users', 'manage_admins', 'manage_managers',
   ];
 
-  for (let pi = 0; pi < propertyIds.length; pi++) {
-    const gallery = propertyGalleries[pi % propertyGalleries.length];
-    for (let j = 0; j < gallery.length; j++) {
+  // Limited permissions for manager1 (assignments 0,1,2)
+  const manager1Perms = [
+    'view_bookings', 'accept_bookings', 'reject_bookings',
+    'reply_chat', 'reply_reviews', 'reply_comments', 'contact_guests',
+    'modify_photos', 'modify_description', 'manage_availability',
+    'view_analytics',
+  ];
+
+  // More permissions for manager2 (assignments 3-7)
+  const manager2Perms = [
+    'view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users',
+    'reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests',
+    'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
+    'manage_availability', 'manage_amenities',
+    'view_analytics', 'manage_promotions',
+  ];
+
+  // Manager1 assignments (0,1,2)
+  for (let i = 0; i < 3; i++) {
+    for (const perm of manager1Perms) {
+      await qr.query(
+        `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
+        [uuidv4(), assignmentIds[i], perm]
+      );
+      count++;
+    }
+  }
+
+  // Manager2 assignments (3,4,5,6,7)
+  for (let i = 3; i < 8; i++) {
+    for (const perm of manager2Perms) {
+      await qr.query(
+        `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
+        [uuidv4(), assignmentIds[i], perm]
+      );
+      count++;
+    }
+  }
+
+  // Hyper_manager (assignment 8) gets all permissions
+  for (const perm of allPermissions) {
+    await qr.query(
+      `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
+      [uuidv4(), assignmentIds[8], perm]
+    );
+    count++;
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${count} manager permissions`);
+}
+
+async function seedTourismServices(ds: DataSource, adminIds: number[]): Promise<string[]> {
+  const qr = ds.createQueryRunner();
+  const serviceIds: string[] = [];
+
+  const services = [
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Visite Guidée de la Casbah', en: 'Guided Tour of the Casbah', ar: 'جولة مرشدة في القصبة' }),
+      description: JSON.stringify({ fr: 'Découvrez les ruelles historiques de la Casbah d\'Alger.', en: 'Discover the historic alleys of Algiers\' Casbah.', ar: 'اكتشف أزقة قصبة الجزائر التاريخية.' }),
+      category: 'walking_tour', city: 'Alger', wilaya: 'Alger',
+      price: 3000, pricingType: 'per_person', duration: 3, durationUnit: 'hours',
+      minP: 2, maxP: 15, rating: 4.8, reviews: 45, bookings: 120,
+      images: ['https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=800', 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800'],
+      schedule: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], startTime: '09:00', endTime: '12:00' },
+      languages: ['fr', 'en', 'ar'],
+      includes: { fr: ['Guide professionnel', 'Thé à la menthe', 'Livret historique'], en: ['Professional guide', 'Mint tea', 'Historical booklet'] },
+      tags: ['history', 'culture', 'casbah', 'UNESCO'],
+    },
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Excursion en Bateau - Côte Turquoise', en: 'Boat Trip - Turquoise Coast', ar: 'رحلة بحرية - الساحل الفيروزي' }),
+      description: JSON.stringify({ fr: 'Croisière le long de la côte de Tipaza.', en: 'Cruise along the coast of Tipaza.', ar: 'رحلة بحرية على طول ساحل تيبازة.' }),
+      category: 'boat_tour', city: 'Tipaza', wilaya: 'Tipaza',
+      price: 5000, pricingType: 'per_person', duration: 4, durationUnit: 'hours',
+      minP: 4, maxP: 12, rating: 4.9, reviews: 32, bookings: 85,
+      images: ['https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800', 'https://images.unsplash.com/photo-1540202404-a2f29016b523?w=800'],
+      schedule: { days: ['Tuesday', 'Thursday', 'Saturday', 'Sunday'], startTime: '10:00', endTime: '14:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Gilet de sauvetage', 'Déjeuner à bord', 'Équipement snorkeling'], en: ['Life jacket', 'Onboard lunch', 'Snorkeling gear'] },
+      tags: ['sea', 'boat', 'snorkeling', 'tipaza'],
+    },
+    {
+      providerId: adminIds[1],
+      title: JSON.stringify({ fr: 'Cours de Cuisine Traditionnelle', en: 'Traditional Cooking Class', ar: 'دورة طبخ تقليدي' }),
+      description: JSON.stringify({ fr: 'Apprenez à préparer des plats algériens authentiques.', en: 'Learn to prepare authentic Algerian dishes.', ar: 'تعلم تحضير أطباق جزائرية أصيلة.' }),
+      category: 'cooking_class', city: 'Constantine', wilaya: 'Constantine',
+      price: 4000, pricingType: 'per_person', duration: 3, durationUnit: 'hours',
+      minP: 2, maxP: 8, rating: 4.7, reviews: 28, bookings: 65,
+      images: ['https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800', 'https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?w=800'],
+      schedule: { days: ['Monday', 'Wednesday', 'Saturday'], startTime: '10:00', endTime: '13:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Ingrédients', 'Tablier', 'Recettes à emporter'], en: ['Ingredients', 'Apron', 'Take-home recipes'] },
+      tags: ['cooking', 'food', 'traditional', 'algerian'],
+    },
+    {
+      providerId: adminIds[1],
+      title: JSON.stringify({ fr: 'Randonnée Djurdjura', en: 'Djurdjura Hiking', ar: 'مشي في جرجرة' }),
+      description: JSON.stringify({ fr: 'Randonnée guidée dans le parc national du Djurdjura.', en: 'Guided hike in Djurdjura National Park.', ar: 'مشي مع مرشد في حديقة جرجرة الوطنية.' }),
+      category: 'nature_excursion', city: 'Tizi Ouzou', wilaya: 'Tizi Ouzou',
+      price: 3500, pricingType: 'per_person', duration: 6, durationUnit: 'hours',
+      minP: 3, maxP: 20, rating: 4.6, reviews: 19, bookings: 42,
+      images: ['https://images.unsplash.com/photo-1551632811-561732d1e306?w=800', 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800'],
+      schedule: { days: ['Saturday', 'Sunday'], startTime: '07:00', endTime: '13:00' },
+      languages: ['fr', 'en', 'ar'],
+      includes: { fr: ['Guide montagne', 'Eau et snacks', 'Assurance'], en: ['Mountain guide', 'Water and snacks', 'Insurance'] },
+      tags: ['hiking', 'mountain', 'nature', 'djurdjura'],
+    },
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Séance Photo Professionnelle', en: 'Professional Photo Session', ar: 'جلسة تصوير احترافية' }),
+      description: JSON.stringify({ fr: 'Séance photo avec un photographe professionnel dans les plus beaux sites.', en: 'Photo session with a professional photographer at the most beautiful sites.', ar: 'جلسة تصوير مع مصور محترف في أجمل المواقع.' }),
+      category: 'photography', city: 'Alger', wilaya: 'Alger',
+      price: 8000, pricingType: 'per_group', duration: 2, durationUnit: 'hours',
+      minP: 1, maxP: 6, rating: 4.9, reviews: 15, bookings: 35,
+      images: ['https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=800'],
+      schedule: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], startTime: '08:00', endTime: '18:00' },
+      languages: ['fr', 'en'],
+      includes: { fr: ['50 photos retouchées', 'Album numérique', 'Choix du lieu'], en: ['50 edited photos', 'Digital album', 'Location choice'] },
+      tags: ['photo', 'professional', 'souvenir'],
+    },
+    {
+      providerId: adminIds[1],
+      title: JSON.stringify({ fr: 'Hammam Traditionnel & Spa', en: 'Traditional Hammam & Spa', ar: 'حمام تقليدي وسبا' }),
+      description: JSON.stringify({ fr: 'Expérience de hammam traditionnel algérien avec soins spa.', en: 'Traditional Algerian hammam experience with spa treatments.', ar: 'تجربة حمام جزائري تقليدي مع علاجات سبا.' }),
+      category: 'hammam', city: 'Oran', wilaya: 'Oran',
+      price: 6000, pricingType: 'per_person', duration: 2, durationUnit: 'hours',
+      minP: 1, maxP: 4, rating: 4.8, reviews: 52, bookings: 150,
+      images: ['https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800'],
+      schedule: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], startTime: '10:00', endTime: '20:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Gommage', 'Massage relaxant', 'Thé et pâtisseries'], en: ['Scrub', 'Relaxing massage', 'Tea and pastries'] },
+      tags: ['hammam', 'spa', 'wellness', 'relaxation'],
+    },
+    // ── Artisan & craft services ──
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Bijouterie Traditionnelle en Argent', en: 'Traditional Silver Jewelry Workshop', ar: 'ورشة مجوهرات فضية تقليدية' }),
+      description: JSON.stringify({ fr: 'Découvrez l\'art ancestral de la bijouterie berbère en argent. Création de bracelets, bagues et fibules.', en: 'Discover the ancestral art of Berber silver jewelry. Create bracelets, rings and fibulae.', ar: 'اكتشف فن صناعة المجوهرات الفضية البربرية. صنع أساور وخواتم ومشابك.' }),
+      category: 'silver_jewelry', city: 'Ghardaia', wilaya: 'Ghardaïa',
+      price: 7000, pricingType: 'per_person', duration: 4, durationUnit: 'hours',
+      minP: 1, maxP: 6, rating: 4.9, reviews: 38, bookings: 95,
+      images: ['https://images.unsplash.com/photo-1515562141589-67f0d7f68681?w=800'],
+      schedule: { days: ['Monday', 'Wednesday', 'Friday'], startTime: '09:00', endTime: '13:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Matériaux', 'Outils', 'Bijou à emporter'], en: ['Materials', 'Tools', 'Jewelry to take home'] },
+      tags: ['artisan', 'silver', 'jewelry', 'berber', 'traditional'],
+    },
+    {
+      providerId: adminIds[1],
+      title: JSON.stringify({ fr: 'Atelier Bijoux en Or Traditionnel', en: 'Traditional Gold Jewelry Atelier', ar: 'ورشة مجوهرات ذهبية تقليدية' }),
+      description: JSON.stringify({ fr: 'Initiation à la joaillerie traditionnelle algérienne en or. M\'hejba, khelkhal et boucles.', en: 'Introduction to traditional Algerian gold jewelry. M\'hejba, khelkhal and earrings.', ar: 'مبادئ صناعة المجوهرات الذهبية التقليدية الجزائرية.' }),
+      category: 'gold_jewelry', city: 'Constantine', wilaya: 'Constantine',
+      price: 12000, pricingType: 'per_person', duration: 5, durationUnit: 'hours',
+      minP: 1, maxP: 4, rating: 4.8, reviews: 22, bookings: 55,
+      images: ['https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=800'],
+      schedule: { days: ['Tuesday', 'Thursday', 'Saturday'], startTime: '10:00', endTime: '15:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Matériaux de base', 'Démonstration', 'Certificat'], en: ['Base materials', 'Demonstration', 'Certificate'] },
+      tags: ['artisan', 'gold', 'jewelry', 'constantine', 'luxury'],
+    },
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Poterie Traditionnelle de Kabylie', en: 'Traditional Kabyle Pottery', ar: 'فخار تقليدي قبائلي' }),
+      description: JSON.stringify({ fr: 'Apprenez la poterie kabyle avec des motifs géométriques ancestraux.', en: 'Learn Kabyle pottery with ancestral geometric patterns.', ar: 'تعلم صناعة الفخار القبائلي بأنماط هندسية عريقة.' }),
+      category: 'pottery', city: 'Tizi Ouzou', wilaya: 'Tizi Ouzou',
+      price: 4500, pricingType: 'per_person', duration: 3, durationUnit: 'hours',
+      minP: 2, maxP: 10, rating: 4.7, reviews: 41, bookings: 110,
+      images: ['https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800'],
+      schedule: { days: ['Monday', 'Wednesday', 'Friday', 'Saturday'], startTime: '09:00', endTime: '12:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Argile', 'Outils', 'Cuisson', 'Pièce à emporter'], en: ['Clay', 'Tools', 'Firing', 'Piece to take home'] },
+      tags: ['artisan', 'pottery', 'kabyle', 'traditional'],
+    },
+    {
+      providerId: adminIds[1],
+      title: JSON.stringify({ fr: 'Tissage de Tapis Traditionnels', en: 'Traditional Carpet Weaving', ar: 'نسج السجاد التقليدي' }),
+      description: JSON.stringify({ fr: 'Découvrez le tissage de tapis berbères sur métier à tisser traditionnel.', en: 'Discover Berber carpet weaving on a traditional loom.', ar: 'اكتشف نسج السجاد البربري على نول تقليدي.' }),
+      category: 'carpet_weaving', city: 'Ghardaia', wilaya: 'Ghardaïa',
+      price: 5500, pricingType: 'per_person', duration: 4, durationUnit: 'hours',
+      minP: 1, maxP: 5, rating: 4.6, reviews: 18, bookings: 40,
+      images: ['https://images.unsplash.com/photo-1531512073830-ba890ca4eba2?w=800'],
+      schedule: { days: ['Tuesday', 'Thursday', 'Saturday'], startTime: '09:00', endTime: '13:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Laine', 'Métier à tisser', 'Thé'], en: ['Wool', 'Loom', 'Tea'] },
+      tags: ['artisan', 'carpet', 'weaving', 'berber'],
+    },
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Art du Henné - Atelier', en: 'Henna Art Workshop', ar: 'ورشة فن الحناء' }),
+      description: JSON.stringify({ fr: 'Apprenez les motifs traditionnels algériens de henné pour mariages et fêtes.', en: 'Learn traditional Algerian henna patterns for weddings and celebrations.', ar: 'تعلم أنماط الحناء الجزائرية التقليدية للأعراس والاحتفالات.' }),
+      category: 'henna_art', city: 'Alger', wilaya: 'Alger',
+      price: 3000, pricingType: 'per_person', duration: 2, durationUnit: 'hours',
+      minP: 2, maxP: 8, rating: 4.8, reviews: 56, bookings: 180,
+      images: ['https://images.unsplash.com/photo-1570554886111-e80fcca6a029?w=800'],
+      schedule: { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], startTime: '10:00', endTime: '18:00' },
+      languages: ['fr', 'ar', 'en'],
+      includes: { fr: ['Henné naturel', 'Modèles', 'Application'], en: ['Natural henna', 'Patterns', 'Application'] },
+      tags: ['artisan', 'henna', 'beauty', 'traditional', 'wedding'],
+    },
+    {
+      providerId: adminIds[1],
+      title: JSON.stringify({ fr: 'Calligraphie Arabe - Initiation', en: 'Arabic Calligraphy Workshop', ar: 'ورشة الخط العربي' }),
+      description: JSON.stringify({ fr: 'Initiez-vous à l\'art de la calligraphie arabe avec un maître calligraphe.', en: 'Get introduced to Arabic calligraphy with a master calligrapher.', ar: 'تعلم فن الخط العربي مع خطاط محترف.' }),
+      category: 'calligraphy', city: 'Constantine', wilaya: 'Constantine',
+      price: 3500, pricingType: 'per_person', duration: 2, durationUnit: 'hours',
+      minP: 1, maxP: 10, rating: 4.7, reviews: 33, bookings: 75,
+      images: ['https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800'],
+      schedule: { days: ['Monday', 'Wednesday', 'Saturday'], startTime: '14:00', endTime: '16:00' },
+      languages: ['ar', 'fr'],
+      includes: { fr: ['Matériel de calligraphie', 'Encre', 'Parchemin'], en: ['Calligraphy supplies', 'Ink', 'Parchment'] },
+      tags: ['artisan', 'calligraphy', 'arabic', 'art', 'culture'],
+    },
+    {
+      providerId: adminIds[0],
+      title: JSON.stringify({ fr: 'Maroquinerie Artisanale', en: 'Artisan Leather Crafting', ar: 'صناعة الجلود الحرفية' }),
+      description: JSON.stringify({ fr: 'Créez votre propre sac ou ceinture en cuir avec un artisan local.', en: 'Create your own leather bag or belt with a local craftsman.', ar: 'اصنع حقيبتك أو حزامك الجلدي مع حرفي محلي.' }),
+      category: 'leather_craft', city: 'Alger', wilaya: 'Alger',
+      price: 6000, pricingType: 'per_person', duration: 4, durationUnit: 'hours',
+      minP: 1, maxP: 6, rating: 4.5, reviews: 14, bookings: 32,
+      images: ['https://images.unsplash.com/photo-1473188588951-666fce8e7c68?w=800'],
+      schedule: { days: ['Tuesday', 'Thursday', 'Saturday'], startTime: '10:00', endTime: '14:00' },
+      languages: ['fr', 'ar'],
+      includes: { fr: ['Cuir', 'Outils', 'Pièce finie'], en: ['Leather', 'Tools', 'Finished piece'] },
+      tags: ['artisan', 'leather', 'craft', 'handmade'],
+    },
+  ];
+
+  for (const s of services) {
+    const id = uuidv4();
+    await qr.query(
+      `INSERT INTO tourism_services (id, providerId, title, description, category, status, price, currency, pricingType, duration, durationUnit, minParticipants, maxParticipants, city, wilaya, country, images, schedule, languages, \`includes\`, tags, averageRating, reviewCount, bookingCount, isAvailable, isVerified, instantBooking, minAge, cancellationPolicy)
+       VALUES (?, ?, ?, ?, ?, 'published', ?, 'DZD', ?, ?, ?, ?, ?, ?, ?, 'Algeria', ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, 0, 'flexible')`,
+      [
+        id, s.providerId, s.title, s.description,
+        s.category, s.price, s.pricingType, s.duration, s.durationUnit,
+        s.minP, s.maxP, s.city, s.wilaya,
+        JSON.stringify(s.images), JSON.stringify(s.schedule), JSON.stringify(s.languages),
+        JSON.stringify(s.includes), JSON.stringify(s.tags),
+        s.rating, s.reviews, s.bookings,
+        ['photography', 'hammam', 'silver_jewelry', 'gold_jewelry'].includes(s.category),
+      ]
+    );
+    serviceIds.push(id);
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${serviceIds.length} tourism services`);
+  return serviceIds;
+}
+
+async function seedPropertyImages(ds: DataSource, propertyIds: string[]) {
+  const qr = ds.createQueryRunner();
+  let count = 0;
+  const defaultGallery = [
+    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&auto=format&fit=crop',
+  ];
+
+  for (const propId of propertyIds) {
+    for (let j = 0; j < defaultGallery.length; j++) {
       await qr.query(
         `INSERT INTO property_images (id, propertyId, url, caption, sortOrder, isCover)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          uuidv4(), propertyIds[pi],
-          gallery[j],
-          j === 0 ? 'Cover photo' : `Photo ${j + 1}`,
-          j, j === 0,
-        ]
+        [uuidv4(), propId, defaultGallery[j], j === 0 ? 'Cover photo' : `Photo ${j + 1}`, j, j === 0]
       );
       count++;
     }
@@ -623,7 +798,7 @@ async function seedBookings(ds: DataSource, propertyIds: string[], guestIds: num
   const qr = ds.createQueryRunner();
   const bookingIds: string[] = [];
 
-  const prices = [15000, 12000, 6500, 10000, 7000, 15000, 18000, 9500, 11000, 22000, 8000, 13000];
+  const prices = [15000, 8000, 12000, 10000, 9500, 6500, 18000, 4500, 7000, 22000, 11000, 14000];
 
   const bookings = [
     { propIdx: 0, guestIdx: 0, checkIn: pastDate(60), checkOut: pastDate(55), nights: 5, guests: 4, status: 'completed', payStatus: 'paid', payMethod: 'ccp', msg: 'Nous avons hâte de séjourner dans votre villa!' },
@@ -631,14 +806,13 @@ async function seedBookings(ds: DataSource, propertyIds: string[], guestIds: num
     { propIdx: 5, guestIdx: 2, checkIn: pastDate(30), checkOut: pastDate(27), nights: 3, guests: 1, status: 'completed', payStatus: 'paid', payMethod: 'baridi_mob', msg: null },
     { propIdx: 3, guestIdx: 3, checkIn: pastDate(20), checkOut: pastDate(16), nights: 4, guests: 3, status: 'completed', payStatus: 'paid', payMethod: 'cash', msg: 'Avez-vous un parking?' },
     { propIdx: 8, guestIdx: 0, checkIn: pastDate(10), checkOut: pastDate(5), nights: 5, guests: 6, status: 'completed', payStatus: 'paid', payMethod: 'ccp', msg: null },
-    { propIdx: 0, guestIdx: 1, checkIn: futureDate(5), checkOut: futureDate(10), nights: 5, guests: 2, status: 'confirmed', payStatus: 'paid', payMethod: 'edahabia', msg: 'Premier séjour chez vous, très enthousiaste!' },
-    { propIdx: 6, guestIdx: 0, checkIn: futureDate(15), checkOut: futureDate(22), nights: 7, guests: 4, status: 'confirmed', payStatus: 'partial', payMethod: 'bank_transfer', msg: 'Nous sommes un couple avec 2 enfants.' },
+    { propIdx: 0, guestIdx: 1, checkIn: futureDate(5), checkOut: futureDate(10), nights: 5, guests: 2, status: 'confirmed', payStatus: 'paid', payMethod: 'edahabia', msg: 'Premier séjour!' },
+    { propIdx: 6, guestIdx: 0, checkIn: futureDate(15), checkOut: futureDate(22), nights: 7, guests: 4, status: 'confirmed', payStatus: 'partial', payMethod: 'bank_transfer', msg: 'Couple avec 2 enfants.' },
     { propIdx: 4, guestIdx: 2, checkIn: futureDate(20), checkOut: futureDate(23), nights: 3, guests: 2, status: 'pending', payStatus: 'pending', payMethod: null, msg: 'Le petit-déjeuner est-il inclus?' },
     { propIdx: 10, guestIdx: 3, checkIn: futureDate(30), checkOut: futureDate(37), nights: 7, guests: 5, status: 'pending', payStatus: 'pending', payMethod: null, msg: null },
-    { propIdx: 9, guestIdx: 1, checkIn: pastDate(15), checkOut: pastDate(12), nights: 3, guests: 2, status: 'cancelled', payStatus: 'refunded', payMethod: 'ccp', msg: 'Changement de plans, désolé.' },
-    // Extra bookings for host management page variety
-    { propIdx: 0, guestIdx: 2, checkIn: futureDate(25), checkOut: futureDate(30), nights: 5, guests: 3, status: 'pending', payStatus: 'pending', payMethod: null, msg: 'Est-ce que la piscine est ouverte en cette saison?' },
-    { propIdx: 0, guestIdx: 3, checkIn: futureDate(40), checkOut: futureDate(45), nights: 5, guests: 2, status: 'rejected', payStatus: 'failed', payMethod: null, msg: 'Nous cherchons un endroit calme.' },
+    { propIdx: 9, guestIdx: 1, checkIn: pastDate(15), checkOut: pastDate(12), nights: 3, guests: 2, status: 'cancelled', payStatus: 'refunded', payMethod: 'ccp', msg: 'Changement de plans.' },
+    // Admin as guest (admin can book other properties)
+    { propIdx: 6, guestIdx: 4, checkIn: futureDate(10), checkOut: futureDate(14), nights: 4, guests: 2, status: 'confirmed', payStatus: 'paid', payMethod: 'ccp', msg: 'Admin booking as guest.' },
   ];
 
   for (const b of bookings) {
@@ -651,12 +825,13 @@ async function seedBookings(ds: DataSource, propertyIds: string[], guestIds: num
     const effectiveRate = ppn * (1 - discount / 100);
     const subtotal = effectiveRate * b.nights;
     const totalPrice = subtotal + cleaningFee + serviceFee;
+    const guestId = b.guestIdx < guestIds.length ? guestIds[b.guestIdx] : guestIds[0];
 
     await qr.query(
       `INSERT INTO bookings (id, propertyId, guestId, checkInDate, checkOutDate, numberOfGuests, numberOfNights, pricePerNight, cleaningFee, serviceFee, discountPercent, discountType, effectiveRate, subtotal, totalPrice, currency, status, paymentStatus, paymentMethod, guestMessage, confirmedAt, cancelledAt, cancellationReason)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        id, propertyIds[b.propIdx], guestIds[b.guestIdx],
+        id, propertyIds[b.propIdx], guestId,
         b.checkIn, b.checkOut, b.guests, b.nights,
         ppn, cleaningFee, serviceFee, discount, discountType,
         effectiveRate, subtotal, totalPrice, 'DZD',
@@ -676,14 +851,14 @@ async function seedBookings(ds: DataSource, propertyIds: string[], guestIds: num
 async function seedReviews(ds: DataSource, propertyIds: string[], guestIds: number[]) {
   const qr = ds.createQueryRunner();
   const reviews = [
-    { propIdx: 0, guestIdx: 0, rating: 5, comment: 'Séjour exceptionnel! La villa est encore plus belle en vrai. Karim est un hôte très attentionné. Je recommande vivement!' },
-    { propIdx: 0, guestIdx: 1, rating: 5, comment: 'Vue magnifique, piscine parfaite, tout était impeccable. Nous reviendrons certainement!' },
-    { propIdx: 0, guestIdx: 2, rating: 4, comment: 'Très belle propriété, bien équipée. Petit bémol sur la route d\'accès un peu difficile mais ça vaut le détour!' },
-    { propIdx: 2, guestIdx: 1, rating: 5, comment: 'La maison traditionnelle est un bijou. On se sent transporté dans le temps. Hôte charmante.' },
-    { propIdx: 4, guestIdx: 2, rating: 5, comment: 'Le riad est un havre de paix. Le petit-déjeuner saharien est incroyable. Une expérience unique!' },
-    { propIdx: 5, guestIdx: 0, rating: 4, comment: 'Bon rapport qualité/prix pour Oran. Chambre propre et petit-déjeuner copieux.' },
-    { propIdx: 6, guestIdx: 3, rating: 5, comment: 'Villa paradisiaque! Le jardin est magnifique et la piscine chauffée est un vrai plus.' },
-    { propIdx: 9, guestIdx: 1, rating: 5, comment: 'Le penthouse est à couper le souffle. Vue incroyable sur la baie d\'Alger au coucher du soleil.' },
+    { propIdx: 0, guestIdx: 0, rating: 5, comment: 'Séjour exceptionnel! La villa est magnifique.' },
+    { propIdx: 0, guestIdx: 1, rating: 5, comment: 'Vue magnifique, piscine parfaite!' },
+    { propIdx: 0, guestIdx: 2, rating: 4, comment: 'Très belle propriété, petit bémol sur la route d\'accès.' },
+    { propIdx: 2, guestIdx: 1, rating: 5, comment: 'La maison traditionnelle est un bijou.' },
+    { propIdx: 4, guestIdx: 2, rating: 5, comment: 'Le riad est un havre de paix.' },
+    { propIdx: 5, guestIdx: 0, rating: 4, comment: 'Bon rapport qualité/prix pour Oran.' },
+    { propIdx: 6, guestIdx: 3, rating: 5, comment: 'Villa paradisiaque!' },
+    { propIdx: 9, guestIdx: 1, rating: 5, comment: 'Le penthouse est à couper le souffle.' },
   ];
 
   for (const r of reviews) {
@@ -700,43 +875,24 @@ async function seedReviews(ds: DataSource, propertyIds: string[], guestIds: numb
 async function seedVerificationDocs(ds: DataSource, propertyIds: string[], hostIds: number[]) {
   const qr = ds.createQueryRunner();
   const docs = [
-    // Villa Vue Mer (5 stars) - all docs approved
     { propIdx: 0, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.98 },
     { propIdx: 0, type: 'notarized_deed', status: 'approved', aiValid: true, aiConf: 0.95 },
     { propIdx: 0, type: 'utility_bill', status: 'approved', aiValid: true, aiConf: 0.97 },
-    // Appartement Moderne (3 stars) - identity + deed
     { propIdx: 1, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.96 },
     { propIdx: 1, type: 'notarized_deed', status: 'approved', aiValid: true, aiConf: 0.92 },
-    // Maison Traditionnelle (5 stars)
     { propIdx: 2, type: 'passport', status: 'approved', aiValid: true, aiConf: 0.99 },
     { propIdx: 2, type: 'land_registry', status: 'approved', aiValid: true, aiConf: 0.94 },
-    { propIdx: 2, type: 'utility_bill', status: 'approved', aiValid: true, aiConf: 0.96 },
-    // Chalet (1 star) - identity only
     { propIdx: 3, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.93 },
-    // Riad Ghardaïa (5 stars)
     { propIdx: 4, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.97 },
     { propIdx: 4, type: 'notarized_deed', status: 'approved', aiValid: true, aiConf: 0.91 },
-    { propIdx: 4, type: 'utility_bill', status: 'approved', aiValid: true, aiConf: 0.95 },
-    // Hotel Oran (2 stars) - identity + utility
     { propIdx: 5, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.94 },
-    { propIdx: 5, type: 'utility_bill', status: 'approved', aiValid: true, aiConf: 0.90 },
-    // Villa Béjaïa (3 stars)
     { propIdx: 6, type: 'passport', status: 'approved', aiValid: true, aiConf: 0.96 },
-    { propIdx: 6, type: 'land_registry', status: 'approved', aiValid: true, aiConf: 0.93 },
-    // Studio Annaba (0 stars) - pending
     { propIdx: 7, type: 'national_id', status: 'pending', aiValid: null, aiConf: null },
-    // Maison Kabyle (2 stars)
     { propIdx: 8, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.95 },
-    { propIdx: 8, type: 'utility_bill', status: 'approved', aiValid: true, aiConf: 0.88 },
-    // Penthouse (5 stars)
     { propIdx: 9, type: 'national_id', status: 'approved', aiValid: true, aiConf: 0.99 },
     { propIdx: 9, type: 'notarized_deed', status: 'approved', aiValid: true, aiConf: 0.97 },
-    { propIdx: 9, type: 'utility_bill', status: 'approved', aiValid: true, aiConf: 0.96 },
-    // Chalet El Kala (0 stars) - rejected
     { propIdx: 10, type: 'national_id', status: 'rejected', aiValid: false, aiConf: 0.45 },
-    // Riad Sahara (3 stars)
     { propIdx: 11, type: 'passport', status: 'approved', aiValid: true, aiConf: 0.94 },
-    { propIdx: 11, type: 'land_registry', status: 'approved', aiValid: true, aiConf: 0.91 },
   ];
 
   for (const d of docs) {
@@ -747,9 +903,8 @@ async function seedVerificationDocs(ds: DataSource, propertyIds: string[], hostI
         uuidv4(), propertyIds[d.propIdx], d.type,
         `${d.type}_prop${d.propIdx + 1}.pdf`,
         `${MEDIA_BASE}/documents/${d.type}_prop${d.propIdx + 1}.pdf`,
-        d.status,
-        d.aiValid !== null, d.aiValid, d.aiConf,
-        d.aiValid ? 'Document verified successfully' : d.aiValid === false ? 'Document quality too low or appears altered' : null,
+        d.status, d.aiValid !== null, d.aiValid, d.aiConf,
+        d.aiValid ? 'Document verified successfully' : d.aiValid === false ? 'Document quality too low' : null,
       ]
     );
   }
@@ -760,14 +915,13 @@ async function seedVerificationDocs(ds: DataSource, propertyIds: string[], hostI
 async function seedNotifications(ds: DataSource, userIds: number[]) {
   const qr = ds.createQueryRunner();
   const notifications = [
-    { userId: userIds[6], type: 'booking_confirmed', title: 'Booking Confirmed', message: 'Your booking at Villa Vue Mer Luxueuse has been confirmed!', read: true },
-    { userId: userIds[2], type: 'new_booking', title: 'New Booking', message: 'Sara H. has booked your Villa Vue Mer Luxueuse for 5 nights.', read: true },
-    { userId: userIds[7], type: 'booking_confirmed', title: 'Booking Confirmed', message: 'Your booking at Maison Traditionnelle Casbah has been confirmed!', read: false },
-    { userId: userIds[2], type: 'new_review', title: 'New Review', message: 'Sara H. left a 5-star review on Villa Vue Mer Luxueuse.', read: false },
+    { userId: userIds[6], type: 'booking_confirmed', title: 'Booking Confirmed', message: 'Your booking at Villa Vue Mer has been confirmed!', read: true },
+    { userId: userIds[2], type: 'new_booking', title: 'New Booking', message: 'Sara H. has booked your Villa Vue Mer for 5 nights.', read: true },
+    { userId: userIds[7], type: 'booking_confirmed', title: 'Booking Confirmed', message: 'Your booking at Maison Traditionnelle has been confirmed!', read: false },
+    { userId: userIds[2], type: 'new_review', title: 'New Review', message: 'Sara H. left a 5-star review on Villa Vue Mer.', read: false },
     { userId: userIds[0], type: 'system', title: 'Document Verified', message: 'Your national ID has been verified successfully.', read: true },
-    { userId: userIds[4], type: 'verification_approved', title: 'Property Verified', message: 'Your Riad Authentique avec Patio has been verified. Trust level: 5★.', read: false },
-    { userId: userIds[6], type: 'promotion', title: 'Special Offer', message: 'Get 15% off weekly stays at Villa Vue Mer Luxueuse!', read: false },
-    { userId: userIds[8], type: 'booking_reminder', title: 'Upcoming Trip', message: 'Your stay at Chalet Bord de Lac starts in 3 days.', read: false },
+    { userId: userIds[4], type: 'assignment', title: 'New Assignment', message: 'You have been assigned to manage Villa Vue Mer by Amina M.', read: false },
+    { userId: userIds[5], type: 'assignment', title: 'New Assignment', message: 'You have been assigned to manage multiple properties.', read: false },
   ];
 
   for (const n of notifications) {
@@ -804,19 +958,16 @@ async function seedFavorites(ds: DataSource, propertyIds: string[], guestIds: nu
   console.log(`✅ Created ${count} favorites`);
 }
 
-async function seedRankings(ds: DataSource, hostIds: number[]) {
+async function seedRankings(ds: DataSource, adminIds: number[]) {
   const qr = ds.createQueryRunner();
   const rankings = [
-    { userId: hostIds[0], score: 950, category: 'superhost' },
-    { userId: hostIds[1], score: 820, category: 'superhost' },
-    { userId: hostIds[2], score: 780, category: 'superhost' },
-    { userId: hostIds[3], score: 710, category: 'top_host' },
+    { userId: adminIds[0], score: 950, category: 'superhost' },
+    { userId: adminIds[1], score: 820, category: 'superhost' },
   ];
 
   for (const r of rankings) {
     await qr.query(
-      `INSERT INTO rankings (id, userId, score, category, createdAt)
-       VALUES (?, ?, ?, ?, NOW())`,
+      `INSERT INTO rankings (id, userId, score, category, createdAt) VALUES (?, ?, ?, ?, NOW())`,
       [uuidv4(), r.userId, r.score, r.category]
     );
   }
@@ -828,26 +979,23 @@ async function seedComments(ds: DataSource, propertyIds: string[], userIds: numb
   const qr = ds.createQueryRunner();
   const comments = [
     { propIdx: 0, userId: userIds[6], text: 'Est-ce que la piscine est chauffée en hiver?' },
-    { propIdx: 0, userId: userIds[2], text: 'Oui, la piscine est chauffée de novembre à mars. Bienvenue!' },
-    { propIdx: 4, userId: userIds[7], text: 'Le petit-déjeuner est-il inclus dans le prix affiché?' },
-    { propIdx: 4, userId: userIds[4], text: 'Absolument! Petit-déjeuner traditionnel avec msemmen, confiture maison et thé à la menthe.' },
+    { propIdx: 0, userId: userIds[2], text: 'Oui, la piscine est chauffée de novembre à mars.' },
+    { propIdx: 4, userId: userIds[7], text: 'Le petit-déjeuner est-il inclus?' },
+    { propIdx: 4, userId: userIds[3], text: 'Absolument! Petit-déjeuner traditionnel inclus.' },
     { propIdx: 6, userId: userIds[8], text: 'Peut-on organiser un événement dans le jardin?' },
-    { propIdx: 9, userId: userIds[9], text: 'La vue de nuit est-elle aussi spectaculaire que sur les photos?' },
-    { propIdx: 9, userId: userIds[2], text: 'Encore mieux! Les lumières de la baie sont magiques.' },
+    { propIdx: 9, userId: userIds[9], text: 'La vue de nuit est-elle spectaculaire?' },
+    { propIdx: 9, userId: userIds[3], text: 'Encore mieux! Les lumières de la baie sont magiques.' },
   ];
 
   for (const c of comments) {
     await qr.query(
-      `INSERT INTO comments (id, propertyId, userId, content, createdAt)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO comments (id, propertyId, userId, content, createdAt) VALUES (?, ?, ?, ?, ?)`,
       [uuidv4(), propertyIds[c.propIdx], c.userId, c.text, pastDate(randomBetween(1, 45))]
     );
   }
   await qr.release();
   console.log(`✅ Created ${comments.length} comments`);
 }
-
-// ─── Main Runner ────────────────────────────────────────────────────────────
 
 async function seedTransferAccounts(ds: DataSource): Promise<string[]> {
   const qr = ds.createQueryRunner();
@@ -875,20 +1023,13 @@ async function seedTransferAccounts(ds: DataSource): Promise<string[]> {
 
 async function seedPaymentReceipts(ds: DataSource, bookingIds: string[], guestIds: number[], accountIds: string[], adminUserId: number) {
   const qr = ds.createQueryRunner();
-
   const receipts = [
-    // Completed booking paid via CCP - approved receipt
-    { bookingIdx: 0, guestIdx: 0, accountIdx: 0, amount: 78750, status: 'approved', reviewedBy: adminUserId, fileName: 'recu_ccp_001.jpg', note: 'Paiement vérifié sur le relevé CCP' },
-    // Completed booking paid via bank_transfer - approved receipt
-    { bookingIdx: 1, guestIdx: 1, accountIdx: 1, amount: 44590, status: 'approved', reviewedBy: adminUserId, fileName: 'virement_bna_002.pdf', note: 'Virement confirmé par la banque' },
-    // Confirmed booking partial payment - approved receipt
-    { bookingIdx: 6, guestIdx: 0, accountIdx: 0, amount: 63000, status: 'approved', reviewedBy: adminUserId, fileName: 'recu_ccp_003.jpg', note: 'Premier versement reçu, en attente du reste' },
-    // Pending booking - pending receipt (awaiting admin review)
+    { bookingIdx: 0, guestIdx: 0, accountIdx: 0, amount: 78750, status: 'approved', reviewedBy: adminUserId, fileName: 'recu_ccp_001.jpg', note: 'Paiement vérifié' },
+    { bookingIdx: 1, guestIdx: 1, accountIdx: 1, amount: 44590, status: 'approved', reviewedBy: adminUserId, fileName: 'virement_bna_002.pdf', note: 'Virement confirmé' },
+    { bookingIdx: 6, guestIdx: 0, accountIdx: 0, amount: 63000, status: 'approved', reviewedBy: adminUserId, fileName: 'recu_ccp_003.jpg', note: 'Premier versement reçu' },
     { bookingIdx: 7, guestIdx: 2, accountIdx: 2, amount: 21000, status: 'pending', reviewedBy: null, fileName: 'recu_badr_004.jpg', note: null },
-    // Another pending receipt
     { bookingIdx: 8, guestIdx: 3, accountIdx: 0, amount: 75460, status: 'pending', reviewedBy: null, fileName: 'recu_ccp_005.pdf', note: null },
-    // Rejected receipt (wrong amount)
-    { bookingIdx: 4, guestIdx: 0, accountIdx: 1, amount: 30000, status: 'rejected', reviewedBy: adminUserId, fileName: 'virement_bna_006.jpg', note: 'Montant incorrect - ne correspond pas au total de la réservation' },
+    { bookingIdx: 4, guestIdx: 0, accountIdx: 1, amount: 30000, status: 'rejected', reviewedBy: adminUserId, fileName: 'virement_bna_006.jpg', note: 'Montant incorrect' },
   ];
 
   for (const r of receipts) {
@@ -896,18 +1037,10 @@ async function seedPaymentReceipts(ds: DataSource, bookingIds: string[], guestId
       `INSERT INTO payment_receipts (id, bookingId, uploadedByUserId, transferAccountId, receiptUrl, originalFileName, amount, currency, status, reviewedByUserId, reviewedAt, reviewNote, guestNote)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'DZD', ?, ?, ?, ?, ?)`,
       [
-        uuidv4(),
-        bookingIds[r.bookingIdx],
-        guestIds[r.guestIdx],
-        accountIds[r.accountIdx],
-        `${MEDIA_BASE}/receipts/${r.fileName}`,
-        r.fileName,
-        r.amount,
-        r.status,
-        r.reviewedBy,
-        r.status !== 'pending' ? pastDate(randomBetween(1, 30)) : null,
-        r.note,
-        r.status === 'pending' ? 'Voici mon reçu de paiement' : null,
+        uuidv4(), bookingIds[r.bookingIdx], guestIds[r.guestIdx], accountIds[r.accountIdx],
+        `${MEDIA_BASE}/receipts/${r.fileName}`, r.fileName, r.amount, r.status,
+        r.reviewedBy, r.status !== 'pending' ? pastDate(randomBetween(1, 30)) : null,
+        r.note, r.status === 'pending' ? 'Voici mon reçu de paiement' : null,
       ]
     );
   }
@@ -924,32 +1057,39 @@ async function main() {
   console.log('✅ Database connected\n');
 
   try {
-    // 1. Users
+    // 1. Users (hyper_admin, hyper_manager have their role; others have 'user')
     const userIds = await seedUsers(AppDataSource);
     await seedUserRoles(AppDataSource, userIds);
     await seedProfiles(AppDataSource, userIds);
 
-    // 2. Properties (hosts are users at indices 2,3,4,5)
-    const hostIds = [userIds[2], userIds[3], userIds[4], userIds[5]];
-    const propertyIds = await seedProperties(AppDataSource, hostIds);
+    // 2. Properties — admins (indices 2,3) own properties
+    const adminIds = [userIds[2], userIds[3]];
+    const propertyIds = await seedProperties(AppDataSource, adminIds);
     await seedPropertyImages(AppDataSource, propertyIds);
 
-    // 3. Bookings & Reviews (guests are users at indices 6,7,8,9)
-    const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9]];
+    // 3. Manager assignments & permissions
+    const assignmentIds = await seedManagerAssignments(AppDataSource, userIds, propertyIds);
+    await seedManagerPermissions(AppDataSource, assignmentIds);
+
+    // 4. Tourism services
+    await seedTourismServices(AppDataSource, adminIds);
+
+    // 5. Bookings & Reviews — guests (indices 6-10), admins can also be guests
+    const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9], userIds[2]]; // admin1 as guest too
     const bookingIds = await seedBookings(AppDataSource, propertyIds, guestIds);
     await seedReviews(AppDataSource, propertyIds, guestIds);
 
-    // 4. Verification documents
-    await seedVerificationDocs(AppDataSource, propertyIds, hostIds);
+    // 6. Verification documents
+    await seedVerificationDocs(AppDataSource, propertyIds, adminIds);
 
-    // 5. Transfer accounts & payment receipts
+    // 7. Transfer accounts & payment receipts
     const transferAccountIds = await seedTransferAccounts(AppDataSource);
     await seedPaymentReceipts(AppDataSource, bookingIds, guestIds, transferAccountIds, userIds[0]);
 
-    // 6. Social & system data
+    // 8. Social & system data
     await seedNotifications(AppDataSource, userIds);
     await seedFavorites(AppDataSource, propertyIds, guestIds);
-    await seedRankings(AppDataSource, hostIds);
+    await seedRankings(AppDataSource, adminIds);
     await seedComments(AppDataSource, propertyIds, userIds);
 
     console.log('\n═══════════════════════════════════════════');
@@ -958,16 +1098,20 @@ async function main() {
     console.log('\n📋 Summary:');
     console.log(`   Users:              ${userIds.length}`);
     console.log(`   Properties:         ${propertyIds.length}`);
+    console.log(`   Manager Assignments: ${assignmentIds.length}`);
+    console.log(`   Tourism Services:   13`);
     console.log(`   Bookings:           ${bookingIds.length}`);
     console.log(`   Reviews:            8`);
-    console.log(`   Documents:          25`);
     console.log(`   Transfer Accounts:  ${transferAccountIds.length}`);
     console.log(`   Payment Receipts:   6`);
-    console.log(`   Notifications:      8`);
     console.log('\n🔑 Default password: Password123!');
-    console.log('   Admin: admin@byootdz.com');
-    console.log('   Host:  host1@byootdz.com');
-    console.log('   Guest: guest1@byootdz.com\n');
+    console.log('   Hyper Admin:      hyper_admin_byootdz@yopmail.com');
+    console.log('   Hyper Manager:    hyper_manager_byootdz@yopmail.com');
+    console.log('   Admin 1:          admin1_byootdz@yopmail.com');
+    console.log('   Admin 2:          admin2_byootdz@yopmail.com');
+    console.log('   Manager 1:        manager1_byootdz@yopmail.com');
+    console.log('   Manager 2:        manager2_byootdz@yopmail.com');
+    console.log('   Guests:           guest1_byootdz@yopmail.com - guest5_byootdz@yopmail.com\n');
 
   } catch (err) {
     console.error('❌ Seeding failed:', err);

@@ -20,7 +20,7 @@ export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index('IDX_bookings_propertyId')
+  @Index('IDX_bookings_propertyId', ['propertyId'])
   @Column()
   propertyId: string;
 
@@ -28,7 +28,7 @@ export class Booking {
   @JoinColumn({ name: 'propertyId' })
   property: Property;
 
-  @Index('IDX_bookings_guestId')
+  @Index('IDX_bookings_guestId', ['guestId'])
   @Column()
   guestId: number;
 

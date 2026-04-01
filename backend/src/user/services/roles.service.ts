@@ -1,10 +1,11 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { UserRole, AppRole } from '../entity/user-role.entity';
+import { UserRole, AppRole, INCOMPATIBLE_ROLES } from '../entity/user-role.entity';
 import { ManagerAssignment, AssignmentScope } from '../entity/manager-assignment.entity';
 import { ManagerPermission, PermissionType } from '../entity/manager-permission.entity';
 import { PropertyGroupMembership } from '../../properties/entity/property-group-membership.entity';
+import { User } from '../entity/user.entity';
 
 @Injectable()
 export class RolesService {
@@ -17,6 +18,8 @@ export class RolesService {
     private readonly permissionRepo: Repository<ManagerPermission>,
     @InjectRepository(PropertyGroupMembership)
     private readonly membershipRepo: Repository<PropertyGroupMembership>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   // Dashboard stats
@@ -52,16 +55,29 @@ export class RolesService {
   async assignRole(assignerId: number, userId: number, role: AppRole): Promise<UserRole> {
     const assignerRoles = await this.getUserRoles(assignerId);
     
-    if (role === 'hyper_manager' && !assignerRoles.includes('hyper_manager')) {
-      throw new ForbiddenException('Only hyper_manager can assign hyper_manager role');
+    // Permission checks
+    if ((role === 'hyper_admin' || role === 'hyper_manager') && !assignerRoles.includes('hyper_admin')) {
+      throw new ForbiddenException('Only hyper_admin can assign hyper_admin or hyper_manager roles');
     }
     
-    if (role === 'admin' && !assignerRoles.includes('hyper_manager')) {
-      throw new ForbiddenException('Only hyper_manager can assign admin role');
+    if (role === 'admin' && !assignerRoles.includes('hyper_admin') && !assignerRoles.includes('hyper_manager')) {
+      throw new ForbiddenException('Only hyper_admin or hyper_manager can assign admin role');
     }
     
-    if (role === 'manager' && !assignerRoles.includes('hyper_manager') && !assignerRoles.includes('admin')) {
-      throw new ForbiddenException('Only hyper_manager or admin can assign manager role');
+    if (role === 'manager' && !assignerRoles.includes('hyper_admin') && !assignerRoles.includes('hyper_manager') && !assignerRoles.includes('admin')) {
+      throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can assign manager role');
+    }
+
+    // Enforce mutual exclusivity: check if user already has incompatible roles
+    const incompatible = INCOMPATIBLE_ROLES[role] || [];
+    if (incompatible.length > 0) {
+      const existingRoles = await this.getUserRoles(userId);
+      const conflicts = existingRoles.filter(r => incompatible.includes(r));
+      if (conflicts.length > 0) {
+        throw new ForbiddenException(
+          `Cannot assign '${role}' — user already has incompatible role(s): ${conflicts.join(', ')}. Remove them first.`
+        );
+      }
     }
 
     const existing = await this.userRoleRepo.findOne({ where: { userId, role } });
@@ -75,8 +91,13 @@ export class RolesService {
   async removeRole(removerId: number, userId: number, role: AppRole): Promise<void> {
     const removerRoles = await this.getUserRoles(removerId);
     
-    if (!removerRoles.includes('hyper_manager') && !removerRoles.includes('admin')) {
+    if (!removerRoles.includes('hyper_admin') && !removerRoles.includes('hyper_manager') && !removerRoles.includes('admin')) {
       throw new ForbiddenException('Insufficient permissions to remove roles');
+    }
+
+    // Only hyper_admin can remove hyper_admin or hyper_manager roles
+    if ((role === 'hyper_admin' || role === 'hyper_manager') && !removerRoles.includes('hyper_admin')) {
+      throw new ForbiddenException('Only hyper_admin can remove hyper_admin or hyper_manager roles');
     }
     
     await this.userRoleRepo.delete({ userId, role });
@@ -92,8 +113,8 @@ export class RolesService {
   ): Promise<ManagerAssignment> {
     // Verify admin has permission
     const adminRoles = await this.getUserRoles(adminId);
-    if (!adminRoles.includes('hyper_manager') && !adminRoles.includes('admin')) {
-      throw new ForbiddenException('Only hyper_manager or admin can assign managers');
+    if (!adminRoles.includes('hyper_admin') && !adminRoles.includes('hyper_manager') && !adminRoles.includes('admin')) {
+      throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can assign managers');
     }
 
     // Verify target user has manager role
@@ -124,8 +145,8 @@ export class RolesService {
 
     // Verify admin has permission
     const adminRoles = await this.getUserRoles(adminId);
-    if (!adminRoles.includes('hyper_manager') && !adminRoles.includes('admin')) {
-      throw new ForbiddenException('Only hyper_manager or admin can set permissions');
+    if (!adminRoles.includes('hyper_admin') && !adminRoles.includes('hyper_manager') && !adminRoles.includes('admin')) {
+      throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can set permissions');
     }
 
     // Delete existing permissions
@@ -227,5 +248,57 @@ export class RolesService {
     }
 
     return Array.from(propertyIds);
+  }
+
+  // ─── Missing: getAllUsersWithRoles, getAllAssignments, removeAssignment ───
+
+  async getAllUsersWithRoles(): Promise<{ id: number; email: string; firstName: string; lastName: string; roles: AppRole[] }[]> {
+    const users = await this.userRepo.find({ where: { isActive: true } });
+    const allRoles = await this.userRoleRepo.find();
+    const roleMap = new Map<number, AppRole[]>();
+    allRoles.forEach(r => {
+      if (!roleMap.has(r.userId)) roleMap.set(r.userId, []);
+      roleMap.get(r.userId)!.push(r.role);
+    });
+    return users.map(u => ({
+      id: u.id,
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      roles: roleMap.get(u.id) || ['user'],
+    }));
+  }
+
+  async getAllAssignments(): Promise<ManagerAssignment[]> {
+    return this.assignmentRepo.find({
+      where: { isActive: true },
+      relations: ['manager', 'property', 'propertyGroup'],
+    });
+  }
+
+  async removeAssignment(adminId: number, assignmentId: string): Promise<void> {
+    const adminRoles = await this.getUserRoles(adminId);
+    if (!adminRoles.includes('hyper_admin') && !adminRoles.includes('hyper_manager') && !adminRoles.includes('admin')) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+    const assignment = await this.assignmentRepo.findOne({ where: { id: assignmentId } });
+    if (!assignment) throw new NotFoundException('Assignment not found');
+    await this.assignmentRepo.update(assignmentId, { isActive: false });
+  }
+
+  async updateUserStatus(adminId: number, userId: number, status: string): Promise<void> {
+    const adminRoles = await this.getUserRoles(adminId);
+    if (!adminRoles.includes('hyper_admin') && !adminRoles.includes('hyper_manager') && !adminRoles.includes('admin')) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+    await this.userRepo.update(userId, { isActive: status === 'active' });
+  }
+
+  async deleteUser(adminId: number, userId: number): Promise<void> {
+    const adminRoles = await this.getUserRoles(adminId);
+    if (!adminRoles.includes('hyper_admin') && !adminRoles.includes('hyper_manager')) {
+      throw new ForbiddenException('Only hyper_admin or hyper_manager can delete users');
+    }
+    await this.userRepo.delete(userId);
   }
 }

@@ -14,11 +14,17 @@ import { PropertyGroupsService } from '../services/property-groups.service';
 import { DocumentValidationService } from '../services/document-validation.service';
 import { UserRole } from '../../user/entity/user-role.entity';
 import { NotificationModule } from '../../notification/modules/notification.module';
+import { PropertyPromo } from '../entity/property-promo.entity';
+import { PromoAlert } from '../entity/promo-alert.entity';
+import { SavedSearchAlert } from '../entity/saved-search-alert.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Property,
+      PromoAlert,
+      PropertyPromo,
+      SavedSearchAlert,
       VerificationDocument,
       PropertyImage,
       PropertyAvailability,
@@ -27,6 +33,7 @@ import { NotificationModule } from '../../notification/modules/notification.modu
       UserRole,
     ]),
     NotificationModule,
+    
   ],
   controllers: [PropertiesController, PropertyGroupsController, DocumentValidationController],
   providers: [PropertiesService, PropertyGroupsService, DocumentValidationService],

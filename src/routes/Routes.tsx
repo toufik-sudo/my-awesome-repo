@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Routes as RouterRoutes, Route } from "react-router-dom";
+import { Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MainLayout } from "@/modules/shared/layout/MainLayout";
 import { useLoadingIntegration } from "@/modules/shared/hooks/useLoadingIntegration";
@@ -12,6 +12,8 @@ import AddPropertyWizard from "@/modules/admin/pages/AddPropertyWizard";
 import Auth from "@/modules/auth/auth.component";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/modules/dashboard/Dashboard";
+import { HyperDashboard } from "@/modules/dashboard/HyperDashboard";
+import { AdminManagerDashboard } from "@/modules/dashboard/AdminManagerDashboard";
 import { ComponentsDemo } from "@/modules/demo/pages/ComponentsDemo";
 import { FilterDemo } from "@/modules/demo/pages/FilterDemo";
 import { GridDemo } from "@/modules/demo/pages/GridDemo";
@@ -20,11 +22,9 @@ import { ComboboxDemo } from "@/modules/demo/pages/ComboboxDemo";
 import { ChartsDemo } from "@/modules/demo/pages/ChartsDemo";
 import { Settings } from "@/modules/settings/settings.component";
 import { SSOCallback, SSO_ROUTES } from "@/modules/shared/sso";
-import { AdminDashboard } from "@/modules/admin/pages/AdminDashboard";
-import { HyperManagerDashboard } from "@/modules/admin/pages/HyperManagerDashboard";
-import { ManagerDashboard } from "@/modules/admin/pages/ManagerDashboard";
 import { VerificationReview } from "@/modules/admin/pages/VerificationReview";
-import { DashboardRedirect } from "@/modules/admin/pages/DashboardRedirect";
+import { useDashboardRedirect } from "@/modules/admin/pages/DashboardRedirect";
+import { EmailAnalyticsPage } from "@/modules/admin/pages/EmailAnalyticsPage";
 import { HostBookings } from "@/modules/bookings/pages/HostBookings";
 import { BookingHistory } from "@/modules/bookings/pages/BookingHistory";
 import { BookingChat } from "@/modules/chat/pages/BookingChat";
@@ -32,9 +32,15 @@ import { SupportInbox } from "@/modules/support/pages/SupportInbox";
 import { SupportThreadChat } from "@/modules/support/pages/SupportThreadChat";
 import { PaymentValidation } from "@/modules/payments/pages/PaymentValidation";
 import { useSocketNotifications } from "@/modules/notifications/useSocketNotifications";
-import { ADMIN_ROUTES } from "@/modules/admin/admin.constants";
+import ServiceListing from "@/pages/ServiceListing";
+import ServiceDetail from "@/pages/ServiceDetail";
+import AddServiceWizard from "@/modules/admin/pages/AddServiceWizard";
+import PointsPage from "@/pages/PointsPage";
 
-// Route groups for cleaner organization
+const HYPER_ROLES = ['hyper_admin', 'hyper_manager'];
+const ADMIN_ROLES = ['hyper_admin', 'hyper_manager', 'admin'];
+const MANAGER_ROLES = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
+
 const PublicRoutes = () => (
   <>
     <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
@@ -48,16 +54,19 @@ const PropertyRoutes = () => (
   <>
     <Route path="/properties" element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path="/property/:id" element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/properties/new" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/properties/:id/edit" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/properties/new" element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/properties/:id/edit" element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/services" element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/services/:id" element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/services/new" element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
 const BookingRoutes = () => (
   <>
     <Route path="/bookings" element={<ProtectedRoute><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/bookings/host" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager']}><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path="/bookings/history" element={<ProtectedRoute requiredRoles={['admin', 'manager', 'hyper_manager', 'hyper_admin']}><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/bookings/host" element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/bookings/history" element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path="/chat/:bookingId" element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path="/support" element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path="/support/:threadId" element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportThreadChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
@@ -67,31 +76,39 @@ const BookingRoutes = () => (
 
 const AdminRoutes = () => (
   <>
-    {/* Role-specific dashboards */}
-    <Route path={ADMIN_ROUTES.HYPER_DASHBOARD} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><HyperManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.ADMIN_DASHBOARD} element={<ProtectedRoute requiredRoles={['hyper_manager', 'admin']}><MainLayout><ErrorBoundary><AdminDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.MANAGER_DASHBOARD} element={<ProtectedRoute requiredRoles={['hyper_manager', 'admin', 'manager']}><MainLayout><ErrorBoundary><ManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.VERIFICATION_REVIEW} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.DOCUMENT_VALIDATION} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.PAYMENT_VALIDATION} element={<ProtectedRoute requiredRoles={['hyper_manager']}><MainLayout><ErrorBoundary><PaymentValidation /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    {/* Consolidated dashboards */}
+    <Route path="/dashboard/hyper" element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><HyperDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/dashboard/admin" element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AdminManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    {/* Legacy redirects */}
+    <Route path="/hyper-admin" element={<Navigate to="/dashboard/hyper" replace />} />
+    <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
+    <Route path="/manager" element={<Navigate to="/dashboard/admin" replace />} />
+    {/* Admin sub-pages */}
+    <Route path="/admin/verification-review" element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/admin/document-validation" element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/admin/payment-validation" element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><PaymentValidation /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/admin/email-analytics" element={<ProtectedRoute requiredRoles={ADMIN_ROLES}><MainLayout><ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
 const DashboardRoutes = () => (
   <>
     <Route path="/dashboard" element={<ProtectedRoute><MainLayout><ErrorBoundary><DashboardWithRedirect /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path="/points" element={<ProtectedRoute><MainLayout><ErrorBoundary><PointsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
-/** Smart dashboard: shows role-appropriate content or redirects */
+/**
+ * Smart dashboard: redirects role-specific users to their consolidated dashboard,
+ * regular users see the default guest Dashboard.
+ */
 const DashboardWithRedirect: React.FC = memo(() => {
-  return (
-    <>
-      <DashboardRedirect />
-      <Dashboard />
-    </>
-  );
+  const redirectTo = useDashboardRedirect();
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
+  }
+  return <Dashboard />;
 });
 DashboardWithRedirect.displayName = 'DashboardWithRedirect';
 
@@ -108,7 +125,7 @@ const DemoRoutes = () => (
 
 export const Routes = memo(() => {
   useLoadingIntegration();
-  useSocketNotifications(); // Real-time booking & chat notifications
+  useSocketNotifications();
 
   return (
     <RouterRoutes>

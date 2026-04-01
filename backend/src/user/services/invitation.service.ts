@@ -59,14 +59,17 @@ export class InvitationService {
 
     const saved = await this.invitationRepo.save(invitation);
 
-    // Send invitation via email
+    // Send invitation via email using the invitation template
     if (data.method === 'email' && data.email) {
+      const roleLabel = data.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const signupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?invitation=${token}`;
+
       await this.jobProducer.sendEmail({
         to: data.email,
-        subject: `You've been invited to join ByootDZ as ${data.role}`,
-        body: this.buildInvitationEmailBody(data.role, token, data.message),
+        subject: `You've been invited to join ByootDZ as ${roleLabel}`,
+        body: '',
         template: 'invitation',
-        context: { role: data.role, token, message: data.message },
+        context: { roleLabel, signupUrl, message: data.message },
       });
     }
 
@@ -110,12 +113,15 @@ export class InvitationService {
     const saved = await this.invitationRepo.save(invitation);
 
     if (invitation.method === 'email' && invitation.email) {
+      const roleLabel = invitation.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const signupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?invitation=${invitation.token}`;
+
       await this.jobProducer.sendEmail({
         to: invitation.email,
-        subject: `Reminder: You've been invited to join ByootDZ as ${invitation.role}`,
-        body: this.buildInvitationEmailBody(invitation.role, invitation.token, invitation.message),
+        subject: `Reminder: You've been invited to join ByootDZ as ${roleLabel}`,
+        body: '',
         template: 'invitation',
-        context: { role: invitation.role, token: invitation.token },
+        context: { roleLabel, signupUrl, message: invitation.message },
       });
     }
 
@@ -151,21 +157,4 @@ export class InvitationService {
     });
   }
 
-  private buildInvitationEmailBody(role: string, token: string, message?: string): string {
-    const roleLabel = role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const signupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?invitation=${token}`;
-
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #0891b2;">You're Invited to ByootDZ</h1>
-        <p>You've been invited to join ByootDZ as a <strong>${roleLabel}</strong>.</p>
-        ${message ? `<p style="padding: 12px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0891b2;">${message}</p>` : ''}
-        <p>Click the button below to create your account and get started:</p>
-        <a href="${signupUrl}" style="display: inline-block; padding: 12px 24px; background: #0891b2; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
-          Accept Invitation
-        </a>
-        <p style="color: #666; font-size: 12px; margin-top: 24px;">This invitation expires in 7 days.</p>
-      </div>
-    `;
-  }
 }

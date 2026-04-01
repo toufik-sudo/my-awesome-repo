@@ -2,9 +2,9 @@
 
 export const ADMIN_ROUTES = {
   DASHBOARD: '/dashboard',
-  HYPER_DASHBOARD: '/hyper-admin',
-  ADMIN_DASHBOARD: '/admin',
-  MANAGER_DASHBOARD: '/manager',
+  HYPER_DASHBOARD: '/dashboard/hyper',
+  ADMIN_DASHBOARD: '/dashboard/admin',
+  MANAGER_DASHBOARD: '/dashboard/admin',
   VERIFICATION_REVIEW: '/admin/verification-review',
   DOCUMENT_VALIDATION: '/admin/document-validation',
   PAYMENT_VALIDATION: '/admin/payment-validation',
@@ -13,6 +13,7 @@ export const ADMIN_ROUTES = {
 // ─── Role Hierarchy ─────────────────────────────────────────────────────────
 
 export const ROLE_HIERARCHY = {
+  hyper_admin: 5,
   hyper_manager: 4,
   admin: 3,
   manager: 2,

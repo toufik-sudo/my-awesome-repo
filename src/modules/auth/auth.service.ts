@@ -34,8 +34,8 @@ export const authService = {
           return {
             id: jwtData.sub || '',
             email: jwtData.email || '',
-            name: jwtData.name,
-            role: jwtData.role,
+            username: jwtData.username,
+            roles: Array.isArray(jwtData.roles) ? jwtData.roles : jwtData.roles ? [jwtData.roles] : [],
           } as User;
         }
       }
@@ -46,7 +46,7 @@ export const authService = {
         storeJWT(response.data.access_token, response.data.refreshToken);
         this.initAutoRenewal();
       }
-      return response.data.user || response.data as unknown as User;
+      return this.checkAuth();
     } catch (error) {
       clearJWT();
       return null;

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
+import { JobProducerService } from '../../infrastructure/jobs/job-producer.service';
 import { Notification, NotificationType, NotificationChannel } from '../entity/notification.entity';
 import { User } from '../../user/entity/user.entity';
 import { UserRole } from '../../user/entity/user-role.entity';
@@ -26,6 +27,7 @@ export class NotificationService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(UserRole)
     private readonly userRoleRepo: Repository<UserRole>,
+    private readonly jobProducer: JobProducerService,
   ) {}
 
   /** Create a single in-app notification */
@@ -86,7 +88,7 @@ export class NotificationService {
     return notifications;
   }
 
-  /** Send email notification (placeholder - integrate with your mailer) */
+  /** Send email notification via the job queue (processed by nodemailer) */
   private async sendEmail(userId: number, subject: string, body: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user?.email) {
@@ -94,11 +96,12 @@ export class NotificationService {
       return;
     }
 
-    // TODO: Replace with real mailer (nodemailer, SendGrid, etc.)
-    this.logger.log(
-      `📧 EMAIL SENT to ${user.email}\n` +
-      `  Subject: ${subject}\n` +
-      `  Body: ${body}`,
-    );
+    await this.jobProducer.sendEmail({
+      to: user.email,
+      subject,
+      body,
+      template: 'notification',
+      context: { title: subject, message: body },
+    });
   }
 }

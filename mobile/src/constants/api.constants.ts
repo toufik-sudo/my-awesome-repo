@@ -7,6 +7,7 @@ export const API_BASE = {
   PROPERTIES: '/properties',
   DOCUMENTS: '/documents',
   BOOKINGS: '/bookings',
+  SERVICES: '/services',
 } as const;
 
 export const STORAGE_KEYS = {
