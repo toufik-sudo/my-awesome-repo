@@ -36,6 +36,7 @@ import ServiceListing from "@/pages/ServiceListing";
 import ServiceDetail from "@/pages/ServiceDetail";
 import AddServiceWizard from "@/modules/admin/pages/AddServiceWizard";
 import PointsPage from "@/pages/PointsPage";
+import RewardsShop from "@/modules/rewards/pages/RewardsShop";
 import { HostFeeAbsorptionPage } from "@/modules/admin/pages/HostFeeAbsorptionPage";
 import { CancellationRulesPage } from "@/modules/admin/pages/CancellationRulesPage";
 import { BookingCalendarPage } from "@/modules/admin/pages/BookingCalendarPage";
