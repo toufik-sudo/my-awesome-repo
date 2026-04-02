@@ -23,6 +23,7 @@ import {
   Compass,
   Trophy,
   Calendar,
+  Gift,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
