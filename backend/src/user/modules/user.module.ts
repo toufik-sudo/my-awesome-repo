@@ -8,6 +8,9 @@ import { UserService } from 'src/user/services/user.service';
 import { RolesService } from 'src/user/services/roles.service';
 import { RolesController } from 'src/user/controllers/roles.controller';
 import { UserController } from 'src/user/controllers/user.controller';
+import { CancellationRuleController } from 'src/user/controllers/cancellation-rule.controller';
+import { CancellationRuleService } from 'src/user/services/cancellation-rule.service';
+import { CancellationRule } from 'src/user/entity/cancellation-rule.entity';
 import { PropertyGroupMembership } from 'src/properties/entity/property-group-membership.entity';
 import { Profile } from 'src/profiles/entity/profile.entity';
 
@@ -20,10 +23,11 @@ import { Profile } from 'src/profiles/entity/profile.entity';
       ManagerPermission,
       PropertyGroupMembership,
       Profile,
+      CancellationRule,
     ]),
   ],
-  controllers: [RolesController, UserController],
-  providers: [UserService, RolesService],
-  exports: [UserService, RolesService],
+  controllers: [RolesController, UserController, CancellationRuleController],
+  providers: [UserService, RolesService, CancellationRuleService],
+  exports: [UserService, RolesService, CancellationRuleService],
 })
 export class UserModule {}

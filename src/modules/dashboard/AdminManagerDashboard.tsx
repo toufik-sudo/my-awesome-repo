@@ -16,24 +16,27 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { GlassCard, GlassStat } from '@/modules/admin/components/GlassCard';
 import { InvitationForm } from '@/modules/admin/components/InvitationForm';
 import { RolesManagement } from '@/modules/admin/pages/RolesManagement';
-import { PropertyGroupsManagement } from '@/modules/admin/pages/PropertyGroupsManagement';
-import { ServiceGroupsManagement } from '@/modules/admin/pages/ServiceGroupsManagement';
+import { GroupsManagement } from '@/modules/admin/pages/GroupsManagement';
 import { ManagerAssignments } from '@/modules/admin/pages/ManagerAssignments';
 import { VerificationReview } from '@/modules/admin/pages/VerificationReview';
 import { PointsDashboardWidget } from '@/modules/points/PointsDashboardWidget';
 import { PointsRulesManager } from '@/modules/admin/components/PointsRulesManager';
 import { ServiceFeesManager } from '@/modules/admin/components/ServiceFeesManager';
 import { FeeSimulator } from '@/modules/admin/components/FeeSimulator';
+import { CancellationRulesPage } from '@/modules/admin/pages/CancellationRulesPage';
+import { PaymentValidation } from '@/modules/payments/pages/PaymentValidation';
+import { EmailAnalyticsPage } from '@/modules/admin/pages/EmailAnalyticsPage';
+import { HostFeeAbsorptionPage } from '@/modules/admin/pages/HostFeeAbsorptionPage';
 import { statsApi, assignmentsApi, type AdminStats } from '@/modules/admin/admin.api';
 import { useDashboard } from '@/modules/dashboard/useDashboard';
 import type { ManagerAssignment, ManagerPermission, PermissionType } from '@/modules/admin/admin.types';
 import { PERMISSION_LABELS, PERMISSION_CATEGORIES } from '@/modules/admin/admin.types';
 import {
-  Building2, Shield, ShieldCheck, Users, UserPlus, FileCheck2,
+  Building2, Shield, ShieldCheck, ShieldX, Users, UserPlus, FileCheck2,
   FolderKanban, BarChart3, Zap, Home, Calendar, TrendingUp,
   CheckCircle2, Clock, XCircle, CalendarCheck, MessageSquare,
   DollarSign, Lock, Unlock, Star, PlusCircle, Compass,
-  MapPin, ArrowRight, Trophy,
+  MapPin, ArrowRight, Trophy, CreditCard, Mail, Percent,
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { color: string }> = {
@@ -92,6 +95,12 @@ export const AdminManagerDashboard: React.FC = memo(() => {
   const hasPermission = useCallback((assignmentId: string, perm: PermissionType): boolean => {
     return (permissionsMap[assignmentId] || []).some(p => p.permission === perm && p.isGranted);
   }, [permissionsMap]);
+
+  // Check if manager has a specific permission on ANY assignment
+  const hasAnyPermission = useCallback((perm: PermissionType): boolean => {
+    if (isAdmin) return true;
+    return assignments.some(a => hasPermission(a.id, perm));
+  }, [isAdmin, assignments, hasPermission]);
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><LoadingSpinner size="lg" /></div>;
 
@@ -379,13 +388,30 @@ export const AdminManagerDashboard: React.FC = memo(() => {
         </div>
       </ErrorBoundary>
     )},
+    { value: 'payment-validation', label: 'Validation paiements', icon: <CreditCard className="h-4 w-4" />, content: (
+      <ErrorBoundary><PaymentValidation /></ErrorBoundary>
+    )},
+    ...(isAdmin || hasAnyPermission('view_analytics') ? [
+      { value: 'email-analytics', label: 'Email Analytics', icon: <Mail className="h-4 w-4" />, content: (
+        <ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary>
+      )},
+    ] : []),
+    { value: 'fee-absorption', label: 'Absorption frais', icon: <Percent className="h-4 w-4" />, content: (
+      <ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary>
+    )},
+    { value: 'cancellation', label: t('dashboard.tabs.cancellation', "Règles d'annulation"), icon: <ShieldX className="h-4 w-4" />, content: (
+      <ErrorBoundary>
+        <CancellationRulesPage />
+      </ErrorBoundary>
+    )},
     ...(isAdmin ? [
       { value: 'verifications', label: 'Vérifications', icon: <FileCheck2 className="h-4 w-4" />, badge: stats?.pendingVerifications, content: <ErrorBoundary><VerificationReview /></ErrorBoundary> },
       { value: 'roles', label: 'Rôles', icon: <Users className="h-4 w-4" />, badge: stats?.totalUsers, content: <ErrorBoundary><RolesManagement /></ErrorBoundary> },
-      { value: 'property-groups', label: 'Groupes Propriétés', icon: <FolderKanban className="h-4 w-4" />, badge: stats?.totalGroups, content: <ErrorBoundary><PropertyGroupsManagement /></ErrorBoundary> },
-      { value: 'service-groups', label: 'Groupes Services', icon: <Compass className="h-4 w-4" />, content: <ErrorBoundary><ServiceGroupsManagement /></ErrorBoundary> },
+      { value: 'groups', label: 'Groupes', icon: <FolderKanban className="h-4 w-4" />, badge: stats?.totalGroups, content: <ErrorBoundary><GroupsManagement /></ErrorBoundary> },
       { value: 'assignments', label: 'Assignations', icon: <ShieldCheck className="h-4 w-4" />, badge: stats?.totalAssignments, content: <ErrorBoundary><ManagerAssignments /></ErrorBoundary> },
-    ] : []),
+    ] : [
+      { value: 'assignments', label: 'Assignations', icon: <ShieldCheck className="h-4 w-4" />, content: <ErrorBoundary><ManagerAssignments /></ErrorBoundary> },
+    ]),
   ];
 
   return (

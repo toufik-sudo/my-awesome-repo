@@ -7,6 +7,12 @@ export interface PointsRule {
   createdByUserId: number;
   ruleType: 'earning' | 'conversion';
   targetRole: 'guest' | 'manager';
+  scope: 'global' | 'host' | 'property_group' | 'service_group' | 'property' | 'service';
+  targetHostId?: number;
+  targetPropertyGroupId?: string;
+  targetServiceGroupId?: string;
+  targetPropertyId?: string;
+  targetServiceId?: string;
   action: string;
   pointsAmount: number;
   conversionRate?: number;

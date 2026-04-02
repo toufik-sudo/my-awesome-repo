@@ -166,14 +166,17 @@ export class BookingsService {
     // Real-time notification to host
     if (property.hostId) {
       this.eventsGateway.emitBookingUpdate(String(property.hostId), fullBooking);
+      
+      // Also notify authorized managers for this property
+      this.notifyAuthorizedManagers(property.id, fullBooking, property.title);
     }
 
-    // Queue notification job
+    // Queue notification job for the host
     this.jobProducer.queueNotification({
       userId: property.hostId as any,
       type: 'booking_request',
-      title: 'New Booking Request',
-      message: `New booking for ${property.title || property.id} (${nights} nights)`,
+      title: 'Nouvelle demande de réservation',
+      message: `Nouvelle réservation pour ${property.title || property.id} (${nights} nuits, ${totalPrice} DZD)`,
       channel: 'both',
       actionUrl: `/bookings/${saved.id}`,
       metadata: { bookingId: saved.id, propertyId: property.id },
@@ -296,5 +299,47 @@ export class BookingsService {
       .getCount();
 
     return { available: overlapping === 0 };
+  }
+
+  /** Notify managers who have accept_bookings permission for a property */
+  private async notifyAuthorizedManagers(propertyId: string, booking: any, propertyTitle: string) {
+    try {
+      const { ManagerAssignment } = await import('../../user/entity/manager-assignment.entity');
+      const { ManagerPermission } = await import('../../user/entity/manager-permission.entity');
+
+      const assignmentRepo = this.bookingRepository.manager.getRepository(ManagerAssignment);
+      const permissionRepo = this.bookingRepository.manager.getRepository(ManagerPermission);
+
+      // Get active assignments that cover this property
+      const assignments = await assignmentRepo.find({ where: { isActive: true } });
+
+      for (const assignment of assignments) {
+        let covers = false;
+        if (assignment.scope === 'all') covers = true;
+        else if (assignment.scope === 'property' && assignment.propertyId === propertyId) covers = true;
+
+        if (!covers) continue;
+
+        // Check accept_bookings permission
+        const perm = await permissionRepo.findOne({
+          where: { assignmentId: assignment.id, permission: 'accept_bookings' as any, isGranted: true },
+        });
+
+        if (perm) {
+          this.eventsGateway.emitBookingUpdate(String(assignment.managerId), booking);
+          this.jobProducer.queueNotification({
+            userId: assignment.managerId,
+            type: 'booking_request',
+            title: 'Nouvelle demande de réservation',
+            message: `Nouvelle réservation pour ${propertyTitle}`,
+            channel: 'in_app',
+            actionUrl: `/bookings/${booking.id}`,
+            metadata: { bookingId: booking.id, propertyId },
+          });
+        }
+      }
+    } catch (err:any) {
+      this.logger.warn(`Failed to notify managers: ${err.message}`);
+    }
   }
 }

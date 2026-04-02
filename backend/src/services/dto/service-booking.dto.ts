@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsDateString, IsOptional, IsIn, Min, Max, MaxLength, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsInt, IsDateString, IsOptional, IsIn, Min, Max, MaxLength, IsArray, ValidateNested, IsBoolean, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ParticipantDetailDto {
@@ -45,6 +45,15 @@ export class CreateServiceBookingDto {
   @ValidateNested({ each: true })
   @Type(() => ParticipantDetailDto)
   participantDetails?: ParticipantDetailDto[];
+
+  @IsOptional()
+  @IsBoolean()
+  usePoints?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  pointsToUse?: number;
 }
 
 export class ServiceAvailabilityDto {

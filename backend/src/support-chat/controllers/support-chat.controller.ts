@@ -2,23 +2,28 @@ import {
   Controller, Get, Post, Patch, Param, Body, Query,
   UseGuards, Request, DefaultValuePipe, ParseIntPipe,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { SupportChatService } from '../services/support-chat.service';
 import { CreateSupportThreadDto, SendSupportMessageDto, UpdateThreadStatusDto, AssignThreadDto } from '../dtos/support-chat.dto';
 import { RequireRole } from '../../auth/decorators/require-role.decorator';
 
+@ApiTags('Support')
+@ApiBearerAuth('JWT-auth')
 @Controller('support')
 export class SupportChatController {
   constructor(private readonly supportChatService: SupportChatService) {}
 
-  /** Create a new support thread (any authenticated user) */
   @Post('threads')
+  @ApiOperation({ summary: 'Create support thread', description: 'Any authenticated user can create a support request.' })
   async createThread(@Request() req, @Body() dto: CreateSupportThreadDto) {
     const userRole = req.user.roles?.[0] || 'guest';
     return this.supportChatService.createThread(req.user.sub, userRole, dto);
   }
 
-  /** Get my support threads (user view) */
   @Get('threads/mine')
+  @ApiOperation({ summary: 'Get my support threads' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
   async getMyThreads(
     @Request() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -27,9 +32,13 @@ export class SupportChatController {
     return this.supportChatService.getUserThreads(req.user.sub, page, limit);
   }
 
-  /** Admin inbox - all threads */
   @Get('threads')
   @RequireRole('hyper_admin' as any, 'hyper_manager' as any, 'admin' as any)
+  @ApiOperation({ summary: 'Admin inbox — all threads', description: '**Roles**: hyper_admin, hyper_manager, admin' })
+  @ApiQuery({ name: 'status', required: false, enum: ['open', 'in_progress', 'resolved', 'closed'] })
+  @ApiQuery({ name: 'category', required: false })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
   async getAdminThreads(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
@@ -39,14 +48,18 @@ export class SupportChatController {
     return this.supportChatService.getAdminThreads(page, limit, status, category);
   }
 
-  /** Get a specific thread */
   @Get('threads/:threadId')
+  @ApiOperation({ summary: 'Get a specific thread' })
+  @ApiParam({ name: 'threadId', format: 'uuid' })
   async getThread(@Request() req, @Param('threadId') threadId: string) {
     return this.supportChatService.getThreadById(threadId, req.user.sub);
   }
 
-  /** Get messages for a thread */
   @Get('threads/:threadId/messages')
+  @ApiOperation({ summary: 'Get messages in thread' })
+  @ApiParam({ name: 'threadId', format: 'uuid' })
+  @ApiQuery({ name: 'page', required: false, type: 'number' })
+  @ApiQuery({ name: 'limit', required: false, type: 'number' })
   async getMessages(
     @Request() req,
     @Param('threadId') threadId: string,
@@ -56,8 +69,9 @@ export class SupportChatController {
     return this.supportChatService.getMessages(threadId, req.user.sub, page, limit);
   }
 
-  /** Send a message in a thread */
   @Post('threads/:threadId/messages')
+  @ApiOperation({ summary: 'Send message in thread' })
+  @ApiParam({ name: 'threadId', format: 'uuid' })
   async sendMessage(
     @Request() req,
     @Param('threadId') threadId: string,
@@ -67,28 +81,25 @@ export class SupportChatController {
     return this.supportChatService.sendMessage(threadId, req.user.sub, userRole, dto);
   }
 
-  /** Update thread status (admin only) */
   @Patch('threads/:threadId/status')
   @RequireRole('hyper_admin' as any, 'hyper_manager' as any, 'admin' as any)
-  async updateStatus(
-    @Param('threadId') threadId: string,
-    @Body() dto: UpdateThreadStatusDto,
-  ) {
+  @ApiOperation({ summary: 'Update thread status', description: '**Roles**: hyper_admin, hyper_manager, admin' })
+  @ApiParam({ name: 'threadId', format: 'uuid' })
+  async updateStatus(@Param('threadId') threadId: string, @Body() dto: UpdateThreadStatusDto) {
     return this.supportChatService.updateStatus(threadId, dto.status);
   }
 
-  /** Assign admin to thread */
   @Patch('threads/:threadId/assign')
   @RequireRole('hyper_admin' as any, 'hyper_manager' as any)
-  async assignThread(
-    @Param('threadId') threadId: string,
-    @Body() dto: AssignThreadDto,
-  ) {
+  @ApiOperation({ summary: 'Assign admin to thread', description: '**Roles**: hyper_admin, hyper_manager' })
+  @ApiParam({ name: 'threadId', format: 'uuid' })
+  async assignThread(@Param('threadId') threadId: string, @Body() dto: AssignThreadDto) {
     return this.supportChatService.assignThread(threadId, dto.adminId);
   }
 
-  /** Mark thread as read */
   @Post('threads/:threadId/read')
+  @ApiOperation({ summary: 'Mark thread as read' })
+  @ApiParam({ name: 'threadId', format: 'uuid' })
   async markRead(@Request() req, @Param('threadId') threadId: string) {
     const isAdmin = req.user.roles?.some((r: string) =>
       ['hyper_admin', 'hyper_manager', 'admin'].includes(r),

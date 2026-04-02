@@ -15,10 +15,13 @@ import { Referral, PropertyShare } from '../entity/referral.entity';
 import { PropertyGroupMembership } from '../../properties/entity/property-group-membership.entity';
 import { ServiceFeeRule } from '../entity/service-fee-rule.entity';
 import { PointsRule } from '../entity/points-rule.entity';
+import { HostFeeAbsorption } from '../entity/host-fee-absorption.entity';
 import { ServiceFeeController } from '../controllers/service-fee.controller';
 import { PointsRuleController } from '../controllers/points-rule.controller';
+import { HostFeeAbsorptionController } from '../controllers/host-fee-absorption.controller';
 import { ServiceFeeService } from '../services/service-fee.service';
 import { PointsRuleService } from '../services/points-rule.service';
+import { HostFeeAbsorptionService } from '../services/host-fee-absorption.service';
 import { JobsModule } from 'src/infrastructure/jobs/jobs.module';
 
 @Global()
@@ -35,11 +38,12 @@ import { JobsModule } from 'src/infrastructure/jobs/jobs.module';
       PropertyGroupMembership,
       ServiceFeeRule,
       PointsRule,
+      HostFeeAbsorption,
     ]),
     JobsModule,
   ],
-  controllers: [RolesController, InvitationController, ServiceFeeController, PointsRuleController, ReferralController],
-  providers: [RolesService, InvitationService, ServiceFeeService, PointsRuleService, ReferralService],
-  exports: [RolesService, InvitationService, ServiceFeeService, PointsRuleService, ReferralService],
+  controllers: [RolesController, InvitationController, ServiceFeeController, PointsRuleController, HostFeeAbsorptionController, ReferralController],
+  providers: [RolesService, InvitationService, ServiceFeeService, PointsRuleService, HostFeeAbsorptionService, ReferralService],
+  exports: [RolesService, InvitationService, ServiceFeeService, PointsRuleService, HostFeeAbsorptionService, ReferralService],
 })
 export class RolesModule {}

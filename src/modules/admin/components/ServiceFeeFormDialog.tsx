@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,35 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { serviceFeesApi, type ServiceFeeRule } from '@/modules/admin/service-fees.api';
+import { useScopeEntities } from '@/modules/admin/hooks/useScopeEntities';
+import { MultiScopeSelector } from '@/modules/admin/components/MultiScopeSelector';
+
+const SCOPE_OPTIONS = [
+  { value: 'global', label: 'Global (tous)' },
+  { value: 'host', label: 'Par hôte (admin)' },
+  { value: 'property_group', label: 'Groupe de propriétés' },
+  { value: 'property', label: 'Propriété spécifique' },
+  { value: 'service_group', label: 'Groupe de services' },
+  { value: 'service', label: 'Service spécifique' },
+];
+
+const CALC_OPTIONS = [
+  { value: 'percentage', label: 'Pourcentage', desc: 'Frais = montant × taux%' },
+  { value: 'fixed', label: 'Montant fixe', desc: 'Frais = montant fixe constant' },
+  { value: 'percentage_plus_fixed', label: '% + Fixe', desc: 'Frais = montant × taux% + montant fixe' },
+  { value: 'fixed_then_percentage', label: 'Fixe puis %', desc: 'Fixe si ≤ seuil, sinon fixe + (excédent) × taux%, plafonné au max' },
+];
+
+const SCOPE_TARGET_KEY: Record<string, string> = {
+  host: 'targetHostId',
+  property_group: 'targetPropertyGroupId',
+  service_group: 'targetServiceGroupId',
+  property: 'targetPropertyId',
+  service: 'targetServiceId',
+};
 
 interface Props {
   open: boolean;
@@ -19,23 +46,84 @@ interface Props {
 export const ServiceFeeFormDialog: React.FC<Props> = memo(({ open, onOpenChange, rule, onSuccess }) => {
   const isEdit = !!rule;
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<Partial<ServiceFeeRule>>({
-    scope: rule?.scope || 'global',
-    calculationType: rule?.calculationType || 'percentage',
-    percentageRate: rule?.percentageRate || 5,
-    fixedAmount: rule?.fixedAmount || 0,
-    minFee: rule?.minFee || undefined,
-    maxFee: rule?.maxFee || undefined,
-    isDefault: rule?.isDefault || false,
-    isActive: rule?.isActive ?? true,
-    description: rule?.description || '',
-    priority: rule?.priority || 100,
-    targetHostId: rule?.targetHostId || undefined,
-    targetPropertyGroupId: rule?.targetPropertyGroupId || undefined,
-    targetPropertyId: rule?.targetPropertyId || undefined,
-  });
+  const [form, setForm] = useState<Partial<ServiceFeeRule>>({});
+
+  useEffect(() => {
+    if (open) {
+      setForm({
+        scope: rule?.scope || 'global',
+        calculationType: rule?.calculationType || 'percentage',
+        percentageRate: rule?.percentageRate ?? 5,
+        fixedAmount: rule?.fixedAmount ?? 0,
+        fixedThreshold: rule?.fixedThreshold ?? undefined,
+        minFee: rule?.minFee ?? undefined,
+        maxFee: rule?.maxFee ?? undefined,
+        isDefault: rule?.isDefault || false,
+        isActive: rule?.isActive ?? true,
+        description: rule?.description || '',
+        priority: rule?.priority ?? 100,
+        targetHostId: rule?.targetHostId ?? undefined,
+        targetPropertyGroupId: rule?.targetPropertyGroupId ?? undefined,
+        targetPropertyId: rule?.targetPropertyId ?? undefined,
+        targetServiceGroupId: rule?.targetServiceGroupId ?? undefined,
+        targetServiceId: rule?.targetServiceId ?? undefined,
+      });
+    }
+  }, [open, rule]);
 
   const update = (key: string, value: any) => setForm(f => ({ ...f, [key]: value }));
+
+  const currentScope = form.scope || 'global';
+  const { entities: scopeEntities, loading: entitiesLoading } = useScopeEntities(currentScope);
+
+  const targetKey = SCOPE_TARGET_KEY[currentScope];
+  const currentTargetValue = targetKey ? String(form[targetKey as keyof ServiceFeeRule] || '') : '';
+  const isMultiScope = currentScope === 'property' || currentScope === 'service';
+  const multiTargetIds = isMultiScope && currentTargetValue ? currentTargetValue.split(',').filter(Boolean) : [];
+
+  const handleScopeChange = (newScope: string) => {
+    setForm(f => ({
+      ...f,
+      scope: newScope as ServiceFeeRule['scope'],
+      targetHostId: undefined,
+      targetPropertyGroupId: undefined,
+      targetServiceGroupId: undefined,
+      targetPropertyId: undefined,
+      targetServiceId: undefined,
+    }));
+  };
+
+  const handleTargetChange = (value: string) => {
+    if (!targetKey) return;
+    update(targetKey, currentScope === 'host' ? Number(value) : value);
+  };
+
+  const handleMultiTargetChange = (ids: string[]) => {
+    if (!targetKey) return;
+    update(targetKey, ids.join(','));
+  };
+
+  const calcType = form.calculationType || 'percentage';
+  const showPercentage = calcType !== 'fixed';
+  const showFixed = calcType !== 'percentage';
+  const showThreshold = calcType === 'fixed_then_percentage';
+
+  const simulateExample = () => {
+    const amount = 10000;
+    const rate = (form.percentageRate || 0) / 100;
+    const fixed = form.fixedAmount || 0;
+    const threshold = form.fixedThreshold || 0;
+    let fee = 0;
+    if (calcType === 'percentage') fee = amount * rate;
+    else if (calcType === 'fixed') fee = fixed;
+    else if (calcType === 'percentage_plus_fixed') fee = amount * rate + fixed;
+    else if (calcType === 'fixed_then_percentage') {
+      fee = amount <= threshold ? fixed : fixed + (amount - threshold) * rate;
+    }
+    if (form.minFee && fee < form.minFee) fee = form.minFee;
+    if (form.maxFee && fee > form.maxFee) fee = form.maxFee;
+    return Math.round(fee * 100) / 100;
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -56,6 +144,8 @@ export const ServiceFeeFormDialog: React.FC<Props> = memo(({ open, onOpenChange,
     }
   };
 
+  const calcDesc = CALC_OPTIONS.find(c => c.value === calcType)?.desc || '';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -65,16 +155,16 @@ export const ServiceFeeFormDialog: React.FC<Props> = memo(({ open, onOpenChange,
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Scope + Calc Type */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-sm">Portée</Label>
-              <Select value={form.scope} onValueChange={v => update('scope', v)}>
+              <Select value={currentScope} onValueChange={handleScopeChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="global">Global</SelectItem>
-                  <SelectItem value="host">Par hôte</SelectItem>
-                  <SelectItem value="property_group">Par groupe</SelectItem>
-                  <SelectItem value="property">Par propriété</SelectItem>
+                  {SCOPE_OPTIONS.map(o => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -83,49 +173,70 @@ export const ServiceFeeFormDialog: React.FC<Props> = memo(({ open, onOpenChange,
               <Select value={form.calculationType} onValueChange={v => update('calculationType', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="percentage">Pourcentage</SelectItem>
-                  <SelectItem value="fixed">Montant fixe</SelectItem>
-                  <SelectItem value="percentage_plus_fixed">% + Fixe</SelectItem>
+                  {CALC_OPTIONS.map(o => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">{calcDesc}</p>
             </div>
           </div>
 
-          {form.scope === 'host' && (
-            <div>
-              <Label className="text-sm">ID Hôte</Label>
-              <Input type="number" value={form.targetHostId || ''} onChange={e => update('targetHostId', Number(e.target.value) || undefined)} placeholder="ID de l'hôte" />
-            </div>
+          {/* Scope Target Selector */}
+          {currentScope !== 'global' && (
+            isMultiScope ? (
+              <MultiScopeSelector
+                scope={currentScope}
+                selectedIds={multiTargetIds}
+                onSelectionChange={handleMultiTargetChange}
+                label={SCOPE_OPTIONS.find(o => o.value === currentScope)?.label || 'Cible'}
+                placeholder="Sélectionner..."
+              />
+            ) : (
+              <div>
+                <Label className="text-sm">
+                  {SCOPE_OPTIONS.find(o => o.value === currentScope)?.label || 'Cible'}
+                </Label>
+                <Select value={currentTargetValue} onValueChange={handleTargetChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={entitiesLoading ? 'Chargement...' : 'Sélectionner...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scopeEntities.map(e => (
+                      <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>
+                    ))}
+                    {scopeEntities.length === 0 && !entitiesLoading && (
+                      <SelectItem value="__empty" disabled>Aucun élément trouvé</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )
           )}
 
-          {form.scope === 'property_group' && (
-            <div>
-              <Label className="text-sm">ID Groupe de propriétés</Label>
-              <Input value={form.targetPropertyGroupId || ''} onChange={e => update('targetPropertyGroupId', e.target.value || undefined)} placeholder="UUID du groupe" />
-            </div>
-          )}
-
-          {form.scope === 'property' && (
-            <div>
-              <Label className="text-sm">ID Propriété</Label>
-              <Input value={form.targetPropertyId || ''} onChange={e => update('targetPropertyId', e.target.value || undefined)} placeholder="UUID de la propriété" />
-            </div>
-          )}
-
+          {/* Rates */}
           <div className="grid grid-cols-2 gap-3">
-            {(form.calculationType === 'percentage' || form.calculationType === 'percentage_plus_fixed') && (
+            {showPercentage && (
               <div>
                 <Label className="text-sm">Taux (%)</Label>
-                <Input type="number" value={form.percentageRate} onChange={e => update('percentageRate', Number(e.target.value))} min={0} max={100} step={0.5} />
+                <Input type="number" value={form.percentageRate ?? ''} onChange={e => update('percentageRate', Number(e.target.value))} min={0} max={100} step={0.5} />
               </div>
             )}
-            {(form.calculationType === 'fixed' || form.calculationType === 'percentage_plus_fixed') && (
+            {showFixed && (
               <div>
                 <Label className="text-sm">Montant fixe (DA)</Label>
-                <Input type="number" value={form.fixedAmount} onChange={e => update('fixedAmount', Number(e.target.value))} min={0} />
+                <Input type="number" value={form.fixedAmount ?? ''} onChange={e => update('fixedAmount', Number(e.target.value))} min={0} />
               </div>
             )}
           </div>
+
+          {showThreshold && (
+            <div>
+              <Label className="text-sm">Seuil (DA)</Label>
+              <Input type="number" value={form.fixedThreshold ?? ''} onChange={e => update('fixedThreshold', Number(e.target.value) || undefined)} placeholder="Montant seuil" />
+              <p className="text-xs text-muted-foreground mt-1">En dessous → frais fixe uniquement. Au-dessus → fixe + % sur le dépassement.</p>
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-3">
             <div>
@@ -138,9 +249,17 @@ export const ServiceFeeFormDialog: React.FC<Props> = memo(({ open, onOpenChange,
             </div>
             <div>
               <Label className="text-sm">Priorité</Label>
-              <Input type="number" value={form.priority} onChange={e => update('priority', Number(e.target.value))} min={0} />
+              <Input type="number" value={form.priority ?? 100} onChange={e => update('priority', Number(e.target.value))} min={0} />
             </div>
           </div>
+
+          {/* Simulation */}
+          <Card className="bg-muted/50 border-dashed">
+            <CardContent className="p-3">
+              <p className="text-sm font-medium text-foreground">Simulation (montant: 10 000 DA)</p>
+              <p className="text-lg font-bold text-primary mt-1">{simulateExample()} DA</p>
+            </CardContent>
+          </Card>
 
           <div>
             <Label className="text-sm">Description</Label>

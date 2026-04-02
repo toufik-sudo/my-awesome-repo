@@ -17,6 +17,8 @@ export type PermissionType =
   | 'modify_property'
   | 'delete_property'
   | 'pause_property'
+  | 'archive_property'
+  | 'duplicate_property'
   | 'modify_prices'
   | 'modify_photos'
   | 'modify_title'
@@ -50,10 +52,15 @@ export type PermissionType =
   | 'modify_service'
   | 'delete_service'
   | 'pause_service'
+  | 'archive_service'
+  | 'duplicate_service'
   // User management (hyper level)
   | 'manage_users'
   | 'manage_admins'
-  | 'manage_managers';
+  | 'manage_managers'
+  // Fee management
+  | 'manage_fee_absorption'
+  | 'manage_cancellation_rules';
   
 
 @Entity('manager_permissions')

@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ServiceBooking } from '../entity/service-booking.entity';
 import { ServiceAvailability } from '../entity/service-availability.entity';
 import { TourismService } from '../entity/tourism-service.entity';
 import { CreateServiceBookingDto, ServiceAvailabilityDto } from '../dto/service-booking.dto';
+import { ServiceFeeService } from '../../user/services/service-fee.service';
+import { HostFeeAbsorptionService } from '../../user/services/host-fee-absorption.service';
+import { PointsRuleService } from '../../user/services/points-rule.service';
 
 @Injectable()
 export class ServiceBookingsService {
@@ -17,6 +20,9 @@ export class ServiceBookingsService {
     private readonly availRepo: Repository<ServiceAvailability>,
     @InjectRepository(TourismService)
     private readonly serviceRepo: Repository<TourismService>,
+    @Optional() private readonly feeService?: ServiceFeeService,
+    @Optional() private readonly absorptionService?: HostFeeAbsorptionService,
+    @Optional() private readonly pointsRuleService?: PointsRuleService,
   ) {}
 
   async create(dto: CreateServiceBookingDto, customerId: number) {
@@ -38,17 +44,52 @@ export class ServiceBookingsService {
       throw new BadRequestException('No slots available for this date');
     }
 
-    // Calculate price
+    // Calculate base price
     const unitPrice = avail?.customPrice || Number(service.price);
     const childPrice = service.priceChild ? Number(service.priceChild) : unitPrice;
-    let total = unitPrice * dto.participants + childPrice * (dto.childParticipants || 0);
+    let subtotal = unitPrice * dto.participants + childPrice * (dto.childParticipants || 0);
 
     // Group discount
     let discount = 0;
     if (service.groupDiscount && totalParticipants >= 5) {
       discount = Number(service.groupDiscount);
-      total = total * (1 - discount / 100);
+      subtotal = subtotal * (1 - discount / 100);
     }
+
+    // Points conversion discount (if guest uses points)
+    let pointsDiscount = 0;
+    if (dto.usePoints && dto.pointsToUse > 0 && this.pointsRuleService) {
+      const convRate = await this.pointsRuleService.getConversionRate('guest');
+      if (convRate && dto.pointsToUse >= convRate.minPoints) {
+        pointsDiscount = dto.pointsToUse * convRate.rate;
+        if (pointsDiscount > subtotal) pointsDiscount = subtotal;
+      }
+    }
+
+    const amountAfterPoints = subtotal - pointsDiscount;
+
+    // Calculate service fee
+    let serviceFee = 0;
+    let hostAbsorptionAmount = 0;
+    if (this.feeService) {
+      const feeResult = await this.feeService.calculateFee(
+        service.providerId, '', null, amountAfterPoints, dto.serviceId,
+      );
+      serviceFee = feeResult.fee;
+
+      // Check if host absorbs any fees
+      if (this.absorptionService) {
+        const absorption = await this.absorptionService.getAbsorptionForBooking(
+          service.providerId, undefined, dto.serviceId, undefined, undefined, new Date(dto.bookingDate),
+        );
+        if (absorption.absorptionPercent > 0) {
+          hostAbsorptionAmount = Math.round(serviceFee * absorption.absorptionPercent / 100 * 100) / 100;
+        }
+      }
+    }
+
+    const guestFee = serviceFee - hostAbsorptionAmount;
+    const totalPrice = Math.round((amountAfterPoints + guestFee) * 100) / 100;
 
     const booking = this.bookingRepo.create({
       serviceId: dto.serviceId,
@@ -60,7 +101,7 @@ export class ServiceBookingsService {
       unitPrice,
       childPrice,
       discountPercent: discount,
-      totalPrice: Math.round(total * 100) / 100,
+      totalPrice,
       currency: service.currency,
       paymentMethod: dto.paymentMethod as any,
       customerMessage: dto.message,
@@ -78,7 +119,17 @@ export class ServiceBookingsService {
     // Update service booking count
     await this.serviceRepo.increment({ id: dto.serviceId }, 'bookingCount', 1);
 
-    return saved;
+    return {
+      ...saved,
+      _pricing: {
+        subtotal: Math.round(subtotal * 100) / 100,
+        pointsDiscount,
+        serviceFee,
+        hostAbsorption: hostAbsorptionAmount,
+        guestFee,
+        totalPrice,
+      },
+    };
   }
 
   async getMyBookings(customerId: number) {

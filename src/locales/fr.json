@@ -1,8 +1,41 @@
 {
   "demo": {
-    "mapWithProperties": "Carte avec annonces immobilières",
-    "mapDescription": "Carte interactive montrant les annonces immobilières avec recherche et filtres",
-    "propertySelected": "Sélectionné: {{title}}"
+    "title": "Démo des Composants",
+    "description": "Explorez des composants réutilisables entièrement configurables.",
+    "sections": {
+      "input": "Entrée Dynamique",
+      "buttons": "Boutons Dynamiques",
+      "dropdowns": "Listes Déroulantes Dynamiques",
+      "grid": "Grille Dynamique",
+      "fileUploader": "Téléverseur de Fichiers",
+      "image": "Image Dynamique",
+      "submenu": "Sous-menu Dynamique",
+      "form": "Formulaire Dynamique",
+      "map": "Recherche sur Carte",
+      "dynamicFilter": "Démo Filtre Dynamique",
+      "calendar": "Calendrier d'événements",
+      "imageCropper": "Recadrage d'image",
+      "booking": "Modal de réservation",
+      "tabs": "Onglets Dynamiques",
+      "combobox": "Combobox Dynamique",
+      "charts": "Graphiques Dynamiques"
+    },
+    "filterDescription": "Un composant de filtrage entièrement dynamique et paramétré.",
+    "filterTeaser": "Filtrage avancé avec plusieurs types.",
+    "viewFilterDemo": "Voir la Démo des Filtres",
+    "actions": {
+      "primary": "Primaire",
+      "secondary": "Secondaire",
+      "withIcon": "Avec Icône",
+      "largeDestructive": "Grand Destructif",
+      "disabled": "Désactivé",
+      "singleSelect": "Sélection Simple",
+      "multiSelect": "Sélection Multiple",
+      "selectOption": "Sélectionner une option",
+      "selectMultiple": "Sélectionner plusieurs",
+      "standardInput": "Entrée standard",
+      "styledInput": "Entrée stylisée"
+    }
   },
   "datePicker": {
     "selectDate": "Sélectionner une date",
@@ -248,17 +281,41 @@
     "gradient": "Dégradé"
   },
   "navigation": {
-    "groups": { "main": "Principal", "demos": "Démos", "content": "Contenu", "admin": "Administration" },
-    "home": "Accueil", "dashboard": "Tableau de Bord", "components": "Composants",
-    "gridDemo": "Démo Grille", "filterDemo": "Démo Filtre", "mapSearch": "Recherche Carte",
-    "searchProperties": "Rechercher Propriétés", "savedLocations": "Emplacements Sauvegardés",
-    "calendar": "Calendrier", "events": "Événements", "bookings": "Réservations",
-    "pages": "Pages", "allPages": "Toutes les Pages", "createPage": "Créer Page",
-    "media": "Médias", "messages": "Messages", "users": "Utilisateurs",
-    "analytics": "Analytique", "security": "Sécurité", "appearance": "Apparence",
-    "settings": "Paramètres", "profile": "Profil", "notifications": "Notifications",
-    "help": "Aide & Support", "newBooking": "Nouvelle Réservation", "addProperty": "Ajouter Propriété",
-    "onboarding": "Intégration"
+    "groups": {
+      "main": "Principal",
+      "demos": "Démos",
+      "content": "Contenu",
+      "admin": "Administration"
+    },
+    "home": "Accueil",
+    "dashboard": "Tableau de Bord",
+    "components": "Composants",
+    "gridDemo": "Démo Grille",
+    "filterDemo": "Démo Filtre",
+    "mapSearch": "Recherche Carte",
+    "searchProperties": "Rechercher Propriétés",
+    "savedLocations": "Emplacements Sauvegardés",
+    "calendar": "Calendrier",
+    "events": "Événements",
+    "bookings": "Réservations",
+    "pages": "Pages",
+    "allPages": "Toutes les Pages",
+    "createPage": "Créer Page",
+    "media": "Médias",
+    "messages": "Messages",
+    "users": "Utilisateurs",
+    "analytics": "Analytique",
+    "security": "Sécurité",
+    "appearance": "Apparence",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "help": "Aide & Support",
+    "newBooking": "Nouvelle Réservation",
+    "addProperty": "Ajouter Propriété",
+    "onboarding": "Intégration",
+    "bookingCalendar": "Calendrier réservations",
+    "cancellationRules": "Règles d'annulation"
   },
   "auth": {
     "login": "Connexion",
@@ -497,44 +554,6 @@
     "message": "Oups! Page non trouvée",
     "returnHome": "Retour à l'Accueil"
   },
-  "demo": {
-    "title": "Démo des Composants",
-    "description": "Explorez des composants réutilisables entièrement configurables.",
-    "sections": {
-      "input": "Entrée Dynamique",
-      "buttons": "Boutons Dynamiques",
-      "dropdowns": "Listes Déroulantes Dynamiques",
-      "grid": "Grille Dynamique",
-      "fileUploader": "Téléverseur de Fichiers",
-      "image": "Image Dynamique",
-      "submenu": "Sous-menu Dynamique",
-      "form": "Formulaire Dynamique",
-      "map": "Recherche sur Carte",
-      "dynamicFilter": "Démo Filtre Dynamique",
-      "calendar": "Calendrier d'événements",
-      "imageCropper": "Recadrage d'image",
-      "booking": "Modal de réservation",
-      "tabs": "Onglets Dynamiques",
-      "combobox": "Combobox Dynamique",
-      "charts": "Graphiques Dynamiques"
-    },
-    "filterDescription": "Un composant de filtrage entièrement dynamique et paramétré.",
-    "filterTeaser": "Filtrage avancé avec plusieurs types.",
-    "viewFilterDemo": "Voir la Démo des Filtres",
-    "actions": {
-      "primary": "Primaire",
-      "secondary": "Secondaire",
-      "withIcon": "Avec Icône",
-      "largeDestructive": "Grand Destructif",
-      "disabled": "Désactivé",
-      "singleSelect": "Sélection Simple",
-      "multiSelect": "Sélection Multiple",
-      "selectOption": "Sélectionner une option",
-      "selectMultiple": "Sélectionner plusieurs",
-      "standardInput": "Entrée standard",
-      "styledInput": "Entrée stylisée"
-    }
-  },
   "loading": {
     "title": "Chargement",
     "message": "Veuillez patienter..."
@@ -767,26 +786,74 @@
     "lightMode": "Mode clair",
     "darkMode": "Mode sombre",
     "themes": {
-      "default": { "name": "Classique", "description": "Design épuré et professionnel" },
-      "commerce": { "name": "Commerce", "description": "Audacieux et axé sur la conversion" },
-      "admin": { "name": "Administration", "description": "Professionnel et axé sur les données" },
-      "ai": { "name": "IA / Tech", "description": "Futuriste et innovant" },
-      "nature": { "name": "Nature", "description": "Organique et apaisant" },
-      "sunset": { "name": "Coucher de soleil", "description": "Dégradés chauds et vibrants" },
-      "ocean": { "name": "Océan", "description": "Tons profonds et rafraîchissants" },
-      "midnight": { "name": "Minuit", "description": "Élégant et sophistiqué" }
+      "default": {
+        "name": "Classique",
+        "description": "Design épuré et professionnel"
+      },
+      "commerce": {
+        "name": "Commerce",
+        "description": "Audacieux et axé sur la conversion"
+      },
+      "admin": {
+        "name": "Administration",
+        "description": "Professionnel et axé sur les données"
+      },
+      "ai": {
+        "name": "IA / Tech",
+        "description": "Futuriste et innovant"
+      },
+      "nature": {
+        "name": "Nature",
+        "description": "Organique et apaisant"
+      },
+      "sunset": {
+        "name": "Coucher de soleil",
+        "description": "Dégradés chauds et vibrants"
+      },
+      "ocean": {
+        "name": "Océan",
+        "description": "Tons profonds et rafraîchissants"
+      },
+      "midnight": {
+        "name": "Minuit",
+        "description": "Élégant et sophistiqué"
+      }
     }
   },
   "themeCustomizer": {
     "title": "Personnalisateur de thème",
     "description": "Personnalisez les couleurs, polices et animations en temps réel",
-    "tabs": { "colors": "Couleurs", "fonts": "Polices", "animations": "Animations", "spacing": "Espacement" },
+    "tabs": {
+      "colors": "Couleurs",
+      "fonts": "Polices",
+      "animations": "Animations",
+      "spacing": "Espacement"
+    },
     "mainColors": "Couleurs principales",
     "backgroundColors": "Couleurs d'arrière-plan",
-    "colors": { "primary": "Couleur primaire", "secondary": "Couleur secondaire", "accent": "Couleur d'accent", "background": "Arrière-plan", "foreground": "Premier plan", "muted": "Atténué" },
-    "fonts": { "heading": "Police de titre", "body": "Police de corps", "headingPreview": "Le Renard Brun Rapide", "bodyPreview": "Le renard brun rapide saute par-dessus le chien paresseux." },
-    "animations": { "preset": "Préréglage d'animation", "speed": "Vitesse d'animation", "preview": "Aperçu au survol" },
-    "spacing": { "borderRadius": "Rayon de bordure", "preview": "Aperçu du rayon" },
+    "colors": {
+      "primary": "Couleur primaire",
+      "secondary": "Couleur secondaire",
+      "accent": "Couleur d'accent",
+      "background": "Arrière-plan",
+      "foreground": "Premier plan",
+      "muted": "Atténué"
+    },
+    "fonts": {
+      "heading": "Police de titre",
+      "body": "Police de corps",
+      "headingPreview": "Le Renard Brun Rapide",
+      "bodyPreview": "Le renard brun rapide saute par-dessus le chien paresseux."
+    },
+    "animations": {
+      "preset": "Préréglage d'animation",
+      "speed": "Vitesse d'animation",
+      "preview": "Aperçu au survol"
+    },
+    "spacing": {
+      "borderRadius": "Rayon de bordure",
+      "preview": "Aperçu du rayon"
+    },
     "preview": "Aperçu en direct",
     "previewPrimary": "Primaire",
     "previewSecondary": "Secondaire",
@@ -813,26 +880,76 @@
     "average": "Moyenne"
   },
   "dashboard": {
-    "title": "Tableau de Bord",
-    "welcome": "Bienvenue, {{name}}",
-    "overview": "Aperçu",
-    "recentActivity": "Activité récente",
-    "quickActions": "Actions rapides",
+    "title": "Tableau de bord",
+    "subtitle": "Vue d'ensemble de vos propriétés, réservations et performances",
+    "error": "Échec du chargement du tableau de bord",
+    "retry": "Réessayer",
+    "viewAll": "Voir tout",
+    "total": "total",
+    "myProperties": "Mes propriétés",
+    "noProperties": "Vous n'avez encore listé aucune propriété",
+    "recentBookings": "Réservations récentes",
+    "noBookings": "Aucune réservation",
+    "hostRequests": "Demandes entrantes",
+    "noHostRequests": "Aucune demande de réservation",
+    "trustScore": "Score de confiance",
+    "avgTrustDesc": "Score de confiance moyen de vos propriétés",
+    "pendingRequests": "demandes en attente",
+    "pendingRequestsDesc": "Demandes de réservation en attente de votre réponse",
     "stats": {
-      "totalUsers": "Utilisateurs totaux",
+      "properties": "Propriétés",
+      "published": "publiées",
+      "totalRevenue": "Revenu total",
+      "bookings": "Réservations",
+      "pending": "en attente",
+      "favorites": "Favoris"
+    },
+    "actions": {
+      "addProperty": "Ajouter une propriété",
+      "addService": "Ajouter Service",
+      "browseProperties": "Parcourir les propriétés",
+      "myBookings": "Mes réservations",
+      "settings": "Paramètres"
+    },
+    "charts": {
       "revenue": "Revenus",
-      "orders": "Commandes",
-      "growth": "Croissance"
+      "bookings": "Réservations",
+      "revenueTitle": "Aperçu des revenus",
+      "revenueDesc": "Tendances mensuelles des revenus et réservations",
+      "propertyTypes": "Types de propriétés",
+      "propertyTypesDesc": "Répartition de votre portefeuille immobilier"
+    },
+    "verification": {
+      "title": "Statut de vérification",
+      "approved": "Approuvés",
+      "pending": "En attente",
+      "rejected": "Rejetés",
+      "rate": "taux d'approbation"
+    },
+    "tabs": {
+      "cancellation": "Règles d'annulation"
     }
   },
   "onboarding": {
     "title": "Bienvenue sur {{appName}}",
     "subtitle": "Configurons votre compte en quelques étapes",
     "steps": {
-      "welcome": { "title": "Bienvenue", "description": "Nous sommes ravis de vous accueillir!" },
-      "profile": { "title": "Votre Profil", "description": "Parlez-nous un peu de vous" },
-      "preferences": { "title": "Préférences", "description": "Personnalisez votre expérience" },
-      "complete": { "title": "Tout est prêt!", "description": "Vous êtes prêt à commencer" }
+      "welcome": {
+        "title": "Bienvenue",
+        "description": "Nous sommes ravis de vous accueillir!"
+      },
+      "profile": {
+        "title": "Votre Profil",
+        "description": "Parlez-nous un peu de vous"
+      },
+      "preferences": {
+        "title": "Préférences",
+        "description": "Personnalisez votre expérience"
+      },
+      "complete": {
+        "title": "Tout est prêt!",
+        "description": "Vous êtes prêt à commencer"
+      }
     },
     "getStarted": "Commencer",
     "letsGo": "C'est parti!",
@@ -1062,54 +1179,6 @@
       "newest": "Plus récents"
     }
   },
-  "dashboard": {
-    "title": "Tableau de bord",
-    "subtitle": "Vue d'ensemble de vos propriétés, réservations et performances",
-    "error": "Échec du chargement du tableau de bord",
-    "retry": "Réessayer",
-    "viewAll": "Voir tout",
-    "total": "total",
-    "myProperties": "Mes propriétés",
-    "noProperties": "Vous n'avez encore listé aucune propriété",
-    "recentBookings": "Réservations récentes",
-    "noBookings": "Aucune réservation",
-    "hostRequests": "Demandes entrantes",
-    "noHostRequests": "Aucune demande de réservation",
-    "trustScore": "Score de confiance",
-    "avgTrustDesc": "Score de confiance moyen de vos propriétés",
-    "pendingRequests": "demandes en attente",
-    "pendingRequestsDesc": "Demandes de réservation en attente de votre réponse",
-    "stats": {
-      "properties": "Propriétés",
-      "published": "publiées",
-      "totalRevenue": "Revenu total",
-      "bookings": "Réservations",
-      "pending": "en attente",
-      "favorites": "Favoris"
-    },
-    "actions": {
-      "addProperty": "Ajouter une propriété",
-      "addService": "Ajouter Service",
-      "browseProperties": "Parcourir les propriétés",
-      "myBookings": "Mes réservations",
-      "settings": "Paramètres"
-    },
-    "charts": {
-      "revenue": "Revenus",
-      "bookings": "Réservations",
-      "revenueTitle": "Aperçu des revenus",
-      "revenueDesc": "Tendances mensuelles des revenus et réservations",
-      "propertyTypes": "Types de propriétés",
-      "propertyTypesDesc": "Répartition de votre portefeuille immobilier"
-    },
-    "verification": {
-      "title": "Statut de vérification",
-      "approved": "Approuvés",
-      "pending": "En attente",
-      "rejected": "Rejetés",
-      "rate": "taux d'approbation"
-    }
-  },
   "services": {
     "title": "Services Touristiques",
     "subtitle": "Découvrez des expériences et activités pour votre voyage",
@@ -1183,5 +1252,57 @@
       "history": "Historique",
       "leaderboard": "Classement"
     }
+  },
+  "cancellation": {
+    "title": "Règles d'annulation",
+    "subtitle": "Définissez les politiques de remboursement pour vos réservations",
+    "newRule": "Nouvelle règle",
+    "howItWorks": "Comment ça marche ?",
+    "flexibleDesc": "Annulation gratuite 24h avant, 50% après",
+    "moderateDesc": "Annulation gratuite 72h avant, 50% après",
+    "strictDesc": "Annulation gratuite 7 jours avant, 25% ensuite",
+    "customDesc": "Définissez vos propres délais et pourcentages",
+    "loadError": "Erreur de chargement",
+    "updated": "Règle mise à jour",
+    "created": "Règle créée",
+    "saveError": "Erreur de sauvegarde",
+    "deleted": "Supprimée",
+    "deleteError": "Erreur",
+    "empty": "Aucune règle d'annulation configurée",
+    "editTitle": "Modifier la règle d'annulation",
+    "newTitle": "Nouvelle règle d'annulation",
+    "policyType": "Type de politique",
+    "scope": "Portée",
+    "fullRefundHours": "Remboursement total (heures avant)",
+    "partialRefundHours": "Remboursement partiel (heures avant)",
+    "partialRefundPercent": "Remboursement partiel (%)",
+    "latePenalty": "Pénalité annulation tardive (%)",
+    "noShowPenalty": "Pénalité no-show",
+    "noShowPercent": "Pénalité no-show (%)",
+    "description": "Description"
+  },
+  "serviceBooking": {
+    "priceBreakdown": "Récapitulatif du prix",
+    "adults": "adulte(s)",
+    "children": "enfant(s)",
+    "subtotal": "Sous-total",
+    "groupDiscount": "Réduction groupe",
+    "serviceFee": "Frais de service",
+    "hostAbsorption": "Frais pris en charge par l'hôte",
+    "pointsDiscount": "Réduction points",
+    "total": "Total",
+    "usePoints": "Utiliser mes points",
+    "available": "disponibles",
+    "pointsAmount": "Nombre de points"
+  },
+  "bookingCalendar": {
+    "title": "Calendrier des réservations",
+    "subtitle": "Vue d'ensemble de toutes les réservations",
+    "guest": "Client",
+    "guests": "Invités",
+    "nights": "Nuits",
+    "total": "Total",
+    "payment": "Paiement",
+    "status": "Statut"
   }
 }

@@ -61,8 +61,14 @@ export class ServiceFeeService {
   }
 
   /** Calculate fee for a given booking amount using the best matching rule */
-  async calculateFee(hostId: number, propertyId: string, propertyGroupId: string | null, amount: number): Promise<{ fee: number; rule: ServiceFeeRule }> {
-    // Find most specific rule
+  async calculateFee(
+    hostId: number,
+    propertyId: string,
+    propertyGroupId: string | null,
+    amount: number,
+    serviceId?: string,
+    serviceGroupId?: string,
+  ): Promise<{ fee: number; rule: ServiceFeeRule }> {
     const rules = await this.feeRuleRepo.find({
       where: { isActive: true },
       order: { priority: 'ASC' },
@@ -70,7 +76,9 @@ export class ServiceFeeService {
 
     const rule = rules.find(r =>
       (r.scope === 'property' && r.targetPropertyId === propertyId) ||
+      (r.scope === 'service' && serviceId && r.targetServiceId === serviceId) ||
       (r.scope === 'property_group' && r.targetPropertyGroupId === propertyGroupId) ||
+      (r.scope === 'service_group' && serviceGroupId && r.targetServiceGroupId === serviceGroupId) ||
       (r.scope === 'host' && r.targetHostId === hostId) ||
       (r.scope === 'global')
     ) || await this.getDefault();

@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export type FeeScope = 'global' | 'host' | 'property_group' | 'property';
+export type FeeScope = 'global' | 'host' | 'property_group' | 'property' | 'service_group' | 'service';
 export type FeeCalculation = 'percentage' | 'fixed' | 'percentage_plus_fixed' | 'fixed_then_percentage';
 
 @Entity('service_fee_rules')
@@ -32,6 +32,14 @@ export class ServiceFeeRule {
   /** Target property – null unless scope=property */
   @Column({ type: 'uuid', nullable: true })
   targetPropertyId: string;
+
+  /** Target service group – null unless scope=service_group */
+  @Column({ type: 'uuid', nullable: true })
+  targetServiceGroupId: string;
+
+  /** Target service – null unless scope=service */
+  @Column({ type: 'uuid', nullable: true })
+  targetServiceId: string;
 
   @Column({ type: 'varchar', length: 30 })
   calculationType: FeeCalculation;

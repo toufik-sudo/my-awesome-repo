@@ -8,13 +8,34 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { serviceFeesApi, type ServiceFeeRule } from '@/modules/admin/service-fees.api';
 import { ServiceFeeFormDialog } from './ServiceFeeFormDialog';
 import { FeeSimulator } from './FeeSimulator';
-import { DollarSign, RefreshCw, Globe, User, Building2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { DollarSign, RefreshCw, Globe, User, Building2, Plus, Pencil, Trash2, Layers, Compass } from 'lucide-react';
 
 const SCOPE_ICONS: Record<string, React.ReactNode> = {
   global: <Globe className="h-4 w-4 text-primary" />,
   host: <User className="h-4 w-4 text-secondary-foreground" />,
-  property_group: <Building2 className="h-4 w-4 text-accent" />,
+  property_group: <Building2 className="h-4 w-4 text-accent-foreground" />,
   property: <Building2 className="h-4 w-4 text-muted-foreground" />,
+  service_group: <Layers className="h-4 w-4 text-primary" />,
+  service: <Compass className="h-4 w-4 text-muted-foreground" />,
+};
+
+const SCOPE_LABELS: Record<string, string> = {
+  global: 'Global',
+  host: 'Hôte',
+  property_group: 'Groupe propriétés',
+  property: 'Propriété',
+  service_group: 'Groupe services',
+  service: 'Service',
+};
+
+const formatCalcType = (rule: ServiceFeeRule): string => {
+  switch (rule.calculationType) {
+    case 'percentage': return `${rule.percentageRate}%`;
+    case 'fixed': return `${rule.fixedAmount} DA fixe`;
+    case 'percentage_plus_fixed': return `${rule.percentageRate}% + ${rule.fixedAmount} DA`;
+    case 'fixed_then_percentage': return `${rule.fixedAmount} DA (≤${rule.fixedThreshold || 0}) puis ${rule.percentageRate}%`;
+    default: return '';
+  }
 };
 
 export const ServiceFeesManager: React.FC = memo(() => {
@@ -103,12 +124,8 @@ export const ServiceFeesManager: React.FC = memo(() => {
                         {rule.isDefault && <Badge variant="secondary" className="text-[10px]">Défaut</Badge>}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <Badge variant="outline" className="text-[10px]">{rule.scope}</Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {rule.calculationType === 'percentage' && `${rule.percentageRate}%`}
-                          {rule.calculationType === 'fixed' && `${rule.fixedAmount} DA fixe`}
-                          {rule.calculationType === 'percentage_plus_fixed' && `${rule.percentageRate}% + ${rule.fixedAmount} DA`}
-                        </span>
+                        <Badge variant="outline" className="text-[10px]">{SCOPE_LABELS[rule.scope] || rule.scope}</Badge>
+                        <span className="text-xs text-muted-foreground">{formatCalcType(rule)}</span>
                         <span className="text-xs text-muted-foreground">Priorité: {rule.priority}</span>
                         {rule.minFee != null && <span className="text-[10px] text-muted-foreground">Min: {rule.minFee} DA</span>}
                         {rule.maxFee != null && <span className="text-[10px] text-muted-foreground">Max: {rule.maxFee} DA</span>}

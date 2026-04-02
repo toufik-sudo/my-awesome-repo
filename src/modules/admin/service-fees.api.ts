@@ -5,10 +5,12 @@ const FEES_BASE = '/service-fees';
 export interface ServiceFeeRule {
   id: string;
   createdByUserId: number;
-  scope: 'global' | 'host' | 'property_group' | 'property';
+  scope: 'global' | 'host' | 'property_group' | 'property' | 'service_group' | 'service';
   targetHostId?: number;
   targetPropertyGroupId?: string;
   targetPropertyId?: string;
+  targetServiceGroupId?: string;
+  targetServiceId?: string;
   calculationType: 'percentage' | 'fixed' | 'percentage_plus_fixed' | 'fixed_then_percentage';
   percentageRate: number;
   fixedAmount: number;
@@ -54,6 +56,6 @@ export const serviceFeesApi = {
   remove: (ruleId: string) =>
     api.delete(`${FEES_BASE}/${ruleId}`),
 
-  calculate: (data: { hostId: number; propertyId: string; propertyGroupId?: string; amount: number }) =>
+  calculate: (data: { hostId: number; propertyId: string; propertyGroupId?: string; amount: number; serviceId?: string; serviceGroupId?: string }) =>
     api.post<{ fee: number; rule: ServiceFeeRule }>(`${FEES_BASE}/calculate`, data).then(r => r.data),
 };

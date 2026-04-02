@@ -9,6 +9,8 @@ export interface ServiceBookingDto {
   paymentMethod: 'ccp' | 'baridi_mob' | 'edahabia' | 'cib' | 'cash' | 'bank_transfer';
   message?: string;
   participantDetails?: Array<{ name: string; age?: number }>;
+  usePoints?: boolean;
+  pointsToUse?: number;
 }
 
 export interface ServiceBookingResponse {

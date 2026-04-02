@@ -36,8 +36,39 @@ export class PermissionGuard implements CanActivate {
     // Get user roles
     const userRoles = await this.rolesService.getUserRoles(userId);
 
-    // Hyper admins and hyper managers always pass
-    if (userRoles.includes('hyper_admin') || userRoles.includes('hyper_manager')) return true;
+    // Hyper admins bypass role/permission checks but have limited property/service actions
+    if (userRoles.includes('hyper_admin') || userRoles.includes('hyper_manager')) {
+      // Check if this is a restricted action for hyper users
+      const permMeta = this.reflector.getAllAndOverride<{
+        permission: PermissionType;
+        propertyParam: string;
+        source: 'param' | 'body' | 'query';
+      }>(PERMISSION_KEY, [context.getHandler(), context.getClass()]);
+
+      if (permMeta) {
+        // Hyper admin/manager can only pause and archive properties/services
+        const hyperAllowedPerms: PermissionType[] = [
+          'pause_property', 'archive_property', 'pause_service', 'archive_service',
+          'delete_property', 'delete_service',
+          'view_bookings', 'view_analytics',
+        ];
+        if (!hyperAllowedPerms.includes(permMeta.permission)) {
+          // Check if it's a create/modify action — block it
+          const blockedForHyper: PermissionType[] = [
+            'create_property', 'modify_property', 'modify_prices', 'modify_photos',
+            'modify_title', 'modify_description', 'manage_availability', 'manage_amenities',
+            'duplicate_property', 'create_service', 'modify_service', 'duplicate_service',
+            'manage_fee_absorption', 'manage_cancellation_rules',
+          ];
+          if (blockedForHyper.includes(permMeta.permission)) {
+            throw new ForbiddenException(
+              `Hyper admin/manager cannot perform: ${permMeta.permission}. This is managed by the host (admin/manager).`,
+            );
+          }
+        }
+      }
+      return true;
+    }
 
     // ─── Role check ─────────────────────────────────────────────────────
     const requiredRoles = this.reflector.getAllAndOverride<AppRole[]>(ROLES_KEY, [

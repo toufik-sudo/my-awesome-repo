@@ -7,7 +7,25 @@ import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { pointsRulesApi, type PointsRule } from '@/modules/admin/points-rules.api';
 import { PointsRuleFormDialog } from './PointsRuleFormDialog';
-import { Trophy, Coins, RefreshCw, Users, Gift, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Trophy, Coins, RefreshCw, Users, Gift, Plus, Pencil, Trash2, Globe, Building2, Layers, Compass, User, CalendarDays, Target } from 'lucide-react';
+
+const SCOPE_LABELS: Record<string, string> = {
+  global: 'Global',
+  host: 'Hôte',
+  property_group: 'Grp propriétés',
+  service_group: 'Grp services',
+  property: 'Propriété',
+  service: 'Service',
+};
+
+const SCOPE_ICONS: Record<string, React.ReactNode> = {
+  global: <Globe className="h-3 w-3" />,
+  host: <User className="h-3 w-3" />,
+  property_group: <Building2 className="h-3 w-3" />,
+  service_group: <Layers className="h-3 w-3" />,
+  property: <Building2 className="h-3 w-3" />,
+  service: <Compass className="h-3 w-3" />,
+};
 
 export const PointsRulesManager: React.FC = memo(() => {
   const [rules, setRules] = useState<PointsRule[]>([]);
@@ -66,34 +84,60 @@ export const PointsRulesManager: React.FC = memo(() => {
   const earningRules = rules.filter(r => r.ruleType === 'earning');
   const conversionRules = rules.filter(r => r.ruleType === 'conversion');
 
+  const formatValidity = (rule: PointsRule) => {
+    if (!rule.validFrom && !rule.validTo) return null;
+    const from = rule.validFrom ? new Date(rule.validFrom).toLocaleDateString('fr-FR') : '∞';
+    const to = rule.validTo ? new Date(rule.validTo).toLocaleDateString('fr-FR') : '∞';
+    return `${from} → ${to}`;
+  };
+
   const RuleRow = ({ rule }: { rule: PointsRule }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors">
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10">
+    <div className="flex items-start justify-between p-4 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors gap-3">
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="p-2 rounded-lg bg-primary/10 mt-0.5">
           {rule.ruleType === 'earning' ? <Coins className="h-4 w-4 text-primary" /> : <Gift className="h-4 w-4 text-accent" />}
         </div>
-        <div>
-          <p className="text-sm font-medium">{rule.action.replace(/_/g, ' ')}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <Badge variant="outline" className="text-[10px]"><Users className="h-3 w-3 mr-1" />{rule.targetRole}</Badge>
-            {rule.description && <span className="text-xs text-muted-foreground">{rule.description}</span>}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold">{rule.action.replace(/_/g, ' ')}</p>
             {rule.isDefault && <Badge variant="secondary" className="text-[10px]">Défaut</Badge>}
           </div>
+          {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <Badge variant="outline" className="text-[10px] gap-1">
+              <Users className="h-3 w-3" />{rule.targetRole === 'guest' ? 'Voyageur' : 'Manager'}
+            </Badge>
+            <Badge variant="outline" className="text-[10px] gap-1">
+              {SCOPE_ICONS[rule.scope]}{SCOPE_LABELS[rule.scope] || rule.scope}
+            </Badge>
+            {rule.ruleType === 'earning' && (
+              <Badge variant="secondary" className="font-mono text-[10px]">+{rule.pointsAmount} pts</Badge>
+            )}
+            {rule.multiplier > 1 && (
+              <Badge className="bg-accent text-accent-foreground text-[10px]">×{rule.multiplier}</Badge>
+            )}
+            {rule.ruleType === 'conversion' && rule.conversionRate && (
+              <Badge variant="outline" className="text-[10px]">{rule.conversionRate} {rule.currency}/pt</Badge>
+            )}
+            {rule.ruleType === 'conversion' && rule.minPointsForConversion && (
+              <Badge variant="outline" className="text-[10px]">Min: {rule.minPointsForConversion} pts</Badge>
+            )}
+            {rule.maxPointsPerPeriod > 0 && (
+              <Badge variant="outline" className="text-[10px]">Max: {rule.maxPointsPerPeriod}/{rule.period || '∞'}</Badge>
+            )}
+            {rule.minNights && rule.minNights > 0 && (
+              <Badge variant="outline" className="text-[10px]">Min {rule.minNights} nuits</Badge>
+            )}
+          </div>
+          {formatValidity(rule) && (
+            <div className="flex items-center gap-1 mt-1">
+              <CalendarDays className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">{formatValidity(rule)}</span>
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        {rule.ruleType === 'earning' && (
-          <Badge variant="secondary" className="font-mono">+{rule.pointsAmount} pts</Badge>
-        )}
-        {rule.multiplier > 1 && (
-          <Badge className="bg-accent text-accent-foreground text-[10px]">×{rule.multiplier}</Badge>
-        )}
-        {rule.ruleType === 'conversion' && rule.conversionRate && (
-          <span className="text-xs text-muted-foreground">{rule.conversionRate} {rule.currency}/pt</span>
-        )}
-        {rule.maxPointsPerPeriod > 0 && (
-          <span className="text-[10px] text-muted-foreground">Max: {rule.maxPointsPerPeriod}/{rule.period}</span>
-        )}
+      <div className="flex items-center gap-1.5 shrink-0">
         <Switch checked={rule.isActive} onCheckedChange={() => handleToggle(rule)} />
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(rule)}>
           <Pencil className="h-3.5 w-3.5" />

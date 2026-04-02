@@ -252,8 +252,8 @@ export class RolesService {
 
   // ─── Missing: getAllUsersWithRoles, getAllAssignments, removeAssignment ───
 
-  async getAllUsersWithRoles(): Promise<{ id: number; email: string; firstName: string; lastName: string; roles: AppRole[] }[]> {
-    const users = await this.userRepo.find({ where: { isActive: true } });
+  async getAllUsersWithRoles(): Promise<{ id: number; email: string; firstName: string; lastName: string; isActive: boolean; phoneNbr: string; city: string; roles: AppRole[] }[]> {
+    const users = await this.userRepo.find(); // Include inactive users for management
     const allRoles = await this.userRoleRepo.find();
     const roleMap = new Map<number, AppRole[]>();
     allRoles.forEach(r => {
@@ -265,6 +265,9 @@ export class RolesService {
       email: u.email,
       firstName: u.firstName,
       lastName: u.lastName,
+      isActive: u.isActive,
+      phoneNbr: u.phoneNbr,
+      city: u.city,
       roles: roleMap.get(u.id) || ['user'],
     }));
   }

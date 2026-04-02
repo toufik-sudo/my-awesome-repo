@@ -1,71 +1,46 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BaseComponentProps } from '@/types/component.types';
 import { buildComponentStyles } from '@/utils/styleBuilder';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface DynamicTabItem {
-  /** Unique tab key */
   value: string;
-  /** Display label */
   label: string;
-  /** Icon element */
   icon?: React.ReactNode;
-  /** Badge count or text */
   badge?: string | number;
-  /** Badge variant */
   badgeVariant?: 'default' | 'secondary' | 'destructive' | 'outline';
-  /** Tooltip on hover */
   tooltip?: string;
-  /** Tab content */
   content?: React.ReactNode;
-  /** Whether tab is disabled */
   disabled?: boolean;
-  /** Whether tab is hidden */
   hidden?: boolean;
-  /** Custom class for the trigger */
   triggerClassName?: string;
-  /** Custom class for the content panel */
   contentClassName?: string;
 }
 
 export interface DynamicTabsProps extends BaseComponentProps {
-  /** Tab items configuration */
   tabs: DynamicTabItem[];
-  /** Default active tab value */
   defaultValue?: string;
-  /** Controlled active tab value */
   value?: string;
-  /** Tab orientation */
   orientation?: 'horizontal' | 'vertical';
-  /** Tab list variant style */
   variant?: 'default' | 'outline' | 'pills' | 'underline';
-  /** Size */
   size?: 'sm' | 'md' | 'lg';
-  /** Full width tabs */
   fullWidth?: boolean;
-  /** Animate content transitions */
   animated?: boolean;
-  /** Called when tab changes */
   onTabChange?: (value: string) => void;
-  /** Called when a tab is hovered */
   onTabHover?: (value: string) => void;
-  /** Called when a tab is clicked */
   onTabClick?: (value: string) => void;
-  /** Extra content next to tab list */
   tabListSuffix?: React.ReactNode;
-  /** Custom class for tab list */
   tabListClassName?: string;
-  /** Children (alternative to tabs[].content) */
   children?: React.ReactNode;
 }
-
-// ─── Outputs ─────────────────────────────────────────────────────────────────
 
 export interface DynamicTabsOutput {
   activeTab: string;
@@ -99,6 +74,35 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
   const resolvedDefault = defaultValue || visibleTabs[0]?.value || '';
   const [internalValue, setInternalValue] = useState(resolvedDefault);
   const activeValue = controlledValue ?? internalValue;
+
+  // Scroll state for horizontal tabs
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll);
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      ro.disconnect();
+    };
+  }, [checkScroll, visibleTabs.length]);
+
+  const scrollBy = useCallback((dir: number) => {
+    scrollRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
+  }, []);
 
   const handleValueChange = useCallback((val: string) => {
     setInternalValue(val);
@@ -144,8 +148,7 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
         className={cn(
           sizeClasses[size],
           variantTriggerClasses[variant],
-          fullWidth && 'flex-1',
-          'gap-2 transition-all',
+          'gap-2 transition-all whitespace-nowrap shrink-0',
           tab.triggerClassName
         )}
         onClick={() => handleTabClick(tab.value)}
@@ -175,6 +178,8 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
     return trigger;
   };
 
+  const showArrows = orientation === 'horizontal' && (canScrollLeft || canScrollRight);
+
   return (
     <Tabs
       value={activeValue}
@@ -190,14 +195,42 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
         orientation === 'vertical' && 'flex flex-col',
         'relative'
       )}>
-        <TabsList className={cn(
-          variantListClasses[variant],
-          orientation === 'vertical' && 'flex-col h-auto w-48 items-stretch',
-          fullWidth && 'w-full',
-          tabListClassName
-        )}>
-          {visibleTabs.map(renderTrigger)}
-        </TabsList>
+        <div className="flex items-center gap-1">
+          {showArrows && canScrollLeft && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 rounded-full border border-border bg-background shadow-sm hover:bg-muted"
+              onClick={() => scrollBy(-1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <div
+            ref={scrollRef}
+            className="overflow-x-auto scrollbar-hide flex-1"
+          >
+            <TabsList className={cn(
+              variantListClasses[variant],
+              orientation === 'vertical' && 'flex-col h-auto w-48 items-stretch',
+              fullWidth && 'w-full',
+              'inline-flex w-auto max-w-none',
+              tabListClassName
+            )}>
+              {visibleTabs.map(renderTrigger)}
+            </TabsList>
+          </div>
+          {showArrows && canScrollRight && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 rounded-full border border-border bg-background shadow-sm hover:bg-muted"
+              onClick={() => scrollBy(1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
         {tabListSuffix && (
           <div className="ml-auto flex items-center">{tabListSuffix}</div>
         )}

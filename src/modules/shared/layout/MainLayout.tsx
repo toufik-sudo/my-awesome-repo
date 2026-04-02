@@ -22,8 +22,18 @@ import {
   Headphones,
   Compass,
   Trophy,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  PUBLIC_ROUTES,
+  PROPERTY_ROUTES,
+  SERVICE_ROUTES,
+  BOOKING_ROUTES,
+  DASHBOARD_ROUTES,
+  SUPPORT_ROUTES,
+  DEMO_ROUTES,
+} from '@/routes/routes.constants';
 
 interface MainLayoutProps {
   headerProps?: LayoutProps;
@@ -63,17 +73,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const navItems: NavItem[] = [
-    { path: '/', label: t('nav.home') || 'Home', icon: Home },
-    { path: '/dashboard', label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true },
-    { path: '/properties', label: t('nav.properties') || 'Properties', icon: Building2 },
-    { path: '/services', label: t('nav.services') || 'Services', icon: Compass },
-    { path: '/bookings', label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true },
-    { path: '/points', label: t('nav.points', 'Points') || 'Points', icon: Trophy, requireAuth: true },
-    { path: '/bookings/host', label: t('nav.bookingRequests') || 'Requests', icon: MessageSquare, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager'] },
-    { path: '/bookings/history', label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
-    { path: '/settings', label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true },
-    { path: '/support', label: t('nav.support') || 'Support', icon: Headphones, requireAuth: true },
-    { path: '/demo', label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true },
+    { path: PUBLIC_ROUTES.HOME, label: t('nav.home') || 'Home', icon: Home },
+    { path: DASHBOARD_ROUTES.ROOT, label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true },
+    { path: PROPERTY_ROUTES.LIST, label: t('nav.properties') || 'Properties', icon: Building2 },
+    { path: SERVICE_ROUTES.LIST, label: t('nav.services') || 'Services', icon: Compass },
+    { path: BOOKING_ROUTES.LIST, label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true },
+    { path: BOOKING_ROUTES.CALENDAR, label: t('nav.bookingCalendar') || 'Calendar', icon: Calendar, requireAuth: true },
+    { path: DASHBOARD_ROUTES.POINTS, label: t('nav.points', 'Points') || 'Points', icon: Trophy, requireAuth: true },
+    { path: BOOKING_ROUTES.HOST, label: t('nav.bookingRequests') || 'Requests', icon: MessageSquare, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager'] },
+    { path: BOOKING_ROUTES.HISTORY, label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
+    { path: DASHBOARD_ROUTES.SETTINGS, label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true },
+    { path: SUPPORT_ROUTES.INBOX, label: t('nav.support') || 'Support', icon: Headphones, requireAuth: true },
+    { path: DEMO_ROUTES.ROOT, label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true },
   ];
 
   const filteredNavItems = navItems.filter((item) => {

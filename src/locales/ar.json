@@ -1,8 +1,41 @@
 {
   "demo": {
-    "mapWithProperties": "خريطة مع إعلانات العقارات",
-    "mapDescription": "خريطة تفاعلية تعرض إعلانات العقارات مع إمكانيات البحث والتصفية",
-    "propertySelected": "تم اختيار: {{title}}"
+    "title": "ديمو المكونات",
+    "description": "استكشف مكونات قابلة لإعادة الاستخدام بالكامل مع خيارات تصميم موسعة.",
+    "sections": {
+      "input": "مدخل ديناميكي",
+      "buttons": "أزرار ديناميكية",
+      "dropdowns": "قوائم منسدلة ديناميكية",
+      "grid": "شبكة ديناميكية",
+      "fileUploader": "رافعة الملفات",
+      "image": "صورة ديناميكية",
+      "submenu": "قائمة فرعية ديناميكية",
+      "form": "نموذج ديناميكي",
+      "map": "البحث على الخريطة",
+      "dynamicFilter": "عرض الفلتر الديناميكي",
+      "calendar": "تقويم الأحداث",
+      "imageCropper": "قص الصور",
+      "booking": "نافذة الحجز",
+      "tabs": "ألسنة ديناميكية",
+      "combobox": "صندوق اختيار ديناميكي",
+      "charts": "رسوم بيانية ديناميكية"
+    },
+    "filterDescription": "مكون فلترة ديناميكي ومعلمي بالكامل للبحث عن العقارات مع أنواع فلاتر متعددة.",
+    "filterTeaser": "تصفية متقدمة بأنواع متعددة: نص، رقم، اختيار، نطاق، تاريخ، والمزيد.",
+    "viewFilterDemo": "عرض ديمو الفلتر",
+    "actions": {
+      "primary": "أساسي",
+      "secondary": "ثانوي",
+      "withIcon": "مع أيقونة",
+      "largeDestructive": "مدمر كبير",
+      "disabled": "معطل",
+      "singleSelect": "تحديد مفرد",
+      "multiSelect": "تحديد متعدد",
+      "selectOption": "حدد خياراً",
+      "selectMultiple": "حدد عدة خيارات",
+      "standardInput": "مدخل قياسي",
+      "styledInput": "مدخل منمق"
+    }
   },
   "datePicker": {
     "selectDate": "اختر تاريخاً",
@@ -248,17 +281,41 @@
     "gradient": "متدرج"
   },
   "navigation": {
-    "groups": { "main": "الرئيسية", "demos": "العروض", "content": "المحتوى", "admin": "الإدارة" },
-    "home": "الرئيسية", "dashboard": "لوحة التحكم", "components": "المكونات",
-    "gridDemo": "عرض الشبكة", "filterDemo": "عرض الفلتر", "mapSearch": "بحث الخريطة",
-    "searchProperties": "بحث العقارات", "savedLocations": "المواقع المحفوظة",
-    "calendar": "التقويم", "events": "الأحداث", "bookings": "الحجوزات",
-    "pages": "الصفحات", "allPages": "كل الصفحات", "createPage": "إنشاء صفحة",
-    "media": "الوسائط", "messages": "الرسائل", "users": "المستخدمون",
-    "analytics": "التحليلات", "security": "الأمان", "appearance": "المظهر",
-    "settings": "الإعدادات", "profile": "الملف الشخصي", "notifications": "الإشعارات",
-    "help": "المساعدة والدعم", "newBooking": "حجز جديد", "addProperty": "إضافة عقار",
-    "onboarding": "الإعداد الأولي"
+    "groups": {
+      "main": "الرئيسية",
+      "demos": "العروض",
+      "content": "المحتوى",
+      "admin": "الإدارة"
+    },
+    "home": "الرئيسية",
+    "dashboard": "لوحة التحكم",
+    "components": "المكونات",
+    "gridDemo": "عرض الشبكة",
+    "filterDemo": "عرض الفلتر",
+    "mapSearch": "بحث الخريطة",
+    "searchProperties": "بحث العقارات",
+    "savedLocations": "المواقع المحفوظة",
+    "calendar": "التقويم",
+    "events": "الأحداث",
+    "bookings": "الحجوزات",
+    "pages": "الصفحات",
+    "allPages": "كل الصفحات",
+    "createPage": "إنشاء صفحة",
+    "media": "الوسائط",
+    "messages": "الرسائل",
+    "users": "المستخدمون",
+    "analytics": "التحليلات",
+    "security": "الأمان",
+    "appearance": "المظهر",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "notifications": "الإشعارات",
+    "help": "المساعدة والدعم",
+    "newBooking": "حجز جديد",
+    "addProperty": "إضافة عقار",
+    "onboarding": "الإعداد الأولي",
+    "bookingCalendar": "تقويم الحجوزات",
+    "cancellationRules": "قواعد الإلغاء"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -496,44 +553,6 @@
     "title": "404",
     "message": "عذراً! الصفحة غير موجودة",
     "returnHome": "العودة إلى الرئيسية"
-  },
-  "demo": {
-    "title": "ديمو المكونات",
-    "description": "استكشف مكونات قابلة لإعادة الاستخدام بالكامل مع خيارات تصميم موسعة.",
-    "sections": {
-      "input": "مدخل ديناميكي",
-      "buttons": "أزرار ديناميكية",
-      "dropdowns": "قوائم منسدلة ديناميكية",
-      "grid": "شبكة ديناميكية",
-      "fileUploader": "رافعة الملفات",
-      "image": "صورة ديناميكية",
-      "submenu": "قائمة فرعية ديناميكية",
-      "form": "نموذج ديناميكي",
-      "map": "البحث على الخريطة",
-      "dynamicFilter": "عرض الفلتر الديناميكي",
-      "calendar": "تقويم الأحداث",
-      "imageCropper": "قص الصور",
-      "booking": "نافذة الحجز",
-      "tabs": "ألسنة ديناميكية",
-      "combobox": "صندوق اختيار ديناميكي",
-      "charts": "رسوم بيانية ديناميكية"
-    },
-    "filterDescription": "مكون فلترة ديناميكي ومعلمي بالكامل للبحث عن العقارات مع أنواع فلاتر متعددة.",
-    "filterTeaser": "تصفية متقدمة بأنواع متعددة: نص، رقم، اختيار، نطاق، تاريخ، والمزيد.",
-    "viewFilterDemo": "عرض ديمو الفلتر",
-    "actions": {
-      "primary": "أساسي",
-      "secondary": "ثانوي",
-      "withIcon": "مع أيقونة",
-      "largeDestructive": "مدمر كبير",
-      "disabled": "معطل",
-      "singleSelect": "تحديد مفرد",
-      "multiSelect": "تحديد متعدد",
-      "selectOption": "حدد خياراً",
-      "selectMultiple": "حدد عدة خيارات",
-      "standardInput": "مدخل قياسي",
-      "styledInput": "مدخل منمق"
-    }
   },
   "loading": {
     "title": "جاري التحميل",
@@ -827,15 +846,52 @@
   },
   "dashboard": {
     "title": "لوحة التحكم",
-    "welcome": "مرحبًا بعودتك، {{name}}",
-    "overview": "نظرة عامة",
-    "recentActivity": "النشاط الأخير",
-    "quickActions": "إجراءات سريعة",
+    "subtitle": "نظرة عامة على عقاراتك وحجوزاتك وأدائك",
+    "error": "فشل تحميل لوحة التحكم",
+    "retry": "إعادة المحاولة",
+    "viewAll": "عرض الكل",
+    "total": "إجمالي",
+    "myProperties": "عقاراتي",
+    "noProperties": "لم تقم بإدراج أي عقارات بعد",
+    "recentBookings": "الحجوزات الأخيرة",
+    "noBookings": "لا توجد حجوزات",
+    "hostRequests": "الطلبات الواردة",
+    "noHostRequests": "لا توجد طلبات حجز واردة",
+    "trustScore": "نقاط الثقة",
+    "avgTrustDesc": "متوسط نقاط الثقة عبر عقاراتك",
+    "pendingRequests": "طلبات معلقة",
+    "pendingRequestsDesc": "طلبات الحجز في انتظار ردك",
     "stats": {
-      "totalUsers": "إجمالي المستخدمين",
+      "properties": "العقارات",
+      "published": "منشورة",
+      "totalRevenue": "إجمالي الإيرادات",
+      "bookings": "الحجوزات",
+      "pending": "معلقة",
+      "favorites": "المفضلة"
+    },
+    "actions": {
+      "addProperty": "إضافة عقار",
+      "browseProperties": "تصفح العقارات",
+      "myBookings": "حجوزاتي",
+      "settings": "الإعدادات"
+    },
+    "charts": {
       "revenue": "الإيرادات",
-      "orders": "الطلبات",
-      "growth": "النمو"
+      "bookings": "الحجوزات",
+      "revenueTitle": "نظرة عامة على الإيرادات",
+      "revenueDesc": "اتجاهات الإيرادات والحجوزات الشهرية",
+      "propertyTypes": "أنواع العقارات",
+      "propertyTypesDesc": "توزيع محفظة عقاراتك"
+    },
+    "verification": {
+      "title": "حالة التحقق",
+      "approved": "معتمدة",
+      "pending": "قيد الانتظار",
+      "rejected": "مرفوضة",
+      "rate": "معدل الموافقة"
+    },
+    "tabs": {
+      "cancellation": "قواعد الإلغاء"
     }
   },
   "onboarding": {
@@ -1087,53 +1143,6 @@
       "newest": "الأحدث"
     }
   },
-  "dashboard": {
-    "title": "لوحة التحكم",
-    "subtitle": "نظرة عامة على عقاراتك وحجوزاتك وأدائك",
-    "error": "فشل تحميل لوحة التحكم",
-    "retry": "إعادة المحاولة",
-    "viewAll": "عرض الكل",
-    "total": "إجمالي",
-    "myProperties": "عقاراتي",
-    "noProperties": "لم تقم بإدراج أي عقارات بعد",
-    "recentBookings": "الحجوزات الأخيرة",
-    "noBookings": "لا توجد حجوزات",
-    "hostRequests": "الطلبات الواردة",
-    "noHostRequests": "لا توجد طلبات حجز واردة",
-    "trustScore": "نقاط الثقة",
-    "avgTrustDesc": "متوسط نقاط الثقة عبر عقاراتك",
-    "pendingRequests": "طلبات معلقة",
-    "pendingRequestsDesc": "طلبات الحجز في انتظار ردك",
-    "stats": {
-      "properties": "العقارات",
-      "published": "منشورة",
-      "totalRevenue": "إجمالي الإيرادات",
-      "bookings": "الحجوزات",
-      "pending": "معلقة",
-      "favorites": "المفضلة"
-    },
-    "actions": {
-      "addProperty": "إضافة عقار",
-      "browseProperties": "تصفح العقارات",
-      "myBookings": "حجوزاتي",
-      "settings": "الإعدادات"
-    },
-    "charts": {
-      "revenue": "الإيرادات",
-      "bookings": "الحجوزات",
-      "revenueTitle": "نظرة عامة على الإيرادات",
-      "revenueDesc": "اتجاهات الإيرادات والحجوزات الشهرية",
-      "propertyTypes": "أنواع العقارات",
-      "propertyTypesDesc": "توزيع محفظة عقاراتك"
-    },
-    "verification": {
-      "title": "حالة التحقق",
-      "approved": "معتمدة",
-      "pending": "قيد الانتظار",
-      "rejected": "مرفوضة",
-      "rate": "معدل الموافقة"
-    }
-  },
   "services": {
     "title": "الخدمات السياحية",
     "subtitle": "اكتشف تجارب وأنشطة لرحلتك",
@@ -1199,5 +1208,57 @@
     "spend": "إنفاق",
     "earn": "كسب",
     "history": "السجل"
+  },
+  "cancellation": {
+    "title": "قواعد الإلغاء",
+    "subtitle": "حدد سياسات الاسترداد لحجوزاتك",
+    "newRule": "قاعدة جديدة",
+    "howItWorks": "كيف تعمل؟",
+    "flexibleDesc": "إلغاء مجاني قبل 24 ساعة، 50% بعد ذلك",
+    "moderateDesc": "إلغاء مجاني قبل 72 ساعة، 50% بعد ذلك",
+    "strictDesc": "إلغاء مجاني قبل 7 أيام، 25% بعد ذلك",
+    "customDesc": "حدد مواعيدك ونسبك الخاصة",
+    "loadError": "خطأ في التحميل",
+    "updated": "تم تحديث القاعدة",
+    "created": "تم إنشاء القاعدة",
+    "saveError": "خطأ في الحفظ",
+    "deleted": "تم الحذف",
+    "deleteError": "خطأ",
+    "empty": "لا توجد قواعد إلغاء مكونة",
+    "editTitle": "تعديل قاعدة الإلغاء",
+    "newTitle": "قاعدة إلغاء جديدة",
+    "policyType": "نوع السياسة",
+    "scope": "النطاق",
+    "fullRefundHours": "استرداد كامل (ساعات قبل)",
+    "partialRefundHours": "استرداد جزئي (ساعات قبل)",
+    "partialRefundPercent": "استرداد جزئي (%)",
+    "latePenalty": "غرامة الإلغاء المتأخر (%)",
+    "noShowPenalty": "غرامة عدم الحضور",
+    "noShowPercent": "غرامة عدم الحضور (%)",
+    "description": "الوصف"
+  },
+  "serviceBooking": {
+    "priceBreakdown": "تفاصيل السعر",
+    "adults": "بالغ(ين)",
+    "children": "طفل/أطفال",
+    "subtotal": "المجموع الفرعي",
+    "groupDiscount": "خصم المجموعة",
+    "serviceFee": "رسوم الخدمة",
+    "hostAbsorption": "رسوم يتحملها المضيف",
+    "pointsDiscount": "خصم النقاط",
+    "total": "المجموع",
+    "usePoints": "استخدام نقاطي",
+    "available": "متاحة",
+    "pointsAmount": "عدد النقاط"
+  },
+  "bookingCalendar": {
+    "title": "تقويم الحجوزات",
+    "subtitle": "نظرة عامة على جميع الحجوزات",
+    "guest": "الضيف",
+    "guests": "الضيوف",
+    "nights": "الليالي",
+    "total": "المجموع",
+    "payment": "الدفع",
+    "status": "الحالة"
   }
 }

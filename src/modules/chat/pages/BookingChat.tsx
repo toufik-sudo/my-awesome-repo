@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MainLayout } from '@/modules/shared/layout/MainLayout';
+// MainLayout removed — provided by Routes
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChatConversation, useSendMessage } from '../chat.hooks';
@@ -85,18 +85,16 @@ export const BookingChat: React.FC = () => {
 
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner size="lg" />
+      </div>
     );
   }
 
   const messages = conversation?.messages || [];
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-3xl mx-auto h-[calc(100vh-120px)] flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
@@ -228,7 +226,7 @@ export const BookingChat: React.FC = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 

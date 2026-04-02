@@ -60,6 +60,8 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
   const map = useRef<maplibregl.Map | null>(null);
   const markers = useRef<maplibregl.Marker[]>([]);
   const popups = useRef<maplibregl.Popup[]>([]);
+  const activePopup = useRef<maplibregl.Popup | null>(null);
+  const activeMarkerEl = useRef<HTMLDivElement | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -91,6 +93,27 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
     );
   }, []);
 
+  // Close the active popup
+  const closeActivePopup = useCallback(() => {
+    if (activePopup.current) {
+      activePopup.current.remove();
+      activePopup.current = null;
+    }
+    if (activeMarkerEl.current) {
+      activeMarkerEl.current.classList.remove('active-marker');
+      activeMarkerEl.current = null;
+    }
+  }, []);
+
+  // Show a popup, closing any previously active one
+  const showPopup = useCallback((popup: maplibregl.Popup, lngLat: [number, number], markerEl: HTMLDivElement) => {
+    closeActivePopup();
+    popup.setLngLat(lngLat).addTo(map.current!);
+    markerEl.classList.add('active-marker');
+    activePopup.current = popup;
+    activeMarkerEl.current = markerEl;
+  }, [closeActivePopup]);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -114,6 +137,11 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
     });
     m.on('load', () => setMapReady(true));
 
+    // Close popup on map click
+    m.on('click', () => {
+      closeActivePopup();
+    });
+
     return () => {
       clearTimeout(moveTimeout);
       markers.current.forEach(mk => mk.remove());
@@ -130,13 +158,17 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
     popups.current.forEach(p => p.remove());
     markers.current = [];
     popups.current = [];
+    activePopup.current = null;
+    activeMarkerEl.current = null;
 
     const allCoords: [number, number][] = [];
 
     // ── Property Markers (Blue/Primary) ──
     if (activeLayer === 'all' || activeLayer === 'properties') {
       const filteredProps = properties.filter(p => {
-        if (!p.location?.latitude || !p.location?.longitude) return false;
+        const lat = Number(p.location?.latitude);
+        const lng = Number(p.location?.longitude);
+        if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return false;
         if (filters.minPrice && p.price < filters.minPrice) return false;
         if (filters.maxPrice && p.price > filters.maxPrice) return false;
         return true;
@@ -144,6 +176,15 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
 
       filteredProps.forEach(property => {
         const popupContainer = document.createElement('div');
+        popupContainer.style.position = 'relative';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'map-popup-close';
+        closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeActivePopup();
+        });
+        popupContainer.appendChild(closeBtn);
         const root = ReactDOM.createRoot(popupContainer);
         root.render(
           <div className="w-72 p-0">
@@ -178,7 +219,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
           </div>
         );
 
-        const popup = new maplibregl.Popup({ offset: 25, closeButton: true, closeOnClick: false, maxWidth: '300px' })
+        const popup = new maplibregl.Popup({ offset: 25, closeButton: false, closeOnClick: false, maxWidth: '300px' })
           .setDOMContent(popupContainer);
         popups.current.push(popup);
 
@@ -186,24 +227,15 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         markerEl.className = 'custom-marker property-marker';
         markerEl.innerHTML = `<div class="marker-content marker-property"><span class="marker-price">🏠 ${property.currency}${property.price}</span></div>`;
 
+        const lngLat: [number, number] = [property.location.longitude, property.location.latitude];
+
         const marker = new maplibregl.Marker({ element: markerEl })
-          .setLngLat([property.location.longitude, property.location.latitude])
+          .setLngLat(lngLat)
           .addTo(map.current!);
 
-        // Hover to show popup
+        // Hover to show popup — stays until another marker is hovered or close is clicked
         markerEl.addEventListener('mouseenter', () => {
-          popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
-          markerEl.classList.add('active-marker');
-        });
-        markerEl.addEventListener('mouseleave', () => {
-          // Delay removal to allow interaction with popup
-          setTimeout(() => {
-            const popupEl = popup.getElement();
-            if (popupEl && !popupEl.matches(':hover')) {
-              popup.remove();
-              markerEl.classList.remove('active-marker');
-            }
-          }, 300);
+          showPopup(popup, lngLat, markerEl);
         });
 
         markerEl.addEventListener('click', (e) => {
@@ -212,14 +244,16 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         });
 
         markers.current.push(marker);
-        allCoords.push([property.location.longitude, property.location.latitude]);
+        allCoords.push(lngLat);
       });
     }
 
     // ── Service Markers (Orange/Accent) ──
     if (activeLayer === 'all' || activeLayer === 'services') {
       const filteredServices = services.filter(s => {
-        if (!s.latitude || !s.longitude) return false;
+        const lat = Number(s.latitude);
+        const lng = Number(s.longitude);
+        if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return false;
         if (filters.minPrice && s.price < filters.minPrice) return false;
         if (filters.maxPrice && s.price > filters.maxPrice) return false;
         if (filters.serviceCategory && s.category !== filters.serviceCategory) return false;
@@ -231,6 +265,15 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         const icon = CATEGORY_ICONS[service.category] || '✨';
 
         const popupContainer = document.createElement('div');
+        popupContainer.style.position = 'relative';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'map-popup-close';
+        closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeActivePopup();
+        });
+        popupContainer.appendChild(closeBtn);
         const root = ReactDOM.createRoot(popupContainer);
         root.render(
           <div className="w-72 p-0">
@@ -267,7 +310,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
           </div>
         );
 
-        const popup = new maplibregl.Popup({ offset: 25, closeButton: true, closeOnClick: false, maxWidth: '300px' })
+        const popup = new maplibregl.Popup({ offset: 25, closeButton: false, closeOnClick: false, maxWidth: '300px' })
           .setDOMContent(popupContainer);
         popups.current.push(popup);
 
@@ -275,23 +318,15 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         markerEl.className = 'custom-marker service-marker';
         markerEl.innerHTML = `<div class="marker-content marker-service"><span class="marker-price">${icon} ${service.price.toLocaleString()}</span></div>`;
 
+        const lngLat: [number, number] = [service.longitude!, service.latitude!];
+
         const marker = new maplibregl.Marker({ element: markerEl })
-          .setLngLat([service.longitude!, service.latitude!])
+          .setLngLat(lngLat)
           .addTo(map.current!);
 
-        // Hover to show popup
+        // Hover to show popup — stays until another marker is hovered
         markerEl.addEventListener('mouseenter', () => {
-          popup.setLngLat([service.longitude!, service.latitude!]).addTo(map.current!);
-          markerEl.classList.add('active-marker');
-        });
-        markerEl.addEventListener('mouseleave', () => {
-          setTimeout(() => {
-            const popupEl = popup.getElement();
-            if (popupEl && !popupEl.matches(':hover')) {
-              popup.remove();
-              markerEl.classList.remove('active-marker');
-            }
-          }, 300);
+          showPopup(popup, lngLat, markerEl);
         });
 
         markerEl.addEventListener('click', (e) => {
@@ -300,7 +335,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         });
 
         markers.current.push(marker);
-        allCoords.push([service.longitude!, service.latitude!]);
+        allCoords.push(lngLat);
       });
     }
 
@@ -310,7 +345,7 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
       allCoords.forEach(c => bounds.extend(c));
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }
-  }, [properties, services, filters, activeLayer, lang, mapReady, onPropertySelect, onServiceSelect]);
+  }, [properties, services, filters, activeLayer, lang, mapReady, onPropertySelect, onServiceSelect, showPopup]);
 
   const propertiesCount = properties.filter(p => p.location?.latitude && p.location?.longitude).length;
   const servicesCount = services.filter(s => s.latitude && s.longitude).length;

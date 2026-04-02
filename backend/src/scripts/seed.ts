@@ -1050,37 +1050,42 @@ async function seedPaymentReceipts(ds: DataSource, bookingIds: string[], guestId
 
 // ─── Points Rules Seed ──────────────────────────────────────────────────────
 
-async function seedPointsRules(ds: DataSource, hyperAdminId: number) {
+async function seedPointsRules(ds: DataSource, hyperAdminId: number, propertyIds: string[], serviceIds: string[]) {
   const qr = ds.createQueryRunner();
 
   const rules = [
-    // Earning rules
-    { ruleType: 'earning', targetRole: 'guest', action: 'booking_completed', pointsAmount: 50, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: 1, validFrom: null, validTo: null, isDefault: true, description: 'Points pour chaque réservation complétée' },
-    { ruleType: 'earning', targetRole: 'guest', action: 'review_submitted', pointsAmount: 20, multiplier: 1.0, maxPointsPerPeriod: 100, period: 'monthly', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour chaque avis soumis' },
-    { ruleType: 'earning', targetRole: 'guest', action: 'referral_signup', pointsAmount: 100, multiplier: 1.5, maxPointsPerPeriod: 500, period: 'monthly', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points de parrainage quand un filleul s\'inscrit' },
-    { ruleType: 'earning', targetRole: 'guest', action: 'first_booking', pointsAmount: 75, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus première réservation' },
-    { ruleType: 'earning', targetRole: 'guest', action: 'profile_completed', pointsAmount: 30, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus profil complété' },
-    { ruleType: 'earning', targetRole: 'guest', action: 'property_shared', pointsAmount: 5, multiplier: 1.0, maxPointsPerPeriod: 50, period: 'daily', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour partage de propriété' },
-    { ruleType: 'earning', targetRole: 'guest', action: 'five_star_review', pointsAmount: 30, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus avis 5 étoiles' },
-    // Seasonal earning rule
-    { ruleType: 'earning', targetRole: 'guest', action: 'booking_completed', pointsAmount: 100, multiplier: 2.0, maxPointsPerPeriod: 0, period: null, minNights: 3, validFrom: '2026-06-01', validTo: '2026-08-31', isDefault: false, description: 'Double points été 2026 (min 3 nuits)' },
+    // Earning rules - global scope
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'booking_completed', pointsAmount: 50, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: 1, validFrom: null, validTo: null, isDefault: true, description: 'Points pour chaque réservation complétée', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'review_submitted', pointsAmount: 20, multiplier: 1.0, maxPointsPerPeriod: 100, period: 'monthly', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour chaque avis soumis', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'referral_signup', pointsAmount: 100, multiplier: 1.5, maxPointsPerPeriod: 500, period: 'monthly', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points de parrainage', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'first_booking', pointsAmount: 75, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus première réservation', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'profile_completed', pointsAmount: 30, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus profil complété', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'property_shared', pointsAmount: 5, multiplier: 1.0, maxPointsPerPeriod: 50, period: 'daily', minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour partage', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'five_star_review', pointsAmount: 30, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Bonus avis 5 étoiles', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    // Seasonal rule with date range
+    { ruleType: 'earning', targetRole: 'guest', scope: 'global', action: 'booking_completed', pointsAmount: 100, multiplier: 2.0, maxPointsPerPeriod: 0, period: null, minNights: 3, validFrom: '2026-06-01', validTo: '2026-08-31', isDefault: false, description: 'Double points été 2026 (min 3 nuits)', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    // Property-scoped rule
+    { ruleType: 'earning', targetRole: 'guest', scope: 'property', action: 'booking_completed', pointsAmount: 80, multiplier: 1.5, maxPointsPerPeriod: 0, period: null, minNights: 2, validFrom: null, validTo: null, isDefault: false, description: 'Points bonus Villa Vue Mer', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: propertyIds[0], targetServiceId: null },
+    // Service-scoped rule
+    { ruleType: 'earning', targetRole: 'guest', scope: 'service', action: 'booking_completed', pointsAmount: 60, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: false, description: 'Points bonus Casbah tour', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: serviceIds[0] || null },
     // Manager earning rules
-    { ruleType: 'earning', targetRole: 'manager', action: 'property_verified', pointsAmount: 40, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour propriété vérifiée' },
-    { ruleType: 'earning', targetRole: 'manager', action: 'service_created', pointsAmount: 35, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour service créé' },
+    { ruleType: 'earning', targetRole: 'manager', scope: 'global', action: 'property_verified', pointsAmount: 40, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour propriété vérifiée', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'earning', targetRole: 'manager', scope: 'global', action: 'service_created', pointsAmount: 35, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Points pour service créé', targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
     // Conversion rules
-    { ruleType: 'conversion', targetRole: 'guest', action: 'points_to_currency', pointsAmount: 0, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Conversion points en DZD pour les invités', conversionRate: 10.0, currency: 'DZD', minPointsForConversion: 500 },
-    { ruleType: 'conversion', targetRole: 'manager', action: 'points_to_currency', pointsAmount: 0, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Conversion points en DZD pour les managers', conversionRate: 15.0, currency: 'DZD', minPointsForConversion: 1000 },
+    { ruleType: 'conversion', targetRole: 'guest', scope: 'global', action: 'points_to_currency', pointsAmount: 0, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Conversion points en DZD pour les invités', conversionRate: 10.0, currency: 'DZD', minPointsForConversion: 500, targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
+    { ruleType: 'conversion', targetRole: 'manager', scope: 'global', action: 'points_to_currency', pointsAmount: 0, multiplier: 1.0, maxPointsPerPeriod: 0, period: null, minNights: null, validFrom: null, validTo: null, isDefault: true, description: 'Conversion points en DZD pour les managers', conversionRate: 15.0, currency: 'DZD', minPointsForConversion: 1000, targetHostId: null, targetPropertyGroupId: null, targetServiceGroupId: null, targetPropertyId: null, targetServiceId: null },
   ];
 
   for (const r of rules) {
     await qr.query(
-      `INSERT INTO points_rules (id, createdByUserId, ruleType, targetRole, action, pointsAmount, multiplier, maxPointsPerPeriod, period, minNights, validFrom, validTo, isDefault, isActive, description, conversionRate, currency, minPointsForConversion)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+      `INSERT INTO points_rules (id, createdByUserId, ruleType, targetRole, scope, action, pointsAmount, multiplier, maxPointsPerPeriod, period, minNights, validFrom, validTo, isDefault, isActive, description, conversionRate, currency, minPointsForConversion, targetHostId, targetPropertyGroupId, targetServiceGroupId, targetPropertyId, targetServiceId)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        uuidv4(), hyperAdminId, r.ruleType, r.targetRole, r.action, r.pointsAmount,
+        uuidv4(), hyperAdminId, r.ruleType, r.targetRole, r.scope, r.action, r.pointsAmount,
         r.multiplier, r.maxPointsPerPeriod, r.period, r.minNights, r.validFrom, r.validTo,
         r.isDefault, r.description,
         (r as any).conversionRate || null, (r as any).currency || 'DZD', (r as any).minPointsForConversion || null,
+        r.targetHostId, r.targetPropertyGroupId, r.targetServiceGroupId, r.targetPropertyId, r.targetServiceId,
       ]
     );
   }
@@ -1090,28 +1095,111 @@ async function seedPointsRules(ds: DataSource, hyperAdminId: number) {
 
 // ─── Service Fee Rules Seed ────────────────────────────────────────────────
 
-async function seedServiceFeeRules(ds: DataSource, hyperAdminId: number) {
+async function seedServiceFeeRules(ds: DataSource, hyperAdminId: number, adminIds: number[], propertyIds: string[]) {
   const qr = ds.createQueryRunner();
 
   const feeRules = [
-    { scope: 'global', calculationType: 'percentage', percentageRate: 10.0, fixedAmount: 0, fixedThreshold: null, minFee: 500, maxFee: null, isDefault: true, priority: 100, description: 'Frais de service global 10%' },
-    { scope: 'global', calculationType: 'fixed', percentageRate: 0, fixedAmount: 1000, fixedThreshold: null, minFee: null, maxFee: null, isDefault: false, priority: 90, description: 'Frais fixe 1000 DZD pour petites réservations' },
-    { scope: 'global', calculationType: 'percentage_plus_fixed', percentageRate: 5.0, fixedAmount: 500, fixedThreshold: null, minFee: 600, maxFee: 5000, isDefault: false, priority: 80, description: '5% + 500 DZD (min 600, max 5000)' },
-    { scope: 'global', calculationType: 'fixed_then_percentage', percentageRate: 8.0, fixedAmount: 1500, fixedThreshold: 20000, minFee: 1500, maxFee: 10000, isDefault: false, priority: 70, description: '1500 DZD fixe jusqu\'à 20000, puis 8% au-delà (max 10000)' },
+    // Global rules
+    { scope: 'global', calculationType: 'percentage', percentageRate: 10.0, fixedAmount: 0, fixedThreshold: null, minFee: 500, maxFee: null, isDefault: true, priority: 100, description: 'Frais de service global 10%', targetHostId: null, targetPropertyGroupId: null, targetPropertyId: null, targetServiceGroupId: null, targetServiceId: null },
+    { scope: 'global', calculationType: 'fixed', percentageRate: 0, fixedAmount: 1000, fixedThreshold: null, minFee: null, maxFee: null, isDefault: false, priority: 90, description: 'Frais fixe 1000 DZD pour petites réservations', targetHostId: null, targetPropertyGroupId: null, targetPropertyId: null, targetServiceGroupId: null, targetServiceId: null },
+    { scope: 'global', calculationType: 'percentage_plus_fixed', percentageRate: 5.0, fixedAmount: 500, fixedThreshold: null, minFee: 600, maxFee: 5000, isDefault: false, priority: 80, description: '5% + 500 DZD (min 600, max 5000)', targetHostId: null, targetPropertyGroupId: null, targetPropertyId: null, targetServiceGroupId: null, targetServiceId: null },
+    { scope: 'global', calculationType: 'fixed_then_percentage', percentageRate: 8.0, fixedAmount: 1500, fixedThreshold: 20000, minFee: 1500, maxFee: 10000, isDefault: false, priority: 70, description: '1500 DZD fixe jusqu\'à 20000, puis 8% au-delà (max 10000)', targetHostId: null, targetPropertyGroupId: null, targetPropertyId: null, targetServiceGroupId: null, targetServiceId: null },
+    // Host-scoped fee (hands-to-hands for admin1)
+    { scope: 'host', calculationType: 'percentage', percentageRate: 7.0, fixedAmount: 0, fixedThreshold: null, minFee: 300, maxFee: null, isDefault: false, priority: 50, description: 'Frais réduits pour admin1 (hands-to-hands)', targetHostId: adminIds[0], targetPropertyGroupId: null, targetPropertyId: null, targetServiceGroupId: null, targetServiceId: null },
+    // Property-scoped fee
+    { scope: 'property', calculationType: 'percentage', percentageRate: 12.0, fixedAmount: 0, fixedThreshold: null, minFee: 800, maxFee: null, isDefault: false, priority: 40, description: 'Frais premium Villa Vue Mer', targetHostId: null, targetPropertyGroupId: null, targetPropertyId: propertyIds[0], targetServiceGroupId: null, targetServiceId: null },
   ];
 
   for (const f of feeRules) {
     await qr.query(
-      `INSERT INTO service_fee_rules (id, createdByUserId, scope, calculationType, percentageRate, fixedAmount, fixedThreshold, minFee, maxFee, isDefault, isActive, priority, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+      `INSERT INTO service_fee_rules (id, createdByUserId, scope, calculationType, percentageRate, fixedAmount, fixedThreshold, minFee, maxFee, isDefault, isActive, priority, description, targetHostId, targetPropertyGroupId, targetPropertyId, targetServiceGroupId, targetServiceId)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)`,
       [
         uuidv4(), hyperAdminId, f.scope, f.calculationType, f.percentageRate, f.fixedAmount,
         f.fixedThreshold, f.minFee, f.maxFee, f.isDefault, f.priority, f.description,
+        f.targetHostId, f.targetPropertyGroupId, f.targetPropertyId, f.targetServiceGroupId, f.targetServiceId,
       ]
     );
   }
   await qr.release();
   console.log(`✅ Created ${feeRules.length} service fee rules`);
+}
+
+// ─── Property & Service Groups Seed ─────────────────────────────────────────
+
+async function seedGroups(ds: DataSource, adminIds: number[], propertyIds: string[], serviceIds: string[]) {
+  const qr = ds.createQueryRunner();
+
+  // Property groups
+  const propGroups = [
+    { name: 'Propriétés Côtières', description: 'Villas et appartements en bord de mer', adminId: adminIds[0] },
+    { name: 'Propriétés Montagne', description: 'Chalets et maisons en montagne', adminId: adminIds[0] },
+    { name: 'Propriétés Sahara', description: 'Riads et logements au sud', adminId: adminIds[1] },
+  ];
+
+  const propGroupIds: string[] = [];
+  for (const g of propGroups) {
+    const id = uuidv4();
+    await qr.query(
+      `INSERT INTO property_groups (id, name, description, adminId, isActive) VALUES (?, ?, ?, ?, 1)`,
+      [id, g.name, g.description, g.adminId]
+    );
+    propGroupIds.push(id);
+  }
+
+  // Add properties to groups
+  const propMemberships = [
+    { groupIdx: 0, propIdxList: [0, 1, 5] },   // Coastal: Villa Vue Mer, Appart Centre, Hotel Oran
+    { groupIdx: 1, propIdxList: [3, 8] },        // Mountain: Chalet Tikjda, Maison Kabyle
+    { groupIdx: 2, propIdxList: [4, 11] },       // Sahara: Riad Ghardaia, Riad Tamanrasset
+  ];
+  for (const m of propMemberships) {
+    for (const pIdx of m.propIdxList) {
+      if (propertyIds[pIdx]) {
+        await qr.query(
+          `INSERT INTO property_group_memberships (id, propertyGroupId, propertyId) VALUES (?, ?, ?)`,
+          [uuidv4(), propGroupIds[m.groupIdx], propertyIds[pIdx]]
+        );
+      }
+    }
+  }
+
+  // Service groups
+  const svcGroups = [
+    { name: 'Visites Culturelles', description: 'Tours guidés et activités culturelles', adminId: adminIds[0] },
+    { name: 'Artisanat & Bien-être', description: 'Ateliers artisanaux et spa', adminId: adminIds[1] },
+  ];
+
+  const svcGroupIds: string[] = [];
+  for (const g of svcGroups) {
+    const id = uuidv4();
+    await qr.query(
+      `INSERT INTO service_groups (id, name, description, adminId, isActive) VALUES (?, ?, ?, ?, 1)`,
+      [id, g.name, g.description, g.adminId]
+    );
+    svcGroupIds.push(id);
+  }
+
+  // Add services to groups
+  if (serviceIds.length >= 6) {
+    const svcMemberships = [
+      { groupIdx: 0, svcIdxList: [0, 1, 3] },   // Cultural: Casbah, Boat, Hiking
+      { groupIdx: 1, svcIdxList: [5, 6, 9] },    // Artisan: Hammam, Silver, Henna
+    ];
+    for (const m of svcMemberships) {
+      for (const sIdx of m.svcIdxList) {
+        if (serviceIds[sIdx]) {
+          await qr.query(
+            `INSERT INTO service_group_memberships (id, serviceGroupId, serviceId) VALUES (?, ?, ?)`,
+            [uuidv4(), svcGroupIds[m.groupIdx], serviceIds[sIdx]]
+          );
+        }
+      }
+    }
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${propGroups.length} property groups, ${svcGroups.length} service groups with memberships`);
 }
 
 // ─── Referrals Seed ─────────────────────────────────────────────────────────
@@ -1181,29 +1269,32 @@ async function main() {
     await seedManagerPermissions(AppDataSource, assignmentIds);
 
     // 4. Tourism services
-    await seedTourismServices(AppDataSource, adminIds);
+    const serviceIds = await seedTourismServices(AppDataSource, adminIds);
 
-    // 5. Bookings & Reviews — guests (indices 6-10), admins can also be guests
+    // 5. Groups (property + service)
+    await seedGroups(AppDataSource, adminIds, propertyIds, serviceIds);
+
+    // 6. Bookings & Reviews — guests (indices 6-10), admins can also be guests
     const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9], userIds[2]]; // admin1 as guest too
     const bookingIds = await seedBookings(AppDataSource, propertyIds, guestIds);
     await seedReviews(AppDataSource, propertyIds, guestIds);
 
-    // 6. Verification documents
+    // 7. Verification documents
     await seedVerificationDocs(AppDataSource, propertyIds, adminIds);
 
-    // 7. Transfer accounts & payment receipts
+    // 8. Transfer accounts & payment receipts
     const transferAccountIds = await seedTransferAccounts(AppDataSource);
     await seedPaymentReceipts(AppDataSource, bookingIds, guestIds, transferAccountIds, userIds[0]);
 
-    // 8. Social & system data
+    // 9. Social & system data
     await seedNotifications(AppDataSource, userIds);
     await seedFavorites(AppDataSource, propertyIds, guestIds);
     await seedRankings(AppDataSource, adminIds);
     await seedComments(AppDataSource, propertyIds, userIds);
 
-    // 9. Points rules, service fee rules, referrals
-    await seedPointsRules(AppDataSource, userIds[0]);
-    await seedServiceFeeRules(AppDataSource, userIds[0]);
+    // 10. Points rules, service fee rules, referrals
+    await seedPointsRules(AppDataSource, userIds[0], propertyIds, serviceIds);
+    await seedServiceFeeRules(AppDataSource, userIds[0], adminIds, propertyIds);
     await seedReferrals(AppDataSource, userIds, propertyIds);
 
     console.log('\n═══════════════════════════════════════════');

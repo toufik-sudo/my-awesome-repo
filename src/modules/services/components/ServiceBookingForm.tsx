@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Users, Clock, CreditCard, Minus, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { CalendarIcon, Users, Clock, CreditCard, Minus, Plus, AlertCircle, CheckCircle2, Shield, Coins } from 'lucide-react';
 import type { TourismService } from '@/types/tourism-service.types';
 import type { ServiceAvailabilitySlot } from '../service-bookings.api';
 
@@ -26,8 +26,18 @@ interface ServiceBookingFormProps {
     childParticipants: number;
     paymentMethod: string;
     message?: string;
+    usePoints?: boolean;
+    pointsToUse?: number;
   }) => void;
   loading?: boolean;
+  /** Calculated service fee from backend */
+  serviceFee?: number;
+  /** Host absorption amount (fee covered by host) */
+  hostAbsorption?: number;
+  /** Available points for the guest */
+  availablePoints?: number;
+  /** Points value in DA */
+  pointsValueDA?: number;
 }
 
 const PAYMENT_METHODS = [
@@ -44,6 +54,10 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   availability = [],
   onSubmit,
   loading,
+  serviceFee = 0,
+  hostAbsorption = 0,
+  availablePoints = 0,
+  pointsValueDA = 0,
 }) => {
   const { t, i18n } = useTranslation();
   const lang = i18n.language || 'fr';
@@ -54,6 +68,8 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   const [childParticipants, setChildParticipants] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [message, setMessage] = useState('');
+  const [usePoints, setUsePoints] = useState(false);
+  const [pointsToUse, setPointsToUse] = useState(0);
 
   const blockedDates = useMemo(() => 
     availability.filter(a => a.isBlocked).map(a => new Date(a.date)),
@@ -76,7 +92,12 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
 
   const subtotal = effectivePrice * participants + childPrice * childParticipants;
   const discount = service.groupDiscount && totalParticipants >= 5 ? service.groupDiscount : 0;
-  const total = subtotal * (1 - discount / 100);
+  const discountedSubtotal = subtotal * (1 - discount / 100);
+  
+  // Fee breakdown
+  const effectiveFee = Math.max(0, serviceFee - hostAbsorption);
+  const pointsDiscount = usePoints ? Math.min(pointsToUse * (pointsValueDA || 1), discountedSubtotal) : 0;
+  const total = discountedSubtotal + effectiveFee - pointsDiscount;
 
   const canBook = selectedDate && participants >= service.minParticipants && totalParticipants <= service.maxParticipants;
 
@@ -93,8 +114,10 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
       childParticipants,
       paymentMethod,
       message: message || undefined,
+      usePoints: usePoints || undefined,
+      pointsToUse: usePoints ? pointsToUse : undefined,
     });
-  }, [selectedDate, startTime, participants, childParticipants, paymentMethod, message, onSubmit]);
+  }, [selectedDate, startTime, participants, childParticipants, paymentMethod, message, onSubmit, usePoints, pointsToUse]);
 
   const isDateDisabled = useCallback((date: Date) => {
     if (isBefore(date, new Date())) return true;
@@ -187,29 +210,88 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
           </p>
         </div>
 
-        {/* Price Summary */}
+        {/* Detailed Price Breakdown */}
         <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+          <p className="text-sm font-semibold text-foreground mb-2">{t('serviceBooking.priceBreakdown', 'Récapitulatif du prix')}</p>
+          
           <div className="flex justify-between text-sm">
-            <span>{effectivePrice.toLocaleString()} DA × {participants} adulte(s)</span>
+            <span>{effectivePrice.toLocaleString()} DA × {participants} {t('serviceBooking.adults', 'adulte(s)')}</span>
             <span>{(effectivePrice * participants).toLocaleString()} DA</span>
           </div>
           {childParticipants > 0 && (
             <div className="flex justify-between text-sm">
-              <span>{childPrice.toLocaleString()} DA × {childParticipants} enfant(s)</span>
+              <span>{childPrice.toLocaleString()} DA × {childParticipants} {t('serviceBooking.children', 'enfant(s)')}</span>
               <span>{(childPrice * childParticipants).toLocaleString()} DA</span>
             </div>
           )}
+          
+          <div className="border-t border-border pt-2 flex justify-between text-sm">
+            <span className="font-medium">{t('serviceBooking.subtotal', 'Sous-total')}</span>
+            <span>{Math.round(subtotal).toLocaleString()} DA</span>
+          </div>
+
           {discount > 0 && (
             <div className="flex justify-between text-sm text-emerald-600">
-              <span>Réduction groupe (-{discount}%)</span>
+              <span>{t('serviceBooking.groupDiscount', 'Réduction groupe')} (-{discount}%)</span>
               <span>-{(subtotal * discount / 100).toLocaleString()} DA</span>
             </div>
           )}
-          <div className="border-t border-border pt-2 flex justify-between font-semibold">
-            <span>Total</span>
+
+          {serviceFee > 0 && (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{t('serviceBooking.serviceFee', 'Frais de service')}</span>
+              <span>+{serviceFee.toLocaleString()} DA</span>
+            </div>
+          )}
+
+          {hostAbsorption > 0 && (
+            <div className="flex justify-between text-sm text-emerald-600">
+              <span className="flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                {t('serviceBooking.hostAbsorption', 'Frais pris en charge par l\'hôte')}
+              </span>
+              <span>-{hostAbsorption.toLocaleString()} DA</span>
+            </div>
+          )}
+
+          {usePoints && pointsDiscount > 0 && (
+            <div className="flex justify-between text-sm text-primary">
+              <span className="flex items-center gap-1">
+                <Coins className="h-3 w-3" />
+                {t('serviceBooking.pointsDiscount', 'Réduction points')} ({pointsToUse} pts)
+              </span>
+              <span>-{Math.round(pointsDiscount).toLocaleString()} DA</span>
+            </div>
+          )}
+
+          <div className="border-t border-border pt-2 flex justify-between font-semibold text-base">
+            <span>{t('serviceBooking.total', 'Total')}</span>
             <span className="text-primary">{Math.round(total).toLocaleString()} DA</span>
           </div>
         </div>
+
+        {/* Points usage */}
+        {availablePoints > 0 && (
+          <div className="rounded-lg border border-border p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2 text-sm">
+                <Coins className="h-4 w-4 text-primary" />
+                {t('serviceBooking.usePoints', 'Utiliser mes points')} ({availablePoints} {t('serviceBooking.available', 'disponibles')})
+              </Label>
+              <input type="checkbox" checked={usePoints} onChange={e => { setUsePoints(e.target.checked); if (!e.target.checked) setPointsToUse(0); }} className="rounded" />
+            </div>
+            {usePoints && (
+              <Input
+                type="number"
+                min={0}
+                max={availablePoints}
+                value={pointsToUse}
+                onChange={e => setPointsToUse(Math.min(availablePoints, parseInt(e.target.value) || 0))}
+                placeholder={t('serviceBooking.pointsAmount', 'Nombre de points')}
+              />
+            )}
+          </div>
+        )}
 
         {/* Payment */}
         <div className="space-y-2">

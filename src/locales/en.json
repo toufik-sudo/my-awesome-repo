@@ -1,8 +1,41 @@
 {
   "demo": {
-    "mapWithProperties": "Map with Property Listings",
-    "mapDescription": "Interactive map showing property listings with search and filter capabilities",
-    "propertySelected": "Selected: {{title}}"
+    "title": "Components Demo",
+    "description": "Explore fully configurable, reusable components with extensive styling options.",
+    "sections": {
+      "input": "Dynamic Input",
+      "buttons": "Dynamic Buttons",
+      "dropdowns": "Dynamic Dropdowns",
+      "grid": "Dynamic Grid",
+      "fileUploader": "File Uploader",
+      "image": "Dynamic Image",
+      "submenu": "Dynamic SubMenu",
+      "form": "Dynamic Form",
+      "map": "Map Search",
+      "dynamicFilter": "Dynamic Filter Demo",
+      "calendar": "Event Calendar",
+      "imageCropper": "Image Cropper",
+      "booking": "Booking Modal",
+      "tabs": "Dynamic Tabs",
+      "combobox": "Dynamic Combobox",
+      "charts": "Dynamic Charts"
+    },
+    "filterDescription": "A fully dynamic and parameterized filter component for property search with multiple filter types.",
+    "filterTeaser": "Advanced filtering with multiple types: text, number, select, range, date, and more.",
+    "viewFilterDemo": "View Filter Demo",
+    "actions": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "withIcon": "With Icon",
+      "largeDestructive": "Large Destructive",
+      "disabled": "Disabled",
+      "singleSelect": "Single Select",
+      "multiSelect": "Multi Select",
+      "selectOption": "Select an option",
+      "selectMultiple": "Select multiple",
+      "standardInput": "Standard input",
+      "styledInput": "Styled input"
+    }
   },
   "datePicker": {
     "selectDate": "Select a date",
@@ -280,7 +313,9 @@
     "help": "Help & Support",
     "newBooking": "New Booking",
     "addProperty": "Add Property",
-    "onboarding": "Onboarding"
+    "onboarding": "Onboarding",
+    "bookingCalendar": "Booking Calendar",
+    "cancellationRules": "Cancellation Rules"
   },
   "auth": {
     "login": "Login",
@@ -518,44 +553,6 @@
     "title": "404",
     "message": "Oops! Page not found",
     "returnHome": "Return to Home"
-  },
-  "demo": {
-    "title": "Components Demo",
-    "description": "Explore fully configurable, reusable components with extensive styling options.",
-    "sections": {
-      "input": "Dynamic Input",
-      "buttons": "Dynamic Buttons",
-      "dropdowns": "Dynamic Dropdowns",
-      "grid": "Dynamic Grid",
-      "fileUploader": "File Uploader",
-      "image": "Dynamic Image",
-      "submenu": "Dynamic SubMenu",
-      "form": "Dynamic Form",
-      "map": "Map Search",
-      "dynamicFilter": "Dynamic Filter Demo",
-      "calendar": "Event Calendar",
-      "imageCropper": "Image Cropper",
-      "booking": "Booking Modal",
-      "tabs": "Dynamic Tabs",
-      "combobox": "Dynamic Combobox",
-      "charts": "Dynamic Charts"
-    },
-    "filterDescription": "A fully dynamic and parameterized filter component for property search with multiple filter types.",
-    "filterTeaser": "Advanced filtering with multiple types: text, number, select, range, date, and more.",
-    "viewFilterDemo": "View Filter Demo",
-    "actions": {
-      "primary": "Primary",
-      "secondary": "Secondary",
-      "withIcon": "With Icon",
-      "largeDestructive": "Large Destructive",
-      "disabled": "Disabled",
-      "singleSelect": "Single Select",
-      "multiSelect": "Multi Select",
-      "selectOption": "Select an option",
-      "selectMultiple": "Select multiple",
-      "standardInput": "Standard input",
-      "styledInput": "Styled input"
-    }
   },
   "loading": {
     "title": "Loading",
@@ -884,15 +881,53 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome back, {{name}}",
-    "overview": "Overview",
-    "recentActivity": "Recent Activity",
-    "quickActions": "Quick Actions",
+    "subtitle": "Overview of your properties, bookings, and performance",
+    "error": "Failed to load dashboard",
+    "retry": "Try Again",
+    "viewAll": "View All",
+    "total": "total",
+    "myProperties": "My Properties",
+    "noProperties": "You haven't listed any properties yet",
+    "recentBookings": "Recent Bookings",
+    "noBookings": "No bookings yet",
+    "hostRequests": "Incoming Requests",
+    "noHostRequests": "No incoming booking requests",
+    "trustScore": "Trust Score",
+    "avgTrustDesc": "Average trust score across your properties",
+    "pendingRequests": "pending requests",
+    "pendingRequestsDesc": "Booking requests awaiting your response",
     "stats": {
-      "totalUsers": "Total Users",
+      "properties": "Properties",
+      "published": "published",
+      "totalRevenue": "Total Revenue",
+      "bookings": "Bookings",
+      "pending": "pending",
+      "favorites": "Favorites"
+    },
+    "actions": {
+      "addProperty": "Add Property",
+      "addService": "Add Service",
+      "browseProperties": "Browse Properties",
+      "myBookings": "My Bookings",
+      "settings": "Settings"
+    },
+    "charts": {
       "revenue": "Revenue",
-      "orders": "Orders",
-      "growth": "Growth"
+      "bookings": "Bookings",
+      "revenueTitle": "Revenue Overview",
+      "revenueDesc": "Monthly revenue and booking trends",
+      "propertyTypes": "Property Types",
+      "propertyTypesDesc": "Distribution of your property portfolio"
+    },
+    "verification": {
+      "title": "Verification Status",
+      "approved": "Approved",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "rate": "approval rate"
+    },
+    "tabs": {
+      "cancellation": "Cancellation Rules"
     }
   },
   "onboarding": {
@@ -1144,54 +1179,6 @@
       "newest": "Newest"
     }
   },
-  "dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Overview of your properties, bookings, and performance",
-    "error": "Failed to load dashboard",
-    "retry": "Try Again",
-    "viewAll": "View All",
-    "total": "total",
-    "myProperties": "My Properties",
-    "noProperties": "You haven't listed any properties yet",
-    "recentBookings": "Recent Bookings",
-    "noBookings": "No bookings yet",
-    "hostRequests": "Incoming Requests",
-    "noHostRequests": "No incoming booking requests",
-    "trustScore": "Trust Score",
-    "avgTrustDesc": "Average trust score across your properties",
-    "pendingRequests": "pending requests",
-    "pendingRequestsDesc": "Booking requests awaiting your response",
-    "stats": {
-      "properties": "Properties",
-      "published": "published",
-      "totalRevenue": "Total Revenue",
-      "bookings": "Bookings",
-      "pending": "pending",
-      "favorites": "Favorites"
-    },
-    "actions": {
-      "addProperty": "Add Property",
-      "addService": "Add Service",
-      "browseProperties": "Browse Properties",
-      "myBookings": "My Bookings",
-      "settings": "Settings"
-    },
-    "charts": {
-      "revenue": "Revenue",
-      "bookings": "Bookings",
-      "revenueTitle": "Revenue Overview",
-      "revenueDesc": "Monthly revenue and booking trends",
-      "propertyTypes": "Property Types",
-      "propertyTypesDesc": "Distribution of your property portfolio"
-    },
-    "verification": {
-      "title": "Verification Status",
-      "approved": "Approved",
-      "pending": "Pending",
-      "rejected": "Rejected",
-      "rate": "approval rate"
-    }
-  },
   "services": {
     "title": "Tourism Services",
     "subtitle": "Discover experiences and activities for your trip",
@@ -1265,5 +1252,57 @@
       "history": "History",
       "leaderboard": "Leaderboard"
     }
+  },
+  "cancellation": {
+    "title": "Cancellation Rules",
+    "subtitle": "Define refund policies for your bookings",
+    "newRule": "New Rule",
+    "howItWorks": "How does it work?",
+    "flexibleDesc": "Free cancellation up to 24h before, 50% after",
+    "moderateDesc": "Free cancellation up to 72h before, 50% after",
+    "strictDesc": "Free cancellation 7 days before, 25% after",
+    "customDesc": "Define your own deadlines and percentages",
+    "loadError": "Loading error",
+    "updated": "Rule updated",
+    "created": "Rule created",
+    "saveError": "Save error",
+    "deleted": "Deleted",
+    "deleteError": "Error",
+    "empty": "No cancellation rules configured",
+    "editTitle": "Edit cancellation rule",
+    "newTitle": "New cancellation rule",
+    "policyType": "Policy type",
+    "scope": "Scope",
+    "fullRefundHours": "Full refund (hours before)",
+    "partialRefundHours": "Partial refund (hours before)",
+    "partialRefundPercent": "Partial refund (%)",
+    "latePenalty": "Late cancellation penalty (%)",
+    "noShowPenalty": "No-show penalty",
+    "noShowPercent": "No-show penalty (%)",
+    "description": "Description"
+  },
+  "serviceBooking": {
+    "priceBreakdown": "Price Breakdown",
+    "adults": "adult(s)",
+    "children": "child(ren)",
+    "subtotal": "Subtotal",
+    "groupDiscount": "Group discount",
+    "serviceFee": "Service fee",
+    "hostAbsorption": "Fees covered by host",
+    "pointsDiscount": "Points discount",
+    "total": "Total",
+    "usePoints": "Use my points",
+    "available": "available",
+    "pointsAmount": "Number of points"
+  },
+  "bookingCalendar": {
+    "title": "Booking Calendar",
+    "subtitle": "Overview of all bookings",
+    "guest": "Guest",
+    "guests": "Guests",
+    "nights": "Nights",
+    "total": "Total",
+    "payment": "Payment",
+    "status": "Status"
   }
 }

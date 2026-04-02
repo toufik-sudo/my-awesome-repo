@@ -5,9 +5,11 @@ import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { DynamicForm } from '@/modules/shared/components/DynamicForm';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
-import { UserPlus, Shield, ShieldCheck, ShieldAlert, Trash2 } from 'lucide-react';
+import { UserPlus, Shield, ShieldCheck, ShieldAlert, Trash2, Settings2 } from 'lucide-react';
 import { rolesApi } from '../admin.api';
+import { UserManageModal } from '../components/UserManageModal';
 import type { AppRole, UserWithRoles } from '../admin.types';
 import type { GridColumn, DynamicFormField } from '@/types/component.types';
 
@@ -33,6 +35,8 @@ export const RolesManagement: React.FC = React.memo(() => {
   const [loading, setLoading] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
+  const [manageUser, setManageUser] = useState<UserWithRoles | null>(null);
+  const [manageOpen, setManageOpen] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -47,6 +51,12 @@ export const RolesManagement: React.FC = React.memo(() => {
   }, []);
 
   React.useEffect(() => { loadUsers(); }, [loadUsers]);
+
+  // Filter out hyper_admin users — they cannot be managed
+  const managableUsers = useMemo(() =>
+    users.filter(u => !u.roles?.includes('hyper_admin')),
+    [users]
+  );
 
   const columns = useMemo<GridColumn[]>(() => [
     { key: 'id', title: 'ID', width: '80px', sortable: true },
@@ -69,16 +79,34 @@ export const RolesManagement: React.FC = React.memo(() => {
       ),
     },
     {
-      key: 'actions', title: 'Actions', width: '120px',
+      key: 'isActive', title: 'Statut', width: '90px',
+      render: (v: boolean) => (
+        <Badge variant={v !== false ? 'default' : 'destructive'} className="text-[10px]">
+          {v !== false ? 'Actif' : 'Inactif'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions', title: 'Actions', width: '180px',
       render: (_: any, row: UserWithRoles) => (
-        <DynamicButton
-          variant="outline"
-          size="sm"
-          icon={<UserPlus className="h-3.5 w-3.5" />}
-          onClick={() => { setSelectedUser(row); setAssignModalOpen(true); }}
-        >
-          Manage
-        </DynamicButton>
+        <div className="flex items-center gap-1">
+          <DynamicButton
+            variant="outline"
+            size="sm"
+            icon={<UserPlus className="h-3.5 w-3.5" />}
+            onClick={() => { setSelectedUser(row); setAssignModalOpen(true); }}
+          >
+            Rôles
+          </DynamicButton>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setManageUser(row); setManageOpen(true); }}
+            title="Gérer l'utilisateur"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       ),
     },
   ], []);
@@ -124,7 +152,7 @@ export const RolesManagement: React.FC = React.memo(() => {
     <div className="space-y-4">
       <DynamicGrid
         columns={columns}
-        data={users}
+        data={managableUsers}
         loading={loading}
         selectable={false}
         striped
@@ -175,6 +203,14 @@ export const RolesManagement: React.FC = React.memo(() => {
           </div>
         )}
       </DynamicModal>
+
+      {/* User Management Modal (pause/archive/resume/reactivate) */}
+      <UserManageModal
+        open={manageOpen}
+        onOpenChange={setManageOpen}
+        user={manageUser}
+        onRefresh={loadUsers}
+      />
     </div>
   );
 });

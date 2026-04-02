@@ -337,8 +337,15 @@ export const defaultMenuGroups: NavMenuGroup[] = [
     id: 'admin',
     translationKey: 'navigation.groups.admin',
     collapsible: true,
-    defaultOpen: false,
+    defaultOpen: true,
     items: [
+      {
+        id: 'booking-calendar',
+        label: 'Booking Calendar',
+        translationKey: 'navigation.bookingCalendar',
+        url: '/booking-calendar',
+        icon: Calendar,
+      },
       {
         id: 'admin-dashboard',
         label: 'Administration',
@@ -346,6 +353,14 @@ export const defaultMenuGroups: NavMenuGroup[] = [
         url: '/admin',
         icon: Shield,
         roles: ['hyper_manager', 'admin']
+      },
+      {
+        id: 'cancellation-rules',
+        label: 'Cancellation Rules',
+        translationKey: 'navigation.cancellationRules',
+        url: '/admin/cancellation-rules',
+        icon: Shield,
+        roles: ['hyper_admin', 'hyper_manager', 'admin', 'manager']
       },
       {
         id: 'admin-chat',

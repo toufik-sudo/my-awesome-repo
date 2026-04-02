@@ -1,56 +1,45 @@
 import { Controller, Get, Post, Put, Param, Body, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { DocumentValidationService } from '../services/document-validation.service';
 import { RequireRole } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 
+@ApiTags('Documents')
+@ApiBearerAuth('JWT-auth')
 @Controller('documents')
 @UseGuards(PermissionGuard)
 export class DocumentValidationController {
   constructor(private readonly validationService: DocumentValidationService) {}
 
-  /**
-   * Submit a document for AI validation
-   * Called after upload - triggers AI analysis and auto-approve or escalate
-   */
   @Post(':id/validate')
+  @ApiOperation({ summary: 'Submit document for validation', description: 'Triggers AI analysis → auto-approve or escalate.' })
+  @ApiParam({ name: 'id', format: 'uuid' })
   submitForValidation(@Param('id') id: string) {
     return this.validationService.submitDocument(id);
   }
 
-  /**
-   * Get all pending documents for hyper admin review
-   */
   @Get('pending')
   @RequireRole('hyper_manager')
+  @ApiOperation({ summary: 'Get pending documents', description: '**Roles**: hyper_manager+' })
   getPendingDocuments() {
     return this.validationService.getPendingDocuments();
   }
 
-  /**
-   * Hyper admin approves a document
-   */
   @Put(':id/approve')
   @RequireRole('hyper_manager')
-  approveDocument(
-    @Param('id') id: string,
-    @Body() body: { note?: string },
-    @Request() req: any,
-  ) {
-    const reviewerId = req.user?.id || req.user?.userId;
-    return this.validationService.approveDocument(id, reviewerId, body.note);
+  @ApiOperation({ summary: 'Approve a document', description: '**Roles**: hyper_manager+' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ schema: { type: 'object', properties: { note: { type: 'string' } } }, required: false })
+  approveDocument(@Param('id') id: string, @Body() body: { note?: string }, @Request() req: any) {
+    return this.validationService.approveDocument(id, req.user?.id || req.user?.userId, body.note);
   }
 
-  /**
-   * Hyper admin rejects a document
-   */
   @Put(':id/reject')
   @RequireRole('hyper_manager')
-  rejectDocument(
-    @Param('id') id: string,
-    @Body() body: { note?: string },
-    @Request() req: any,
-  ) {
-    const reviewerId = req.user?.id || req.user?.userId;
-    return this.validationService.rejectDocument(id, reviewerId, body.note);
+  @ApiOperation({ summary: 'Reject a document', description: '**Roles**: hyper_manager+' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ schema: { type: 'object', properties: { note: { type: 'string' } } }, required: false })
+  rejectDocument(@Param('id') id: string, @Body() body: { note?: string }, @Request() req: any) {
+    return this.validationService.rejectDocument(id, req.user?.id || req.user?.userId, body.note);
   }
 }

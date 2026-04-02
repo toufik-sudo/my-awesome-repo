@@ -24,6 +24,25 @@ export class PointsRule {
   @Column({ type: 'varchar', length: 20 })
   targetRole: PointsTargetRole;
 
+  /** Scope: global, host, property_group, service_group, property, service */
+  @Column({ type: 'varchar', length: 30, default: 'global' })
+  scope: string;
+
+  @Column({ nullable: true })
+  targetHostId: number;
+
+  @Column({ type: 'uuid', nullable: true })
+  targetPropertyGroupId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  targetServiceGroupId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  targetPropertyId: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  targetServiceId: string;
+
   /** Action that triggers points (booking_completed, review_submitted, referral_signup, property_shared, etc.) */
   @Column({ type: 'varchar', length: 50 })
   action: string;

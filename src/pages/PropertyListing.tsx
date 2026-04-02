@@ -115,7 +115,13 @@ const PropertyListing = () => {
 
   const canAddProperty = useMemo(() => {
     if (!user?.roles) return false;
-    return user.roles.some(r => ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(r));
+    // Hyper admin/manager cannot add - only admin/manager can
+    return user.roles.some(r => ['admin', 'manager'].includes(r));
+  }, [user]);
+
+  const canPauseArchive = useMemo(() => {
+    if (!user?.roles) return false;
+    return user.roles.some(r => ['hyper_admin', 'hyper_manager', 'admin', 'manager'].includes(r));
   }, [user]);
 
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
@@ -123,8 +129,15 @@ const PropertyListing = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const { data: allProperties = [], isLoading: propertiesLoading } = useProperties();
-  const { data: servicesData } = useServices({ page: 1, limit: 100 });
-  const mapServicesData = useMemo(() => servicesData?.data?.filter(s => s.latitude && s.longitude) || [], [servicesData]);
+  const { data: servicesData } = useServices({ page: 1, limit: 200 });
+  const mapServicesData = useMemo(() => {
+    const services = servicesData?.data || [];
+    return services.filter(s => {
+      const lat = Number(s.latitude);
+      const lng = Number(s.longitude);
+      return !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
+    }).map(s => ({ ...s, latitude: Number(s.latitude), longitude: Number(s.longitude) }));
+  }, [servicesData]);
 
   const [filters, setFilters] = useState<Filters>({
     location: searchParams.get('location') || '',
