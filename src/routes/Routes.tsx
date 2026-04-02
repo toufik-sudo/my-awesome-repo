@@ -115,6 +115,7 @@ const DashboardRoutes = () => (
   <>
     <Route path={DASHBOARD_ROUTES.ROOT} element={<ProtectedRoute><MainLayout><ErrorBoundary><DashboardWithRedirect /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.POINTS} element={<ProtectedRoute><MainLayout><ErrorBoundary><PointsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={DASHBOARD_ROUTES.REWARDS} element={<ProtectedRoute><MainLayout><ErrorBoundary><RewardsShop /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.SETTINGS} element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
