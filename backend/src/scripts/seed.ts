@@ -1245,6 +1245,54 @@ async function seedReferrals(ds: DataSource, userIds: number[], propertyIds: str
   console.log(`✅ Created ${referrals.length} referrals and ${shares.length} property shares`);
 }
 
+// ─── Rewards Seed ───────────────────────────────────────────────────────────
+
+async function seedRewards(ds: DataSource, hyperAdminId: number, guestIds: number[]) {
+  const qr = ds.createQueryRunner();
+
+  const rewards = [
+    { name: '10% Réduction Réservation', description: 'Obtenez 10% de réduction sur votre prochaine réservation', type: 'discount', pointsCost: 200, discountPercent: 10, discountAmount: 0, icon: '🏷️', category: 'discounts', requiredTier: null, maxRedemptions: 500, maxPerUser: 5, sortOrder: 10 },
+    { name: '500 DZD de réduction', description: '500 DZD de réduction immédiate sur une réservation', type: 'discount', pointsCost: 100, discountPercent: 0, discountAmount: 500, icon: '💵', category: 'discounts', requiredTier: null, maxRedemptions: 1000, maxPerUser: 10, sortOrder: 20 },
+    { name: 'Surclassement chambre', description: 'Surclassement vers une chambre supérieure (selon disponibilité)', type: 'upgrade', pointsCost: 500, discountPercent: 0, discountAmount: 0, icon: '⬆️', category: 'upgrades', requiredTier: 'silver', maxRedemptions: 100, maxPerUser: 2, sortOrder: 30 },
+    { name: 'Nuit gratuite', description: 'Une nuit gratuite dans un hébergement partenaire', type: 'free_night', pointsCost: 1000, discountPercent: 0, discountAmount: 0, icon: '🌙', category: 'experiences', requiredTier: 'gold', maxRedemptions: 50, maxPerUser: 1, sortOrder: 40 },
+    { name: 'Visite guidée gratuite', description: 'Un service de visite guidée offert', type: 'free_service', pointsCost: 300, discountPercent: 0, discountAmount: 0, icon: '🎁', category: 'services', requiredTier: null, maxRedemptions: 200, maxPerUser: 3, sortOrder: 50 },
+    { name: 'Cashback 1000 DZD', description: '1000 DZD crédités sur votre compte', type: 'cashback', pointsCost: 800, discountPercent: 0, discountAmount: 1000, icon: '💰', category: 'gifts', requiredTier: 'silver', maxRedemptions: 200, maxPerUser: 5, sortOrder: 60 },
+    { name: '25% Réduction Premium', description: '25% de réduction exclusive pour les membres Platinum+', type: 'discount', pointsCost: 1500, discountPercent: 25, discountAmount: 0, icon: '👑', category: 'discounts', requiredTier: 'platinum', maxRedemptions: 30, maxPerUser: 1, sortOrder: 70 },
+    { name: 'Petit-déjeuner offert', description: 'Petit-déjeuner traditionnel offert lors de votre séjour', type: 'free_service', pointsCost: 150, discountPercent: 0, discountAmount: 0, icon: '🥐', category: 'services', requiredTier: null, maxRedemptions: 300, maxPerUser: 5, sortOrder: 80 },
+  ];
+
+  const rewardIds: string[] = [];
+  for (const r of rewards) {
+    const id = uuidv4();
+    await qr.query(
+      `INSERT INTO rewards (id, name, description, type, pointsCost, discountPercent, discountAmount, currency, icon, category, requiredTier, maxRedemptions, currentRedemptions, maxPerUser, status, sortOrder, createdByUserId)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'DZD', ?, ?, ?, ?, 0, ?, 'active', ?, ?)`,
+      [id, r.name, r.description, r.type, r.pointsCost, r.discountPercent, r.discountAmount, r.icon, r.category, r.requiredTier, r.maxRedemptions, r.maxPerUser, r.sortOrder, hyperAdminId]
+    );
+    rewardIds.push(id);
+  }
+
+  // Sample redemptions
+  const redemptions = [
+    { userId: guestIds[0], rewardIdx: 0, pointsSpent: 200, code: 'RWD-A1B2C3D4', status: 'confirmed' },
+    { userId: guestIds[0], rewardIdx: 4, pointsSpent: 300, code: 'RWD-E5F6G7H8', status: 'used' },
+    { userId: guestIds[1], rewardIdx: 1, pointsSpent: 100, code: 'RWD-I9J0K1L2', status: 'confirmed' },
+  ];
+
+  for (const rd of redemptions) {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
+    await qr.query(
+      `INSERT INTO reward_redemptions (id, userId, rewardId, pointsSpent, code, status, expiresAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [uuidv4(), rd.userId, rewardIds[rd.rewardIdx], rd.pointsSpent, rd.code, rd.status, expiresAt]
+    );
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${rewards.length} rewards and ${redemptions.length} redemptions`);
+}
+
 // ─── Main Runner ────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1254,12 +1302,12 @@ async function main() {
   console.log('✅ Database connected\n');
 
   try {
-    // 1. Users (hyper_admin, hyper_manager have their role; others have 'user')
+    // 1. Users
     const userIds = await seedUsers(AppDataSource);
     await seedUserRoles(AppDataSource, userIds);
     await seedProfiles(AppDataSource, userIds);
 
-    // 2. Properties — admins (indices 2,3) own properties
+    // 2. Properties
     const adminIds = [userIds[2], userIds[3]];
     const propertyIds = await seedProperties(AppDataSource, adminIds);
     await seedPropertyImages(AppDataSource, propertyIds);
@@ -1271,11 +1319,11 @@ async function main() {
     // 4. Tourism services
     const serviceIds = await seedTourismServices(AppDataSource, adminIds);
 
-    // 5. Groups (property + service)
+    // 5. Groups
     await seedGroups(AppDataSource, adminIds, propertyIds, serviceIds);
 
-    // 6. Bookings & Reviews — guests (indices 6-10), admins can also be guests
-    const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9], userIds[2]]; // admin1 as guest too
+    // 6. Bookings & Reviews
+    const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9], userIds[2]];
     const bookingIds = await seedBookings(AppDataSource, propertyIds, guestIds);
     await seedReviews(AppDataSource, propertyIds, guestIds);
 
@@ -1297,6 +1345,9 @@ async function main() {
     await seedServiceFeeRules(AppDataSource, userIds[0], adminIds, propertyIds);
     await seedReferrals(AppDataSource, userIds, propertyIds);
 
+    // 11. Rewards & redemptions
+    await seedRewards(AppDataSource, userIds[0], guestIds);
+
     console.log('\n═══════════════════════════════════════════');
     console.log('  ✅ Seeding complete!');
     console.log('═══════════════════════════════════════════');
@@ -1309,9 +1360,11 @@ async function main() {
     console.log(`   Reviews:            8`);
     console.log(`   Transfer Accounts:  ${transferAccountIds.length}`);
     console.log(`   Payment Receipts:   6`);
-    console.log(`   Points Rules:       12`);
-    console.log(`   Service Fee Rules:  4`);
+    console.log(`   Points Rules:       14`);
+    console.log(`   Service Fee Rules:  6`);
     console.log(`   Referrals:          4`);
+    console.log(`   Rewards:            8`);
+    console.log(`   Redemptions:        3`);
     console.log('\n🔑 Default password: Password123!');
     console.log('   Hyper Admin:      hyper_admin_byootdz@yopmail.com');
     console.log('   Hyper Manager:    hyper_manager_byootdz@yopmail.com');

@@ -90,6 +90,7 @@ Managers have granular permissions per property/group: \`create_property\`, \`mo
     .addTag('Service Fees', 'Platform service fee rules')
     .addTag('Points Rules', 'Points earning/conversion rules')
     .addTag('Saved Search Alerts', 'Property search alerts')
+    .addTag('Rewards', 'Rewards shop — redeem points for discounts, upgrades, free services')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

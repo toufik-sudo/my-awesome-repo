@@ -51,6 +51,7 @@ export const DASHBOARD_ROUTES = {
   HYPER: '/dashboard/hyper',
   ADMIN: '/dashboard/admin',
   POINTS: '/points',
+  REWARDS: '/rewards',
   SETTINGS: '/settings',
 } as const;
 

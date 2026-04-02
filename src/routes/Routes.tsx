@@ -36,6 +36,7 @@ import ServiceListing from "@/pages/ServiceListing";
 import ServiceDetail from "@/pages/ServiceDetail";
 import AddServiceWizard from "@/modules/admin/pages/AddServiceWizard";
 import PointsPage from "@/pages/PointsPage";
+import RewardsShop from "@/modules/rewards/pages/RewardsShop";
 import { HostFeeAbsorptionPage } from "@/modules/admin/pages/HostFeeAbsorptionPage";
 import { CancellationRulesPage } from "@/modules/admin/pages/CancellationRulesPage";
 import { BookingCalendarPage } from "@/modules/admin/pages/BookingCalendarPage";
@@ -114,6 +115,7 @@ const DashboardRoutes = () => (
   <>
     <Route path={DASHBOARD_ROUTES.ROOT} element={<ProtectedRoute><MainLayout><ErrorBoundary><DashboardWithRedirect /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.POINTS} element={<ProtectedRoute><MainLayout><ErrorBoundary><PointsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={DASHBOARD_ROUTES.REWARDS} element={<ProtectedRoute><MainLayout><ErrorBoundary><RewardsShop /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.SETTINGS} element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
