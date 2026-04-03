@@ -20,7 +20,8 @@ import { RolesManagement } from './RolesManagement';
 import { PropertyGroupsManagement } from './PropertyGroupsManagement';
 import { ManagerAssignments } from './ManagerAssignments';
 import { VerificationReview } from './VerificationReview';
-import { statsApi, rolesApi, assignmentsApi, invitationsApi, type AdminStats, type Invitation } from '../admin.api';
+import { statsApi, rolesApi, assignmentsApi, invitationsApi, type AdminStats } from '../admin.api';
+import type { Invitation } from '../admin.types';
 import type { AppRole, UserWithRoles } from '../admin.types';
 import type { GridColumn } from '@/types/component.types';
 import {
