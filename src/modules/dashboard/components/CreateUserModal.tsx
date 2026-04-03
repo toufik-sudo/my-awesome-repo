@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus, Shield, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,20 +11,16 @@ import {
 } from '@/components/ui/dialog';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { invitationsApi } from '@/modules/admin/admin.api';
+import type { AppRole } from '@/modules/admin/admin.types';
+import { ROLE_LABELS } from '@/modules/admin/admin.types';
 
 interface CreateUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Roles the current user is allowed to create */
-  allowedRoles: string[];
+  allowedRoles: AppRole[];
   onSuccess?: () => void;
 }
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrateur',
-  manager: 'Manager',
-  hyper_manager: 'Hyper Manager',
-};
 
 export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   open,
@@ -33,8 +29,15 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   onSuccess,
 }) => {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState(allowedRoles[0] || 'manager');
+  const [role, setRole] = useState<AppRole>(allowedRoles[0] || 'guest');
   const [loading, setLoading] = useState(false);
+
+  // Reset role when allowedRoles changes
+  useEffect(() => {
+    if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
+      setRole(allowedRoles[0]);
+    }
+  }, [allowedRoles]);
 
   const handleSubmit = async () => {
     if (!email.trim()) {
@@ -90,7 +93,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               <Shield className="h-3.5 w-3.5 text-muted-foreground" />
               Rôle
             </Label>
-            <Select value={role} onValueChange={setRole}>
+            <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

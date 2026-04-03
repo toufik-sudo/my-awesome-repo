@@ -437,4 +437,24 @@ export class RolesService {
     }
     await this.userRepo.delete(userId);
   }
+
+  // ─── IT MVP helpers ──────────────────────────────────────────────────
+
+  /**
+   * Remove all assignments for a user (used when converting guest → user).
+   */
+  async removeAllAssignments(userId: number): Promise<void> {
+    await this.assignmentRepo.update(
+      { managerId: userId, isActive: true },
+      { isActive: false },
+    );
+  }
+
+  /**
+   * Directly set a user's role without permission checks.
+   * Only used internally (e.g., guest → user conversion).
+   */
+  async setUserRoleDirect(userId: number, role: AppRole): Promise<void> {
+    await this.setUserRole(userId, role);
+  }
 }

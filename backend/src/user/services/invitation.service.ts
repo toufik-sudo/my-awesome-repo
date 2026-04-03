@@ -1,9 +1,11 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invitation, InvitationStatus } from '../entity/invitation.entity';
 import { RolesService } from './roles.service';
 import { JobProducerService } from '../../infrastructure/jobs/job-producer.service';
+import { canInviteRole, getAllowedInvitationRoles } from '../constants/invitation-rules.constant';
+import { AppRole } from '../entity/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -15,6 +17,14 @@ export class InvitationService {
     private readonly jobProducer: JobProducerService,
   ) {}
 
+  /**
+   * Returns the roles the given user is allowed to invite, based on invitation rules.
+   */
+  async getAllowedRolesForInviter(inviterId: number): Promise<AppRole[]> {
+    const inviterRole = await this.rolesService.getUserRole(inviterId);
+    return getAllowedInvitationRoles(inviterRole);
+  }
+
   async createInvitation(
     invitedBy: number,
     data: {
@@ -25,35 +35,15 @@ export class InvitationService {
       message?: string;
     },
   ): Promise<Invitation> {
-    // Verify the inviter has sufficient permissions
     const inviterRole = await this.rolesService.getUserRole(invitedBy);
+    const targetRole = data.role as AppRole;
 
-    // Only hyper_admin can invite hyper_managers
-    if (data.role === 'hyper_manager') {
-      if (inviterRole !== 'hyper_admin') {
-        throw new ForbiddenException('Only hyper_admin can invite hyper_managers');
-      }
-    }
-
-    // hyper_admin/hyper_manager can invite admins
-    if (data.role === 'admin') {
-      if (inviterRole !== 'hyper_admin' && inviterRole !== 'hyper_manager') {
-        throw new ForbiddenException('Only hyper_admin or hyper_manager can invite admins');
-      }
-    }
-
-    // Admin (or hyper) can invite managers
-    if (data.role === 'manager') {
-      if (!['hyper_admin', 'hyper_manager', 'admin'].includes(inviterRole)) {
-        throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can invite managers');
-      }
-    }
-
-    // Any role except user/guest can invite guests — guests inherit inviter's scope
-    if (data.role === 'guest') {
-      if (['user', 'guest'].includes(inviterRole)) {
-        throw new ForbiddenException('Users and guests cannot invite guests');
-      }
+    // Enforce invitation rules matrix
+    if (!canInviteRole(inviterRole, targetRole)) {
+      const allowed = getAllowedInvitationRoles(inviterRole);
+      throw new ForbiddenException(
+        `Role '${inviterRole}' can only invite: ${allowed.length ? allowed.join(', ') : 'nobody'}. Cannot invite '${targetRole}'.`,
+      );
     }
 
     const token = uuidv4();
@@ -73,7 +63,7 @@ export class InvitationService {
 
     const saved = await this.invitationRepo.save(invitation);
 
-    // Send invitation via email using the invitation template
+    // Send invitation via email
     if (data.method === 'email' && data.email) {
       const roleLabel = data.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
       const signupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?invitation=${token}`;
@@ -86,8 +76,6 @@ export class InvitationService {
         context: { roleLabel, signupUrl, message: data.message },
       });
     }
-
-    // TODO: SMS integration for phone invitations
 
     return saved;
   }
@@ -154,16 +142,20 @@ export class InvitationService {
       throw new ForbiddenException('Invitation has expired');
     }
 
-    // Assign the role
-    await this.rolesService.assignRole(invitation.invitedBy, userId, invitation.role as any);
+    const targetRole = invitation.role as AppRole;
 
-    // For guest role: create scope-inheriting assignments based on inviter's scope
-    if (invitation.role === 'guest') {
+    // Assign the role
+    await this.rolesService.assignRole(invitation.invitedBy, userId, targetRole);
+
+    // Guest scope: inherit inviter's accessible properties/services (read-only)
+    if (targetRole === 'guest') {
       await this.rolesService.createGuestAssignmentsFromInviter(
         invitation.invitedBy,
         userId,
       );
     }
+
+    // Admin invited = will create own properties, no scope inheritance
 
     // Mark as accepted
     invitation.status = 'accepted';
@@ -179,4 +171,28 @@ export class InvitationService {
     });
   }
 
+  /**
+   * IT MVP Exception: Convert a guest to a regular user.
+   * This gives the guest access to all properties/services.
+   * Only hyper_admin or hyper_manager can do this.
+   */
+  async convertGuestToUser(adminId: number, guestUserId: number): Promise<{ userId: number; role: AppRole }> {
+    const adminRole = await this.rolesService.getUserRole(adminId);
+    if (adminRole !== 'hyper_admin' && adminRole !== 'hyper_manager') {
+      throw new ForbiddenException('Only hyper_admin or hyper_manager can convert guest to user');
+    }
+
+    const guestRole = await this.rolesService.getUserRole(guestUserId);
+    if (guestRole !== 'guest') {
+      throw new BadRequestException(`User is not a guest (current role: ${guestRole})`);
+    }
+
+    // Remove guest-scoped assignments
+    await this.rolesService.removeAllAssignments(guestUserId);
+
+    // Set role to 'user' — user gets full access to all properties/services
+    await this.rolesService.setUserRoleDirect(guestUserId, 'user');
+
+    return { userId: guestUserId, role: 'user' };
+  }
 }

@@ -63,9 +63,9 @@ export const Dashboard = memo(() => {
   }, [user]);
 
   const createUserRoles = useMemo(() => {
-    if (!user?.role) return [];
-    if (user.role === 'hyper_admin' || user.role === 'hyper_manager') return ['admin', 'manager'];
-    return [];
+    if (!user?.role) return [] as import('@/modules/admin/admin.types').AppRole[];
+    const { getAllowedInvitationRoles } = require('@/modules/admin/admin.types');
+    return getAllowedInvitationRoles(user.role) as import('@/modules/admin/admin.types').AppRole[];
   }, [user]);
 
   // Booking approve/reject handlers

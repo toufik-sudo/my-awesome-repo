@@ -32,7 +32,8 @@ import { HyperEntityManager } from '@/modules/admin/components/HyperEntityManage
 import { EmailAnalyticsPage } from '@/modules/admin/pages/EmailAnalyticsPage';
 import { HostFeeAbsorptionPage } from '@/modules/admin/pages/HostFeeAbsorptionPage';
 import { CancellationRulesPage } from '@/modules/admin/pages/CancellationRulesPage';
-import { statsApi, invitationsApi, rolesApi, type AdminStats, type Invitation } from '@/modules/admin/admin.api';
+import { statsApi, invitationsApi, rolesApi, type AdminStats } from '@/modules/admin/admin.api';
+import type { Invitation } from '@/modules/admin/admin.types';
 import { useDashboard } from '@/modules/dashboard/useDashboard';
 import type { GridColumn } from '@/types/component.types';
 import {
