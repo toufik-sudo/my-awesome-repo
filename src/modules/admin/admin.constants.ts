@@ -42,6 +42,10 @@ export const USER_STATUS = {
 
 export type UserStatus = typeof USER_STATUS[keyof typeof USER_STATUS];
 
+// ─── Invitation Rules (synced with backend) ────────────────────────────────
+
+export { INVITATION_ALLOWED_ROLES, getAllowedInvitationRoles } from './admin.types';
+
 // ─── Hyper Manager Permissions ──────────────────────────────────────────────
 
 export const HYPER_PERMISSIONS = [
@@ -61,3 +65,18 @@ export const HYPER_PERMISSIONS = [
 ] as const;
 
 export type HyperPermission = typeof HYPER_PERMISSIONS[number];
+
+// ─── Guest Behavior Notes ──────────────────────────────────────────────────
+/**
+ * Guest behavior depends on who invited them:
+ * - Admin invites Guest → access only admin's properties/services (read-only)
+ * - Manager invites Guest → access only manager's assigned properties (multi-admin possible)
+ * - HyperManager invites Guest → access hyper_manager's permissioned properties
+ * 
+ * Guests can: view properties/services, calendar, make reservations, contact support.
+ * 
+ * IT MVP Exception: Guest can request via support to get full access.
+ * hyper_admin/hyper_manager can convert guest → user via API.
+ * 
+ * Non-invited users (self-registration) default to 'user' role with full access.
+ */

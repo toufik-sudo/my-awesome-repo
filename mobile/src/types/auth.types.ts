@@ -26,3 +26,18 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
+
+// ─── Invitation Rules (synced with backend) ────────────────────────────────
+
+export const INVITATION_ALLOWED_ROLES: Record<AppRole, AppRole[]> = {
+  hyper_admin: ['hyper_manager', 'admin', 'user', 'guest'],
+  hyper_manager: ['admin', 'guest'],
+  admin: ['manager', 'guest'],
+  manager: ['guest'],
+  user: [],
+  guest: [],
+};
+
+export function getAllowedInvitationRoles(inviterRole: AppRole): AppRole[] {
+  return INVITATION_ALLOWED_ROLES[inviterRole] || [];
+}

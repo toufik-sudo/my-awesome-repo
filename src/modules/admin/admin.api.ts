@@ -2,6 +2,7 @@ import { api } from '@/lib/axios';
 import type {
   AppRole, UserRole, PropertyGroup, ManagerAssignment,
   ManagerPermission, PermissionType, AssignmentScope, UserWithRoles,
+  Invitation, CreateInvitationRequest, ConvertGuestToUserRequest, ConvertGuestToUserResponse,
 } from './admin.types';
 import type {
   VerificationDocument,
@@ -61,11 +62,13 @@ export interface AdminStats {
   totalGroups: number;
   activeManagers: number;
   totalAssignments: number;
-  pendingVerifications: number;
-  // Extended stats
+  pendingVerifications?: number;
   totalAdmins?: number;
   totalManagers?: number;
   totalRegularUsers?: number;
+  totalGuests?: number;
+  hyperAdmins?: number;
+  hyperManagers?: number;
   approvedVerifications?: number;
   rejectedVerifications?: number;
   totalProperties?: number;
@@ -111,23 +114,18 @@ export const groupsApi = {
 // ─── Document Verification ──────────────────────────────────────────────────
 
 export const documentsApi = {
-  /** Get all pending documents for hyper admin review */
   getPending: () =>
     api.get<VerificationDocument[]>(`${DOCUMENTS_BASE}/pending`).then(r => r.data),
 
-  /** Submit a document for AI validation */
   submitForValidation: (docId: string) =>
     api.post<DocumentValidationResponse>(`${DOCUMENTS_BASE}/${docId}/validate`).then(r => r.data),
 
-  /** Approve a document (hyper admin) */
   approve: (docId: string, note?: string) =>
     api.put<VerificationDocument>(`${DOCUMENTS_BASE}/${docId}/approve`, { note }).then(r => r.data),
 
-  /** Reject a document (hyper admin) */
   reject: (docId: string, note?: string) =>
     api.put<VerificationDocument>(`${DOCUMENTS_BASE}/${docId}/reject`, { note }).then(r => r.data),
 
-  /** Upload a new verification document */
   upload: (propertyId: string, type: string, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -138,7 +136,6 @@ export const documentsApi = {
     }).then(r => r.data);
   },
 
-  /** Get documents for a specific property */
   getByProperty: (propertyId: string) =>
     api.get<VerificationDocument[]>(`${PROPERTIES_BASE}/${propertyId}/documents`).then(r => r.data),
 };
@@ -146,34 +143,19 @@ export const documentsApi = {
 // ─── Trust Recalculation ────────────────────────────────────────────────────
 
 export const trustApi = {
-  /** Recalculate trust stars for a property */
   recalculate: (propertyId: string) =>
     api.put<TrustRecalculationResponse>(`${PROPERTIES_BASE}/${propertyId}/recalculate-trust`).then(r => r.data),
 };
 
 // ─── Invitations ────────────────────────────────────────────────────────────
 
-export interface Invitation {
-  id: string;
-  method: 'email' | 'phone';
-  email?: string;
-  phone?: string;
-  role: string;
-  status: string;
-  invitedBy: number;
-  message?: string;
-  createdAt: string;
-  expiresAt: string;
-}
-
 export const invitationsApi = {
-  create: (data: {
-    method: 'email' | 'phone';
-    email?: string;
-    phone?: string;
-    role: string;
-    message?: string;
-  }) => api.post<Invitation>(`${ROLES_BASE}/invitations`, data).then(r => r.data),
+  /** Get roles the current user is allowed to invite */
+  getAllowedRoles: () =>
+    api.get<AppRole[]>(`${ROLES_BASE}/invitations/allowed-roles`).then(r => r.data),
+
+  create: (data: CreateInvitationRequest) =>
+    api.post<Invitation>(`${ROLES_BASE}/invitations`, data).then(r => r.data),
 
   getAll: () =>
     api.get<Invitation[]>(`${ROLES_BASE}/invitations`).then(r => r.data),
@@ -183,6 +165,10 @@ export const invitationsApi = {
 
   resend: (invitationId: string) =>
     api.post(`${ROLES_BASE}/invitations/${invitationId}/resend`).then(r => r.data),
+
+  /** IT MVP: Convert guest to regular user (hyper_admin/hyper_manager only) */
+  convertGuestToUser: (data: ConvertGuestToUserRequest) =>
+    api.post<ConvertGuestToUserResponse>(`${ROLES_BASE}/invitations/convert-guest-to-user`, data).then(r => r.data),
 
   /** Update user status (pause/disable/activate) */
   updateUserStatus: (userId: number, status: string) =>

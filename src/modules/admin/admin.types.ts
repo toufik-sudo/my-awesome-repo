@@ -20,6 +20,9 @@ export type PermissionType =
   | 'reject_bookings'
   | 'pause_bookings'
   | 'refund_users'
+  | 'answer_demands'
+  | 'decline_demands'
+  | 'accept_demands'
   // Communication
   | 'reply_chat'
   | 'reply_reviews'
@@ -42,6 +45,8 @@ export type PermissionType =
   | 'manage_users'
   | 'manage_admins'
   | 'manage_managers';
+
+export type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'cancelled';
 
 export interface UserRole {
   userId: number;
@@ -94,6 +99,69 @@ export interface UserWithRoles {
   isActive?: boolean;
 }
 
+export interface Invitation {
+  id: string;
+  method: 'email' | 'phone';
+  email?: string;
+  phone?: string;
+  role: AppRole;
+  status: InvitationStatus;
+  invitedBy: number;
+  message?: string;
+  token?: string;
+  createdAt: string;
+  updatedAt?: string;
+  expiresAt: string;
+  acceptedAt?: string;
+}
+
+export interface CreateInvitationRequest {
+  method: 'email' | 'phone';
+  email?: string;
+  phone?: string;
+  role: AppRole;
+  message?: string;
+}
+
+export interface ConvertGuestToUserRequest {
+  userId: number;
+}
+
+export interface ConvertGuestToUserResponse {
+  userId: number;
+  role: AppRole;
+}
+
+// ─── Invitation Rules ─────────────────────────────────────────────────────
+
+/**
+ * Which roles each inviter role can invite.
+ * Synced with backend/src/user/constants/invitation-rules.constant.ts
+ */
+export const INVITATION_ALLOWED_ROLES: Record<AppRole, AppRole[]> = {
+  hyper_admin: ['hyper_manager', 'admin', 'user', 'guest'],
+  hyper_manager: ['admin', 'guest'],
+  admin: ['manager', 'guest'],
+  manager: ['guest'],
+  user: [],
+  guest: [],
+};
+
+export function getAllowedInvitationRoles(inviterRole: AppRole): AppRole[] {
+  return INVITATION_ALLOWED_ROLES[inviterRole] || [];
+}
+
+// ─── Labels ───────────────────────────────────────────────────────────────
+
+export const ROLE_LABELS: Record<AppRole, string> = {
+  hyper_admin: 'Hyper Admin',
+  hyper_manager: 'Hyper Manager',
+  admin: 'Admin (Host)',
+  manager: 'Manager',
+  user: 'Utilisateur',
+  guest: 'Guest',
+};
+
 export const PERMISSION_LABELS: Record<PermissionType, string> = {
   create_property: 'Create Property',
   modify_property: 'Modify Property',
@@ -110,6 +178,9 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
   reject_bookings: 'Reject Bookings',
   pause_bookings: 'Pause Bookings',
   refund_users: 'Refund Users',
+  answer_demands: 'Answer Demands',
+  decline_demands: 'Decline Demands',
+  accept_demands: 'Accept Demands',
   reply_chat: 'Reply to Chat',
   reply_reviews: 'Reply to Reviews',
   reply_comments: 'Reply to Comments',
@@ -135,7 +206,7 @@ export const PERMISSION_CATEGORIES: Record<string, PermissionType[]> = {
     'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
     'manage_availability', 'manage_amenities',
   ],
-  'Bookings': ['view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users'],
+  'Bookings': ['view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users', 'answer_demands', 'decline_demands', 'accept_demands'],
   'Communication': ['reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests'],
   'Social & Engagement': ['manage_reactions', 'manage_likes'],
   'Business & Analytics': ['view_analytics', 'manage_promotions', 'modify_offers'],
