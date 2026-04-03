@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../../user/entity/user.entity';
+import { User, AppRole } from '../../user/entity/user.entity';
 import { SSOUserInfoResponseDto } from '../dtos/responses/sso.token.response.dto';
 import * as bcrypt from 'bcrypt';
 
@@ -82,7 +82,7 @@ export class SSOProvisioningService {
     user.phoneNbr = userInfo.phone_number || `sso_${provider}_${userInfo.sub}`;
     user.firstName = firstName;
     user.lastName = lastName;
-    user.roles = this.resolveRoles(userInfo.roles);
+    user.role = this.resolveRole(userInfo.roles);
     user.cardId = `SSO_${provider.toUpperCase()}_${userInfo.sub}`;
     user.passportId = null;
     user.title = '';
@@ -139,7 +139,7 @@ export class SSOProvisioningService {
 
     // Update roles if provided by SSO
     if (userInfo.roles?.length) {
-      user.roles = this.resolveRoles(userInfo.roles);
+      user.role = this.resolveRole(userInfo.roles);
     }
 
     // Ensure user is active after SSO login
@@ -174,21 +174,27 @@ export class SSOProvisioningService {
   /**
    * Resolve SSO roles to application roles
    */
-  private resolveRoles(roles?: string[]): string {
-    if (!roles?.length) return 'ROLE_USER';
+  private resolveRole(roles?: string[]): AppRole {
+    if (!roles?.length) return 'user';
 
     // Map known SSO roles to app roles
     const roleMap: Record<string, string> = {
-      admin: 'ROLE_ADMIN',
-      manager: 'ROLE_MANAGER',
-      user: 'ROLE_USER',
-      technician: 'ROLE_TECHNIC',
+      admin: 'admin',
+      manager: 'manager',
+      user: 'user',
+      guest: 'guest',
+      hyper_admin: 'hyper_admin',
+      hyper_manager: 'hyper_manager',
     };
 
-    const mappedRoles = roles
-      .map((r) => roleMap[r.toLowerCase()] || r)
-      .filter(Boolean);
+    // Return the highest priority role found
+    const priorityOrder = ['hyper_admin', 'hyper_manager', 'admin', 'manager', 'user', 'guest'];
+    for (const priority of priorityOrder) {
+      if (roles.some(r => roleMap[r.toLowerCase()] === priority)) {
+        return priority as AppRole;
+      }
+    }
 
-    return mappedRoles.length > 0 ? mappedRoles.join(',') : 'ROLE_USER';
+    return 'user' as AppRole;
   }
 }

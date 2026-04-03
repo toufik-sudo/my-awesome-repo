@@ -9,8 +9,8 @@
 // ENUMS & UNION TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Role hierarchy: hyper_admin(5) > hyper_manager(4) > admin(3) > manager(2) > user(1) */
-export type AppRole = 'hyper_admin' | 'hyper_manager' | 'admin' | 'manager' | 'user';
+/** Role hierarchy: hyper_admin(6) > hyper_manager(5) > admin(4) > manager(3) > user(2) > guest(1) */
+export type AppRole = 'hyper_admin' | 'hyper_manager' | 'admin' | 'manager' | 'user' | 'guest';
 
 export type PermissionType =
   | 'create_property' | 'modify_property' | 'delete_property' | 'pause_property'
@@ -867,4 +867,5 @@ export const INCOMPATIBLE_ROLES: Record<AppRole, AppRole[]> = {
   admin: ['hyper_admin', 'hyper_manager'],
   manager: ['hyper_admin', 'hyper_manager'],
   user: [],
+  guest: [],
 };

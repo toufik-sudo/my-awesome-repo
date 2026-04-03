@@ -6,12 +6,11 @@ import {
   IsMobilePhone,
   IsPostalCode,
   IsEmpty,
-  IsArray,
-  ArrayNotEmpty,
-  ArrayMinSize,
   IsIn,
+  IsOptional,
 } from 'class-validator';
-import { Transform } from "class-transformer";
+// import { Transform } from "class-transformer";
+// import { AppRole } from '../entity/user.entity';
 
 export class CreateUserRequestDto {  
   @IsNotEmpty()
@@ -28,23 +27,10 @@ export class CreateUserRequestDto {
   @IsEmail()
   email: string;
 
-  @IsArray()
-  @ArrayNotEmpty()
-  @ArrayMinSize(1)
-  @IsIn(
-    [
-      'ROLE_USER',
-      'ROLE_ADMIN',
-      'ROLE_MANAGER',
-      'ROLE_HYPER_ADMIN',
-      'ROLE_TECHNIC',
-      'ROLE_JOBS',
-      'ROLE_DB_USER',
-      'ROLE_DB_ADMIN',
-    ],
-    { each: true }, // ⚡ important → applique la règle à chaque élément
-  )
-  roles: string[];
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['hyper_admin', 'hyper_manager', 'admin', 'manager', 'user', 'guest'])
+  role: string;
 
   @IsString()
   @IsNotEmpty()

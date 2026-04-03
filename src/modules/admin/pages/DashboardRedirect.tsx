@@ -11,13 +11,16 @@ export function useDashboardRedirect(): string | null {
 
   if (loading || !user) return null;
 
-  const roles = user.roles || [];
+  const role = user.role || 'user';
 
-  if (roles.includes('hyper_admin') || roles.includes('hyper_manager')) {
+  if (role === 'hyper_admin' || role === 'hyper_manager') {
     return '/dashboard/hyper';
   }
-  if (roles.includes('admin') || roles.includes('manager')) {
+  if (role === 'admin' || role === 'manager') {
     return '/dashboard/admin';
+  }
+  if (role === 'guest') {
+    return '/dashboard/guest';
   }
 
   return null;

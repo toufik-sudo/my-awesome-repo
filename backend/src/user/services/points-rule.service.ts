@@ -93,8 +93,8 @@ export class PointsRuleService {
   }
 
   private async assertHyperRole(userId: number) {
-    const roles = await this.rolesService.getUserRoles(userId);
-    if (!roles.includes('hyper_admin') && !roles.includes('hyper_manager')) {
+    const role = await this.rolesService.getUserRole(userId);
+    if (role !== 'hyper_admin' && role !== 'hyper_manager') {
       throw new ForbiddenException('Only hyper_admin or hyper_manager can manage points rules');
     }
   }

@@ -19,6 +19,7 @@ export type NotificationType =
   | 'doc_admin_rejected'
   | 'saved_search_match'
   | 'promo_alert'
+  | 'system'
   | 'general';
 
 export type NotificationChannel = 'in_app' | 'email' | 'both';

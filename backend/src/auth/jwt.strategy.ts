@@ -12,15 +12,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async validate(payload: { sub: number; id: number; email: string; phoneNbr: string; roles: any; username: string }) {
-        // Whatever you return here becomes req.user
+    async validate(payload: { sub: number; id: number; email: string; phoneNbr: string; role: string; username: string }) {
         return {
-            sub: payload.sub,         // ← this is the standard JWT subject claim, often used for user ID   
-            id: payload.sub,        // ← this is what req.user.id reads
+            sub: payload.sub,
+            id: payload.sub,
             email: payload.email,
             phoneNbr: payload.phoneNbr,
-            roles: payload.roles,
-            username: payload.username, // ← for convenience in payload, not used in validation but can be accessed as req.user.username
+            role: payload.role,
+            username: payload.username,
         };
     }
 }

@@ -64,9 +64,9 @@ export class CancellationRuleService {
   }
 
   private async assertHostRole(userId: number) {
-    const roles = await this.rolesService.getUserRoles(userId);
+    const role = await this.rolesService.getUserRole(userId);
     const allowed = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
-    if (!roles.some(r => allowed.includes(r))) {
+    if (!allowed.includes(role)) {
       throw new ForbiddenException('Only admin/manager can manage cancellation rules');
     }
   }

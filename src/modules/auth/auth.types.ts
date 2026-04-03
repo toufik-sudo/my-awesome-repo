@@ -1,9 +1,13 @@
+export type AppRole = 'hyper_admin' | 'hyper_manager' | 'admin' | 'manager' | 'user' | 'guest';
+
 export interface User {
   id: string;
   email: string;
-  username?: string;  
+  username?: string;
   language?: string;
-  roles?: string[];
+  role?: AppRole;
+  /** @deprecated Use role instead */
+  roles?: AppRole[];
   [key: string]: any;
 }
 

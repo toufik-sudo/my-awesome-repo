@@ -52,7 +52,7 @@ export const SupportInbox: React.FC = () => {
   const [newCategory, setNewCategory] = useState('general');
   const [newContent, setNewContent] = useState('');
 
-  const isAdmin = user?.roles?.some(r => ['hyper_admin', 'hyper_manager', 'admin'].includes(r));
+  const isAdmin = ['hyper_admin', 'hyper_manager', 'admin'].includes(user?.role || '');
 
   const adminQuery = useSupportAdminThreads(
     1,

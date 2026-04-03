@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@ne
 import { MetricsService, PaginatedResult } from '../services/metrics.service';
 import { RequireRole } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
+import { AppRole } from 'src/user/entity/user.entity';
 
 @ApiTags('Metrics')
 @ApiBearerAuth('JWT-auth')
@@ -14,13 +15,13 @@ export class MetricsController {
   @Get('users')
   @RequireRole('hyper_admin', 'hyper_manager')
   @ApiOperation({ summary: 'Detailed user metrics', description: 'Paginated user list with roles. **Roles**: hyper_admin, hyper_manager' })
-  @ApiQuery({ name: 'role', required: false, enum: ['hyper_admin', 'hyper_manager', 'admin', 'manager', 'user'] })
+  @ApiQuery({ name: 'role', required: false, enum: ['hyper_admin', 'hyper_manager', 'admin', 'manager', 'user', 'guest'] })
   @ApiQuery({ name: 'status', required: false, enum: ['active', 'inactive'] })
   @ApiQuery({ name: 'page', required: false, type: 'number' })
   @ApiQuery({ name: 'limit', required: false, type: 'number' })
   @ApiResponse({ status: 200, description: 'Paginated user metrics' })
   getUsers(
-    @Query('role') role?: string,
+    @Query('role') role?: AppRole,
     @Query('status') status?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,

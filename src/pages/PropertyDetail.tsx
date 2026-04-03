@@ -59,7 +59,7 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const canEdit = user?.roles?.some((r: string) => ['admin', 'manager', 'hyper_manager', 'hyper_admin'].includes(r));
+  const canEdit = ['admin', 'manager', 'hyper_manager', 'hyper_admin'].includes(user?.role || '');
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);

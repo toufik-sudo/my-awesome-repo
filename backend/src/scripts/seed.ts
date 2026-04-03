@@ -69,29 +69,29 @@ async function seedUsers(ds: DataSource): Promise<number[]> {
   const pwd = await hashPassword('Password123!');
   const token = 'seed-token-placeholder';
 
-  // Role logic:
-  // - hyper_admin / hyper_manager keep their role in users.roles
-  // - admin / manager / guest all have 'user' in users.roles (actual roles in user_roles table)
+  // Single role stored directly in users.role column
   const users = [
-    { email: 'hyper_admin_byootdz@yopmail.com', phoneNbr: '+213550000000', cardId: 'CID0000', passportId: 'P000', roles: 'hyper_admin', firstName: 'Sofiane', lastName: 'Hamidi', title: 'Mr', city: 'Alger', country: 'Algeria' },
-    { email: 'hyper_manager_byootdz@yopmail.com', phoneNbr: '+213550000001', cardId: 'CID0001', passportId: 'P001', roles: 'hyper_manager', firstName: 'Karim', lastName: 'Bensalah', title: 'Mr', city: 'Alger', country: 'Algeria' },
-    { email: 'admin1_byootdz@yopmail.com', phoneNbr: '+213550000002', cardId: 'CID0002', passportId: 'P002', roles: 'user', firstName: 'Amina', lastName: 'Mebarki', title: 'Mme', city: 'Oran', country: 'Algeria' },
-    { email: 'admin2_byootdz@yopmail.com', phoneNbr: '+213550000003', cardId: 'CID0003', passportId: 'P003', roles: 'user', firstName: 'Yacine', lastName: 'Khelifi', title: 'Mr', city: 'Tipaza', country: 'Algeria' },
-    { email: 'manager1_byootdz@yopmail.com', phoneNbr: '+213550000004', cardId: 'CID0004', passportId: 'P004', roles: 'user', firstName: 'Lina', lastName: 'Bouaziz', title: 'Mme', city: 'Constantine', country: 'Algeria' },
-    { email: 'manager2_byootdz@yopmail.com', phoneNbr: '+213550000005', cardId: 'CID0005', passportId: 'P005', roles: 'user', firstName: 'Omar', lastName: 'Touati', title: 'Mr', city: 'Ghardaïa', country: 'Algeria' },
-    { email: 'guest1_byootdz@yopmail.com', phoneNbr: '+213550000006', cardId: 'CID0006', passportId: 'P006', roles: 'user', firstName: 'Fatima', lastName: 'Zeroual', title: 'Mme', city: 'Béjaïa', country: 'Algeria' },
-    { email: 'guest2_byootdz@yopmail.com', phoneNbr: '+213550000007', cardId: 'CID0007', passportId: 'P007', roles: 'user', firstName: 'Sara', lastName: 'Hadj', title: 'Mme', city: 'Annaba', country: 'Algeria' },
-    { email: 'guest3_byootdz@yopmail.com', phoneNbr: '+213550000008', cardId: 'CID0008', passportId: 'P008', roles: 'user', firstName: 'Raouf', lastName: 'Brahimi', title: 'Mr', city: 'Tizi Ouzou', country: 'Algeria' },
-    { email: 'guest4_byootdz@yopmail.com', phoneNbr: '+213550000009', cardId: 'CID0009', passportId: 'P009', roles: 'user', firstName: 'Nadia', lastName: 'Ferhat', title: 'Mme', city: 'Bouira', country: 'Algeria' },
-    { email: 'guest5_byootdz@yopmail.com', phoneNbr: '+213550000010', cardId: 'CID0010', passportId: 'P010', roles: 'user', firstName: 'Mehdi', lastName: 'Ziani', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'hyper_admin_byootdz@yopmail.com', phoneNbr: '+213550000000', cardId: 'CID0000', passportId: 'P000', role: 'hyper_admin', firstName: 'Sofiane', lastName: 'Hamidi', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'hyper_manager_byootdz@yopmail.com', phoneNbr: '+213550000001', cardId: 'CID0001', passportId: 'P001', role: 'hyper_manager', firstName: 'Karim', lastName: 'Bensalah', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'admin1_byootdz@yopmail.com', phoneNbr: '+213550000002', cardId: 'CID0002', passportId: 'P002', role: 'admin', firstName: 'Amina', lastName: 'Mebarki', title: 'Mme', city: 'Oran', country: 'Algeria' },
+    { email: 'admin2_byootdz@yopmail.com', phoneNbr: '+213550000003', cardId: 'CID0003', passportId: 'P003', role: 'admin', firstName: 'Yacine', lastName: 'Khelifi', title: 'Mr', city: 'Tipaza', country: 'Algeria' },
+    { email: 'manager1_byootdz@yopmail.com', phoneNbr: '+213550000004', cardId: 'CID0004', passportId: 'P004', role: 'manager', firstName: 'Lina', lastName: 'Bouaziz', title: 'Mme', city: 'Constantine', country: 'Algeria' },
+    { email: 'manager2_byootdz@yopmail.com', phoneNbr: '+213550000005', cardId: 'CID0005', passportId: 'P005', role: 'manager', firstName: 'Omar', lastName: 'Touati', title: 'Mr', city: 'Ghardaïa', country: 'Algeria' },
+    { email: 'guest1_byootdz@yopmail.com', phoneNbr: '+213550000006', cardId: 'CID0006', passportId: 'P006', role: 'user', firstName: 'Fatima', lastName: 'Zeroual', title: 'Mme', city: 'Béjaïa', country: 'Algeria' },
+    { email: 'guest2_byootdz@yopmail.com', phoneNbr: '+213550000007', cardId: 'CID0007', passportId: 'P007', role: 'user', firstName: 'Sara', lastName: 'Hadj', title: 'Mme', city: 'Annaba', country: 'Algeria' },
+    { email: 'guest3_byootdz@yopmail.com', phoneNbr: '+213550000008', cardId: 'CID0008', passportId: 'P008', role: 'user', firstName: 'Raouf', lastName: 'Brahimi', title: 'Mr', city: 'Tizi Ouzou', country: 'Algeria' },
+    { email: 'guest4_byootdz@yopmail.com', phoneNbr: '+213550000009', cardId: 'CID0009', passportId: 'P009', role: 'user', firstName: 'Nadia', lastName: 'Ferhat', title: 'Mme', city: 'Bouira', country: 'Algeria' },
+    { email: 'guest5_byootdz@yopmail.com', phoneNbr: '+213550000010', cardId: 'CID0010', passportId: 'P010', role: 'user', firstName: 'Mehdi', lastName: 'Ziani', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'guestrole1_byootdz@yopmail.com', phoneNbr: '+213550000011', cardId: 'CID0011', passportId: 'P011', role: 'guest', firstName: 'Amine', lastName: 'Kaci', title: 'Mr', city: 'Alger', country: 'Algeria' },
+    { email: 'guestrole2_byootdz@yopmail.com', phoneNbr: '+213550000012', cardId: 'CID0012', passportId: 'P012', role: 'guest', firstName: 'Houda', lastName: 'Belkacem', title: 'Mme', city: 'Oran', country: 'Algeria' },
   ];
 
   const userIds: number[] = [];
   for (const u of users) {
     const result = await qr.query(
-      `INSERT INTO users (email, phoneNbr, cardId, passportId, roles, firstName, lastName, password, token, title, city, country, isActive)
+      `INSERT INTO users (email, phoneNbr, cardId, passportId, role, firstName, lastName, password, token, title, city, country, isActive)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [u.email, u.phoneNbr, u.cardId, u.passportId, u.roles, u.firstName, u.lastName, pwd, token, u.title, u.city, u.country, true]
+      [u.email, u.phoneNbr, u.cardId, u.passportId, u.role, u.firstName, u.lastName, pwd, token, u.title, u.city, u.country, true]
     );
     userIds.push(result.insertId);
   }
@@ -100,42 +100,7 @@ async function seedUsers(ds: DataSource): Promise<number[]> {
   return userIds;
 }
 
-async function seedUserRoles(ds: DataSource, userIds: number[]) {
-  const qr = ds.createQueryRunner();
-  // Roles in user_roles table reflect actual business roles
-  // hyper_admin/hyper_manager: their role + user
-  // admin: owns properties, can assign managers
-  // manager: manages assigned properties from admins
-  // guests: just 'user' role
-  // Note: an admin/manager can also be a guest (book other properties)
-  const roles = [
-    { userId: userIds[0], role: 'hyper_admin' },
-    { userId: userIds[0], role: 'user' },
-    { userId: userIds[1], role: 'hyper_manager' },
-    { userId: userIds[1], role: 'user' },
-    { userId: userIds[2], role: 'admin' },    // admin1 - owns properties
-    { userId: userIds[2], role: 'user' },     // can also be a guest
-    { userId: userIds[3], role: 'admin' },    // admin2 - owns properties  
-    { userId: userIds[3], role: 'user' },     // can also be a guest
-    { userId: userIds[4], role: 'manager' },  // manager1 - manages for admin1
-    { userId: userIds[4], role: 'user' },     // can also be a guest
-    { userId: userIds[5], role: 'manager' },  // manager2 - manages for admin2 & admin1
-    { userId: userIds[5], role: 'user' },     // can also be a guest
-    { userId: userIds[6], role: 'user' },     // guest only
-    { userId: userIds[7], role: 'user' },     // guest only
-    { userId: userIds[8], role: 'user' },     // guest only
-    { userId: userIds[9], role: 'user' },     // guest only
-    { userId: userIds[10], role: 'user' },    // guest only
-  ];
-  for (const r of roles) {
-    await qr.query(
-      `INSERT INTO user_roles (id, userId, role) VALUES (?, ?, ?)`,
-      [uuidv4(), r.userId, r.role]
-    );
-  }
-  await qr.release();
-  console.log(`✅ Created ${roles.length} user roles`);
-}
+// seedUserRoles removed — roles are now stored directly in users.roles as JSON array
 
 async function seedProfiles(ds: DataSource, userIds: number[]) {
   const qr = ds.createQueryRunner();
@@ -1245,54 +1210,6 @@ async function seedReferrals(ds: DataSource, userIds: number[], propertyIds: str
   console.log(`✅ Created ${referrals.length} referrals and ${shares.length} property shares`);
 }
 
-// ─── Rewards Seed ───────────────────────────────────────────────────────────
-
-async function seedRewards(ds: DataSource, hyperAdminId: number, guestIds: number[]) {
-  const qr = ds.createQueryRunner();
-
-  const rewards = [
-    { name: '10% Réduction Réservation', description: 'Obtenez 10% de réduction sur votre prochaine réservation', type: 'discount', pointsCost: 200, discountPercent: 10, discountAmount: 0, icon: '🏷️', category: 'discounts', requiredTier: null, maxRedemptions: 500, maxPerUser: 5, sortOrder: 10 },
-    { name: '500 DZD de réduction', description: '500 DZD de réduction immédiate sur une réservation', type: 'discount', pointsCost: 100, discountPercent: 0, discountAmount: 500, icon: '💵', category: 'discounts', requiredTier: null, maxRedemptions: 1000, maxPerUser: 10, sortOrder: 20 },
-    { name: 'Surclassement chambre', description: 'Surclassement vers une chambre supérieure (selon disponibilité)', type: 'upgrade', pointsCost: 500, discountPercent: 0, discountAmount: 0, icon: '⬆️', category: 'upgrades', requiredTier: 'silver', maxRedemptions: 100, maxPerUser: 2, sortOrder: 30 },
-    { name: 'Nuit gratuite', description: 'Une nuit gratuite dans un hébergement partenaire', type: 'free_night', pointsCost: 1000, discountPercent: 0, discountAmount: 0, icon: '🌙', category: 'experiences', requiredTier: 'gold', maxRedemptions: 50, maxPerUser: 1, sortOrder: 40 },
-    { name: 'Visite guidée gratuite', description: 'Un service de visite guidée offert', type: 'free_service', pointsCost: 300, discountPercent: 0, discountAmount: 0, icon: '🎁', category: 'services', requiredTier: null, maxRedemptions: 200, maxPerUser: 3, sortOrder: 50 },
-    { name: 'Cashback 1000 DZD', description: '1000 DZD crédités sur votre compte', type: 'cashback', pointsCost: 800, discountPercent: 0, discountAmount: 1000, icon: '💰', category: 'gifts', requiredTier: 'silver', maxRedemptions: 200, maxPerUser: 5, sortOrder: 60 },
-    { name: '25% Réduction Premium', description: '25% de réduction exclusive pour les membres Platinum+', type: 'discount', pointsCost: 1500, discountPercent: 25, discountAmount: 0, icon: '👑', category: 'discounts', requiredTier: 'platinum', maxRedemptions: 30, maxPerUser: 1, sortOrder: 70 },
-    { name: 'Petit-déjeuner offert', description: 'Petit-déjeuner traditionnel offert lors de votre séjour', type: 'free_service', pointsCost: 150, discountPercent: 0, discountAmount: 0, icon: '🥐', category: 'services', requiredTier: null, maxRedemptions: 300, maxPerUser: 5, sortOrder: 80 },
-  ];
-
-  const rewardIds: string[] = [];
-  for (const r of rewards) {
-    const id = uuidv4();
-    await qr.query(
-      `INSERT INTO rewards (id, name, description, type, pointsCost, discountPercent, discountAmount, currency, icon, category, requiredTier, maxRedemptions, currentRedemptions, maxPerUser, status, sortOrder, createdByUserId)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'DZD', ?, ?, ?, ?, 0, ?, 'active', ?, ?)`,
-      [id, r.name, r.description, r.type, r.pointsCost, r.discountPercent, r.discountAmount, r.icon, r.category, r.requiredTier, r.maxRedemptions, r.maxPerUser, r.sortOrder, hyperAdminId]
-    );
-    rewardIds.push(id);
-  }
-
-  // Sample redemptions
-  const redemptions = [
-    { userId: guestIds[0], rewardIdx: 0, pointsSpent: 200, code: 'RWD-A1B2C3D4', status: 'confirmed' },
-    { userId: guestIds[0], rewardIdx: 4, pointsSpent: 300, code: 'RWD-E5F6G7H8', status: 'used' },
-    { userId: guestIds[1], rewardIdx: 1, pointsSpent: 100, code: 'RWD-I9J0K1L2', status: 'confirmed' },
-  ];
-
-  for (const rd of redemptions) {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 90);
-    await qr.query(
-      `INSERT INTO reward_redemptions (id, userId, rewardId, pointsSpent, code, status, expiresAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [uuidv4(), rd.userId, rewardIds[rd.rewardIdx], rd.pointsSpent, rd.code, rd.status, expiresAt]
-    );
-  }
-
-  await qr.release();
-  console.log(`✅ Created ${rewards.length} rewards and ${redemptions.length} redemptions`);
-}
-
 // ─── Main Runner ────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1302,12 +1219,12 @@ async function main() {
   console.log('✅ Database connected\n');
 
   try {
-    // 1. Users
+    // 1. Users (roles stored as JSON array in users.roles)
     const userIds = await seedUsers(AppDataSource);
-    await seedUserRoles(AppDataSource, userIds);
+    // seedUserRoles removed — roles in users.roles column
     await seedProfiles(AppDataSource, userIds);
 
-    // 2. Properties
+    // 2. Properties — admins (indices 2,3) own properties
     const adminIds = [userIds[2], userIds[3]];
     const propertyIds = await seedProperties(AppDataSource, adminIds);
     await seedPropertyImages(AppDataSource, propertyIds);
@@ -1319,11 +1236,11 @@ async function main() {
     // 4. Tourism services
     const serviceIds = await seedTourismServices(AppDataSource, adminIds);
 
-    // 5. Groups
+    // 5. Groups (property + service)
     await seedGroups(AppDataSource, adminIds, propertyIds, serviceIds);
 
-    // 6. Bookings & Reviews
-    const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9], userIds[2]];
+    // 6. Bookings & Reviews — guests (indices 6-10), admins can also be guests
+    const guestIds = [userIds[6], userIds[7], userIds[8], userIds[9], userIds[2]]; // admin1 as guest too
     const bookingIds = await seedBookings(AppDataSource, propertyIds, guestIds);
     await seedReviews(AppDataSource, propertyIds, guestIds);
 
@@ -1345,9 +1262,6 @@ async function main() {
     await seedServiceFeeRules(AppDataSource, userIds[0], adminIds, propertyIds);
     await seedReferrals(AppDataSource, userIds, propertyIds);
 
-    // 11. Rewards & redemptions
-    await seedRewards(AppDataSource, userIds[0], guestIds);
-
     console.log('\n═══════════════════════════════════════════');
     console.log('  ✅ Seeding complete!');
     console.log('═══════════════════════════════════════════');
@@ -1360,11 +1274,9 @@ async function main() {
     console.log(`   Reviews:            8`);
     console.log(`   Transfer Accounts:  ${transferAccountIds.length}`);
     console.log(`   Payment Receipts:   6`);
-    console.log(`   Points Rules:       14`);
-    console.log(`   Service Fee Rules:  6`);
+    console.log(`   Points Rules:       12`);
+    console.log(`   Service Fee Rules:  4`);
     console.log(`   Referrals:          4`);
-    console.log(`   Rewards:            8`);
-    console.log(`   Redemptions:        3`);
     console.log('\n🔑 Default password: Password123!');
     console.log('   Hyper Admin:      hyper_admin_byootdz@yopmail.com');
     console.log('   Hyper Manager:    hyper_manager_byootdz@yopmail.com');

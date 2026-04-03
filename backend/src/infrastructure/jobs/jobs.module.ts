@@ -9,7 +9,7 @@ import { AlertsProcessor } from './processors/alerts.processor';
 import { JobProducerService } from './job-producer.service';
 import { Notification } from '../../notification/entity/notification.entity';
 import { User } from '../../user/entity/user.entity';
-import { UserRole } from '../../user/entity/user-role.entity';
+
 import { Property } from '../../properties/entity/property.entity';
 import { SavedSearchAlert } from '../../properties/entity/saved-search-alert.entity';
 import { PromoAlert } from '../../properties/entity/promo-alert.entity';
@@ -44,7 +44,7 @@ import { QUEUE_EMAIL, QUEUE_NOTIFICATION, QUEUE_IMAGE, QUEUE_ALERTS } from './jo
       { name: QUEUE_ALERTS },
     ),
     TypeOrmModule.forFeature([
-      Notification, User, UserRole,
+      Notification, User,
       Property, SavedSearchAlert, PromoAlert, PropertyPromo,
     ]),
   ],

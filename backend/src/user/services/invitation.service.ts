@@ -26,19 +26,33 @@ export class InvitationService {
     },
   ): Promise<Invitation> {
     // Verify the inviter has sufficient permissions
-    const inviterRoles = await this.rolesService.getUserRoles(invitedBy);
+    const inviterRole = await this.rolesService.getUserRole(invitedBy);
 
-    // Only hyper_manager can invite admins or other hyper_managers
-    if (['hyper_manager', 'admin'].includes(data.role)) {
-      if (!inviterRoles.includes('hyper_manager')) {
-        throw new ForbiddenException('Only hyper_manager can invite admins or hyper_managers');
+    // Only hyper_admin can invite hyper_managers
+    if (data.role === 'hyper_manager') {
+      if (inviterRole !== 'hyper_admin') {
+        throw new ForbiddenException('Only hyper_admin can invite hyper_managers');
       }
     }
 
-    // Admin can invite managers
+    // hyper_admin/hyper_manager can invite admins
+    if (data.role === 'admin') {
+      if (inviterRole !== 'hyper_admin' && inviterRole !== 'hyper_manager') {
+        throw new ForbiddenException('Only hyper_admin or hyper_manager can invite admins');
+      }
+    }
+
+    // Admin (or hyper) can invite managers
     if (data.role === 'manager') {
-      if (!inviterRoles.includes('hyper_manager') && !inviterRoles.includes('admin')) {
-        throw new ForbiddenException('Only hyper_manager or admin can invite managers');
+      if (!['hyper_admin', 'hyper_manager', 'admin'].includes(inviterRole)) {
+        throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can invite managers');
+      }
+    }
+
+    // Any role except user/guest can invite guests — guests inherit inviter's scope
+    if (data.role === 'guest') {
+      if (['user', 'guest'].includes(inviterRole)) {
+        throw new ForbiddenException('Users and guests cannot invite guests');
       }
     }
 
@@ -142,6 +156,14 @@ export class InvitationService {
 
     // Assign the role
     await this.rolesService.assignRole(invitation.invitedBy, userId, invitation.role as any);
+
+    // For guest role: create scope-inheriting assignments based on inviter's scope
+    if (invitation.role === 'guest') {
+      await this.rolesService.createGuestAssignmentsFromInviter(
+        invitation.invitedBy,
+        userId,
+      );
+    }
 
     // Mark as accepted
     invitation.status = 'accepted';

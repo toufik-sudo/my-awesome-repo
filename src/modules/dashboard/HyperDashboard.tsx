@@ -26,6 +26,7 @@ import { VerificationReview } from '@/modules/admin/pages/VerificationReview';
 import { PointsDashboardWidget } from '@/modules/points/PointsDashboardWidget';
 import { PointsRulesManager } from '@/modules/admin/components/PointsRulesManager';
 import { ServiceFeesManager } from '@/modules/admin/components/ServiceFeesManager';
+import { RewardsManager } from '@/modules/admin/components/RewardsManager';
 import { PaymentValidation } from '@/modules/payments/pages/PaymentValidation';
 import { HyperEntityManager } from '@/modules/admin/components/HyperEntityManager';
 import { EmailAnalyticsPage } from '@/modules/admin/pages/EmailAnalyticsPage';
@@ -35,12 +36,12 @@ import { statsApi, invitationsApi, rolesApi, type AdminStats, type Invitation } 
 import { useDashboard } from '@/modules/dashboard/useDashboard';
 import type { GridColumn } from '@/types/component.types';
 import {
-  Crown, Users, Shield, ShieldCheck, ShieldAlert, UserPlus,
+  Crown, Users, Shield, ShieldCheck, UserPlus,
   FileCheck2, FolderKanban, BarChart3, Building2, Send,
   Clock, CheckCircle2, XCircle, TrendingUp,
   Home, Calendar, Star, MapPin, ArrowRight,
   DollarSign, Trophy, CreditCard, Mail, ShieldX, Percent,
-  Loader2, Layers,
+  Loader2, Layers, Gift,
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { color: string }> = {
@@ -50,7 +51,6 @@ const STATUS_CONFIG: Record<string, { color: string }> = {
   cancelled: { color: 'text-destructive' },
 };
 
-// Metric detail modal types
 interface MetricDetail {
   title: string;
   loading: boolean;
@@ -70,7 +70,7 @@ export const HyperDashboard: React.FC = memo(() => {
   const [metricModal, setMetricModal] = useState<MetricDetail | null>(null);
 
   const { data: dashboardData } = useDashboard();
-  const isHyperAdmin = user?.roles?.includes('hyper_admin');
+  const isHyperAdmin = user?.role === 'hyper_admin';
 
   const loadData = useCallback(async () => {
     try {
@@ -93,7 +93,6 @@ export const HyperDashboard: React.FC = memo(() => {
 
   useEffect(() => { loadData(); loadInvitations(); }, [loadData, loadInvitations]);
 
-  // Metric click handlers
   const handleMetricClick = useCallback(async (metricKey: string, title: string) => {
     setMetricModal({ title, loading: true, data: [], columns: [] });
 
@@ -104,26 +103,31 @@ export const HyperDashboard: React.FC = memo(() => {
       switch (metricKey) {
         case 'users': {
           const users = await rolesApi.getAllUsers();
-          data = users;
+          // Exclude hyper_admin from users table
+          data = users.filter(u => u.role !== 'hyper_admin');
           columns = [
             { key: 'email', title: 'Email' },
             { key: 'firstName', title: 'Prénom', render: (v: string) => v || '—' },
             { key: 'lastName', title: 'Nom', render: (v: string) => v || '—' },
-            { key: 'roles', title: 'Rôles', render: (v: string[]) => (
-              <div className="flex flex-wrap gap-1">{(v || []).map(r => <Badge key={r} variant="secondary" className="text-[10px]">{r}</Badge>)}</div>
-            )},
+            {
+              key: 'role', title: 'Rôle', render: (v: string) => (
+                <Badge variant="secondary" className="text-[10px]">{v?.replace('_', ' ')}</Badge>
+              )
+            },
           ];
           break;
         }
         case 'managers': {
           const users = await rolesApi.getAllUsers();
-          data = users.filter(u => u.roles?.some(r => ['manager', 'hyper_manager'].includes(r)));
+          data = users.filter(u => u.role === 'manager' || u.role === 'hyper_manager');
           columns = [
             { key: 'email', title: 'Email' },
             { key: 'firstName', title: 'Prénom', render: (v: string) => v || '—' },
-            { key: 'roles', title: 'Rôles', render: (v: string[]) => (
-              <div className="flex flex-wrap gap-1">{(v || []).map(r => <Badge key={r} variant="secondary" className="text-[10px]">{r}</Badge>)}</div>
-            )},
+            {
+              key: 'role', title: 'Rôle', render: (v: string) => (
+                <Badge variant="secondary" className="text-[10px]">{v?.replace('_', ' ')}</Badge>
+              )
+            },
           ];
           break;
         }
@@ -136,9 +140,11 @@ export const HyperDashboard: React.FC = memo(() => {
           columns = [
             { key: 'label', title: 'Statut' },
             { key: 'count', title: 'Nombre' },
-            { key: 'status', title: '', render: (v: string) => (
-              <Badge variant={v === 'approved' ? 'default' : v === 'rejected' ? 'destructive' : 'outline'}>{v}</Badge>
-            )},
+            {
+              key: 'status', title: '', render: (v: string) => (
+                <Badge variant={v === 'approved' ? 'default' : v === 'rejected' ? 'destructive' : 'outline'}>{v}</Badge>
+              )
+            },
           ];
           break;
         }
@@ -195,20 +201,24 @@ export const HyperDashboard: React.FC = memo(() => {
   const invitationColumns = useMemo<GridColumn[]>(() => [
     { key: 'contact', title: 'Contact', render: (_: any, row: Invitation) => row.email || row.phone || '—' },
     { key: 'role', title: 'Role', width: '120px', render: (v: string) => <Badge variant={v === 'admin' ? 'default' : 'secondary'}>{v?.replace('_', ' ')}</Badge> },
-    { key: 'status', title: 'Status', width: '120px', render: (v: string) => {
-      const cfg: Record<string, { variant: any; icon: React.ReactNode }> = {
-        pending: { variant: 'outline', icon: <Clock className="h-3 w-3" /> },
-        accepted: { variant: 'default', icon: <CheckCircle2 className="h-3 w-3" /> },
-        expired: { variant: 'secondary', icon: <XCircle className="h-3 w-3" /> },
-        cancelled: { variant: 'destructive', icon: <XCircle className="h-3 w-3" /> },
-      };
-      const c = cfg[v] || cfg.pending;
-      return <Badge variant={c.variant} className="gap-1">{c.icon} {v}</Badge>;
-    }},
+    {
+      key: 'status', title: 'Status', width: '120px', render: (v: string) => {
+        const cfg: Record<string, { variant: any; icon: React.ReactNode }> = {
+          pending: { variant: 'outline', icon: <Clock className="h-3 w-3" /> },
+          accepted: { variant: 'default', icon: <CheckCircle2 className="h-3 w-3" /> },
+          expired: { variant: 'secondary', icon: <XCircle className="h-3 w-3" /> },
+          cancelled: { variant: 'destructive', icon: <XCircle className="h-3 w-3" /> },
+        };
+        const c = cfg[v] || cfg.pending;
+        return <Badge variant={c.variant} className="gap-1">{c.icon} {v}</Badge>;
+      }
+    },
     { key: 'createdAt', title: 'Envoyé', width: '140px', render: (v: string) => v ? new Date(v).toLocaleDateString() : '—' },
-    { key: 'actions', title: '', width: '100px', render: (_: any, row: Invitation) => row.status === 'pending' ? (
-      <DynamicButton variant="ghost" size="sm" icon={<Send className="h-3.5 w-3.5" />} onClick={() => handleResend(row.id)}>Renvoyer</DynamicButton>
-    ) : null },
+    {
+      key: 'actions', title: '', width: '100px', render: (_: any, row: Invitation) => row.status === 'pending' ? (
+        <DynamicButton variant="ghost" size="sm" icon={<Send className="h-3.5 w-3.5" />} onClick={() => handleResend(row.id)}>Renvoyer</DynamicButton>
+      ) : null
+    },
   ], []);
 
   const handleResend = useCallback(async (id: string) => {
@@ -217,7 +227,6 @@ export const HyperDashboard: React.FC = memo(() => {
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><LoadingSpinner size="lg" /></div>;
 
-  // Chart data from dashboard
   const revenueChartData = dashboardData?.revenueByMonth?.map(m => ({
     name: m.month,
     revenue: m.revenue,
@@ -226,9 +235,9 @@ export const HyperDashboard: React.FC = memo(() => {
 
   const propertyTypeData = dashboardData?.propertyTypeDistribution
     ? Object.entries(dashboardData.propertyTypeDistribution).map(([key, value]) => ({
-        name: t(`byootdz.categories.${key}s`, key),
-        value,
-      }))
+      name: t(`byootdz.categories.${key}s`, key),
+      value,
+    }))
     : [];
 
   const tabs = [
@@ -294,12 +303,6 @@ export const HyperDashboard: React.FC = memo(() => {
                 </h3>
                 <ScrollArea className="max-h-[220px]">
                   <div className="space-y-3">
-                    {isHyperAdmin && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-destructive" /><span className="text-sm">Hyper Admins</span></div>
-                        <Badge variant="destructive">—</Badge>
-                      </div>
-                    )}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /><span className="text-sm">Admins</span></div>
                       <Badge>{stats?.totalAdmins ?? 0}</Badge>
@@ -314,7 +317,6 @@ export const HyperDashboard: React.FC = memo(() => {
                     </div>
                   </div>
                 </ScrollArea>
-                {/* Trust Score vertical */}
                 <Separator className="my-4" />
                 <div className="flex items-center gap-3">
                   <Star className="h-5 w-5 text-accent shrink-0" />
@@ -516,6 +518,12 @@ export const HyperDashboard: React.FC = memo(() => {
       ),
     },
     {
+      value: 'rewards',
+      label: t('dashboard.tabs.rewards', 'Récompenses'),
+      icon: <Gift className="h-4 w-4" />,
+      content: <ErrorBoundary><RewardsManager /></ErrorBoundary>,
+    },
+    {
       value: 'fees',
       label: t('dashboard.tabs.fees', 'Frais de service'),
       icon: <DollarSign className="h-4 w-4" />,
@@ -537,13 +545,13 @@ export const HyperDashboard: React.FC = memo(() => {
       value: 'fee-absorption',
       label: t('dashboard.tabs.feeAbsorption', 'Absorption frais'),
       icon: <Percent className="h-4 w-4" />,
-      content: <ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary>,
+      content: <ErrorBoundary><HostFeeAbsorptionPage viewOnly /></ErrorBoundary>,
     },
     {
       value: 'cancellation',
       label: t('dashboard.tabs.cancellation', "Règles d'annulation"),
       icon: <ShieldX className="h-4 w-4" />,
-      content: <ErrorBoundary><CancellationRulesPage /></ErrorBoundary>,
+      content: <ErrorBoundary><CancellationRulesPage viewOnly /></ErrorBoundary>,
     },
     {
       value: 'verifications',
@@ -557,7 +565,7 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.users', 'Utilisateurs'),
       icon: <Users className="h-4 w-4" />,
       badge: stats?.totalUsers,
-      content: <ErrorBoundary><RolesManagement /></ErrorBoundary>,
+      content: <ErrorBoundary><RolesManagement excludeHyperAdmin /></ErrorBoundary>,
     },
     {
       value: 'groups',
@@ -571,7 +579,7 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.assignments', 'Assignations'),
       icon: <ShieldCheck className="h-4 w-4" />,
       badge: stats?.totalAssignments,
-      content: <ErrorBoundary><ManagerAssignments /></ErrorBoundary>,
+      content: <ErrorBoundary><ManagerAssignments isHyperContext /></ErrorBoundary>,
     },
   ];
 

@@ -10,8 +10,6 @@ import { Loader2, Search, Map as MapIcon, LayoutGrid } from 'lucide-react';
 import { ServiceCard } from '@/modules/services/components/ServiceCard';
 import { ServiceCategoryFilter } from '@/modules/services/components/ServiceCategoryFilter';
 import { UnifiedMapSearch } from '@/modules/shared/components/UnifiedMapSearch';
-import { useProperties } from '@/modules/properties/properties.hooks';
-import type { Property } from '@/types/property.types';
 
 const ServiceListing: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -32,36 +30,6 @@ const ServiceListing: React.FC = () => {
 
   const { data, isLoading } = useServices(activeFilters);
   const { data: categoryCounts } = useServiceCategories();
-  const { data: allProperties = [] } = useProperties();
-
-  // Convert properties for map display
-  const mapProperties: Property[] = useMemo(() =>
-    allProperties
-      .filter((p: any) => {
-        const lat = Number(p.latitude);
-        const lng = Number(p.longitude);
-        return !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
-      })
-      .map((p: any) => ({
-        id: String(p.id),
-        title: p.title,
-        description: p.title,
-        price: p.price,
-        currency: 'DA',
-        location: { latitude: Number(p.latitude), longitude: Number(p.longitude), address: p.location || '', city: p.city || '', country: p.country || '' },
-        images: p.images || [],
-        bedrooms: p.bedrooms || 0,
-        bathrooms: p.bathrooms || 0,
-        guests: p.guests || 0,
-        rating: p.rating || 0,
-        reviewCount: p.reviews || 0,
-        amenities: p.amenities || [],
-        hostName: '',
-        propertyType: p.type as Property['propertyType'],
-        available: true,
-      })),
-    [allProperties]
-  );
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -92,12 +60,7 @@ const ServiceListing: React.FC = () => {
 
   // Filter services for map (only those with coordinates)
   const mapServices = useMemo(() => {
-    return filteredServices
-    .filter(s => {
-      const lat = Number(s.latitude);
-      const lng = Number(s.longitude);
-      return !isNaN(lat) && !isNaN(lng) && (lat !== 0 || lng !== 0);
-    }).map(s => ({ ...s, location: { latitude: Number(s.latitude), longitude: Number(s.longitude), address: s.address || '', city: s.city || '', country: s.country || '' }, }));
+    return filteredServices.filter(s => s.latitude && s.longitude);
   }, [filteredServices]);
 
   return (
@@ -168,10 +131,8 @@ const ServiceListing: React.FC = () => {
       ) : viewMode === 'map' ? (
         <div className="h-[600px] rounded-xl overflow-hidden border border-border">
           <UnifiedMapSearch
-            properties={mapProperties}
             services={mapServices}
             lang={lang}
-            onPropertySelect={(property) => navigate(`/property/${property.id}`)}
             onServiceSelect={handleServiceSelect}
             className="h-full"
           />

@@ -64,7 +64,7 @@ export class SSOController {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          roles: user.roles,
+          role: user.role,
           phoneNbr: user.phoneNbr,
         },
       };

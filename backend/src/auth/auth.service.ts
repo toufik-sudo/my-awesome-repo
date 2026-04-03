@@ -235,13 +235,15 @@ export class AuthService {
         );
       }
 
+      const userRole = userdb[0].role || 'user';
+
       const payload = {
-        sub: userdb[0].id,                    // ← numeric DB id, used by strategy
-        id: userdb[0].id,                     // ← explicit, so req.user.id works directly
+        sub: userdb[0].id,
+        id: userdb[0].id,
         email: loginDto.email,
         phoneNbr: loginDto.phoneNbr,
-        roles: userdb[0].roles,
-        username: userdb[0].lastName + ' ' + userdb[0].firstName, // ← for convenience in payload
+        role: userRole,
+        username: userdb[0].lastName + ' ' + userdb[0].firstName,
       };
 
       const passwordDto = this.userService.decodePassword(loginDto.password);
@@ -272,14 +274,13 @@ export class AuthService {
         7 * 24 * 3600,
       );
 
-      const roles = JSON.stringify(userdb[0].roles || '');
       const sessionData: SessionDto = {
         sub: userdb[0].id,
         id: userdb[0].id,
         phoneNbr: userdb[0].phoneNbr,
         authToken: token,
         username: userdb[0].lastName + '_' + userdb[0].firstName,
-        roles: roles,
+        roles: userRole,
       };
 
       this.sessionService.setSession(req, res, loginDto.phoneNbr, sessionData);
@@ -320,7 +321,8 @@ export class AuthService {
     if (user && user.password !== password) {
       throw new UnauthorizedException();
     }
-    const payload = { sub: user.id, phoneNbr: phoneNbr, email: user.email, roles: user.roles, username: user.lastName + ' ' + user.firstName };
+    const userRole = user.role || 'user';
+    const payload = { sub: user.id, phoneNbr: phoneNbr, email: user.email, role: userRole, username: user.lastName + ' ' + user.firstName };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
@@ -398,12 +400,14 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
+      const userRole = user.role || 'user';
+
       const payload = {
         sub: user.id,
         id: user.id,
         email: user.email,
         phoneNbr: user.phoneNbr,
-        roles: user.roles,
+        role: userRole,
         username: user.lastName + ' ' + user.firstName,
       };
 

@@ -4,7 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Property } from '../entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { User } from '../../user/entity/user.entity';
-import { UserRole } from '../../user/entity/user-role.entity';
+
 import { ManagerAssignment } from '../../user/entity/manager-assignment.entity';
 import { NotificationService } from '../../notification/services/notification.service';
 import { EventsGateway } from '../../infrastructure/websocket';
@@ -26,8 +26,6 @@ export class HyperManagementService {
     private readonly serviceRepo: Repository<TourismService>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(UserRole)
-    private readonly userRoleRepo: Repository<UserRole>,
     @InjectRepository(ManagerAssignment)
     private readonly assignmentRepo: Repository<ManagerAssignment>,
     private readonly notificationService: NotificationService,

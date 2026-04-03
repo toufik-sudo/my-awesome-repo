@@ -57,10 +57,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
   // Get user roles from auth context
   const userRoles = useMemo(() => {
     if (!user) return [];
-    const roles: string[] = [];
-    if (user.role) roles.push(user.role);
-    if (user.roles) roles.push(...user.roles);
-    return roles;
+    return user.role ? [user.role] : [];
   }, [user]);
 
   const [layoutTheme, setLayoutThemeState] = useState<LayoutThemeConfig>(() => {

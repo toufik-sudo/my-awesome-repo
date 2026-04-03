@@ -48,24 +48,23 @@ export const Dashboard = memo(() => {
   const [createUserOpen, setCreateUserOpen] = useState(false);
 
   const canAddProperty = useMemo(() => {
-    if (!user?.roles) return false;
-    return user.roles.some(r => ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(r));
+    if (!user?.role) return false;
+    return ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(user.role);
   }, [user]);
 
   const canManageBookings = useMemo(() => {
-    if (!user?.roles) return false;
-    return user.roles.some(r => ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(r));
+    if (!user?.role) return false;
+    return ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(user.role);
   }, [user]);
 
   const canCreateUsers = useMemo(() => {
-    if (!user?.roles) return false;
-    return user.roles.some(r => ['hyper_admin', 'hyper_manager'].includes(r));
+    if (!user?.role) return false;
+    return ['hyper_admin', 'hyper_manager'].includes(user.role);
   }, [user]);
 
   const createUserRoles = useMemo(() => {
-    if (!user?.roles) return [];
-    if (user.roles.includes('hyper_admin')) return ['admin', 'manager'];
-    if (user.roles.includes('hyper_manager')) return ['admin', 'manager'];
+    if (!user?.role) return [];
+    if (user.role === 'hyper_admin' || user.role === 'hyper_manager') return ['admin', 'manager'];
     return [];
   }, [user]);
 

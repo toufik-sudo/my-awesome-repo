@@ -370,7 +370,7 @@ export class SSOService {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: body.toString(),
-        }).catch((err:any) => {
+        }).catch((err) => {
           this.logger.warn(`SSO revocation best-effort failed: ${err.message}`);
         });
       }

@@ -35,7 +35,7 @@ export const authService = {
             id: jwtData.sub || '',
             email: jwtData.email || '',
             username: jwtData.username,
-            roles: Array.isArray(jwtData.roles) ? jwtData.roles : jwtData.roles ? [jwtData.roles] : [],
+            role: jwtData.role || (Array.isArray(jwtData.roles) ? jwtData.roles[0] : jwtData.roles) || 'user',
           } as User;
         }
       }

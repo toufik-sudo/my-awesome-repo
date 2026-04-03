@@ -1,5 +1,5 @@
 import { User } from '../user/entity/user.entity';
-import { UserRole } from '../user/entity/user-role.entity';
+
 import { UserAddress } from '../user/entity/user.userAddress.entity';
 import { ManagerAssignment } from '../user/entity/manager-assignment.entity';
 import { ManagerPermission } from '../user/entity/manager-permission.entity';
@@ -23,7 +23,7 @@ import { Badge, UserBadge } from '../modules/points/entity/badge.entity';
 
 export const entityList = [
   User,
-  UserRole,
+  
   UserAddress,
   ManagerAssignment,
   ManagerPermission,

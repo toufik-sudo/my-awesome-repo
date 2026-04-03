@@ -72,45 +72,7 @@ export class PaymentsService {
       status: 'pending',
       currency: 'DZD',
     });
-    const saved = await this.receiptRepo.save(receipt);
-
-    // Real-time notification to hyper admins about new pending receipt
-    await this.notifyHyperAdminsNewReceipt(saved);
-
-    return saved;
-  }
-
-  /** Notify hyper admins about new pending receipt */
-  private async notifyHyperAdminsNewReceipt(receipt: PaymentReceipt) {
-    try {
-      // Find hyper admins and hyper managers
-      const { UserRole } = await import('../user/entity/user-role.entity');
-      const hyperRoles = await this.userRepo.manager.getRepository(UserRole).find({
-        where: [{ role: 'hyper_admin' as any }, { role: 'hyper_manager' as any }],
-      });
-
-      const bookingRef = receipt.bookingId?.slice(0, 8).toUpperCase() || 'N/A';
-      for (const role of hyperRoles) {
-        this.eventsGateway.emitToUser(String(role.userId), 'receipt:new_pending', {
-          receiptId: receipt.id,
-          bookingId: receipt.bookingId,
-          amount: receipt.amount,
-          currency: receipt.currency,
-          timestamp: new Date().toISOString(),
-        });
-
-        this.jobProducer.queueNotification({
-          userId: role.userId,
-          type: 'payment_receipt_pending',
-          title: `Nouveau reçu de paiement — #${bookingRef}`,
-          message: `Un nouveau reçu de ${receipt.amount} DZD est en attente de validation.`,
-          actionUrl: '/dashboard?tab=payment-validation',
-        });
-      }
-      this.logger.log(`Notified hyper admins about new receipt ${receipt.id}`);
-    } catch (err:any) {
-      this.logger.warn(`Failed to notify hyper admins about receipt: ${err.message}`);
-    }
+    return this.receiptRepo.save(receipt);
   }
 
   async getPendingReceipts(): Promise<PaymentReceipt[]> {

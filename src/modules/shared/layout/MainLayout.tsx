@@ -23,7 +23,6 @@ import {
   Compass,
   Trophy,
   Calendar,
-  Gift,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -51,6 +50,7 @@ interface NavItem {
   requireAuth?: boolean;
   roles?: string[];
 }
+
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
   headerProps = {},
@@ -81,7 +81,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     { path: BOOKING_ROUTES.LIST, label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true },
     { path: BOOKING_ROUTES.CALENDAR, label: t('nav.bookingCalendar') || 'Calendar', icon: Calendar, requireAuth: true },
     { path: DASHBOARD_ROUTES.POINTS, label: t('nav.points', 'Points') || 'Points', icon: Trophy, requireAuth: true },
-    { path: DASHBOARD_ROUTES.REWARDS, label: t('nav.rewards', 'Récompenses') || 'Rewards', icon: Gift, requireAuth: true },
     { path: BOOKING_ROUTES.HOST, label: t('nav.bookingRequests') || 'Requests', icon: MessageSquare, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager'] },
     { path: BOOKING_ROUTES.HISTORY, label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
     { path: DASHBOARD_ROUTES.SETTINGS, label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true },
@@ -92,8 +91,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const filteredNavItems = navItems.filter((item) => {
     if (item.requireAuth && !user) return false;
     if (item.roles && item.roles.length > 0) {
-      const userRoles = user?.roles || [];
-      if (!item.roles.some((r) => userRoles.includes(r))) return false;
+      const userRole = user?.role || 'user';
+      if (!item.roles.includes(userRole)) return false;
     }
     return true;
   });

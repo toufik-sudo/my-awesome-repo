@@ -27,11 +27,11 @@ export function useScopeEntities(scope: string) {
     try {
       let items: ScopeEntity[] = [];
       switch (scope) {
-        case 'host': {
+        case 'host':
+        case 'admin': {
           const users = await rolesApi.getAllUsers();
-          // Hosts are admins (users with admin role)
           items = users
-            .filter(u => u.roles?.includes('admin') || u.roles?.includes('hyper_admin'))
+            .filter(u => u.role === 'admin' || u.role === 'hyper_admin')
             .map(u => ({ id: String(u.id), label: `${u.firstName || ''} ${u.lastName || ''} (${u.email})`.trim() }));
           break;
         }

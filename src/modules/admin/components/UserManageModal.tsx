@@ -64,7 +64,7 @@ export const UserManageModal: React.FC<UserManageModalProps> = memo(({ open, onO
 
   if (!user) return null;
 
-  const isAdmin = user.roles?.some(r => ['admin'].includes(r));
+  const isAdmin = user.role === 'admin';
   const isInactive = !user.isActive;
 
   return (
@@ -78,14 +78,14 @@ export const UserManageModal: React.FC<UserManageModalProps> = memo(({ open, onO
       <div className="space-y-4">
         {/* User Info */}
         <div className="flex flex-wrap gap-2">
-          {user.roles?.map(role => (
-            <Badge key={role} variant={ROLE_COLORS[role] as any} className="gap-1">
-              {role === 'hyper_admin' || role === 'hyper_manager' ? <ShieldAlert className="h-3 w-3" /> :
-               role === 'admin' ? <ShieldCheck className="h-3 w-3" /> :
-               role === 'manager' ? <Shield className="h-3 w-3" /> : null}
-              {role.replace('_', ' ')}
+          {user.role && (
+            <Badge variant={ROLE_COLORS[user.role] as any} className="gap-1">
+              {user.role === 'hyper_admin' || user.role === 'hyper_manager' ? <ShieldAlert className="h-3 w-3" /> :
+               user.role === 'admin' ? <ShieldCheck className="h-3 w-3" /> :
+               user.role === 'manager' ? <Shield className="h-3 w-3" /> : null}
+              {user.role.replace('_', ' ')}
             </Badge>
-          ))}
+          )}
           <Badge variant={isInactive ? 'destructive' : 'default'}>
             {isInactive ? 'Inactif' : 'Actif'}
           </Badge>

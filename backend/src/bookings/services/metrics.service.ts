@@ -4,8 +4,8 @@ import { Repository, Between, In } from 'typeorm';
 import { Booking } from '../entity/booking.entity';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
-import { User } from '../../user/entity/user.entity';
-import { UserRole } from '../../user/entity/user-role.entity';
+import { AppRole, User } from '../../user/entity/user.entity';
+
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -28,18 +28,15 @@ export class MetricsService {
     private readonly serviceRepo: Repository<TourismService>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(UserRole)
-    private readonly userRoleRepo: Repository<UserRole>,
   ) {}
 
   async getDetailedUsers(filters: {
-    role?: string;
+    role?: AppRole;
     status?: string;
     page: number;
     limit: number;
   }): Promise<PaginatedResult<any>> {
-    const qb = this.userRepo.createQueryBuilder('u')
-      .leftJoinAndSelect('u.roles', 'ur', 'ur.userId = u.id');
+    const qb = this.userRepo.createQueryBuilder('u');
 
     if (filters.status === 'active') qb.andWhere('u.isActive = :active', { active: true });
     if (filters.status === 'inactive') qb.andWhere('u.isActive = :active', { active: false });
@@ -51,14 +48,6 @@ export class MetricsService {
       .orderBy('u.id', 'DESC')
       .getMany();
 
-    // Get roles separately for clean mapping
-    const allRoles = await this.userRoleRepo.find();
-    const roleMap = new Map<number, string[]>();
-    allRoles.forEach(r => {
-      if (!roleMap.has(r.userId)) roleMap.set(r.userId, []);
-      roleMap.get(r.userId)!.push(r.role);
-    });
-
     let data = users.map(u => ({
       id: u.id,
       email: u.email,
@@ -68,12 +57,12 @@ export class MetricsService {
       city: u.city,
       country: u.country,
       isActive: u.isActive,
-      roles: roleMap.get(u.id) || ['user'],
+      role: u.getRole(),
     }));
 
     // Filter by role if specified
     if (filters.role) {
-      data = data.filter(u => u.roles.includes(filters.role));
+      data = data.filter(u => u.role === filters.role);
     }
 
     return {

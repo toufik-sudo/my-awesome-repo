@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BaseComponentProps } from '@/types/component.types';
@@ -34,6 +33,7 @@ export interface DynamicTabsProps extends BaseComponentProps {
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   animated?: boolean;
+  scrollable?: boolean;
   onTabChange?: (value: string) => void;
   onTabHover?: (value: string) => void;
   onTabClick?: (value: string) => void;
@@ -59,6 +59,7 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
   size = 'md',
   fullWidth = false,
   animated = true,
+  scrollable = true,
   onTabChange,
   onTabHover,
   onTabClick,
@@ -75,7 +76,6 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
   const [internalValue, setInternalValue] = useState(resolvedDefault);
   const activeValue = controlledValue ?? internalValue;
 
-  // Scroll state for horizontal tabs
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -84,14 +84,14 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
     const el = scrollRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 2);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
   }, []);
 
   useEffect(() => {
     checkScroll();
     const el = scrollRef.current;
     if (!el) return;
-    el.addEventListener('scroll', checkScroll);
+    el.addEventListener('scroll', checkScroll, { passive: true });
     const ro = new ResizeObserver(checkScroll);
     ro.observe(el);
     return () => {
@@ -100,8 +100,11 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
     };
   }, [checkScroll, visibleTabs.length]);
 
-  const scrollBy = useCallback((dir: number) => {
-    scrollRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
+  const scroll = useCallback((dir: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.6;
+    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
   }, []);
 
   const handleValueChange = useCallback((val: string) => {
@@ -148,7 +151,8 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
         className={cn(
           sizeClasses[size],
           variantTriggerClasses[variant],
-          'gap-2 transition-all whitespace-nowrap shrink-0',
+          fullWidth && 'flex-1',
+          'gap-2 transition-all whitespace-nowrap',
           tab.triggerClassName
         )}
         onClick={() => handleTabClick(tab.value)}
@@ -178,7 +182,7 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
     return trigger;
   };
 
-  const showArrows = orientation === 'horizontal' && (canScrollLeft || canScrollRight);
+  const showArrows = scrollable && orientation === 'horizontal';
 
   return (
     <Tabs
@@ -193,46 +197,51 @@ export const DynamicTabs: React.FC<DynamicTabsProps> = memo(({
     >
       <div className={cn(
         orientation === 'vertical' && 'flex flex-col',
-        'relative'
+        'relative flex items-center gap-1'
       )}>
-        <div className="flex items-center gap-1">
-          {showArrows && canScrollLeft && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 rounded-full border border-border bg-background shadow-sm hover:bg-muted"
-              onClick={() => scrollBy(-1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          )}
-          <div
-            ref={scrollRef}
-            className="overflow-x-auto scrollbar-hide flex-1"
+        {/* Left Arrow */}
+        {showArrows && canScrollLeft && (
+          <button
+            onClick={() => scroll('left')}
+            className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-muted/80 hover:bg-muted border border-border/50 shadow-sm transition-all z-10"
+            aria-label="Scroll tabs left"
           >
-            <TabsList className={cn(
-              variantListClasses[variant],
-              orientation === 'vertical' && 'flex-col h-auto w-48 items-stretch',
-              fullWidth && 'w-full',
-              'inline-flex w-auto max-w-none',
-              tabListClassName
-            )}>
-              {visibleTabs.map(renderTrigger)}
-            </TabsList>
-          </div>
-          {showArrows && canScrollRight && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 rounded-full border border-border bg-background shadow-sm hover:bg-muted"
-              onClick={() => scrollBy(1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <ChevronLeft className="h-4 w-4 text-foreground" />
+          </button>
+        )}
+
+        <div
+          ref={scrollRef}
+          className={cn(
+            'flex-1 overflow-x-auto scrollbar-none',
+            showArrows && 'scroll-smooth'
           )}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <TabsList className={cn(
+            variantListClasses[variant],
+            orientation === 'vertical' && 'flex-col h-auto w-48 items-stretch',
+            fullWidth && 'w-full',
+            showArrows && 'w-max min-w-full',
+            tabListClassName
+          )}>
+            {visibleTabs.map(renderTrigger)}
+          </TabsList>
         </div>
+
+        {/* Right Arrow */}
+        {showArrows && canScrollRight && (
+          <button
+            onClick={() => scroll('right')}
+            className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-muted/80 hover:bg-muted border border-border/50 shadow-sm transition-all z-10"
+            aria-label="Scroll tabs right"
+          >
+            <ChevronRight className="h-4 w-4 text-foreground" />
+          </button>
+        )}
+
         {tabListSuffix && (
-          <div className="ml-auto flex items-center">{tabListSuffix}</div>
+          <div className="ml-auto flex items-center shrink-0">{tabListSuffix}</div>
         )}
       </div>
 

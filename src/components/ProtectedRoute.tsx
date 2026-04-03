@@ -1,11 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReactNode } from 'react';
+import type { AppRole } from '@/modules/auth/auth.types';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAuth?: boolean;
-  requiredRoles?: string[];
+  requiredRoles?: AppRole[];
   redirectTo?: string;
 }
 
@@ -34,8 +35,8 @@ export const ProtectedRoute = ({
   }
 
   if (requiredRoles.length > 0 && user) {
-    const userRoles = user.roles || [];
-    const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
+    const userRole = user.role || 'user';
+    const hasRequiredRole = requiredRoles.includes(userRole);
     if (!hasRequiredRole) {
       return <Navigate to="/dashboard" replace />;
     }

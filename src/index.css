@@ -885,38 +885,4 @@ All colors MUST be HSL.
   .hidden-marker {
     display: none !important;
   }
-
-  /* Map popup close button */
-  .map-popup-close {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 10;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: hsl(var(--background) / 0.9);
-    backdrop-filter: blur(4px);
-    border: 1px solid hsl(var(--border));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.15s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  }
-  .map-popup-close:hover {
-    background: hsl(var(--muted));
-    transform: scale(1.1);
-  }
-  .map-popup-close svg {
-    width: 14px;
-    height: 14px;
-    color: hsl(var(--foreground));
-  }
-
-  /* Hide default maplibre close button */
-  .maplibregl-popup-close-button {
-    display: none !important;
-  }
 }

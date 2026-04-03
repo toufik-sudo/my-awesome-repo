@@ -36,11 +36,9 @@ import ServiceListing from "@/pages/ServiceListing";
 import ServiceDetail from "@/pages/ServiceDetail";
 import AddServiceWizard from "@/modules/admin/pages/AddServiceWizard";
 import PointsPage from "@/pages/PointsPage";
-import RewardsShop from "@/modules/rewards/pages/RewardsShop";
 import { HostFeeAbsorptionPage } from "@/modules/admin/pages/HostFeeAbsorptionPage";
 import { CancellationRulesPage } from "@/modules/admin/pages/CancellationRulesPage";
 import { BookingCalendarPage } from "@/modules/admin/pages/BookingCalendarPage";
-import ApiDocumentation from "@/pages/ApiDocumentation";
 
 import {
   PUBLIC_ROUTES,
@@ -54,9 +52,11 @@ import {
   DEMO_ROUTES,
 } from './routes.constants';
 
-const HYPER_ROLES = ['hyper_admin', 'hyper_manager'];
-const ADMIN_ROLE_LIST = ['hyper_admin', 'hyper_manager', 'admin'];
-const MANAGER_ROLES = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
+import type { AppRole } from '@/modules/auth/auth.types';
+
+const HYPER_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager'];
+const ADMIN_ROLE_LIST: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin'];
+const MANAGER_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
 
 const PublicRoutes = () => (
   <>
@@ -107,7 +107,6 @@ const AdminRoutes = () => (
     <Route path={ADMIN_ROUTES.EMAIL_ANALYTICS} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={ADMIN_ROUTES.FEE_ABSORPTION} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={ADMIN_ROUTES.CANCELLATION_RULES} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><CancellationRulesPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.API_DOCS} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><ApiDocumentation /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
@@ -115,7 +114,6 @@ const DashboardRoutes = () => (
   <>
     <Route path={DASHBOARD_ROUTES.ROOT} element={<ProtectedRoute><MainLayout><ErrorBoundary><DashboardWithRedirect /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.POINTS} element={<ProtectedRoute><MainLayout><ErrorBoundary><PointsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={DASHBOARD_ROUTES.REWARDS} element={<ProtectedRoute><MainLayout><ErrorBoundary><RewardsShop /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.SETTINGS} element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );

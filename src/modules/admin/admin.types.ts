@@ -1,4 +1,4 @@
-export type AppRole = 'hyper_admin' | 'hyper_manager' | 'admin' | 'manager' | 'user';
+export type AppRole = 'hyper_admin' | 'hyper_manager' | 'admin' | 'manager' | 'user' | 'guest';
 
 export type AssignmentScope = 'all' | 'property' | 'property_group';
 
@@ -8,8 +8,6 @@ export type PermissionType =
   | 'modify_property'
   | 'delete_property'
   | 'pause_property'
-  | 'archive_property'
-  | 'duplicate_property'
   | 'modify_prices'
   | 'modify_photos'
   | 'modify_title'
@@ -40,21 +38,14 @@ export type PermissionType =
   | 'modify_service'
   | 'delete_service'
   | 'pause_service'
-  | 'archive_service'
-  | 'duplicate_service'
   // User management (hyper level)
   | 'manage_users'
   | 'manage_admins'
-  | 'manage_managers'
-  // Fee management
-  | 'manage_fee_absorption'
-  | 'manage_cancellation_rules';
+  | 'manage_managers';
 
 export interface UserRole {
-  id: string;
   userId: number;
   role: AppRole;
-  createdAt: string;
 }
 
 export interface PropertyGroup {
@@ -99,73 +90,55 @@ export interface UserWithRoles {
   email: string;
   firstName?: string;
   lastName?: string;
-  roles: AppRole[];
+  role: AppRole;
   isActive?: boolean;
-  phoneNbr?: string;
-  city?: string;
 }
 
 export const PERMISSION_LABELS: Record<PermissionType, string> = {
-  // Property management
-  create_property: 'Créer une propriété',
-  modify_property: 'Modifier une propriété',
-  delete_property: 'Supprimer une propriété',
-  pause_property: 'Mettre en pause une propriété',
-  archive_property: 'Archiver une propriété',
-  duplicate_property: 'Dupliquer une propriété',
-  modify_prices: 'Modifier les prix',
-  modify_photos: 'Modifier les photos',
-  modify_title: 'Modifier le titre',
-  modify_description: 'Modifier la description',
-  manage_availability: 'Gérer la disponibilité',
-  manage_amenities: 'Gérer les commodités',
-  // Booking management
-  view_bookings: 'Voir les réservations',
-  accept_bookings: 'Accepter les réservations',
-  reject_bookings: 'Rejeter les réservations',
-  pause_bookings: 'Mettre en pause les réservations',
-  refund_users: 'Rembourser les utilisateurs',
-  // Communication
-  reply_chat: 'Répondre au chat',
-  reply_reviews: 'Répondre aux avis',
-  reply_comments: 'Répondre aux commentaires',
-  send_messages: 'Envoyer des messages',
-  contact_guests: 'Contacter les clients',
-  // Social
-  manage_reactions: 'Gérer les réactions',
-  manage_likes: 'Gérer les likes',
-  // Business
-  view_analytics: 'Voir les analyses',
-  manage_promotions: 'Gérer les promotions',
-  modify_offers: 'Modifier les offres',
-  // Services
-  create_service: 'Créer un service',
-  modify_service: 'Modifier un service',
-  delete_service: 'Supprimer un service',
-  pause_service: 'Mettre en pause un service',
-  archive_service: 'Archiver un service',
-  duplicate_service: 'Dupliquer un service',
-  // User management
-  manage_users: 'Gérer les utilisateurs',
-  manage_admins: 'Gérer les admins',
-  manage_managers: 'Gérer les managers',
-  // Fee management
-  manage_fee_absorption: 'Gérer l\'absorption des frais',
-  manage_cancellation_rules: 'Gérer les règles d\'annulation',
+  create_property: 'Create Property',
+  modify_property: 'Modify Property',
+  delete_property: 'Delete Property',
+  pause_property: 'Pause Property',
+  modify_prices: 'Modify Prices',
+  modify_photos: 'Modify Photos',
+  modify_title: 'Modify Title',
+  modify_description: 'Modify Description',
+  manage_availability: 'Manage Availability',
+  manage_amenities: 'Manage Amenities',
+  view_bookings: 'View Bookings',
+  accept_bookings: 'Accept Bookings',
+  reject_bookings: 'Reject Bookings',
+  pause_bookings: 'Pause Bookings',
+  refund_users: 'Refund Users',
+  reply_chat: 'Reply to Chat',
+  reply_reviews: 'Reply to Reviews',
+  reply_comments: 'Reply to Comments',
+  send_messages: 'Send Messages',
+  contact_guests: 'Contact Guests',
+  manage_reactions: 'Manage Reactions',
+  manage_likes: 'Manage Likes',
+  view_analytics: 'View Analytics',
+  manage_promotions: 'Manage Promotions',
+  modify_offers: 'Modify Offers',
+  create_service: 'Create Service',
+  modify_service: 'Modify Service',
+  delete_service: 'Delete Service',
+  pause_service: 'Pause Service',
+  manage_users: 'Manage Users',
+  manage_admins: 'Manage Admins',
+  manage_managers: 'Manage Managers',
 };
 
 export const PERMISSION_CATEGORIES: Record<string, PermissionType[]> = {
-  'Gestion des propriétés': [
+  'Property Management': [
     'create_property', 'modify_property', 'delete_property', 'pause_property',
-    'archive_property', 'duplicate_property',
     'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
     'manage_availability', 'manage_amenities',
   ],
-  'Réservations': ['view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users'],
+  'Bookings': ['view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users'],
   'Communication': ['reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests'],
   'Social & Engagement': ['manage_reactions', 'manage_likes'],
   'Business & Analytics': ['view_analytics', 'manage_promotions', 'modify_offers'],
-  'Gestion des services': ['create_service', 'modify_service', 'delete_service', 'pause_service', 'archive_service', 'duplicate_service'],
-  'Gestion des utilisateurs': ['manage_users', 'manage_admins', 'manage_managers'],
-  'Frais & Annulations': ['manage_fee_absorption', 'manage_cancellation_rules'],
+  'Service Management': ['create_service', 'modify_service', 'delete_service', 'pause_service'],
+  'User Management': ['manage_users', 'manage_admins', 'manage_managers'],
 };

@@ -50,8 +50,8 @@ export const AdminManagerDashboard: React.FC = memo(() => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('admin');
-  const isManager = user?.roles?.includes('manager') && !isAdmin;
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);

@@ -10,14 +10,14 @@ import { PERMISSION_KEY } from '../decorators/require-permission.decorator';
 import { ROLES_KEY } from '../decorators/require-role.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { PermissionType } from '../../user/entity/manager-permission.entity';
-import { AppRole } from '../../user/entity/user-role.entity';
+import { AppRole } from '../../user/entity/user.entity';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly rolesService: RolesService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Skip public endpoints
@@ -33,41 +33,18 @@ export class PermissionGuard implements CanActivate {
 
     const userId: number = user.id;
 
-    // Get user roles
-    const userRoles = await this.rolesService.getUserRoles(userId);
+    // Get user role from users table
+    const userRole = await this.rolesService.getUserRole(userId);
 
-    // Hyper admins bypass role/permission checks but have limited property/service actions
-    if (userRoles.includes('hyper_admin') || userRoles.includes('hyper_manager')) {
-      // Check if this is a restricted action for hyper users
-      const permMeta = this.reflector.getAllAndOverride<{
-        permission: PermissionType;
-        propertyParam: string;
-        source: 'param' | 'body' | 'query';
-      }>(PERMISSION_KEY, [context.getHandler(), context.getClass()]);
+    // Hyper admins and hyper managers always pass role checks
+    if (userRole === 'hyper_admin' || userRole === 'hyper_manager') return true;
 
-      if (permMeta) {
-        // Hyper admin/manager can only pause and archive properties/services
-        const hyperAllowedPerms: PermissionType[] = [
-          'pause_property', 'archive_property', 'pause_service', 'archive_service',
-          'delete_property', 'delete_service',
-          'view_bookings', 'view_analytics',
-        ];
-        if (!hyperAllowedPerms.includes(permMeta.permission)) {
-          // Check if it's a create/modify action — block it
-          const blockedForHyper: PermissionType[] = [
-            'create_property', 'modify_property', 'modify_prices', 'modify_photos',
-            'modify_title', 'modify_description', 'manage_availability', 'manage_amenities',
-            'duplicate_property', 'create_service', 'modify_service', 'duplicate_service',
-            'manage_fee_absorption', 'manage_cancellation_rules',
-          ];
-          if (blockedForHyper.includes(permMeta.permission)) {
-            throw new ForbiddenException(
-              `Hyper admin/manager cannot perform: ${permMeta.permission}. This is managed by the host (admin/manager).`,
-            );
-          }
-        }
+    // Guests are read-only — block all write operations
+    if (userRole === 'guest') {
+      const method = request.method?.toUpperCase();
+      if (method && method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+        throw new ForbiddenException('Guest role is read-only');
       }
-      return true;
     }
 
     // ─── Role check ─────────────────────────────────────────────────────
@@ -77,8 +54,7 @@ export class PermissionGuard implements CanActivate {
     ]);
 
     if (requiredRoles && requiredRoles.length > 0) {
-      const hasRole = requiredRoles.some(role => userRoles.includes(role));
-      if (!hasRole) {
+      if (!requiredRoles.includes(userRole)) {
         throw new ForbiddenException(
           `Requires one of: ${requiredRoles.join(', ')}`,
         );
@@ -93,20 +69,13 @@ export class PermissionGuard implements CanActivate {
     }>(PERMISSION_KEY, [context.getHandler(), context.getClass()]);
 
     if (permMeta) {
-      // Admins with access pass permission checks (they own properties)
-      if (userRoles.includes('admin')) return true;
+      // Admins pass permission checks (they own properties)
+      if (userRole === 'admin') return true;
 
       // Managers need explicit permission
-      if (!userRoles.includes('manager')) {
+      if (userRole !== 'manager') {
         throw new ForbiddenException('Manager role required');
       }
-
-      console.log('PermissionGuard: Checking permission', {
-        userId,
-        requiredPermission: permMeta.permission,
-        propertyParam: permMeta.propertyParam,
-        source: permMeta.source,
-      });
 
       // Extract propertyId from the request
       let propertyId: string | undefined;

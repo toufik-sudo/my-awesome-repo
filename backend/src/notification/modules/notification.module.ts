@@ -4,13 +4,12 @@ import { NotificationService } from '../services/notification.service';
 import { NotificationController } from '../controllers/notification.controller';
 import { Notification } from '../entity/notification.entity';
 import { User } from '../../user/entity/user.entity';
-import { UserRole } from '../../user/entity/user-role.entity';
 import { AuthModule } from '../../modules/auth.module';
 import { JobsModule } from '../../infrastructure/jobs';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, User, UserRole]),
+    TypeOrmModule.forFeature([Notification, User]),
     AuthModule,
     JobsModule,
   ],

@@ -12,12 +12,13 @@ export const ADMIN_ROUTES = {
 
 // ─── Role Hierarchy ─────────────────────────────────────────────────────────
 
-export const ROLE_HIERARCHY = {
-  hyper_admin: 5,
-  hyper_manager: 4,
-  admin: 3,
-  manager: 2,
-  user: 1,
+export const ROLE_HIERARCHY: Record<string, number> = {
+  hyper_admin: 100,
+  hyper_manager: 90,
+  admin: 50,
+  manager: 30,
+  user: 10,
+  guest: 5,
 } as const;
 
 // ─── Invitation Status ──────────────────────────────────────────────────────

@@ -4,7 +4,6 @@ import { Repository, In } from 'typeorm';
 import { JobProducerService } from '../../infrastructure/jobs/job-producer.service';
 import { Notification, NotificationType, NotificationChannel } from '../entity/notification.entity';
 import { User } from '../../user/entity/user.entity';
-import { UserRole } from '../../user/entity/user-role.entity';
 
 export interface CreateNotificationDto {
   userId: number;
@@ -25,8 +24,6 @@ export class NotificationService {
     private readonly notificationRepo: Repository<Notification>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(UserRole)
-    private readonly userRoleRepo: Repository<UserRole>,
     private readonly jobProducer: JobProducerService,
   ) {}
 
@@ -63,17 +60,19 @@ export class NotificationService {
     return this.notificationRepo.update({ userId, isRead: false }, { isRead: true });
   }
 
-  /** Notify all hyper admins (in-app + email) */
+  /** Notify all hyper admins/managers (in-app + email) */
   async notifyHyperAdmins(type: NotificationType, title: string, message: string, metadata?: Record<string, any>) {
-    const hyperAdminRoles = await this.userRoleRepo.find({
-      where: { role: 'hyper_manager' },
-      relations: ['user'],
+    // Find users whose roles JSON array contains hyper_admin or hyper_manager
+    const allUsers = await this.userRepo.find({ where: { isActive: true } });
+    const hyperUsers = allUsers.filter(u => {
+      const role = u.getRole();
+      return role === 'hyper_admin' || role === 'hyper_manager';
     });
 
     const notifications: Notification[] = [];
-    for (const role of hyperAdminRoles) {
+    for (const user of hyperUsers) {
       const notif = await this.create({
-        userId: role.userId,
+        userId: user.id,
         type,
         title,
         message,

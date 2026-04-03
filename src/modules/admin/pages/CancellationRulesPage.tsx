@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DynamicButton } from '@/modules/shared/components/DynamicButton';
 import { DynamicModal } from '@/modules/shared/components/DynamicModal';
+import { MultiScopeSelector } from '@/modules/admin/components/MultiScopeSelector';
+import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { Plus, Edit, Trash2, ShieldX, Clock, AlertTriangle, Info } from 'lucide-react';
 import { cancellationRulesApi, CANCELLATION_PRESETS, type CancellationRule, type CancellationPolicyType } from '../cancellation-rules.api';
-import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -51,19 +52,19 @@ const emptyForm = (): Partial<CancellationRule> => ({
   description: '',
 });
 
-export const CancellationRulesPage: React.FC = () => {
+interface CancellationRulesPageProps {
+  /** When true, only view and delete — no create/edit (for hyper admin) */
+  viewOnly?: boolean;
+}
+
+export const CancellationRulesPage: React.FC<CancellationRulesPageProps> = ({ viewOnly = false }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [rules, setRules] = useState<CancellationRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<CancellationRule>>(emptyForm());
-
-  const isHyper = useMemo(() =>
-    user?.roles?.some(r => ['hyper_admin', 'hyper_manager'].includes(r)) ?? false,
-    [user]
-  );
+  const [scopeTargetIds, setScopeTargetIds] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,9 +74,34 @@ export const CancellationRulesPage: React.FC = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  const openCreate = () => { setEditingId(null); setForm(emptyForm()); setModalOpen(true); };
-  const openEdit = (r: CancellationRule) => { setEditingId(r.id); setForm({ ...r }); setModalOpen(true); };
+  const openCreate = () => {
+    if (viewOnly) return;
+    setEditingId(null);
+    setForm(emptyForm());
+    setScopeTargetIds([]);
+    setModalOpen(true);
+  };
+
+  const openEdit = (r: CancellationRule) => {
+    if (viewOnly) return;
+    setEditingId(r.id);
+    setForm({ ...r });
+    const targetId = r.targetPropertyGroupId || r.targetServiceGroupId || r.targetPropertyId || r.targetServiceId;
+    setScopeTargetIds(targetId ? [targetId] : []);
+    setModalOpen(true);
+  };
+
   const updateForm = (key: string, value: any) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const handleScopeTargetChange = (ids: string[]) => {
+    setScopeTargetIds(ids);
+    const scope = form.scope || 'all';
+    const firstId = ids[0] || undefined;
+    if (scope === 'property_group') updateForm('targetPropertyGroupId', firstId);
+    else if (scope === 'service_group') updateForm('targetServiceGroupId', firstId);
+    else if (scope === 'property') updateForm('targetPropertyId', firstId);
+    else if (scope === 'service') updateForm('targetServiceId', firstId);
+  };
 
   const applyPreset = (type: CancellationPolicyType) => {
     if (type === 'custom') {
@@ -104,18 +130,20 @@ export const CancellationRulesPage: React.FC = () => {
     return `${hours}h`;
   };
 
+  if (loading) return <div className="flex items-center justify-center py-12"><LoadingSpinner size="lg" /></div>;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">{t('cancellation.title', "Règles d'annulation")}</h2>
           <p className="text-muted-foreground">
-            {isHyper
-              ? t('cancellation.hyperSubtitle', 'Consultez les règles d\'annulation des hôtes. Vous pouvez supprimer une règle si nécessaire.')
+            {viewOnly
+              ? t('cancellation.viewOnlySubtitle', 'Consultez les règles d\'annulation configurées par les hôtes')
               : t('cancellation.subtitle', 'Définissez les politiques de remboursement pour vos réservations')}
           </p>
         </div>
-        {!isHyper && (
+        {!viewOnly && (
           <DynamicButton onClick={openCreate} icon={<Plus className="h-4 w-4" />}>{t('cancellation.newRule', 'Nouvelle règle')}</DynamicButton>
         )}
       </div>
@@ -160,30 +188,24 @@ export const CancellationRulesPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
-                {isHyper ? (
-                  <DynamicButton variant="destructive" size="sm" onClick={() => handleDelete(r.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </DynamicButton>
-                ) : (
-                  <>
-                    <DynamicButton variant="outline" size="sm" onClick={() => openEdit(r)}><Edit className="h-4 w-4" /></DynamicButton>
-                    <DynamicButton variant="destructive" size="sm" onClick={() => handleDelete(r.id)}><Trash2 className="h-4 w-4" /></DynamicButton>
-                  </>
+                {!viewOnly && (
+                  <DynamicButton variant="outline" size="sm" onClick={() => openEdit(r)}><Edit className="h-4 w-4" /></DynamicButton>
                 )}
+                <DynamicButton variant="destructive" size="sm" onClick={() => handleDelete(r.id)}><Trash2 className="h-4 w-4" /></DynamicButton>
               </div>
             </CardContent>
           </Card>
         ))}
-        {rules.length === 0 && !loading && (
+        {rules.length === 0 && (
           <Card><CardContent className="p-8 text-center text-muted-foreground">{t('cancellation.empty', "Aucune règle d'annulation configurée")}</CardContent></Card>
         )}
       </div>
 
-      {/* Only show modal for non-hyper users */}
-      {!isHyper && (
+      {!viewOnly && (
         <DynamicModal open={modalOpen} onOpenChange={open => { if (!open) setModalOpen(false); }}
           title={editingId ? t('cancellation.editTitle', "Modifier la règle d'annulation") : t('cancellation.newTitle', "Nouvelle règle d'annulation")}>
           <div className="max-h-[70vh] overflow-y-auto pr-2 space-y-4">
+            {/* Preset selection */}
             <div className="space-y-2">
               <Label>{t('cancellation.policyType', 'Type de politique')}</Label>
               <div className="grid grid-cols-4 gap-2">
@@ -203,7 +225,10 @@ export const CancellationRulesPage: React.FC = () => {
 
             <div className="space-y-2">
               <Label>{t('cancellation.scope', 'Portée')}</Label>
-              <Select value={form.scope || 'all'} onValueChange={v => updateForm('scope', v)}>
+              <Select value={form.scope || 'all'} onValueChange={v => {
+                updateForm('scope', v);
+                setScopeTargetIds([]);
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(SCOPE_LABELS).map(([val, label]) => (
@@ -213,17 +238,13 @@ export const CancellationRulesPage: React.FC = () => {
               </Select>
             </div>
 
-            {form.scope === 'property_group' && (
-              <div className="space-y-2"><Label>ID Groupe propriétés</Label><Input value={form.targetPropertyGroupId || ''} onChange={e => updateForm('targetPropertyGroupId', e.target.value)} /></div>
-            )}
-            {form.scope === 'service_group' && (
-              <div className="space-y-2"><Label>ID Groupe services</Label><Input value={form.targetServiceGroupId || ''} onChange={e => updateForm('targetServiceGroupId', e.target.value)} /></div>
-            )}
-            {form.scope === 'property' && (
-              <div className="space-y-2"><Label>ID Propriété</Label><Input value={form.targetPropertyId || ''} onChange={e => updateForm('targetPropertyId', e.target.value)} /></div>
-            )}
-            {form.scope === 'service' && (
-              <div className="space-y-2"><Label>ID Service</Label><Input value={form.targetServiceId || ''} onChange={e => updateForm('targetServiceId', e.target.value)} /></div>
+            {form.scope && form.scope !== 'all' && (
+              <MultiScopeSelector
+                scope={form.scope}
+                selectedIds={scopeTargetIds}
+                onSelectionChange={handleScopeTargetChange}
+                label={`Sélectionner ${SCOPE_LABELS[form.scope]?.toLowerCase() || ''}`}
+              />
             )}
 
             <div className="grid grid-cols-2 gap-4">

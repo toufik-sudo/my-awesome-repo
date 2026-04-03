@@ -34,7 +34,7 @@ export const SupportThreadChat: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState('');
 
-  const isAdmin = user?.roles?.some(r => ['hyper_admin', 'hyper_manager', 'admin'].includes(r));
+  const isAdmin = ['hyper_admin', 'hyper_manager', 'admin'].includes(user?.role || '');
 
   const { data: thread, isLoading: threadLoading } = useSupportThread(threadId || '');
   const { data: messagesData, isLoading: msgsLoading } = useSupportMessages(threadId || '');

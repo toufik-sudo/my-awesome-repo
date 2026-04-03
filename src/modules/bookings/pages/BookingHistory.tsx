@@ -49,7 +49,7 @@ export const BookingHistory: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_high' | 'price_low'>('newest');
 
-  const isHyperAdmin = user?.roles?.includes('hyper_manager') || user?.roles?.includes('hyper_admin');
+  const isHyperAdmin = user?.role === 'hyper_manager' || user?.role === 'hyper_admin';
 
   // Fetch all bookings (backend handles role-based filtering)
   const { data: bookings = [], isLoading } = useHostBookings(

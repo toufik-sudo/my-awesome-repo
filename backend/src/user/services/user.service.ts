@@ -154,7 +154,7 @@ export class UserService {
     // userEntity.title = createUserRequestDto.title;
     // userEntity.email = createUserRequestDto.email;
     Object.assign(userEntity, createUserRequestDto);
-    userEntity.roles = createUserRequestDto.roles.toString();
+    userEntity.role = (createUserRequestDto.role as any) || 'user';
     const pswd = this.decodePassword(createUserRequestDto.password);
     userEntity.password = await this.hashPassword(pswd);
     const today = new Date();
