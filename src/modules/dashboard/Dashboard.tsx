@@ -62,10 +62,10 @@ export const Dashboard = memo(() => {
     return ['hyper_admin', 'hyper_manager'].includes(user.role);
   }, [user]);
 
-  const createUserRoles = useMemo((): AppRole[] => {
-    if (!user?.role) return [];
+  const createUserRoles = useMemo(() => {
+    if (!user?.role) return [] as import('@/modules/admin/admin.types').AppRole[];
     const { getAllowedInvitationRoles } = require('@/modules/admin/admin.types');
-    return getAllowedInvitationRoles(user.role as AppRole);
+    return getAllowedInvitationRoles(user.role) as import('@/modules/admin/admin.types').AppRole[];
   }, [user]);
 
   // Booking approve/reject handlers
