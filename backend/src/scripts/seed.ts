@@ -1210,6 +1210,52 @@ async function seedReferrals(ds: DataSource, userIds: number[], propertyIds: str
   console.log(`✅ Created ${referrals.length} referrals and ${shares.length} property shares`);
 }
 
+// ─── Invitations Seed ───────────────────────────────────────────────────────
+
+async function seedInvitations(ds: DataSource, userIds: number[]) {
+  const qr = ds.createQueryRunner();
+
+  const invitations = [
+    // hyper_admin invites hyper_manager
+    { invitedBy: userIds[0], method: 'email', email: 'hyper_manager_byootdz@yopmail.com', role: 'hyper_manager', status: 'accepted', message: 'Join our platform management team' },
+    // hyper_admin invites admin1
+    { invitedBy: userIds[0], method: 'email', email: 'admin1_byootdz@yopmail.com', role: 'admin', status: 'accepted', message: 'Manage your properties on ByootDZ' },
+    // hyper_manager invites admin2
+    { invitedBy: userIds[1], method: 'email', email: 'admin2_byootdz@yopmail.com', role: 'admin', status: 'accepted', message: null },
+    // admin1 invites manager1
+    { invitedBy: userIds[2], method: 'email', email: 'manager1_byootdz@yopmail.com', role: 'manager', status: 'accepted', message: 'Help me manage my properties' },
+    // admin2 invites manager2
+    { invitedBy: userIds[3], method: 'email', email: 'manager2_byootdz@yopmail.com', role: 'manager', status: 'accepted', message: null },
+    // admin1 invites guest (scope: admin1's properties)
+    { invitedBy: userIds[2], method: 'email', email: 'guestrole1_byootdz@yopmail.com', role: 'guest', status: 'accepted', message: 'Welcome as a guest viewer' },
+    // manager1 invites guest (scope: manager1's assigned properties)
+    { invitedBy: userIds[4], method: 'email', email: 'guestrole2_byootdz@yopmail.com', role: 'guest', status: 'accepted', message: null },
+    // Pending invitations
+    { invitedBy: userIds[0], method: 'email', email: 'new_admin@yopmail.com', role: 'admin', status: 'pending', message: 'We need another admin for the south region' },
+    { invitedBy: userIds[2], method: 'phone', email: null, phone: '+213550099001', role: 'guest', status: 'pending', message: null },
+    // Expired invitation
+    { invitedBy: userIds[3], method: 'email', email: 'expired_invite@yopmail.com', role: 'manager', status: 'expired', message: 'This invitation expired' },
+  ];
+
+  for (const inv of invitations) {
+    const token = uuidv4();
+    const expiresAt = inv.status === 'expired' ? pastDate(1) : futureDate(7);
+    const acceptedAt = inv.status === 'accepted' ? pastDate(randomBetween(5, 60)) : null;
+    await qr.query(
+      `INSERT INTO invitations (id, method, email, phone, role, status, invitedBy, token, message, expiresAt, acceptedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        uuidv4(), inv.method, inv.email || null, (inv as any).phone || null,
+        inv.role, inv.status, inv.invitedBy, token,
+        inv.message, expiresAt, acceptedAt,
+      ]
+    );
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${invitations.length} invitations`);
+}
+
 // ─── Main Runner ────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1219,9 +1265,8 @@ async function main() {
   console.log('✅ Database connected\n');
 
   try {
-    // 1. Users (roles stored as JSON array in users.roles)
+    // 1. Users (roles stored directly in users.role column)
     const userIds = await seedUsers(AppDataSource);
-    // seedUserRoles removed — roles in users.roles column
     await seedProfiles(AppDataSource, userIds);
 
     // 2. Properties — admins (indices 2,3) own properties
@@ -1262,6 +1307,9 @@ async function main() {
     await seedServiceFeeRules(AppDataSource, userIds[0], adminIds, propertyIds);
     await seedReferrals(AppDataSource, userIds, propertyIds);
 
+    // 11. Invitations
+    await seedInvitations(AppDataSource, userIds);
+
     console.log('\n═══════════════════════════════════════════');
     console.log('  ✅ Seeding complete!');
     console.log('═══════════════════════════════════════════');
@@ -1274,9 +1322,10 @@ async function main() {
     console.log(`   Reviews:            8`);
     console.log(`   Transfer Accounts:  ${transferAccountIds.length}`);
     console.log(`   Payment Receipts:   6`);
-    console.log(`   Points Rules:       12`);
-    console.log(`   Service Fee Rules:  4`);
+    console.log(`   Points Rules:       14`);
+    console.log(`   Service Fee Rules:  6`);
     console.log(`   Referrals:          4`);
+    console.log(`   Invitations:        10`);
     console.log('\n🔑 Default password: Password123!');
     console.log('   Hyper Admin:      hyper_admin_byootdz@yopmail.com');
     console.log('   Hyper Manager:    hyper_manager_byootdz@yopmail.com');
@@ -1284,7 +1333,14 @@ async function main() {
     console.log('   Admin 2:          admin2_byootdz@yopmail.com');
     console.log('   Manager 1:        manager1_byootdz@yopmail.com');
     console.log('   Manager 2:        manager2_byootdz@yopmail.com');
-    console.log('   Guests:           guest1_byootdz@yopmail.com - guest5_byootdz@yopmail.com\n');
+    console.log('   Guests:           guest1_byootdz@yopmail.com - guest5_byootdz@yopmail.com');
+    console.log('   Guest (role):     guestrole1_byootdz@yopmail.com, guestrole2_byootdz@yopmail.com');
+    console.log('\n📌 Invitation Rules:');
+    console.log('   hyper_admin → hyper_manager, admin, user, guest');
+    console.log('   hyper_manager → admin, guest');
+    console.log('   admin → manager, guest');
+    console.log('   manager → guest');
+    console.log('   user/guest → nobody\n');
 
   } catch (err) {
     console.error('❌ Seeding failed:', err);
