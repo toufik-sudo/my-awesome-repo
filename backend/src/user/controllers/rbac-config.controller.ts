@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { RbacConfigService } from '../services/rbac-config.service';
+import { RbacBindingService } from '../services/rbac-binding.service';
 import { RequireRole } from '../../auth/decorators/require-role.decorator';
 import { AppRole } from '../entity/user.entity';
 import { RbacScope } from '../entity/rbac-backend-permission.entity';
@@ -17,7 +18,10 @@ import { RbacScope } from '../entity/rbac-backend-permission.entity';
 @ApiBearerAuth()
 @Controller('rbac-config')
 export class RbacConfigController {
-  constructor(private readonly rbacService: RbacConfigService) {}
+  constructor(
+    private readonly rbacService: RbacConfigService,
+    private readonly bindingService: RbacBindingService,
+  ) {}
 
   // ─── Backend permissions ──────────────────────────────────────────────
 
@@ -190,6 +194,21 @@ export class RbacConfigController {
   @ApiOperation({ summary: 'Get list of all available roles' })
   async getRoles() {
     return this.rbacService.getRoles();
+  }
+
+  // ─── Bindings ─────────────────────────────────────────────────────────
+
+  @Get('bindings')
+  @ApiOperation({
+    summary: 'Get API ↔ UI permission bindings',
+    description: 'Returns all bindings or filtered by module query param.',
+  })
+  @ApiResponse({ status: 200, description: 'Array of { apiPermissionKey, uiPermissionKey, module }' })
+  async getBindings(@Query('module') module?: string) {
+    if (module) {
+      return this.bindingService.getBindingsForModule(module);
+    }
+    return this.bindingService.getAllBindings();
   }
 
   // ─── Cache management ─────────────────────────────────────────────────
