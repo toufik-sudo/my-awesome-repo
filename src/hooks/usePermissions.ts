@@ -247,6 +247,29 @@ export function usePermissions() {
       /** Check permission on a specific assignment */
       hasPermissionOnAssignment,
 
+      /**
+       * Check a UI permission key from the RBAC config (generated keys).
+       * hyper_admin always returns true. Falls back to false if not loaded.
+       */
+      canUI: (uiKey: string): boolean => {
+        if (isHyperAdmin) return true;
+        return rbacConfig[uiKey] ?? false;
+      },
+
+      /**
+       * Check an API permission key via binding lookup.
+       * Resolves the UI key bound to apiKey, then checks rbacConfig.
+       */
+      canAPI: (apiKey: string): boolean => {
+        if (isHyperAdmin) return true;
+        const uiKey = bindingsMap[apiKey];
+        if (uiKey) return rbacConfig[uiKey] ?? false;
+        return false;
+      },
+
+      /** Pre-generated UI permission key constants */
+      UI_PERM,
+
       // ─── Scope helpers ────────────────────────────────────────────────
       getAccessiblePropertyIds,
       getGrantedPermissions,
