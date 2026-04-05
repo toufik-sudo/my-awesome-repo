@@ -82,6 +82,13 @@ export const rbacConfigApi = {
   createFrontendPermission: (data: { role: string; ui_key: string; permission_key: string; allowed?: boolean; conditions?: Record<string, any> }) =>
     api.post<RbacFrontendPermission>(`${BASE}/frontend`, data).then(r => r.data),
 
+  // Bindings
+  getBindings: () =>
+    api.get<RbacBinding[]>(`${BASE}/bindings`).then(r => r.data),
+
+  getBindingsForModule: (module: string) =>
+    api.get<RbacBinding[]>(`${BASE}/bindings?module=${module}`).then(r => r.data),
+
   // Cache
   reloadCache: () =>
     api.post<{ success: boolean; message: string }>(`${BASE}/reload`, {}).then(r => r.data),
