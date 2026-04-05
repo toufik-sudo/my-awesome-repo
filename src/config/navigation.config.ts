@@ -409,6 +409,14 @@ export const defaultMenuGroups: NavMenuGroup[] = [
         roles: ['admin', 'designer']
       },
       {
+        id: 'rbac-settings',
+        label: 'RBAC Settings',
+        translationKey: 'navigation.rbacSettings',
+        url: '/admin/rbac-settings',
+        icon: Shield,
+        roles: ['hyper_admin', 'hyper_manager', 'admin']
+      },
+      {
         id: 'settings',
         label: 'Settings',
         translationKey: 'navigation.settings',

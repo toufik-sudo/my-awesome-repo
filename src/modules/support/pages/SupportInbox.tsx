@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { SUPPORT_ROUTES } from '@/routes/routes.constants';
 import {
   MessageSquarePlus, Inbox, Clock, CheckCircle2, AlertTriangle, Search,
   Filter, ChevronRight, Loader2, HelpCircle,
@@ -19,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 // MainLayout removed — provided by Routes
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   useSupportMyThreads, useSupportAdminThreads, useCreateSupportThread,
 } from '../support.hooks';
@@ -45,6 +47,7 @@ export const SupportInbox: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const rbac = usePermissions();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showNewThread, setShowNewThread] = useState(false);
@@ -52,7 +55,7 @@ export const SupportInbox: React.FC = () => {
   const [newCategory, setNewCategory] = useState('general');
   const [newContent, setNewContent] = useState('');
 
-  const isAdmin = ['hyper_admin', 'hyper_manager', 'admin'].includes(user?.role || '');
+  const isAdmin = rbac.isHyper || rbac.isAdmin;
 
   const adminQuery = useSupportAdminThreads(
     1,

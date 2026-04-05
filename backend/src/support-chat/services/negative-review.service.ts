@@ -70,7 +70,7 @@ export class NegativeReviewService {
           reviewId: review.id,
         },
       );
-    } catch (e) {
+    } catch (e:any) {
       this.logger.error('Failed to create support thread for negative review', e);
     }
   }

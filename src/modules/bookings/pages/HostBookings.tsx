@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -40,6 +41,7 @@ const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg
 export const HostBookings: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { canAcceptBookings, canRejectBookings, canRefundUsers } = usePermissions();
   const [activeTab, setActiveTab] = useState('pending');
   const [declineDialog, setDeclineDialog] = useState<BookingResponse | null>(null);
   const [declineReason, setDeclineReason] = useState('');

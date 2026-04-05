@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Put, Delete,
-  Body, Param, Request, UseGuards, ForbiddenException,
+  Body, Param, Request, UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { HostFeeAbsorptionService } from '../services/host-fee-absorption.service';
@@ -28,17 +28,15 @@ export class HostFeeAbsorptionController {
     return this.service.getForHost(parseInt(hostId, 10));
   }
 
+  // [BE-05] Only admin/manager can create — hyper roles removed
   @Post()
   @RequireRole('admin', 'manager')
-  @ApiOperation({ summary: 'Create absorption rule', description: 'Only admin/manager can create. Hyper admin cannot.' })
+  @ApiOperation({ summary: 'Create absorption rule', description: 'Only admin/manager can create. Hyper roles cannot.' })
   async create(@Request() req, @Body() body: any) {
-    const role = req.user.role;
-    if (role === 'hyper_admin' || role === 'hyper_manager') {
-      throw new ForbiddenException('Hyper admins cannot create absorption rules');
-    }
     return this.service.create(req.user.id, body);
   }
 
+  // [BE-05] Only admin/manager can update — hyper roles removed
   @Put(':id')
   @RequireRole('admin', 'manager')
   @ApiOperation({ summary: 'Update absorption rule', description: 'Only admin/manager can update' })

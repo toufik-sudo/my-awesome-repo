@@ -5,6 +5,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   Search,
   MapPin,
@@ -63,6 +64,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { PROPERTY_ROUTES } from '@/routes/routes.constants';
 
 import { MapSearch, MapBounds } from '@/modules/shared/components/MapSearch';
 import { UnifiedMapSearch } from '@/modules/shared/components/UnifiedMapSearch';
@@ -112,11 +114,7 @@ const PropertyListing = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-
-  const canAddProperty = useMemo(() => {
-    if (!user?.role) return false;
-    return ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(user.role);
-  }, [user]);
+  const { canCreateProperty: canAddProperty } = usePermissions();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -694,7 +692,7 @@ const PropertyListing = () => {
 
               <div className="flex items-center gap-2">
                 {canAddProperty && (
-                  <Button size="sm" onClick={() => navigate('/properties/new')} className="gap-1.5">
+                  <Button size="sm" onClick={() => navigate(PROPERTY_ROUTES.NEW)} className="gap-1.5">
                     <Plus className="h-4 w-4" />
                     {t('dashboard.actions.addProperty', 'Add Property')}
                   </Button>

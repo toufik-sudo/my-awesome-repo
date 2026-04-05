@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Eye, Check, X, RefreshCw, Plus, Pencil, Trash2,
@@ -30,6 +30,14 @@ export const PaymentValidation: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [accountDialog, setAccountDialog] = useState(false);
   const [editAccount, setEditAccount] = useState<Partial<TransferAccount>>({});
+  const [isEmbedded, setIsEmbedded] = useState(false);
+
+  // Detect if rendered standalone (route) vs embedded (dashboard tab)
+  useEffect(() => {
+    // If parent has DynamicTabs context, we're embedded
+    const el = document.querySelector('[data-payment-validation-root]');
+    setIsEmbedded(!!el?.closest('[role="tabpanel"]'));
+  }, []);
 
   const { data: receipts = [], isLoading: receiptsLoading } = useQuery({
     queryKey: ['pending-receipts'],
@@ -93,7 +101,7 @@ export const PaymentValidation: React.FC = () => {
     );
   }
 
-  return (
+  const content = (
     <>
       <div className="space-y-6">
         {/* Stats Bar */}
@@ -374,6 +382,19 @@ export const PaymentValidation: React.FC = () => {
         </DialogContent>
       </Dialog>
     </>
+  );
+
+  // When rendered as a standalone route (not embedded in dashboard), wrap in full-width clean layout
+  return (
+    <div data-payment-validation-root className="min-h-screen bg-muted/30">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Validation des paiements</h1>
+          <p className="text-sm text-muted-foreground mt-1">Approuvez ou rejetez les reçus de paiement en attente</p>
+        </div>
+        {content}
+      </div>
+    </div>
   );
 };
 

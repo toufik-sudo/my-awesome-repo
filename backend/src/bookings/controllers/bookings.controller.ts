@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Param, Body, Query, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query, Request, UseGuards, ForbiddenException } from '@nestjs/common';
 import { BookingsService } from '../services/bookings.service';
 import { CreateBookingDto } from '../dtos/create-booking.dto';
-import { RequirePermission } from '../../auth/decorators';
+import { RequireRole, RequirePermission } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { Public } from '../../auth/decorators/public.decorator';
 
@@ -21,9 +21,10 @@ export class BookingsController {
     return this.bookingsService.findByGuest(req.user.id);
   }
 
+  // [BE-02] Scope check: only booker or property owner/manager can view
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookingsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req: any) {
+    return this.bookingsService.findOneScoped(id, req.user.id);
   }
 
   @Post()
@@ -68,8 +69,15 @@ export class BookingsController {
     return this.bookingsService.updateStatus(id, 'refunded');
   }
 
+  // [BE-01] Fix: require admin/manager role + permission for status updates
   @Put(':id/status')
-  updateStatus(@Param('id') id: string, @Body('status') status: string) {
+  @RequireRole('admin', 'manager', 'hyper_admin', 'hyper_manager')
+  @RequirePermission('answer_demands', 'propertyId', 'body')
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @Body('propertyId') propertyId: string,
+  ) {
     return this.bookingsService.updateStatus(id, status);
   }
 

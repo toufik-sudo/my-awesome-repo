@@ -1,16 +1,14 @@
-import React, { useState, useCallback, useMemo, memo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { DynamicGrid } from '@/modules/shared/components/DynamicGrid';
+import React, { useState, useCallback, memo } from 'react';
 import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { hyperManagementApi } from '@/modules/admin/hyper-management.api';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { UserWithRoles } from '@/modules/admin/admin.types';
-import type { GridColumn } from '@/types/component.types';
 import {
   Pause, Play, Archive, RotateCcw, Shield, ShieldCheck, ShieldAlert,
-  AlertTriangle, Loader2, Users,
+  AlertTriangle, Loader2,
 } from 'lucide-react';
 
 const ROLE_COLORS: Record<string, string> = {
@@ -31,6 +29,7 @@ interface UserManageModalProps {
 export const UserManageModal: React.FC<UserManageModalProps> = memo(({ open, onOpenChange, user, onRefresh }) => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const { isTargetAdmin } = usePermissions();
 
   const handleAction = useCallback(async (action: string) => {
     if (!user) return;
@@ -64,7 +63,7 @@ export const UserManageModal: React.FC<UserManageModalProps> = memo(({ open, onO
 
   if (!user) return null;
 
-  const isAdmin = user.role === 'admin';
+  const targetIsAdmin = isTargetAdmin(user.role);
   const isInactive = !user.isActive;
 
   return (
@@ -141,7 +140,7 @@ export const UserManageModal: React.FC<UserManageModalProps> = memo(({ open, onO
         </div>
 
         {/* Cascade info */}
-        {isAdmin && (
+        {targetIsAdmin && (
           <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />

@@ -19,7 +19,7 @@ import {
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { resolveImageUrl } from '@/modules/shared/components/BackendImage';
 
-import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useHostBookings } from '../bookings.hooks';
 import type { BookingResponse } from '../bookings.api';
 import { exportBookingsToCSV, exportBookingsToPDF } from '../utils/exportBookings';
@@ -42,14 +42,14 @@ type DateRange = 'all' | '7d' | '30d' | '90d' | '365d';
 export const BookingHistory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { canRefundUsers, canViewBookings, isHyper } = usePermissions();
 
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_high' | 'price_low'>('newest');
 
-  const isHyperAdmin = user?.role === 'hyper_manager' || user?.role === 'hyper_admin';
+  const isHyperAdmin = isHyper;
 
   // Fetch all bookings (backend handles role-based filtering)
   const { data: bookings = [], isLoading } = useHostBookings(

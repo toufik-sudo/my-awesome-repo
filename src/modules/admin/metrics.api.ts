@@ -87,12 +87,30 @@ export interface PlatformSummary {
   revenue: { total: number };
 }
 
+export interface MetricServiceBooking {
+  id: string;
+  serviceId: string;
+  serviceTitle: string;
+  serviceCategory: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  date: string;
+  totalPrice: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+}
+
 export const metricsApi = {
   getUsers: (params?: Record<string, any>) =>
     api.get<PaginatedResult<MetricUser>>(`${BASE}/users`, { params }).then(r => r.data),
 
   getBookings: (params?: Record<string, any>) =>
     api.get<PaginatedResult<MetricBooking>>(`${BASE}/bookings`, { params }).then(r => r.data),
+
+  getServiceBookings: (params?: Record<string, any>) =>
+    api.get<PaginatedResult<MetricServiceBooking>>(`${BASE}/service-bookings`, { params }).then(r => r.data),
 
   getProperties: (params?: Record<string, any>) =>
     api.get<PaginatedResult<MetricProperty>>(`${BASE}/properties`, { params }).then(r => r.data),

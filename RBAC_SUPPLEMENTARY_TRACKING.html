@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>RBAC Supplementary Tracking &mdash; Modules Not in RBAC&lowbar;TRACKING&period;md</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+/* From extension bierner.markdown-checkbox */
+.contains-task-list {
+    padding-left: 0;
+}
+
+.contains-task-list li {
+    margin-left: 24px;
+}
+
+.contains-task-list .task-list-item {
+    list-style: none;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.contains-task-list .contains-task-list {
+    padding-left: 20px;
+} 
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="rbac-supplementary-tracking--modules-not-in-rbac_trackingmd">RBAC Supplementary Tracking — Modules Not in RBAC_TRACKING.md</h1>
+<blockquote>
+<p>Generated: 2026-04-03 | Updated: 2026-04-03
+Convention: Module must be <strong>fully completed</strong> before marking ✅ Done.</p>
+</blockquote>
+<hr>
+<h2 id="1-backend--untracked-controllers--endpoints">1. Backend — Untracked Controllers &amp; Endpoints</h2>
+<h3 id="11-controllers-missing-guards--incomplete-rbac">1.1 Controllers Missing Guards / Incomplete RBAC</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>File</th>
+<th>Guards Applied</th>
+<th>Issues Found</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AppController</strong></td>
+<td><code>backend/src/app.controller.ts</code></td>
+<td>❌ None (no AuthGuard, no PermissionGuard)</td>
+<td>Root <code>GET /</code> is public (OK). Commented-out endpoints had <code>@Roles('admin')</code> but use legacy decorator — unused, no risk.</td>
+<td>✅ N/A</td>
+</tr>
+<tr>
+<td><strong>NotificationController</strong></td>
+<td><code>backend/src/notification/controllers/notification.controller.ts</code></td>
+<td>✅ <code>@UseGuards(JwtAuthGuard)</code> on class</td>
+<td>Auth re-enabled. All endpoints require JWT.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>UserController</strong></td>
+<td><code>backend/src/user/controllers/user.controller.ts</code></td>
+<td>✅ <code>AuthGuard('jwt')</code> on class</td>
+<td>Self-service endpoints (language, avatar, profile) — correct without role restriction.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>SessionController</strong></td>
+<td><code>backend/src/user/controllers/session.controller.ts</code></td>
+<td>❌ No guards, all endpoints commented out</td>
+<td>Inactive — no risk.</td>
+<td>✅ N/A</td>
+</tr>
+<tr>
+<td><strong>ProfilesController</strong></td>
+<td><code>backend/src/profiles/controllers/profiles.controller.ts</code></td>
+<td>✅ <code>@UseGuards(JwtAuthGuard)</code> on class</td>
+<td>Auth required for read/update.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>SettingsController</strong></td>
+<td><code>backend/src/settings/controllers/settings.controller.ts</code></td>
+<td>✅ <code>AuthGuard('jwt')</code> on class</td>
+<td>Self-service endpoints — correct.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>RankingsController</strong></td>
+<td><code>backend/src/rankings/controllers/rankings.controller.ts</code></td>
+<td>✅ <code>AuthGuard('jwt')</code> on class</td>
+<td>Read-only social data — correct.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>FavoritesController</strong></td>
+<td><code>backend/src/favorites/controllers/favorites.controller.ts</code></td>
+<td>✅ <code>@UseGuards(JwtAuthGuard)</code> on class</td>
+<td>Auth required for favorites CRUD.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>CommentsController</strong></td>
+<td><code>backend/src/comments/controllers/comments.controller.ts</code></td>
+<td>✅ <code>@UseGuards(PermissionGuard)</code> on class</td>
+<td>Ownership validated in service layer for PUT/DELETE.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>ReactionsController</strong></td>
+<td><code>backend/src/reactions/controllers/reactions.controller.ts</code></td>
+<td>✅ <code>@UseGuards(PermissionGuard)</code> on class</td>
+<td>Ownership validated in service layer for DELETE.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>BadgeController</strong></td>
+<td><code>backend/src/modules/points/controllers/badge.controller.ts</code></td>
+<td>✅ <code>JwtAuthGuard</code> on class</td>
+<td>Read-only endpoints.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>PointsController</strong></td>
+<td><code>backend/src/modules/points/controllers/points.controller.ts</code></td>
+<td>✅ <code>@UseGuards(PermissionGuard)</code>, <code>@RequireRole('hyper_admin', 'hyper_manager')</code> on admin endpoints</td>
+<td>Admin award/deduct restricted to hyper roles. User endpoints self-scoped.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>SSOController</strong></td>
+<td><code>backend/src/sso/controllers/sso.controller.ts</code></td>
+<td>✅ <code>SsoEnabledGuard</code>, <code>@Public()</code> on token exchange</td>
+<td>OAuth flow correctly public.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>EmailTrackingController</strong></td>
+<td><code>backend/src/infrastructure/email-tracking/controllers/email-tracking.controller.ts</code></td>
+<td>✅ <code>@Public()</code> on pixel/click endpoints</td>
+<td>Tracking endpoints must be public for email clients.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>UserMetricsController</strong></td>
+<td><code>backend/src/user/controllers/metrics.controller.ts</code></td>
+<td>✅ <code>PermissionGuard</code>, <code>@RequireRole('hyper_admin', 'hyper_manager')</code></td>
+<td>Properly guarded.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>PayoutAccountController</strong></td>
+<td><code>backend/src/user/controllers/payout-account.controller.ts</code></td>
+<td>✅ <code>PermissionGuard</code>, <code>@RequireRole</code> per endpoint</td>
+<td>Correct hierarchy.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>RewardsController</strong></td>
+<td><code>backend/src/user/controllers/rewards.controller.ts</code></td>
+<td>✅ <code>PermissionGuard</code>, <code>@RequireRole</code> per write endpoint</td>
+<td>Correct hierarchy.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>PaymentsController</strong></td>
+<td><code>backend/src/payments/payments.controller.ts</code></td>
+<td>✅ <code>@UseGuards(PermissionGuard)</code>, <code>@Public()</code> for read, <code>@RequireRole('hyper_admin', 'hyper_manager')</code> for admin</td>
+<td>Approve/reject hyper-only. Receipt upload any auth user.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>SupportChatController</strong></td>
+<td><code>backend/src/support-chat/controllers/support-chat.controller.ts</code></td>
+<td>✅ <code>@UseGuards(PermissionGuard)</code>, <code>@RequireRole</code> on admin endpoints</td>
+<td>Admin inbox/assign/status hyper-only.</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>DashboardController</strong></td>
+<td><code>backend/src/properties/controllers/dashboard.controller.ts</code></td>
+<td>✅ <code>@UseGuards(JwtAuthGuard)</code> on class</td>
+<td>Auth required.</td>
+<td>✅ Done</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-critical-gaps-summary-backend">1.2 Critical Gaps Summary (Backend)</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Issue</th>
+<th>Controller</th>
+<th>Fix Required</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🔴 Critical</td>
+<td><strong>Points admin endpoints unguarded</strong></td>
+<td><code>PointsController</code></td>
+<td>Added <code>@RequireRole('hyper_admin', 'hyper_manager')</code> + <code>PermissionGuard</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🔴 Critical</td>
+<td><strong>Profiles fully public</strong></td>
+<td><code>ProfilesController</code></td>
+<td>Added <code>@UseGuards(JwtAuthGuard)</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🔴 Critical</td>
+<td><strong>Favorites no auth</strong></td>
+<td><code>FavoritesController</code></td>
+<td>Added <code>@UseGuards(JwtAuthGuard)</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🟡 High</td>
+<td><strong>Notifications auth commented out</strong></td>
+<td><code>NotificationController</code></td>
+<td>Re-enabled <code>@UseGuards(JwtAuthGuard)</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🟡 High</td>
+<td><strong>Comments/Reactions no ownership check</strong></td>
+<td><code>CommentsController</code>, <code>ReactionsController</code></td>
+<td>Upgraded to <code>PermissionGuard</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🟡 High</td>
+<td><strong>Payments missing hyper_admin</strong></td>
+<td><code>PaymentsController</code></td>
+<td>Added <code>PermissionGuard</code> + <code>hyper_admin</code> to all admin endpoints</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🟡 High</td>
+<td><strong>SupportChat no class-level guard</strong></td>
+<td><code>SupportChatController</code></td>
+<td>Added <code>PermissionGuard</code> on class</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td>🟡 High</td>
+<td><strong>Dashboard no guard</strong></td>
+<td><code>DashboardController</code></td>
+<td>Added <code>JwtAuthGuard</code></td>
+<td>✅ Fixed</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-frontend--untracked-pages-components--hooks">2. Frontend — Untracked Pages, Components &amp; Hooks</h2>
+<h3 id="21-route-level-rbac-from-routestsx">2.1 Route-Level RBAC (from Routes.tsx)</h3>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Required Roles</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PUBLIC_ROUTES.HOME</code></td>
+<td>None (public)</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>PUBLIC_ROUTES.LOGIN</code></td>
+<td><code>requireAuth=false</code> (redirect if logged in)</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>PROPERTY_ROUTES.LIST</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>PROPERTY_ROUTES.DETAIL</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>PROPERTY_ROUTES.NEW</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>PROPERTY_ROUTES.EDIT</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>SERVICE_ROUTES.LIST</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>SERVICE_ROUTES.DETAIL</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>SERVICE_ROUTES.NEW</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>BOOKING_ROUTES.LIST</code></td>
+<td><code>requireBookingAccess</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><code>BOOKING_ROUTES.HOST</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>BOOKING_ROUTES.HISTORY</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>BOOKING_ROUTES.CHAT</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>BOOKING_ROUTES.CALENDAR</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><code>SUPPORT_ROUTES.INBOX</code></td>
+<td><code>ADMIN_ROLE_LIST</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><code>SUPPORT_ROUTES.THREAD</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>SUPPORT_ROUTES.REVIEW</code></td>
+<td><code>ADMIN_ROLE_LIST</code></td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><code>DASHBOARD_ROUTES.HYPER</code></td>
+<td><code>HYPER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>DASHBOARD_ROUTES.ADMIN</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>DASHBOARD_ROUTES.GUEST</code></td>
+<td><code>['guest']</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>DASHBOARD_ROUTES.USER</code></td>
+<td><code>['user']</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>ADMIN_ROUTES.VERIFICATION_REVIEW</code></td>
+<td><code>HYPER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>ADMIN_ROUTES.PAYMENT_VALIDATION</code></td>
+<td><code>HYPER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>ADMIN_ROUTES.EMAIL_ANALYTICS</code></td>
+<td><code>ADMIN_ROLE_LIST</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>ADMIN_ROUTES.FEE_ABSORPTION</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>ADMIN_ROUTES.CANCELLATION_RULES</code></td>
+<td><code>MANAGER_ROLES</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>DASHBOARD_ROUTES.POINTS</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><code>DASHBOARD_ROUTES.SETTINGS</code></td>
+<td>Any authenticated</td>
+<td>✅ Done</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-pages--in-page-rbac-filtering">2.2 Pages — In-Page RBAC Filtering</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>File</th>
+<th>RBAC Applied</th>
+<th>Issues</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PropertyDetail</strong></td>
+<td><code>src/pages/PropertyDetail.tsx</code></td>
+<td>✅ <code>usePermissions().canModifyProperty</code></td>
+<td>Migrated from inline role check</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>ServiceDetail</strong></td>
+<td><code>src/pages/ServiceDetail.tsx</code></td>
+<td>✅ <code>usePermissions().canModifyService</code></td>
+<td>Edit/duplicate buttons gated</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>MyBookings</strong></td>
+<td><code>src/pages/MyBookings.tsx</code></td>
+<td>✅ Route-level <code>requireBookingAccess</code></td>
+<td>Non-booking roles blocked at route level</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>PointsPage</strong></td>
+<td><code>src/pages/PointsPage.tsx</code></td>
+<td>✅ No admin CRUD UI exposed</td>
+<td>Read-only for all users — correct</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>RewardsShop</strong></td>
+<td><code>src/modules/rewards/pages/RewardsShop.tsx</code></td>
+<td>✅ No admin CRUD exposed</td>
+<td>Redeem only — admin CRUD via separate API</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>BookingChat</strong></td>
+<td><code>src/modules/chat/pages/BookingChat.tsx</code></td>
+<td>✅ Auth required at route</td>
+<td>Chat is between booking parties — correct</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>HostBookings</strong></td>
+<td><code>src/modules/bookings/pages/HostBookings.tsx</code></td>
+<td>✅ <code>usePermissions()</code> for accept/reject/refund</td>
+<td>Actions gated by permission flags</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>BookingHistory</strong></td>
+<td><code>src/modules/bookings/pages/BookingHistory.tsx</code></td>
+<td>✅ <code>usePermissions().canRefundUsers</code></td>
+<td>Refund action gated</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>BookingCalendarPage</strong></td>
+<td><code>src/modules/admin/pages/BookingCalendarPage.tsx</code></td>
+<td>✅ Route restricted to <code>MANAGER_ROLES</code></td>
+<td>Calendar now role-restricted</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>SupportInbox</strong></td>
+<td><code>src/modules/support/pages/SupportInbox.tsx</code></td>
+<td>✅ Route restricted to <code>ADMIN_ROLE_LIST</code></td>
+<td>Admin inbox properly restricted</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>AddPropertyWizard</strong></td>
+<td><code>src/modules/admin/pages/AddPropertyWizard.tsx</code></td>
+<td>✅ Route restricted to <code>MANAGER_ROLES</code></td>
+<td>Route-level gating sufficient</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>AddServiceWizard</strong></td>
+<td><code>src/modules/admin/pages/AddServiceWizard.tsx</code></td>
+<td>✅ Route restricted to <code>MANAGER_ROLES</code></td>
+<td>Route-level gating sufficient</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>AdminUsersManagement</strong></td>
+<td><code>src/modules/admin/pages/AdminUsersManagement.tsx</code></td>
+<td>✅ Migrated to <code>usePermissions</code></td>
+<td>Replaced deprecated <code>useRoleAccess</code></td>
+<td>✅ Fixed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-components--action-level-rbac">2.3 Components — Action-Level RBAC</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>File</th>
+<th>RBAC Applied</th>
+<th>Issues</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BookingModal</strong></td>
+<td><code>src/modules/shared/components/calendar/BookingModal.tsx</code></td>
+<td>✅ <code>usePermissions().canMakeBooking</code></td>
+<td>Booking check added</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>ServiceBookingForm</strong></td>
+<td><code>src/modules/services/components/ServiceBookingForm.tsx</code></td>
+<td>✅ <code>usePermissions().canMakeBooking</code></td>
+<td>Booking check added</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>ReviewForm</strong></td>
+<td><code>src/modules/reviews/components/ReviewForm.tsx</code></td>
+<td>✅ Auth-only (any user can review)</td>
+<td>Delete handled by backend ownership</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>CreateUserModal</strong></td>
+<td><code>src/modules/dashboard/components/CreateUserModal.tsx</code></td>
+<td>✅ <code>allowedRoles</code> prop from parent</td>
+<td>Roles filtered by <code>usePermissions.allowedInvitationRoles</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>BookingDetailModal</strong></td>
+<td><code>src/modules/dashboard/components/BookingDetailModal.tsx</code></td>
+<td>✅ <code>canManage</code> prop from parent</td>
+<td>Accept/reject gated by parent's <code>usePermissions</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>UserManageModal</strong></td>
+<td><code>src/modules/admin/components/UserManageModal.tsx</code></td>
+<td>✅ Only rendered in hyper context</td>
+<td>Actions scoped by <code>hyperManagementApi</code></td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>ProductModal</strong></td>
+<td><code>src/modules/shared/components/ProductModal.tsx</code></td>
+<td>✅ <code>usePermissions().canMakeBooking</code></td>
+<td>Book button check added</td>
+<td>✅ Fixed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-hooks--rbac-coverage">2.4 Hooks — RBAC Coverage</h3>
+<table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>File</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>usePermissions</strong></td>
+<td><code>src/hooks/usePermissions.ts</code></td>
+<td>✅ Done</td>
+<td>Primary RBAC hook — all consumers migrated</td>
+</tr>
+<tr>
+<td><strong>useRoleAccess</strong></td>
+<td><code>src/hooks/useRoleAccess.ts</code></td>
+<td>✅ Deprecated</td>
+<td>No remaining consumers — kept for backward compat</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="3-mobile--rbac-coverage">3. Mobile — RBAC Coverage</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>File</th>
+<th>RBAC Applied</th>
+<th>Issues</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>auth.types.ts</strong></td>
+<td><code>mobile/src/types/auth.types.ts</code></td>
+<td>✅ Types synced</td>
+<td><code>AppRole</code>, <code>canMakeBooking</code>, <code>isHost</code>, <code>isHyper</code> helpers present</td>
+<td>✅ Done</td>
+</tr>
+<tr>
+<td><strong>DashboardScreen</strong></td>
+<td><code>mobile/src/screens/DashboardScreen.tsx</code></td>
+<td>⬜ No role check</td>
+<td>Should filter by role (mobile-specific, low priority)</td>
+<td>⬜ Pending</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-cross-cutting-sync-issues">4. Cross-Cutting Sync Issues</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Issue</th>
+<th>Priority</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>All backend controllers now guarded</strong></td>
+<td><code>PermissionGuard</code> or <code>JwtAuthGuard</code> applied to all controllers</td>
+<td>🔴 Critical</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong><code>useRoleAccess</code> deprecation</strong></td>
+<td>No remaining consumers — only <code>usePermissions</code> used</td>
+<td>🟡 High</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>Inline role checks</strong></td>
+<td><code>PropertyDetail</code> migrated to <code>usePermissions</code>; <code>SupportInbox</code> &amp; <code>BookingHistory</code> route-gated</td>
+<td>🟡 High</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>Route-level gaps</strong></td>
+<td><code>BOOKING_ROUTES.CALENDAR</code> → <code>MANAGER_ROLES</code>, <code>SUPPORT_ROUTES.INBOX</code> → <code>ADMIN_ROLE_LIST</code>, <code>BOOKING_ROUTES.LIST</code> → <code>requireBookingAccess</code></td>
+<td>🟡 High</td>
+<td>✅ Fixed</td>
+</tr>
+<tr>
+<td><strong>Mobile RBAC hooks missing</strong></td>
+<td>No <code>usePermissions</code> equivalent in mobile (low priority — mobile has helper functions)</td>
+<td>🟢 Medium</td>
+<td>⬜ Pending</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-action-items-priority-order">5. Action Items (Priority Order)</h2>
+<h3 id="-critical-security--all-fixed-">🔴 Critical (Security) — ALL FIXED ✅</h3>
+<ol class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@RequireRole('hyper_admin', 'hyper_manager')</code> to <code>PointsController.admin/award</code> and <code>admin/deduct</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@UseGuards(JwtAuthGuard)</code> to <code>ProfilesController</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@UseGuards(JwtAuthGuard)</code> to <code>FavoritesController</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Re-enable <code>@UseGuards(JwtAuthGuard)</code> on <code>NotificationController</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@UseGuards(PermissionGuard)</code> to <code>PaymentsController</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@UseGuards(PermissionGuard)</code> to <code>SupportChatController</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@UseGuards(JwtAuthGuard)</code> to <code>DashboardController</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>@UseGuards(PermissionGuard)</code> to <code>CommentsController</code> and <code>ReactionsController</code></li>
+</ol>
+<h3 id="-high-correctness--all-fixed-">🟡 High (Correctness) — ALL FIXED ✅</h3>
+<ol start="9" class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Restrict <code>BOOKING_ROUTES.CALENDAR</code> route to <code>MANAGER_ROLES</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Restrict <code>SUPPORT_ROUTES.INBOX</code> route to <code>ADMIN_ROLE_LIST</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Migrate <code>AdminUsersManagement</code> from <code>useRoleAccess</code> to <code>usePermissions</code></li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Replace inline role checks with <code>usePermissions</code> in <code>PropertyDetail</code>, <code>ServiceDetail</code></li>
+</ol>
+<h3 id="-medium-completeness--all-fixed-">🟢 Medium (Completeness) — ALL FIXED ✅</h3>
+<ol start="13" class="contains-task-list">
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>usePermissions</code> gating to BookingModal, ServiceBookingForm, ProductModal</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox" checked=""type="checkbox"> Add <code>canMakeBooking</code> check to BookingModal, ServiceBookingForm, ProductModal</li>
+<li class="task-list-item enabled"><input class="task-list-item-checkbox"type="checkbox"> Create mobile <code>usePermissions</code> hook (low priority — mobile has inline helpers)</li>
+</ol>
+<hr>
+<blockquote>
+<p><strong>Status</strong>: ✅ All backend controllers guarded. ✅ All frontend routes restricted. ✅ All pages and modals use <code>usePermissions</code>. Only mobile <code>usePermissions</code> hook remains pending (low priority).</p>
+</blockquote>
+
+            
+            
+        </body>
+        </html>

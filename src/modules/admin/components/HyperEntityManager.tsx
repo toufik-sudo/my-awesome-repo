@@ -22,7 +22,19 @@ const STATUS_BADGES: Record<string, { variant: any; label: string }> = {
   archived: { variant: 'destructive', label: 'Archivé' },
 };
 
-export const HyperEntityManager: React.FC = memo(() => {
+interface HyperEntityManagerProps {
+  canCreateProperty?: boolean;
+  canCreateService?: boolean;
+  canModifyProperty?: boolean;
+  canModifyService?: boolean;
+}
+
+export const HyperEntityManager: React.FC<HyperEntityManagerProps> = memo(({
+  canCreateProperty = true,
+  canCreateService = true,
+  canModifyProperty = true,
+  canModifyService = true,
+}) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'properties' | 'services'>('properties');
   const [properties, setProperties] = useState<MetricProperty[]>([]);
@@ -89,28 +101,35 @@ export const HyperEntityManager: React.FC = memo(() => {
     } finally { setActionLoading(false); }
   }, [confirmModal, activeTab, loadProperties, loadServices]);
 
+  const canModify = activeTab === 'properties' ? canModifyProperty : canModifyService;
+
   const actionButtons = useCallback((id: string, title: string, status: string, entityType: 'property' | 'service') => (
     <div className="flex items-center gap-1">
-      {status !== 'suspended' && status !== 'archived' && (
+      {canModify && status !== 'suspended' && status !== 'archived' && (
         <Button variant="ghost" size="sm" onClick={() => setConfirmModal({ action: 'pause', entityType, entityId: id, entityTitle: title })} title="Mettre en pause">
           <Pause className="h-3.5 w-3.5 text-amber-600" />
         </Button>
       )}
-      {status === 'suspended' && (
+      {canModify && status === 'suspended' && (
         <Button variant="ghost" size="sm" onClick={() => setConfirmModal({ action: 'resume', entityType, entityId: id, entityTitle: title })} title="Reprendre">
           <Play className="h-3.5 w-3.5 text-emerald-600" />
         </Button>
       )}
-      {status !== 'archived' && (
+      {canModify && status !== 'archived' && (
         <Button variant="ghost" size="sm" onClick={() => setConfirmModal({ action: 'archive', entityType, entityId: id, entityTitle: title })} title="Archiver">
           <Archive className="h-3.5 w-3.5 text-orange-600" />
         </Button>
       )}
-      <Button variant="ghost" size="sm" onClick={() => setConfirmModal({ action: 'delete', entityType, entityId: id, entityTitle: title })} title="Supprimer définitivement">
-        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-      </Button>
+      {canModify && (
+        <Button variant="ghost" size="sm" onClick={() => setConfirmModal({ action: 'delete', entityType, entityId: id, entityTitle: title })} title="Supprimer définitivement">
+          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+        </Button>
+      )}
+      {!canModify && (
+        <span className="text-xs text-muted-foreground italic">Lecture seule</span>
+      )}
     </div>
-  ), []);
+  ), [canModify]);
 
   const propertyColumns = useMemo<GridColumn[]>(() => [
     { key: 'title', title: 'Titre', sortable: true, filterable: true, filterType: 'text' },

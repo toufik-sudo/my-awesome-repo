@@ -14,7 +14,6 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -23,6 +22,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entity/user.entity';
 import { Profile } from '../../profiles/entity/profile.entity';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 
 const AVATAR_UPLOAD_DIR = './uploads/avatars';
 
@@ -31,7 +31,7 @@ if (!fs.existsSync(AVATAR_UPLOAD_DIR)) {
 }
 
 @Controller('user')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class UserController {
   private readonly logger = new Logger(UserController.name);
 
@@ -44,7 +44,9 @@ export class UserController {
 
   @Put('language')
   async updateLanguage(@Request() req, @Body('language') language: string) {
-    const profile = await this.getOrCreateProfile(req.user.id);
+    // Always use authenticated user's ID — no external userId accepted
+    const userId = req.user.id;
+    const profile = await this.getOrCreateProfile(userId);
     profile.preferredLanguage = language;
     await this.profileRepo.save(profile);
     return { message: 'Language updated', language };
@@ -77,18 +79,13 @@ export class UserController {
   async uploadAvatar(
     @Request() req,
     @UploadedFile() file: Express.Multer.File,
-    @Body('userId') bodyUserId?: string,
   ) {
     if (!file) {
       throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
     }
 
-    const userId = bodyUserId ? parseInt(bodyUserId, 10) : req.user.id;
-
-    if (userId !== req.user.id) {
-      throw new HttpException('Unauthorized', HttpStatus.FORBIDDEN);
-    }
-
+    // Always use authenticated user's ID — ignore any body userId
+    const userId = req.user.id;
     const avatarUrl = `/uploads/avatars/${file.filename}`;
     const profile = await this.getOrCreateProfile(userId);
 
@@ -121,7 +118,8 @@ export class UserController {
 
   @Post('profile/complete')
   async completeProfile(@Request() req, @Body() profileData: Record<string, any>) {
-    const userId = profileData.userId ? parseInt(profileData.userId, 10) : req.user.id;
+    // Always use authenticated user's ID — ignore any body userId
+    const userId = req.user.id;
     const profile = await this.getOrCreateProfile(userId);
 
     const allowedFields = [

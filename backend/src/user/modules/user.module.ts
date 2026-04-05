@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entity/user.entity';
 import { ManagerAssignment } from 'src/user/entity/manager-assignment.entity';
 import { ManagerPermission } from 'src/user/entity/manager-permission.entity';
+import { Invitation } from 'src/user/entity/invitation.entity';
 import { UserService } from 'src/user/services/user.service';
 import { RolesService } from 'src/user/services/roles.service';
 import { RolesController } from 'src/user/controllers/roles.controller';
@@ -22,6 +23,7 @@ import { Profile } from 'src/profiles/entity/profile.entity';
       User,
       ManagerAssignment,
       ManagerPermission,
+      Invitation,
       PropertyGroupMembership,
       Profile,
       CancellationRule,

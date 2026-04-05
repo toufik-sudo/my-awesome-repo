@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Comment } from '../entity/comment.entity';
 import { CreateCommentDto, UpdateCommentDto } from '../dtos/comment.dto';
+import { RolesService } from '../../user/services/roles.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepo: Repository<Comment>,
+    private readonly rolesService: RolesService,
   ) {}
 
   async getComments(targetType: string, targetId: string, page: number, limit: number) {
@@ -55,10 +57,17 @@ export class CommentsService {
     return this.commentRepo.save(comment);
   }
 
+  // [BE-12] Ownership validation: author OR admin/hyper can edit
   async update(userId: number, commentId: string, dto: UpdateCommentDto): Promise<Comment> {
     const comment = await this.commentRepo.findOne({ where: { id: commentId } });
     if (!comment) throw new NotFoundException('Comment not found');
-    if (comment.userId !== userId) throw new ForbiddenException('Cannot edit this comment');
+
+    if (comment.userId !== userId) {
+      const userRole = await this.rolesService.getUserRole(userId);
+      if (!['admin', 'hyper_admin', 'hyper_manager'].includes(userRole)) {
+        throw new ForbiddenException('Cannot edit this comment — you are not the author');
+      }
+    }
 
     comment.content = dto.content;
     if (dto.media !== undefined) comment.media = dto.media;
@@ -66,10 +75,18 @@ export class CommentsService {
     return this.commentRepo.save(comment);
   }
 
+  // [BE-12] Ownership validation: author OR admin/hyper can delete (moderation)
   async delete(userId: number, commentId: string): Promise<void> {
     const comment = await this.commentRepo.findOne({ where: { id: commentId } });
     if (!comment) throw new NotFoundException('Comment not found');
-    if (comment.userId !== userId) throw new ForbiddenException('Cannot delete this comment');
+
+    if (comment.userId !== userId) {
+      const userRole = await this.rolesService.getUserRole(userId);
+      if (!['admin', 'hyper_admin', 'hyper_manager'].includes(userRole)) {
+        throw new ForbiddenException('Cannot delete this comment — you are not the author');
+      }
+    }
+
     await this.commentRepo.remove(comment);
   }
 }

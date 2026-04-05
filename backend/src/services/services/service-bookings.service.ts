@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger, Inject, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger, Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { ServiceBooking } from '../entity/service-booking.entity';
@@ -8,6 +8,7 @@ import { CreateServiceBookingDto, ServiceAvailabilityDto } from '../dto/service-
 import { ServiceFeeService } from '../../user/services/service-fee.service';
 import { HostFeeAbsorptionService } from '../../user/services/host-fee-absorption.service';
 import { PointsRuleService } from '../../user/services/points-rule.service';
+import { RolesService } from '../../user/services/roles.service';
 
 @Injectable()
 export class ServiceBookingsService {
@@ -23,6 +24,7 @@ export class ServiceBookingsService {
     @Optional() private readonly feeService?: ServiceFeeService,
     @Optional() private readonly absorptionService?: HostFeeAbsorptionService,
     @Optional() private readonly pointsRuleService?: PointsRuleService,
+    @Optional() private readonly rolesService?: RolesService,
   ) {}
 
   async create(dto: CreateServiceBookingDto, customerId: number) {
@@ -35,7 +37,6 @@ export class ServiceBookingsService {
       throw new BadRequestException(`Participants must be between ${service.minParticipants} and ${service.maxParticipants}`);
     }
 
-    // Check availability
     const avail = await this.availRepo.findOne({
       where: { serviceId: dto.serviceId, date: new Date(dto.bookingDate) as any },
     });
@@ -44,19 +45,16 @@ export class ServiceBookingsService {
       throw new BadRequestException('No slots available for this date');
     }
 
-    // Calculate base price
     const unitPrice = avail?.customPrice || Number(service.price);
     const childPrice = service.priceChild ? Number(service.priceChild) : unitPrice;
     let subtotal = unitPrice * dto.participants + childPrice * (dto.childParticipants || 0);
 
-    // Group discount
     let discount = 0;
     if (service.groupDiscount && totalParticipants >= 5) {
       discount = Number(service.groupDiscount);
       subtotal = subtotal * (1 - discount / 100);
     }
 
-    // Points conversion discount (if guest uses points)
     let pointsDiscount = 0;
     if (dto.usePoints && dto.pointsToUse > 0 && this.pointsRuleService) {
       const convRate = await this.pointsRuleService.getConversionRate('guest');
@@ -68,7 +66,6 @@ export class ServiceBookingsService {
 
     const amountAfterPoints = subtotal - pointsDiscount;
 
-    // Calculate service fee
     let serviceFee = 0;
     let hostAbsorptionAmount = 0;
     if (this.feeService) {
@@ -77,7 +74,6 @@ export class ServiceBookingsService {
       );
       serviceFee = feeResult.fee;
 
-      // Check if host absorbs any fees
       if (this.absorptionService) {
         const absorption = await this.absorptionService.getAbsorptionForBooking(
           service.providerId, undefined, dto.serviceId, undefined, undefined, new Date(dto.bookingDate),
@@ -110,13 +106,11 @@ export class ServiceBookingsService {
 
     const saved = await this.bookingRepo.save(booking);
 
-    // Update booked slots
     if (avail) {
       avail.bookedSlots += 1;
       await this.availRepo.save(avail);
     }
 
-    // Update service booking count
     await this.serviceRepo.increment({ id: dto.serviceId }, 'bookingCount', 1);
 
     return {
@@ -159,6 +153,40 @@ export class ServiceBookingsService {
     return booking;
   }
 
+  /**
+   * [BE-02] Scoped getOne: checks caller is customer or service owner/manager.
+   */
+  async getOneScoped(id: string, callerId: number) {
+    const booking = await this.getOne(id);
+
+    // Customer can always see their own booking
+    if (booking.customerId === callerId) return booking;
+
+    if (this.rolesService) {
+      const callerRole = await this.rolesService.getUserRole(callerId);
+
+      // Hyper roles see all
+      if (callerRole === 'hyper_admin' || callerRole === 'hyper_manager') return booking;
+
+      // Admin: must own the service
+      if (callerRole === 'admin') {
+        const isOwner = await this.rolesService.isServiceOwner(callerId, booking.serviceId);
+        if (isOwner) return booking;
+      }
+
+      // Manager: must have permission
+      if (callerRole === 'manager') {
+        // Use property-level permission check (services are linked to providers)
+        const hasAccess = await this.rolesService.hasPermissionForProperty(
+          callerId, booking.serviceId, 'view_bookings',
+        );
+        if (hasAccess) return booking;
+      }
+    }
+
+    throw new ForbiddenException('You do not have access to this service booking');
+  }
+
   async accept(id: string) {
     const booking = await this.getOne(id);
     if (booking.status !== 'pending') throw new BadRequestException('Booking is not pending');
@@ -184,7 +212,6 @@ export class ServiceBookingsService {
     return this.bookingRepo.save(booking);
   }
 
-  // ── Availability management ──
   async getAvailability(serviceId: string, startDate: string, endDate: string) {
     return this.availRepo.find({
       where: {

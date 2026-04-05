@@ -1,9 +1,9 @@
 import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { RankingsService } from '../services/rankings.service';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 
 @Controller('rankings')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class RankingsController {
   constructor(private readonly rankingsService: RankingsService) {}
 

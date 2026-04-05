@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from '@/hooks/usePermissions';
 import { PropertyCard, SearchBar, Loading } from '@/components';
 import { propertiesApi } from '@/services/properties.api';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -31,6 +32,7 @@ const TRUST_FILTERS = [
 export const PropertyListingScreen: React.FC<PropertyListingScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { canCreateProperty } = usePermissions();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   const [properties, setProperties] = useState<Property[]>([]);
@@ -107,6 +109,15 @@ export const PropertyListingScreen: React.FC<PropertyListingScreenProps> = ({ na
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.foreground }]}>Properties</Text>
+        {canCreateProperty && (
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: theme.primary }]}
+            onPress={() => navigation?.navigate('AddProperty')}
+          >
+            <Text style={[styles.addButtonText, { color: theme.primaryForeground }]}>+ Add</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       </View>
 
       {/* Search */}
@@ -181,6 +192,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
@@ -225,6 +239,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
 

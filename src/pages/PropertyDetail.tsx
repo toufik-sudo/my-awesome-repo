@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   MapPin,
   Star,
@@ -59,7 +60,7 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const canEdit = ['admin', 'manager', 'hyper_manager', 'hyper_admin'].includes(user?.role || '');
+  const { canModifyProperty: canEdit, canMakeBooking } = usePermissions();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);

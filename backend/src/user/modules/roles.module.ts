@@ -3,9 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesController } from '../controllers/roles.controller';
 import { InvitationController } from '../controllers/invitation.controller';
 import { ReferralController } from '../controllers/referral.controller';
+import { RbacConfigController } from '../controllers/rbac-config.controller';
 import { RolesService } from '../services/roles.service';
 import { InvitationService } from '../services/invitation.service';
 import { ReferralService } from '../services/referral.service';
+import { RbacConfigService } from '../services/rbac-config.service';
 import { User } from '../entity/user.entity';
 import { ManagerAssignment } from '../entity/manager-assignment.entity';
 import { ManagerPermission } from '../entity/manager-permission.entity';
@@ -15,6 +17,8 @@ import { PropertyGroupMembership } from '../../properties/entity/property-group-
 import { ServiceFeeRule } from '../entity/service-fee-rule.entity';
 import { PointsRule } from '../entity/points-rule.entity';
 import { HostFeeAbsorption } from '../entity/host-fee-absorption.entity';
+import { RbacBackendPermission } from '../entity/rbac-backend-permission.entity';
+import { RbacFrontendPermission } from '../entity/rbac-frontend-permission.entity';
 import { ServiceFeeController } from '../controllers/service-fee.controller';
 import { PointsRuleController } from '../controllers/points-rule.controller';
 import { HostFeeAbsorptionController } from '../controllers/host-fee-absorption.controller';
@@ -22,6 +26,7 @@ import { ServiceFeeService } from '../services/service-fee.service';
 import { PointsRuleService } from '../services/points-rule.service';
 import { HostFeeAbsorptionService } from '../services/host-fee-absorption.service';
 import { JobsModule } from 'src/infrastructure/jobs/jobs.module';
+import { WsModule } from 'src/infrastructure/websocket/ws.module';
 
 @Global()
 @Module({
@@ -37,11 +42,38 @@ import { JobsModule } from 'src/infrastructure/jobs/jobs.module';
       ServiceFeeRule,
       PointsRule,
       HostFeeAbsorption,
+      RbacBackendPermission,
+      RbacFrontendPermission,
     ]),
     JobsModule,
+    WsModule,
   ],
-  controllers: [RolesController, InvitationController, ServiceFeeController, PointsRuleController, HostFeeAbsorptionController, ReferralController],
-  providers: [RolesService, InvitationService, ServiceFeeService, PointsRuleService, HostFeeAbsorptionService, ReferralService],
-  exports: [RolesService, InvitationService, ServiceFeeService, PointsRuleService, HostFeeAbsorptionService, ReferralService],
+  controllers: [
+    RolesController,
+    InvitationController,
+    ServiceFeeController,
+    PointsRuleController,
+    HostFeeAbsorptionController,
+    ReferralController,
+    RbacConfigController,
+  ],
+  providers: [
+    RolesService,
+    InvitationService,
+    ServiceFeeService,
+    PointsRuleService,
+    HostFeeAbsorptionService,
+    ReferralService,
+    RbacConfigService,
+  ],
+  exports: [
+    RolesService,
+    InvitationService,
+    ServiceFeeService,
+    PointsRuleService,
+    HostFeeAbsorptionService,
+    ReferralService,
+    RbacConfigService,
+  ],
 })
 export class RolesModule {}

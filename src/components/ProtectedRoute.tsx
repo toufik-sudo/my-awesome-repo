@@ -2,19 +2,23 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ReactNode } from 'react';
 import type { AppRole } from '@/modules/auth/auth.types';
+import { canMakeBooking } from '@/modules/auth/auth.types';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAuth?: boolean;
   requiredRoles?: AppRole[];
   redirectTo?: string;
+  /** If true, only roles allowed to book can access this route */
+  requireBookingAccess?: boolean;
 }
 
 export const ProtectedRoute = ({ 
   children, 
   requireAuth = true,
   requiredRoles = [],
-  redirectTo = '/login'
+  redirectTo = '/login',
+  requireBookingAccess = false,
 }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
 
@@ -38,6 +42,14 @@ export const ProtectedRoute = ({
     const userRole = user.role || 'user';
     const hasRequiredRole = requiredRoles.includes(userRole);
     if (!hasRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  // Booking restriction: hyper_admin, hyper_manager, admin cannot book
+  if (requireBookingAccess && user) {
+    const userRole = user.role || 'user';
+    if (!canMakeBooking(userRole)) {
       return <Navigate to="/dashboard" replace />;
     }
   }

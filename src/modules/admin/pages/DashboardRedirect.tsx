@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * Hook that returns the redirect path for role-based dashboard routing.
- * Returns null for regular users (so GuestDashboard renders).
+ * Returns null for regular users (so default Dashboard renders).
  */
 export function useDashboardRedirect(): string | null {
   const { user, loading } = useAuth();
@@ -22,8 +22,8 @@ export function useDashboardRedirect(): string | null {
   if (role === 'guest') {
     return '/dashboard/guest';
   }
-
-  return null;
+  // 'user' role gets the UserDashboard
+  return '/dashboard/user';
 }
 
 /**

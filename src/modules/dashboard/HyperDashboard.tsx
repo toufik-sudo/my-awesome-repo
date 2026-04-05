@@ -33,8 +33,10 @@ import { EmailAnalyticsPage } from '@/modules/admin/pages/EmailAnalyticsPage';
 import { HostFeeAbsorptionPage } from '@/modules/admin/pages/HostFeeAbsorptionPage';
 import { CancellationRulesPage } from '@/modules/admin/pages/CancellationRulesPage';
 import { statsApi, invitationsApi, rolesApi, type AdminStats } from '@/modules/admin/admin.api';
+import { metricsApi } from '@/modules/admin/metrics.api';
 import type { Invitation } from '@/modules/admin/admin.types';
 import { useDashboard } from '@/modules/dashboard/useDashboard';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { GridColumn } from '@/types/component.types';
 import {
   Crown, Users, Shield, ShieldCheck, UserPlus,
@@ -71,7 +73,8 @@ export const HyperDashboard: React.FC = memo(() => {
   const [metricModal, setMetricModal] = useState<MetricDetail | null>(null);
 
   const { data: dashboardData } = useDashboard();
-  const isHyperAdmin = user?.role === 'hyper_admin';
+  const rbac = usePermissions();
+  const isHyperAdmin = rbac.isHyperAdmin;
 
   const loadData = useCallback(async () => {
     try {
@@ -162,13 +165,21 @@ export const HyperDashboard: React.FC = memo(() => {
           break;
         }
         case 'bookings': {
+          const [propBookings, serviceBookings] = await Promise.allSettled([
+            metricsApi.getBookings({ limit: 50 }),
+            metricsApi.getServiceBookings({ limit: 50 }),
+          ]);
+          const propData = propBookings.status === 'fulfilled' ? propBookings.value.data : [];
+          const svcData = serviceBookings.status === 'fulfilled' ? serviceBookings.value.data : [];
           data = [
-            { label: 'Total réservations', count: stats?.totalBookings ?? 0 },
-            { label: 'En attente', count: stats?.pendingBookings ?? 0 },
-            { label: 'Confirmées', count: (stats?.totalBookings ?? 0) - (stats?.pendingBookings ?? 0) },
+            { label: 'Réservations propriétés', count: propData.length, type: 'property' },
+            { label: 'Réservations services', count: svcData.length, type: 'service' },
+            { label: 'Total réservations', count: propData.length + svcData.length, type: 'total' },
+            { label: 'En attente (propriétés)', count: propData.filter((b: any) => b.status === 'pending').length, type: 'pending' },
+            { label: 'Confirmées (propriétés)', count: propData.filter((b: any) => b.status === 'confirmed').length, type: 'confirmed' },
           ];
           columns = [
-            { key: 'label', title: 'Statut' },
+            { key: 'label', title: 'Catégorie' },
             { key: 'count', title: 'Nombre' },
           ];
           break;
@@ -503,7 +514,7 @@ export const HyperDashboard: React.FC = memo(() => {
       value: 'entities',
       label: t('dashboard.tabs.entities', 'Propriétés & Services'),
       icon: <Layers className="h-4 w-4" />,
-      content: <ErrorBoundary><HyperEntityManager /></ErrorBoundary>,
+      content: <ErrorBoundary><HyperEntityManager canCreateProperty={rbac.canCreateProperty} canCreateService={rbac.canCreateService} canModifyProperty={rbac.canModifyProperty} canModifyService={rbac.canModifyService} /></ErrorBoundary>,
     },
     {
       value: 'points',
@@ -546,13 +557,13 @@ export const HyperDashboard: React.FC = memo(() => {
       value: 'fee-absorption',
       label: t('dashboard.tabs.feeAbsorption', 'Absorption frais'),
       icon: <Percent className="h-4 w-4" />,
-      content: <ErrorBoundary><HostFeeAbsorptionPage viewOnly /></ErrorBoundary>,
+      content: <ErrorBoundary><HostFeeAbsorptionPage viewOnly={!rbac.canCreateAbsorptionFees} /></ErrorBoundary>,
     },
     {
       value: 'cancellation',
       label: t('dashboard.tabs.cancellation', "Règles d'annulation"),
       icon: <ShieldX className="h-4 w-4" />,
-      content: <ErrorBoundary><CancellationRulesPage viewOnly /></ErrorBoundary>,
+      content: <ErrorBoundary><CancellationRulesPage viewOnly={!rbac.canCreateCancellationRules} /></ErrorBoundary>,
     },
     {
       value: 'verifications',
@@ -573,7 +584,7 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.groups', 'Groupes'),
       icon: <FolderKanban className="h-4 w-4" />,
       badge: stats?.totalGroups,
-      content: <ErrorBoundary><GroupsManagement /></ErrorBoundary>,
+      content: <ErrorBoundary><GroupsManagement readOnly={!rbac.canCreateGroups} /></ErrorBoundary>,
     },
     {
       value: 'assignments',
@@ -639,7 +650,7 @@ export const HyperDashboard: React.FC = memo(() => {
       <InvitationForm
         open={inviteOpen}
         onOpenChange={setInviteOpen}
-        allowedRoles={isHyperAdmin ? ['hyper_manager', 'admin', 'manager'] : ['admin', 'manager']}
+        allowedRoles={rbac.allowedInvitationRoles}
         onSuccess={loadInvitations}
       />
     </div>

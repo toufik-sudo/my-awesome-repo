@@ -20,10 +20,12 @@ export class InvitationController {
   @ApiOperation({
     summary: 'Get allowed invitation roles',
     description: `Returns the roles the authenticated user can invite based on the invitation rules matrix:
-    - **hyper_admin** → hyper_manager, admin, user, guest
-    - **hyper_manager** → admin, guest
-    - **admin** → manager, guest
-    - **manager** → guest`,
+    - **hyper_admin** → hyper_manager, admin, user, guest (NOT manager — managers are admin-scoped)
+    - **hyper_manager** → admin, guest (NOT manager)
+    - **admin** → manager, guest (NOT admin, hyper_admin, hyper_manager)
+    - **manager** → guest only
+    
+    Booking restriction: hyper_admin, hyper_manager, and admin CANNOT make bookings.`,
   })
   @ApiResponse({ status: 200, description: 'List of invitable role strings' })
   async getAllowedRoles(@Request() req) {
@@ -35,13 +37,20 @@ export class InvitationController {
   @ApiOperation({
     summary: 'Create invitation',
     description: `Send an invitation to join the platform. Role must match the invitation rules:
-    - hyper_admin → can invite hyper_manager, admin, user, guest
-    - hyper_manager → can invite admin, guest
-    - admin → can invite manager, guest
-    - manager → can invite guest only
+    - **hyper_admin** → can invite hyper_manager, admin, user, guest (NOT manager)
+    - **hyper_manager** → can invite admin, guest (NOT manager)
+    - **admin** → can invite manager, guest (NOT admin/hyper roles)
+    - **manager** → can invite guest only
     
-    **Guest behavior**: Guest inherits the inviter's property/service scope (read-only).
-    **Admin behavior**: Invited admin creates their own properties — no scope sharing.`,
+    **Guest behavior depends on inviter:**
+    - HyperAdmin → Guest accesses ALL properties/services (read-only)
+    - Admin → Guest accesses only that admin's properties/services (read-only)
+    - Manager → Guest accesses only the manager's assigned properties (multi-admin possible)
+    - HyperManager → Guest accesses hyper_manager's permissioned scope
+    
+    **Admin behavior**: Invited admin creates their own properties — no scope sharing.
+    
+    **Self-registration**: Creates 'user' role by default with full platform access.`,
   })
   @ApiResponse({ status: 201, description: 'Invitation created and sent' })
   @ApiResponse({ status: 403, description: 'Role not allowed for this inviter' })
@@ -81,8 +90,13 @@ export class InvitationController {
   @ApiOperation({
     summary: 'Accept invitation',
     description: `Accept an invitation using the token from the invitation link.
-    The user's role is updated and, for guests, scope is inherited from the inviter.
-    The inviter receives a notification.`,
+    The user's role is updated and scope is inherited based on the inviter:
+    - HyperAdmin inviter → guest gets scope 'all' (all properties/services)
+    - Admin inviter → guest gets scope 'all' within admin's hostId
+    - Manager inviter → guest copies manager's assignments
+    - HyperManager inviter → guest copies hyper_manager's assignments
+    
+    The inviter receives a notification upon acceptance.`,
   })
   @ApiParam({ name: 'token', description: 'Invitation token (UUID)' })
   @ApiResponse({ status: 200, description: 'Invitation accepted, role assigned' })
@@ -99,7 +113,8 @@ export class InvitationController {
     summary: 'Convert guest to user (IT MVP exception)',
     description: `Converts a guest account to a regular user, giving them full access to all properties and services.
     This is used when a guest requests full access via support.
-    Only hyper_admin or hyper_manager can perform this action.`,
+    Only hyper_admin or hyper_manager can perform this action.
+    All guest-scoped assignments are removed and role is set to 'user'.`,
   })
   @ApiBody({ type: ConvertGuestToUserDto })
   @ApiResponse({ status: 200, description: 'Guest converted to user', schema: { example: { userId: 42, role: 'user' } } })

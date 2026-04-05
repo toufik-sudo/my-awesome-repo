@@ -169,7 +169,7 @@ export const authService = {
       document.cookie.split(';').forEach((c) => {
         document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
       });
-    } catch (e) {
+    } catch (e: any) {
       console.warn('Logout API call failed:', e);
     }
   },

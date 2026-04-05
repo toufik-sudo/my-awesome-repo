@@ -6,14 +6,14 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { SettingsService } from '../services/settings.service';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { UpdatePreferencesDto } from '../dtos/update-preferences.dto';
 import { UpdateNotificationsDto } from '../dtos/update-notifications.dto';
 import { UpdateAccountDto, ChangePasswordDto } from '../dtos/update-account.dto';
 
 @Controller('settings')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 

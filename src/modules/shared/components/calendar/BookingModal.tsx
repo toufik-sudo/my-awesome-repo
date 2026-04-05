@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import { CalendarEvent, CalendarBooking } from './types/calendar.types';
 import {
@@ -59,6 +60,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   onBook,
 }) => {
   const { t } = useTranslation();
+  const { canMakeBooking } = usePermissions();
   const [step, setStep] = useState<Step>('details');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');

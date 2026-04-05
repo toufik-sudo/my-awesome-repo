@@ -44,7 +44,7 @@ export type UserStatus = typeof USER_STATUS[keyof typeof USER_STATUS];
 
 // ─── Invitation Rules (synced with backend) ────────────────────────────────
 
-export { INVITATION_ALLOWED_ROLES, getAllowedInvitationRoles } from './admin.types';
+export { INVITATION_ALLOWED_ROLES, getAllowedInvitationRoles, BOOKING_ALLOWED_ROLES, canMakeBooking } from './admin.types';
 
 // ─── Hyper Manager Permissions ──────────────────────────────────────────────
 
@@ -62,13 +62,25 @@ export const HYPER_PERMISSIONS = [
   'reject_documents',
   'view_system_stats',
   'manage_system_settings',
+  'validate_payments',
+  'manage_fee_rules',
+  'manage_cancellation_rules',
+  'archive_entities',
 ] as const;
 
 export type HyperPermission = typeof HYPER_PERMISSIONS[number];
 
+// ─── Booking Restriction ────────────────────────────────────────────────────
+/**
+ * Booking exception: hyper_admin, hyper_manager, and admin CANNOT make bookings.
+ * Only manager, guest, and user can book.
+ */
+export const BOOKING_RESTRICTED_ROLES = ['hyper_admin', 'hyper_manager', 'admin'] as const;
+
 // ─── Guest Behavior Notes ──────────────────────────────────────────────────
 /**
  * Guest behavior depends on who invited them:
+ * - HyperAdmin invites Guest → access to ALL properties/services (read-only)
  * - Admin invites Guest → access only admin's properties/services (read-only)
  * - Manager invites Guest → access only manager's assigned properties (multi-admin possible)
  * - HyperManager invites Guest → access hyper_manager's permissioned properties

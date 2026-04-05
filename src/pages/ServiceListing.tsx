@@ -2,19 +2,22 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useServices, useServiceCategories } from '@/modules/services/services.hooks';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { TourismServiceFilters, TourismService } from '@/types/tourism-service.types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, Map as MapIcon, LayoutGrid } from 'lucide-react';
+import { Loader2, Search, Map as MapIcon, LayoutGrid, Plus } from 'lucide-react';
 import { ServiceCard } from '@/modules/services/components/ServiceCard';
 import { ServiceCategoryFilter } from '@/modules/services/components/ServiceCategoryFilter';
 import { UnifiedMapSearch } from '@/modules/shared/components/UnifiedMapSearch';
+import { SERVICE_ROUTES } from '@/routes/routes.constants';
 
 const ServiceListing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const lang = i18n.language?.split('-')[0] || 'fr';
+  const { canCreateService } = usePermissions();
 
   const [filters, setFilters] = useState<TourismServiceFilters>({ page: 1, limit: 20 });
   const [searchInput, setSearchInput] = useState('');
@@ -72,6 +75,12 @@ const ServiceListing: React.FC = () => {
           <p className="text-muted-foreground text-sm">{t('services.subtitle')}</p>
         </div>
         <div className="flex gap-2">
+          {canCreateService && (
+            <Button size="sm" onClick={() => navigate(SERVICE_ROUTES.NEW)} className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              {t('services.addService', 'Add Service')}
+            </Button>
+          )}
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             size="icon"

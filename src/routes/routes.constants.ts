@@ -50,6 +50,8 @@ export const DASHBOARD_ROUTES = {
   ROOT: '/dashboard',
   HYPER: '/dashboard/hyper',
   ADMIN: '/dashboard/admin',
+  GUEST: '/dashboard/guest',
+  USER: '/dashboard/user',
   POINTS: '/points',
   SETTINGS: '/settings',
 } as const;
@@ -63,6 +65,7 @@ export const ADMIN_ROUTES = {
   EMAIL_ANALYTICS: '/admin/email-analytics',
   FEE_ABSORPTION: '/admin/fee-absorption',
   CANCELLATION_RULES: '/admin/cancellation-rules',
+  RBAC_SETTINGS: '/admin/rbac-settings',
 } as const;
 
 // ─── Legacy Redirects ───────────────────────────────────────────────────────

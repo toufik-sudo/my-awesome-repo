@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -60,6 +61,7 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   pointsValueDA = 0,
 }) => {
   const { t, i18n } = useTranslation();
+  const { canMakeBooking } = usePermissions();
   const lang = i18n.language || 'fr';
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();

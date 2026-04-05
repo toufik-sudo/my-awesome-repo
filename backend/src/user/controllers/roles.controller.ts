@@ -1,7 +1,7 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards,
+  Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards, Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { RolesService } from '../services/roles.service';
 import { AppRole } from '../entity/user.entity';
 import { AssignmentScope } from '../entity/manager-assignment.entity';
@@ -20,16 +20,18 @@ export class RolesController {
   @RequireRole('hyper_admin', 'hyper_manager', 'admin')
   @ApiOperation({
     summary: 'Dashboard statistics',
-    description: 'Returns user counts, group counts, and assignment stats. Accessible by hyper_admin, hyper_manager, and admin.',
+    description: `Returns user counts, group counts, and assignment stats.
+    - **hyper_admin / hyper_manager**: global stats
+    - **admin**: scoped stats (own properties, own managers/guests only)`,
   })
-  @ApiResponse({ status: 200, description: 'Dashboard stats object', schema: { example: { totalUsers: 13, totalAdmins: 2, totalManagers: 2, totalGuests: 2, hyperAdmins: 1, hyperManagers: 1, totalGroups: 3, totalAssignments: 9 } } })
-  async getStats() {
-    return this.rolesService.getDashboardStats();
+  @ApiResponse({ status: 200, description: 'Dashboard stats object' })
+  async getStats(@Request() req) {
+    return this.rolesService.getDashboardStats(req.user.id);
   }
 
   @Get('user/:userId')
   @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
-  @ApiOperation({ summary: 'Get user role', description: 'Returns the role(s) for a given user. Hyper-level and admin/manager can query.' })
+  @ApiOperation({ summary: 'Get user role', description: 'Returns the role(s) for a given user.' })
   @ApiParam({ name: 'userId', description: 'Numeric user ID', example: '3' })
   @ApiResponse({ status: 200, description: 'Array containing the single user role', schema: { example: ['admin'] } })
   async getUserRoles(@Param('userId') userId: string) {
@@ -43,7 +45,7 @@ export class RolesController {
     description: `Assign a new role. Hierarchy enforced:
     - hyper_admin → can assign any role
     - hyper_manager → can assign admin, manager, user, guest
-    - admin → can assign manager, guest`,
+    - admin → can assign manager, guest ONLY`,
   })
   @ApiBody({ schema: { example: { userId: 5, role: 'manager' } } })
   @ApiResponse({ status: 200, description: 'Role assigned', schema: { example: { userId: 5, role: 'manager' } } })
@@ -57,7 +59,7 @@ export class RolesController {
 
   @Delete('user/:userId/:role')
   @RequireRole('hyper_admin', 'hyper_manager', 'admin')
-  @ApiOperation({ summary: 'Remove role (demote to user)', description: 'Removes a user\'s current role and demotes them to "user".' })
+  @ApiOperation({ summary: 'Remove role (demote to user)', description: 'Removes a user\'s current role. Admin can only demote own managers/guests.' })
   @ApiParam({ name: 'userId', example: '5' })
   @ApiParam({ name: 'role', example: 'manager' })
   @ApiResponse({ status: 200, description: 'Role removed' })
@@ -75,10 +77,10 @@ export class RolesController {
   @ApiOperation({
     summary: 'Assign manager to properties',
     description: `Create a manager assignment with scope:
-    - **all**: all properties
+    - **all**: all properties (admin = all own properties)
     - **property**: single property by ID
     - **property_group**: a property group by ID
-    Hyper-level assigns hyper_managers; admin assigns managers.`,
+    Admin can only assign managers they invited. Hyper assigns hyper_managers.`,
   })
   @ApiBody({ schema: { example: { managerId: 5, scope: 'property', propertyId: 'uuid-here' } } })
   @ApiResponse({ status: 201, description: 'Assignment created' })
@@ -116,10 +118,10 @@ export class RolesController {
 
   @Get('manager/:managerId/permissions')
   @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
-  @ApiOperation({ summary: 'Get manager permissions', description: 'List all assignments and their permissions for a given manager.' })
+  @ApiOperation({ summary: 'Get manager permissions', description: 'List all assignments and their permissions for a given manager. Admin only sees own assignments.' })
   @ApiParam({ name: 'managerId', example: '5' })
-  async getManagerPermissions(@Param('managerId') managerId: string) {
-    return this.rolesService.getManagerPermissions(parseInt(managerId, 10));
+  async getManagerPermissions(@Request() req, @Param('managerId') managerId: string) {
+    return this.rolesService.getManagerPermissions(parseInt(managerId, 10), req.user.id);
   }
 
   @Get('manager/:managerId/properties')
@@ -133,11 +135,17 @@ export class RolesController {
   // ─── User management ────────────────────────────────────────────────
 
   @Get('users')
-  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
-  @ApiOperation({ summary: 'List all users with roles', description: 'Returns all active users with their role. Hyper-level sees all; admin sees limited info.' })
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
+  @ApiOperation({
+    summary: 'List users with roles',
+    description: `Returns users based on caller's role:
+    - **hyper_admin / hyper_manager**: all active users
+    - **admin**: only guests and managers invited by this admin
+    - **manager**: only guests invited by this manager`,
+  })
   @ApiResponse({ status: 200, description: 'Array of user objects with role' })
-  async getAllUsers() {
-    return this.rolesService.getAllUsersWithRoles();
+  async getAllUsers(@Request() req) {
+    return this.rolesService.getAllUsersWithRoles(req.user.id);
   }
 
   @Put('users/:userId/status')
@@ -166,10 +174,16 @@ export class RolesController {
   }
 
   @Get('assignments')
-  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
-  @ApiOperation({ summary: 'List all assignments', description: 'Returns all active manager/guest assignments with relations.' })
-  async getAllAssignments() {
-    return this.rolesService.getAllAssignments();
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
+  @ApiOperation({
+    summary: 'List assignments',
+    description: `Returns assignments based on caller's role:
+    - **hyper**: all active assignments
+    - **admin**: only assignments created by this admin
+    - **manager**: only this manager's own assignments`,
+  })
+  async getAllAssignments(@Request() req) {
+    return this.rolesService.getAllAssignments(req.user.id);
   }
 
   @Delete('assignments/:assignmentId')
@@ -182,7 +196,7 @@ export class RolesController {
   }
 
   @Get('check/:userId/property/:propertyId/:permission')
-  @RequireRole('hyper_admin', 'hyper_manager', 'admin')
+  @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
   @ApiOperation({ summary: 'Check permission', description: 'Check if a user has a specific permission for a property.' })
   @ApiParam({ name: 'userId', example: '5' })
   @ApiParam({ name: 'propertyId', description: 'Property UUID' })

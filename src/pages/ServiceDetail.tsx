@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useServiceDetail } from '@/modules/services/services.hooks';
+import { usePermissions } from '@/hooks/usePermissions';
 import { CATEGORY_ICONS } from '@/modules/services/services.constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ const ServiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { canModifyService, canMakeBooking } = usePermissions();
   const lang = i18n.language?.split('-')[0] || 'fr';
   const { data: service, isLoading } = useServiceDetail(id || '');
 
@@ -68,9 +70,11 @@ const ServiceDetail: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon"><Share2 className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Heart className="h-4 w-4" /></Button>
-            <Button variant="outline" size="sm" onClick={() => navigate(`/services/new?duplicateFrom=${id}`)}>
-              <Copy className="h-4 w-4 mr-1" /> Duplicate
-            </Button>
+            {canModifyService && (
+              <Button variant="outline" size="sm" onClick={() => navigate(`/services/new?duplicateFrom=${id}`)}>
+                <Copy className="h-4 w-4 mr-1" /> Duplicate
+              </Button>
+            )}
           </div>
         </div>
       </header>

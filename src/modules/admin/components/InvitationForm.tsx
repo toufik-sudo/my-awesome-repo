@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { DynamicModal } from '@/modules/shared/components/DynamicModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,13 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { invitationsApi } from '../admin.api';
 import type { AppRole } from '../admin.types';
 import { ROLE_LABELS } from '../admin.types';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Send, Mail, Phone, UserPlus, Loader2, Info } from 'lucide-react';
 
 interface InvitationFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** If provided, use these roles. Otherwise fetch from API. */
+  /** If provided, use these roles. Otherwise use usePermissions().allowedInvitableRoles. */
   allowedRoles?: AppRole[];
   onSuccess?: () => void;
 }
@@ -34,6 +35,7 @@ export const InvitationForm: React.FC<InvitationFormProps> = ({
   allowedRoles: propAllowedRoles,
   onSuccess,
 }) => {
+  const { allowedInvitableRoles, role: inviterRole } = usePermissions();
   const [method, setMethod] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -43,7 +45,10 @@ export const InvitationForm: React.FC<InvitationFormProps> = ({
   const [fetchedRoles, setFetchedRoles] = useState<AppRole[]>([]);
   const [loadingRoles, setLoadingRoles] = useState(false);
 
-  const allowedRoles = propAllowedRoles || fetchedRoles;
+  // Use prop roles, or centralized usePermissions roles (already filters 'manager' for hyper roles)
+  const allowedRoles = useMemo(() => {
+    return propAllowedRoles || (fetchedRoles.length > 0 ? fetchedRoles : allowedInvitableRoles);
+  }, [propAllowedRoles, fetchedRoles, allowedInvitableRoles]);
 
   // Fetch allowed roles from API if not provided via props
   useEffect(() => {

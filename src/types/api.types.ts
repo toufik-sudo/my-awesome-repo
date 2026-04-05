@@ -91,7 +91,10 @@ export interface ApiUser {
   phoneNbr: string;
   cardId: string;
   passportId?: string;
-  roles: string;
+  /** Single role per user */
+  role: AppRole;
+  /** @deprecated Use role instead */
+  roles?: string;
   lastName: string;
   firstName: string;
   title?: string;
@@ -104,6 +107,33 @@ export interface ApiUser {
   passwordCreatedAt?: string;
   passwordUpdatedAt?: string;
 }
+
+// ─── Hyper Role Restrictions (synced with backend) ──────────────────────────
+
+/**
+ * hyper_admin restrictions:
+ *  - Cannot invite managers (admin-scoped)
+ *  - Cannot create/modify properties or services
+ *  - Cannot create absorption fees or cancellation rules
+ *  - Cannot accept booking requests
+ *  - Cannot make bookings
+ *  - Cannot assign permissions to non-hyper_managers
+ *  - Cannot create property/service groups
+ *
+ * hyper_manager restrictions:
+ *  - Cannot invite managers
+ *  - Cannot make bookings
+ *  - All other actions depend on permissions assigned by hyper_admin
+ *  - Cannot exceed permissions granted by hyper_admin
+ */
+export const HYPER_ADMIN_CANNOT = [
+  'invite_manager', 'create_property', 'modify_property',
+  'create_service', 'modify_service', 'create_absorption_fees',
+  'create_cancellation_rules', 'accept_bookings', 'make_booking',
+  'assign_permissions_non_hypermanager', 'create_property_groups',
+] as const;
+
+export const HYPER_MANAGER_CANNOT = ['invite_manager', 'make_booking'] as const;
 
 export interface ApiUserRole {
   id: string;

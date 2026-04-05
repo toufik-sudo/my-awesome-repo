@@ -21,7 +21,11 @@ import type { GridColumn } from '@/types/component.types';
 
 type GroupType = 'property' | 'service';
 
-export const GroupsManagement: React.FC = memo(() => {
+interface GroupsManagementProps {
+  readOnly?: boolean;
+}
+
+export const GroupsManagement: React.FC<GroupsManagementProps> = memo(({ readOnly = false }) => {
   const [tab, setTab] = useState<GroupType>('property');
   const [propGroups, setPropGroups] = useState<PropertyGroup[]>([]);
   const [svcGroups, setSvcGroups] = useState<ServiceGroupResponse[]>([]);
@@ -193,18 +197,19 @@ export const GroupsManagement: React.FC = memo(() => {
     { key: 'description', title: 'Description', render: (v: string) => v || '—' },
     { key: 'isActive', title: 'Statut', width: '100px', render: (v: boolean) => <Badge variant={v ? 'default' : 'secondary'}>{v ? 'Actif' : 'Inactif'}</Badge> },
     { key: 'createdAt', title: 'Créé le', width: '140px', render: (v: string) => new Date(v).toLocaleDateString() },
-    { key: 'actions', title: 'Actions', width: '220px', render: (_: any, row: any) => (
-      <div className="flex gap-1">
-        <DynamicButton variant="ghost" size="sm" icon={type === 'property' ? <Building2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
-          onClick={() => handleOpenDetail(row, type)}>
-          Éléments
-        </DynamicButton>
-        <DynamicButton variant="ghost" size="sm" icon={<Pencil className="h-3.5 w-3.5" />}
-          onClick={() => setEditGroup({ ...row, _type: type })} />
-        <DynamicButton variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5 text-destructive" />}
-          onClick={() => handleDelete(row.id, type)} />
-      </div>
-    ) },
+    ...(!readOnly ? [{
+      key: 'actions', title: 'Actions', width: '220px', render: (_: any, row: any) => (
+        <div className="flex gap-1">
+          <DynamicButton variant="ghost" size="sm" icon={type === 'property' ? <Building2 className="h-3.5 w-3.5" /> : <Compass className="h-3.5 w-3.5" />}
+            onClick={() => handleOpenDetail(row, type)}>
+            Éléments
+          </DynamicButton>
+          <DynamicButton variant="ghost" size="sm" icon={<Pencil className="h-3.5 w-3.5" />}
+            onClick={() => setEditGroup({ ...row, _type: type })} />
+          <DynamicButton variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5 text-destructive" />}
+            onClick={() => handleDelete(row.id, type)} />
+        </div>
+    ) }] : []),
   ];
 
   return (
@@ -216,9 +221,11 @@ export const GroupsManagement: React.FC = memo(() => {
             <TabsTrigger value="service" className="gap-1.5"><Compass className="h-4 w-4" />Services</TabsTrigger>
           </TabsList>
         </Tabs>
-        <DynamicButton variant="primary" icon={<Plus className="h-4 w-4" />} onClick={() => { setCreateOpen(true); setCreateName(''); setCreateDesc(''); setCreateSelectedIds([]); }}>
-          Nouveau Groupe
-        </DynamicButton>
+        {!readOnly && (
+          <DynamicButton variant="primary" icon={<Plus className="h-4 w-4" />} onClick={() => { setCreateOpen(true); setCreateName(''); setCreateDesc(''); setCreateSelectedIds([]); }}>
+            Nouveau Groupe
+          </DynamicButton>
+        )}
       </div>
 
       {tab === 'property' && (

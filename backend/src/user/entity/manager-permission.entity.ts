@@ -32,6 +32,7 @@ export type PermissionType =
   | 'answer_demands'
   | 'decline_demands'
   | 'accept_demands'
+  | 'manage_bookings'
   // Communication
   | 'reply_chat'
   | 'reply_reviews'
@@ -53,8 +54,18 @@ export type PermissionType =
   // User management (hyper level)
   | 'manage_users'
   | 'manage_admins'
-  | 'manage_managers';
-  
+  | 'manage_managers'
+  // Special capabilities (hyper_manager assignable)
+  | 'validate_payments'
+  | 'verify_documents'
+  | 'manage_fee_rules'
+  | 'manage_cancellation_rules'
+  | 'archive_entities'
+  // Granular dashboard permissions
+  | 'view_payments'
+  | 'view_email_analytics'
+  | 'manage_fee_absorption';
+
 
 @Entity('manager_permissions')
 @Unique(['assignmentId', 'permission'])

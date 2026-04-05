@@ -23,7 +23,12 @@ export class CreateInvitationDto {
   @ApiProperty({
     enum: ['hyper_manager', 'admin', 'manager', 'user', 'guest'],
     example: 'admin',
-    description: 'Role to assign to the invitee. Must comply with invitation rules.',
+    description: `Role to assign to the invitee. Must comply with invitation rules:
+    - hyper_admin → hyper_manager, admin, user, guest
+    - hyper_manager → admin, guest
+    - admin → manager, guest
+    - manager → guest only
+    Note: hyper_admin cannot invite managers (admin-scoped). Admin cannot invite admin/hyper roles.`,
   })
   @IsString()
   @IsNotEmpty()

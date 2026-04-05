@@ -74,10 +74,10 @@ export class Property {
   acceptedPaymentMethods: string[];
 
   // Location
-  @Column({ type: 'decimal', precision: 10, scale: 7 })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   latitude: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 7 })
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   longitude: number;
 
   @Column({ length: 500 })

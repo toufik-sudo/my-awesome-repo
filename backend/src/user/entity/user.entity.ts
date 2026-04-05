@@ -4,12 +4,47 @@ export type AppRole = 'hyper_admin' | 'hyper_manager' | 'admin' | 'manager' | 'u
 
 /**
  * Role hierarchy & restrictions:
- * - hyper_admin: full platform access EXCEPT creating/editing properties/services,
- *   cancellation rules, booking acceptance, fee absorption
- * - hyper_manager: invited by hyper_admin only, same scope with hyper_admin-granted permissions
- * - admin: manages OWN properties/services (filtered by hostId). Can invite managers.
- * - manager: invited by admin(s), access limited to assigning admin's resources
- * - user: regular platform user (guest)
+ * 
+ * - hyper_admin: full platform access EXCEPT:
+ *     • inviting managers (admin-scoped)
+ *     • creating/editing properties/services
+ *     • creating absorption fees / cancellation rules
+ *     • accepting booking requests
+ *     • making bookings
+ *     • assigning permissions to non-hyper_managers
+ *     • creating property/service groups
+ * 
+ * - hyper_manager: invited by hyper_admin only.
+ *     Same capabilities as hyper_admin based on assigned permissions.
+ *     Assignable permissions: create/edit/delete/pause/archive
+ *     Scope: global, property groups, specific properties, services, admins, managers
+ *     Special: payment validation, document verification, fees/cancellation visibility & delete
+ *     Cannot make bookings.
+ * 
+ * - admin (Host): controls OWN properties/services only.
+ *     Full access within own scope.
+ *     Cannot: access other admins' resources, invite hyper roles or other admins,
+ *     access global document verification, manage global fee rules, make bookings.
+ *     Can invite: managers, guests.
+ * 
+ * - manager: invited by one or more admins.
+ *     Permissions = exact subset given by each admin.
+ *     Multi-admin scope supported (full on admin A, partial on admin B).
+ *     Can manage bookings, comments, likes, users/guests on assigned scope.
+ *     Can create bookings for self or others.
+ *     Can invite: guests only.
+ * 
+ * - user: self-registered, default role.
+ *     Full platform access (all properties/services).
+ *     Read + booking only, no management.
+ * 
+ * - guest: invited by any role above.
+ *     Read + booking access scoped to inviter's properties/services.
+ *     HyperAdmin → all properties. Admin → admin's properties. Manager → manager's scope.
+ *     No management permissions.
+ *     IT MVP: can request conversion to user via support.
+ * 
+ * Booking exception: ONLY manager, guest, user can make bookings.
  */
 export const ROLE_HIERARCHY: Record<AppRole, number> = {
   hyper_admin: 100,
@@ -96,39 +131,32 @@ export class User {
 
   // ─── Helper methods ───────────────────────────────────────────────────
 
-  /**
-   * Get user role.
-   */
   getRole(): AppRole {
     return this.role || 'user';
   }
 
-  /**
-   * Check if user has a specific role.
-   */
   hasRole(role: AppRole): boolean {
     return this.getRole() === role;
   }
 
-  /**
-   * Check if user has one of the given roles.
-   */
   hasAnyRole(...roles: AppRole[]): boolean {
     return roles.includes(this.getRole());
   }
 
-  /**
-   * Check if user is a hyper-level user (hyper_admin or hyper_manager).
-   */
   isHyper(): boolean {
     return this.hasAnyRole('hyper_admin', 'hyper_manager');
   }
 
-  /**
-   * Check if user is admin-level or above.
-   */
   isAdminOrAbove(): boolean {
     return this.hasAnyRole('hyper_admin', 'hyper_manager', 'admin');
+  }
+
+  /**
+   * Check if user can make bookings.
+   * Only manager, guest, user can book.
+   */
+  canBook(): boolean {
+    return this.hasAnyRole('manager', 'guest', 'user');
   }
 
   /**

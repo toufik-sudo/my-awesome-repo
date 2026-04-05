@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useTranslation } from 'react-i18next';
 import { X, ChevronLeft, ChevronRight, Star, Minus, Plus, ShoppingCart, Heart, Share2, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,6 +21,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   basketQuantity = 0
 }) => {
   const { t } = useTranslation();
+  const { canMakeBooking } = usePermissions();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>();

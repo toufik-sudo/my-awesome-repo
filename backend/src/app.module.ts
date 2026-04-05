@@ -98,13 +98,15 @@ import { EmailTrackingModule } from './infrastructure/email-tracking';
   ],
   controllers: [AppController],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
+    // ⚠️ ORDER MATTERS: JwtAuthGuard MUST run before RolesGuard
+    // so that request.user is populated when roles are checked.
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: APP_GUARD,

@@ -41,3 +41,21 @@ export const INVITATION_ALLOWED_ROLES: Record<AppRole, AppRole[]> = {
 export function getAllowedInvitationRoles(inviterRole: AppRole): AppRole[] {
   return INVITATION_ALLOWED_ROLES[inviterRole] || [];
 }
+
+// ─── Booking Restrictions (synced with backend) ────────────────────────────
+
+export const BOOKING_ALLOWED_ROLES: AppRole[] = ['manager', 'guest', 'user'];
+
+export function canMakeBooking(role: AppRole): boolean {
+  return BOOKING_ALLOWED_ROLES.includes(role);
+}
+
+// ─── Role Helpers ──────────────────────────────────────────────────────────
+
+export function isHost(role: AppRole): boolean {
+  return role === 'admin' || role === 'manager';
+}
+
+export function isHyper(role: AppRole): boolean {
+  return role === 'hyper_admin' || role === 'hyper_manager';
+}

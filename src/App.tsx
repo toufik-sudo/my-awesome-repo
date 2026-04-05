@@ -12,8 +12,12 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { ErrorBoundary } from "@/modules/shared/components/ErrorBoundary";
 import { Routes } from "@/routes/Routes";
+import { initRBACInterceptor } from "@/lib/rbac-interceptor";
 import '@/i18n/config';
 import '@/modules/shared/styles/swal.css';
+
+// Initialize RBAC interceptor for 403 handling
+initRBACInterceptor();
 
 const queryClient = new QueryClient();
 

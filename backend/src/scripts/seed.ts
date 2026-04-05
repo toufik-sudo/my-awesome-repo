@@ -477,16 +477,19 @@ async function seedManagerPermissions(ds: DataSource, assignmentIds: string[]) {
     'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
     'manage_availability', 'manage_amenities',
     'view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users',
+    'answer_demands', 'decline_demands', 'accept_demands',
     'reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests',
     'manage_reactions', 'manage_likes',
     'view_analytics', 'manage_promotions', 'modify_offers',
     'create_service', 'modify_service', 'delete_service', 'pause_service',
     'manage_users', 'manage_admins', 'manage_managers',
+    'validate_payments', 'verify_documents', 'manage_fee_rules', 'manage_cancellation_rules', 'archive_entities',
   ];
 
   // Limited permissions for manager1 (assignments 0,1,2)
   const manager1Perms = [
     'view_bookings', 'accept_bookings', 'reject_bookings',
+    'answer_demands', 'decline_demands', 'accept_demands',
     'reply_chat', 'reply_reviews', 'reply_comments', 'contact_guests',
     'modify_photos', 'modify_description', 'manage_availability',
     'view_analytics',
@@ -495,6 +498,7 @@ async function seedManagerPermissions(ds: DataSource, assignmentIds: string[]) {
   // More permissions for manager2 (assignments 3-7)
   const manager2Perms = [
     'view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users',
+    'answer_demands', 'decline_demands', 'accept_demands',
     'reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests',
     'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
     'manage_availability', 'manage_amenities',
@@ -1210,6 +1214,34 @@ async function seedReferrals(ds: DataSource, userIds: number[], propertyIds: str
   console.log(`✅ Created ${referrals.length} referrals and ${shares.length} property shares`);
 }
 
+// ─── Guest Scope Assignments Seed ───────────────────────────────────────────
+
+async function seedGuestScopeAssignments(ds: DataSource, userIds: number[], propertyIds: string[]) {
+  const qr = ds.createQueryRunner();
+
+  // guestrole1 (userIds[11]) was invited by admin1 (userIds[2]) → scope = admin1's properties (all)
+  // guestrole2 (userIds[12]) was invited by manager1 (userIds[4]) → scope = manager1's assigned properties
+  const assignments = [
+    // guestrole1 gets 'all' scope from admin1
+    { managerId: userIds[11], adminId: userIds[2], scope: 'all', propertyId: null, groupId: null },
+    // guestrole2 inherits manager1's specific property assignments
+    { managerId: userIds[12], adminId: userIds[2], scope: 'property', propertyId: propertyIds[0], groupId: null },
+    { managerId: userIds[12], adminId: userIds[2], scope: 'property', propertyId: propertyIds[1], groupId: null },
+    { managerId: userIds[12], adminId: userIds[2], scope: 'property', propertyId: propertyIds[2], groupId: null },
+  ];
+
+  for (const a of assignments) {
+    await qr.query(
+      `INSERT INTO manager_assignments (id, managerId, assignedByAdminId, scope, propertyId, propertyGroupId, isActive)
+       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+      [uuidv4(), a.managerId, a.adminId, a.scope, a.propertyId, a.groupId]
+    );
+  }
+
+  await qr.release();
+  console.log(`✅ Created ${assignments.length} guest scope assignments`);
+}
+
 // ─── Invitations Seed ───────────────────────────────────────────────────────
 
 async function seedInvitations(ds: DataSource, userIds: number[]) {
@@ -1254,6 +1286,53 @@ async function seedInvitations(ds: DataSource, userIds: number[]) {
 
   await qr.release();
   console.log(`✅ Created ${invitations.length} invitations`);
+}
+
+// ─── Additional Manager Data (demand permissions) ───────────────────────────
+
+async function seedAdditionalManagerData(ds: DataSource, userIds: number[], propertyIds: string[]) {
+  // This function adds a 3rd manager user for admin1 with demand-specific permissions
+  const qr = ds.createQueryRunner();
+  const pwd = await hashPassword('Password123!');
+  
+  const result = await qr.query(
+    `INSERT INTO users (email, phoneNbr, cardId, passportId, role, firstName, lastName, password, token, title, city, country, isActive)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ['manager3_byootdz@yopmail.com', '+213550000013', 'CID0013', 'P013', 'manager', 'Khalil', 'Mansouri', pwd, 'seed-token-placeholder', 'Mr', 'Alger', 'Algeria', true]
+  );
+  const manager3Id = result.insertId;
+
+  // Profile
+  await qr.query(
+    `INSERT INTO profiles (id, userId, displayName, avatarUrl, bio, city, wilaya, country, languages, isHost, isSuperhost, identityVerified, preferredLanguage, preferredCurrency)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [uuidv4(), manager3Id, 'Khalil M.', '/media/avatars/user_14.jpg', 'Manager — demand specialist for admin1.', 'Alger', 'Alger', 'Algeria', JSON.stringify(['fr', 'ar']), true, false, true, 'fr', 'DZD']
+  );
+
+  // Assignment: manager3 manages admin1's properties 4,5
+  const assignId = uuidv4();
+  await qr.query(
+    `INSERT INTO manager_assignments (id, managerId, assignedByAdminId, scope, propertyId, propertyGroupId, isActive) VALUES (?, ?, ?, ?, ?, ?, 1)`,
+    [assignId, manager3Id, userIds[2], 'property', propertyIds[4], null]
+  );
+
+  // Demand-focused permissions
+  const demandPerms = ['view_bookings', 'answer_demands', 'decline_demands', 'accept_demands', 'reply_chat', 'contact_guests'];
+  for (const perm of demandPerms) {
+    await qr.query(
+      `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
+      [uuidv4(), assignId, perm]
+    );
+  }
+
+  // Invitation record
+  await qr.query(
+    `INSERT INTO invitations (id, method, email, phone, role, status, invitedBy, token, message, expiresAt, acceptedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [uuidv4(), 'email', 'manager3_byootdz@yopmail.com', null, 'manager', 'accepted', userIds[2], uuidv4(), 'Demand management specialist', futureDate(7), pastDate(10)]
+  );
+
+  await qr.release();
+  console.log('✅ Created manager3 with demand-specific permissions');
 }
 
 // ─── Main Runner ────────────────────────────────────────────────────────────
@@ -1307,8 +1386,14 @@ async function main() {
     await seedServiceFeeRules(AppDataSource, userIds[0], adminIds, propertyIds);
     await seedReferrals(AppDataSource, userIds, propertyIds);
 
-    // 11. Invitations
+    // 11. Guest scope assignments
+    await seedGuestScopeAssignments(AppDataSource, userIds, propertyIds);
+
+    // 12. Invitations
     await seedInvitations(AppDataSource, userIds);
+
+    // 13. Additional manager3 for admin1 with demand-specific perms
+    await seedAdditionalManagerData(AppDataSource, userIds, propertyIds);
 
     console.log('\n═══════════════════════════════════════════');
     console.log('  ✅ Seeding complete!');

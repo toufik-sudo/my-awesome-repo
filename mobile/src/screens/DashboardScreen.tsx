@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Loading } from '@/components';
 import { api } from '@/lib/axios';
 import { spacing } from '@/constants/theme.constants';
@@ -68,6 +69,7 @@ interface DashboardScreenProps {
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const rbac = usePermissions();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,12 +115,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     );
   }
 
+  // Filter stat cards based on role
   const statCards = [
-    { title: t('dashboard.stats.properties'), value: data.stats.totalProperties, color: theme.primary },
-    { title: t('dashboard.stats.totalRevenue'), value: `${data.stats.totalRevenue.toLocaleString()} DA`, color: theme.accent },
-    { title: t('dashboard.stats.bookings'), value: data.stats.totalBookings, color: theme.secondary },
-    { title: t('dashboard.stats.favorites'), value: data.stats.favoritesCount, color: theme.destructive },
-  ];
+    { title: t('dashboard.stats.properties'), value: data.stats.totalProperties, color: theme.primary, visible: true },
+    { title: t('dashboard.stats.totalRevenue'), value: `${data.stats.totalRevenue.toLocaleString()} DA`, color: theme.accent, visible: rbac.isHost || rbac.isHyper },
+    { title: t('dashboard.stats.bookings'), value: data.stats.totalBookings, color: theme.secondary, visible: true },
+    { title: t('dashboard.stats.favorites'), value: data.stats.favoritesCount, color: theme.destructive, visible: rbac.canMakeBooking },
+  ].filter(s => s.visible);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>

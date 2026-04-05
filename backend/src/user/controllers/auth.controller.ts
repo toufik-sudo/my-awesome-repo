@@ -10,8 +10,6 @@ import {
   Headers,
   Logger,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { CsrfCheck, CsrfGenAuth } from '@tekuconcept/nestjs-csrf';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginDto } from 'src/dtos/login/login.dto';
 import { User } from 'src/user/entity/user.entity';
@@ -20,6 +18,8 @@ import { CreateUserRequestDto } from '../dtos/requests/create.user.request.dto';
 import { SessionService } from '../../services/session/session.service';
 import { ActivateUserRequestDto } from '../dtos/requests/activate.user.request.dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 
 @Controller('auth')
 @UseInterceptors(CustomCsrfInterceptor)
@@ -49,7 +49,7 @@ export class AuthController {
   @Post('logout')
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async logout(
     @Req() req: any,
     @Res({ passthrough: true }) res: any,
@@ -66,7 +66,7 @@ export class AuthController {
   @Post('registerUser')
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async registerUser(@Body() registerDto: CreateUserRequestDto): Promise<User> {
     return await this.authService.registerUser(registerDto);
   }
@@ -74,7 +74,7 @@ export class AuthController {
   @Post('activateUser')
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   async activateUser(
     @Body() activateUserRequestDto: ActivateUserRequestDto,
   ): Promise<User> {
@@ -84,7 +84,7 @@ export class AuthController {
   @Post('profile')
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(JwtAuthGuard)
   getProfile(@Request() req) {
     return req.user;
   }

@@ -14,6 +14,8 @@ import NotFound from "@/pages/NotFound";
 import Dashboard from "@/modules/dashboard/Dashboard";
 import { HyperDashboard } from "@/modules/dashboard/HyperDashboard";
 import { AdminManagerDashboard } from "@/modules/dashboard/AdminManagerDashboard";
+import { GuestDashboard } from "@/modules/dashboard/GuestDashboard";
+import { UserDashboard } from "@/modules/dashboard/UserDashboard";
 import { ComponentsDemo } from "@/modules/demo/pages/ComponentsDemo";
 import { FilterDemo } from "@/modules/demo/pages/FilterDemo";
 import { GridDemo } from "@/modules/demo/pages/GridDemo";
@@ -39,6 +41,7 @@ import PointsPage from "@/pages/PointsPage";
 import { HostFeeAbsorptionPage } from "@/modules/admin/pages/HostFeeAbsorptionPage";
 import { CancellationRulesPage } from "@/modules/admin/pages/CancellationRulesPage";
 import { BookingCalendarPage } from "@/modules/admin/pages/BookingCalendarPage";
+import { RbacSettingsPage } from "@/modules/admin/pages/RbacSettingsPage";
 
 import {
   PUBLIC_ROUTES,
@@ -52,11 +55,14 @@ import {
   DEMO_ROUTES,
 } from './routes.constants';
 
+import { PermissionRoute } from '@/components/PermissionRoute';
 import type { AppRole } from '@/modules/auth/auth.types';
 
 const HYPER_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager'];
 const ADMIN_ROLE_LIST: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin'];
 const MANAGER_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
+/** Roles that can make bookings */
+const BOOKING_ROLES: AppRole[] = ['manager', 'guest', 'user'];
 
 const PublicRoutes = () => (
   <>
@@ -71,24 +77,24 @@ const PropertyRoutes = () => (
   <>
     <Route path={PROPERTY_ROUTES.LIST} element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={PROPERTY_ROUTES.DETAIL} element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={PROPERTY_ROUTES.NEW} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={PROPERTY_ROUTES.EDIT} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={PROPERTY_ROUTES.NEW} element={<PermissionRoute requiredPermission="canCreateProperty"><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={PROPERTY_ROUTES.EDIT} element={<PermissionRoute requiredPermission="canModifyProperty"><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={SERVICE_ROUTES.LIST} element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={SERVICE_ROUTES.DETAIL} element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={SERVICE_ROUTES.NEW} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={SERVICE_ROUTES.NEW} element={<PermissionRoute requiredPermission="canCreateService"><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
   </>
 );
 
 const BookingRoutes = () => (
   <>
-    <Route path={BOOKING_ROUTES.LIST} element={<ProtectedRoute><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={BOOKING_ROUTES.LIST} element={<ProtectedRoute requireBookingAccess><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={BOOKING_ROUTES.HOST} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={BOOKING_ROUTES.HISTORY} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={BOOKING_ROUTES.CHAT} element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={BOOKING_ROUTES.CALENDAR} element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingCalendarPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={SUPPORT_ROUTES.INBOX} element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={BOOKING_ROUTES.CALENDAR} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><BookingCalendarPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={SUPPORT_ROUTES.INBOX} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={SUPPORT_ROUTES.THREAD} element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportThreadChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={SUPPORT_ROUTES.REVIEW} element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={SUPPORT_ROUTES.REVIEW} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
@@ -96,6 +102,8 @@ const AdminRoutes = () => (
   <>
     <Route path={DASHBOARD_ROUTES.HYPER} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><HyperDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={DASHBOARD_ROUTES.ADMIN} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AdminManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={DASHBOARD_ROUTES.GUEST} element={<ProtectedRoute requiredRoles={['guest']}><MainLayout><ErrorBoundary><GuestDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={DASHBOARD_ROUTES.USER} element={<ProtectedRoute requiredRoles={['user']}><MainLayout><ErrorBoundary><UserDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     {/* Legacy redirects */}
     <Route path={LEGACY_ROUTES.HYPER_ADMIN} element={<Navigate to={DASHBOARD_ROUTES.HYPER} replace />} />
     <Route path={LEGACY_ROUTES.ADMIN} element={<Navigate to={DASHBOARD_ROUTES.ADMIN} replace />} />
@@ -103,10 +111,11 @@ const AdminRoutes = () => (
     {/* Admin sub-pages */}
     <Route path={ADMIN_ROUTES.VERIFICATION_REVIEW} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={ADMIN_ROUTES.DOCUMENT_VALIDATION} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.PAYMENT_VALIDATION} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><PaymentValidation /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.PAYMENT_VALIDATION} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><ErrorBoundary><PaymentValidation /></ErrorBoundary></ProtectedRoute>} />
     <Route path={ADMIN_ROUTES.EMAIL_ANALYTICS} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={ADMIN_ROUTES.FEE_ABSORPTION} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={ADMIN_ROUTES.CANCELLATION_RULES} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><CancellationRulesPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.RBAC_SETTINGS} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><RbacSettingsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
   </>
 );
 
@@ -119,8 +128,7 @@ const DashboardRoutes = () => (
 );
 
 /**
- * Smart dashboard: redirects role-specific users to their consolidated dashboard,
- * regular users see the default guest Dashboard.
+ * Smart dashboard: redirects role-specific users to their consolidated dashboard.
  */
 const DashboardWithRedirect: React.FC = memo(() => {
   const redirectTo = useDashboardRedirect();

@@ -41,3 +41,15 @@ export const INVITATION_ALLOWED_ROLES: Record<AppRole, AppRole[]> = {
 export function getAllowedInvitationRoles(inviterRole: AppRole): AppRole[] {
   return INVITATION_ALLOWED_ROLES[inviterRole] || [];
 }
+
+// ─── Booking Restrictions (synced with backend) ────────────────────────────
+
+/**
+ * Only manager, guest, and user can make bookings.
+ * hyper_admin, hyper_manager, and admin CANNOT book.
+ */
+export const BOOKING_ALLOWED_ROLES: AppRole[] = ['manager', 'guest', 'user'];
+
+export function canMakeBooking(role: AppRole): boolean {
+  return BOOKING_ALLOWED_ROLES.includes(role);
+}
