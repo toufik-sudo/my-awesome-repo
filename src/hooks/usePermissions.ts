@@ -7,6 +7,7 @@ import {
 } from '@/modules/admin/admin.types';
 import { assignmentsApi, rolesApi } from '@/modules/admin/admin.api';
 import { rbacConfigApi } from '@/modules/admin/rbac-config.api';
+import { UI_PERM, type UiPermissionKey } from '@/utils/rbac';
 
 interface PermissionsState {
   assignments: ManagerAssignment[];
@@ -38,6 +39,7 @@ export function usePermissions() {
   });
 
   const [rbacConfig, setRbacConfig] = useState<Record<string, boolean>>({});
+  const [bindingsMap, setBindingsMap] = useState<Record<string, string>>({});
   const [fetchCounter, setFetchCounter] = useState(0);
 
   /** Force reload all permissions from API (call after RBAC config change) */
@@ -48,9 +50,21 @@ export function usePermissions() {
   // Fetch RBAC frontend config for the current role
   useEffect(() => {
     if (!user?.id || !role) return;
-    rbacConfigApi.getFrontendByRole(role)
-      .then(config => setRbacConfig(config))
-      .catch(() => {}); // silently fallback
+    // Fetch RBAC frontend config + bindings in parallel
+    Promise.all([
+      rbacConfigApi.getFrontendByRole(role),
+      rbacConfigApi.getBindings().catch(() => []),
+    ])
+      .then(([config, bindings]) => {
+        setRbacConfig(config);
+        const bMap: Record<string, string> = {};
+        for (const b of bindings) {
+          bMap[b.uiPermissionKey] = b.apiPermissionKey;
+          bMap[b.apiPermissionKey] = b.uiPermissionKey;
+        }
+        setBindingsMap(bMap);
+      })
+      .catch(() => {});
   }, [user?.id, role, fetchCounter]);
 
   // Fetch assignments + permissions for admin/manager roles
