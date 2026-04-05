@@ -361,5 +361,5 @@ export function usePermissions() {
       canDuplicateProperty: isAdmin,
       canDuplicateService: isAdmin,
     };
-  }, [role, state, rbacConfig, reloadPermissions]);
+  }, [role, state, rbacConfig, bindingsMap, reloadPermissions]);
 }
