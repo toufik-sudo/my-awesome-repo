@@ -26,7 +26,9 @@
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/seed.ts",
     "seed:rbac": "ts-node -r tsconfig-paths/register ./src/scripts/rbac.seed.ts",
     "seed:media": "ts-node -r tsconfig-paths/register ./src/scripts/generate-media.ts",
-    "seed:all": "ts-node -r tsconfig-paths/register ./src/scripts/seed-runner.ts"
+    "seed:all": "ts-node -r tsconfig-paths/register ./src/scripts/seed-runner.ts",
+    "permissions:sync": "ts-node -r tsconfig-paths/register ./src/scripts/permissions-sync.ts",
+    "rbac:validate": "ts-node -r tsconfig-paths/register ./src/scripts/rbac-validate.ts"
   },
   "dependencies": {
     "@nestjs/bullmq": "^10.2.0",
