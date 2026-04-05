@@ -8,6 +8,7 @@ import { RolesService } from '../services/roles.service';
 import { InvitationService } from '../services/invitation.service';
 import { ReferralService } from '../services/referral.service';
 import { RbacConfigService } from '../services/rbac-config.service';
+import { RbacBindingService } from '../services/rbac-binding.service';
 import { User } from '../entity/user.entity';
 import { ManagerAssignment } from '../entity/manager-assignment.entity';
 import { ManagerPermission } from '../entity/manager-permission.entity';
@@ -19,6 +20,7 @@ import { PointsRule } from '../entity/points-rule.entity';
 import { HostFeeAbsorption } from '../entity/host-fee-absorption.entity';
 import { RbacBackendPermission } from '../entity/rbac-backend-permission.entity';
 import { RbacFrontendPermission } from '../entity/rbac-frontend-permission.entity';
+import { RbacPermissionBinding } from '../entity/rbac-permission-binding.entity';
 import { ServiceFeeController } from '../controllers/service-fee.controller';
 import { PointsRuleController } from '../controllers/points-rule.controller';
 import { HostFeeAbsorptionController } from '../controllers/host-fee-absorption.controller';
@@ -44,6 +46,7 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
       HostFeeAbsorption,
       RbacBackendPermission,
       RbacFrontendPermission,
+      RbacPermissionBinding,
     ]),
     JobsModule,
     WsModule,
@@ -65,6 +68,7 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
     HostFeeAbsorptionService,
     ReferralService,
     RbacConfigService,
+    RbacBindingService,
   ],
   exports: [
     RolesService,
@@ -74,6 +78,7 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
     HostFeeAbsorptionService,
     ReferralService,
     RbacConfigService,
+    RbacBindingService,
   ],
 })
 export class RolesModule {}

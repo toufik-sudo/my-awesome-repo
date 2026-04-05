@@ -33,6 +33,14 @@ export interface BulkUpdateResult {
   errors: string[];
 }
 
+export interface RbacBinding {
+  id: string;
+  apiPermissionKey: string;
+  uiPermissionKey: string;
+  module: string;
+  created_at: string;
+}
+
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 const BASE = '/rbac-config';
@@ -73,6 +81,13 @@ export const rbacConfigApi = {
 
   createFrontendPermission: (data: { role: string; ui_key: string; permission_key: string; allowed?: boolean; conditions?: Record<string, any> }) =>
     api.post<RbacFrontendPermission>(`${BASE}/frontend`, data).then(r => r.data),
+
+  // Bindings
+  getBindings: () =>
+    api.get<RbacBinding[]>(`${BASE}/bindings`).then(r => r.data),
+
+  getBindingsForModule: (module: string) =>
+    api.get<RbacBinding[]>(`${BASE}/bindings?module=${module}`).then(r => r.data),
 
   // Cache
   reloadCache: () =>
