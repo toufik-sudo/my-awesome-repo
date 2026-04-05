@@ -33,6 +33,14 @@ export interface BulkUpdateResult {
   errors: string[];
 }
 
+export interface RbacBinding {
+  id: string;
+  apiPermissionKey: string;
+  uiPermissionKey: string;
+  module: string;
+  created_at: string;
+}
+
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 const BASE = '/rbac-config';
