@@ -16,6 +16,7 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { PermissionType } from '../../user/entity/manager-permission.entity';
 import { AppRole } from '../../user/entity/user.entity';
 import { canMakeBooking } from '../../user/constants/invitation-rules.constant';
+import { ALL_BACKEND_KEYS } from '../../rbac/permission-registry';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INVITATION RULES — qui peut inviter qui (miroir de ASSIGNABLE_ROLES_BY_ROLE
@@ -110,15 +111,19 @@ export class PermissionGuard implements CanActivate {
   /**
    * Check permission via DB-backed RBAC config.
    * Falls back to hardcoded rules if DB has no entry (during migration period).
+   * Rejects any key not found in the permission registry.
    */
   private canByDb(role: AppRole, permissionKey: string): boolean | null {
+    // Reject unknown keys — only registry-generated keys are valid
+    if (!ALL_BACKEND_KEYS.has(permissionKey)) {
+      this.logger.warn(`Unknown permission key rejected: '${permissionKey}'. Register it in permission-registry.ts`);
+      return false;
+    }
     if (!this.rbacConfig.isLoaded()) return null;
     const entry = this.rbacConfig.can(role, permissionKey);
-    // rbacConfig.can returns false if not found — we treat "not found" as null (fallback)
-    // To distinguish: check if the role has ANY permissions loaded
     const allPerms = this.rbacConfig.getBackendPermissions(role);
-    if (Object.keys(allPerms).length === 0) return null; // no DB data for this role
-    if (!(permissionKey in allPerms)) return null; // specific key not in DB
+    if (Object.keys(allPerms).length === 0) return null;
+    if (!(permissionKey in allPerms)) return null;
     return entry;
   }
 
