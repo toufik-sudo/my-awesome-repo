@@ -4,7 +4,6 @@
  * Reads the permission-registry and upserts all entries into:
  *   - rbac_backend_permissions
  *   - rbac_frontend_permissions
- *   - rbac_permission_bindings
  *
  * Then invalidates Redis cache keys and emits RBAC_UPDATED.
  *
@@ -16,7 +15,6 @@ import { config as dotenvConfig } from 'dotenv';
 import {
   BACKEND_PERMISSIONS,
   FRONTEND_PERMISSIONS,
-  PERMISSION_BINDINGS,
 } from '../rbac/permission-registry';
 import Redis from 'ioredis';
 
@@ -46,8 +44,6 @@ async function main() {
   let backendSkipped = 0;
   let frontendCreated = 0;
   let frontendSkipped = 0;
-  let bindingsCreated = 0;
-  let bindingsSkipped = 0;
   const conflicts: string[] = [];
 
   // ─── Backend permissions ──────────────────────────────────────────────────
@@ -102,30 +98,6 @@ async function main() {
   }
   console.log(`  ✓ Created: ${frontendCreated} | Skipped: ${frontendSkipped}`);
 
-  // ─── Bindings ─────────────────────────────────────────────────────────────
-  console.log('▶ Syncing bindings…');
-  for (const binding of PERMISSION_BINDINGS) {
-    try {
-      const exists = await qr.query(
-        `SELECT id FROM rbac_permission_bindings WHERE api_permission_key = ? AND ui_permission_key = ?`,
-        [binding.apiPermissionKey, binding.uiPermissionKey],
-      );
-      if (exists.length > 0) {
-        bindingsSkipped++;
-        continue;
-      }
-      await qr.query(
-        `INSERT INTO rbac_permission_bindings (id, api_permission_key, ui_permission_key, module, created_at)
-         VALUES (UUID(), ?, ?, ?, NOW())`,
-        [binding.apiPermissionKey, binding.uiPermissionKey, binding.module],
-      );
-      bindingsCreated++;
-    } catch (e: any) {
-      conflicts.push(`Binding [${binding.apiPermissionKey}↔${binding.uiPermissionKey}]: ${e.message}`);
-    }
-  }
-  console.log(`  ✓ Created: ${bindingsCreated} | Skipped: ${bindingsSkipped}`);
-
   // ─── Redis invalidation ───────────────────────────────────────────────────
   console.log('\n▶ Invalidating Redis cache…');
   try {
@@ -148,7 +120,6 @@ async function main() {
   console.log('\n═══ Summary ═══');
   console.log(`Backend:  ${backendCreated} created, ${backendSkipped} existing`);
   console.log(`Frontend: ${frontendCreated} created, ${frontendSkipped} existing`);
-  console.log(`Bindings: ${bindingsCreated} created, ${bindingsSkipped} existing`);
 
   if (conflicts.length > 0) {
     console.log(`\n⚠ ${conflicts.length} conflicts:`);
