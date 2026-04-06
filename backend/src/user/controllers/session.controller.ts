@@ -1,23 +1,12 @@
-import { Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Controller, Get, UseGuards, UseInterceptors } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { PermissionGuard } from '../../auth/guards/permission.guard';
+import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 
 @Controller('session')
 @UseGuards(JwtAuthGuard)
+@UseInterceptors(CustomCsrfInterceptor)
 export class SessionController {
-  // @Post('login')
-  // login(@Req() req: Request | any, @Res() res: Response) {
-  //   // Set session data
-  //   req.session.user = { id: 1, username: 'example' };
-  //   res.send('Logged in!');
-  // }
-
-  // @Get('profile')
-  // getProfile(@Req() req: Request | any, @Res() res: Response) {
-  //   if (req.session.user) {
-  //     res.send(`Welcome ${req.session.user.username}`);
-  //   } else {
-  //     res.send('Not logged in');
-  //   }
-  // }
+  // No active endpoints — placeholder for future session management
 }
