@@ -1,54 +1,71 @@
 import {
-  Controller, Get, Post, Body, Param, Request, UseGuards, Query,
+  Controller, Get, Post, Body, Param, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ReferralService } from '../services/referral.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 
 @Controller('referrals')
-@UseGuards(PermissionGuard)
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(CustomCsrfInterceptor)
 export class ReferralController {
   constructor(private readonly service: ReferralService) {}
 
   @Get('code')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   async getMyCode(@Request() req) {
     const code = await this.service.getOrCreateReferralCode(req.user.id);
     return { code };
   }
 
   @Post()
-  async createReferral(@Request() req, @Body() body: {
-    method: string;
-    inviteeContact?: string;
-    propertyId?: string;
-  }) {
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  async createReferral(@Request() req, @Body() body: { method: string; inviteeContact?: string; propertyId?: string }) {
     return this.service.createReferral(req.user.id, body);
   }
 
   @Get()
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   async getMyReferrals(@Request() req) {
     return this.service.getUserReferrals(req.user.id);
   }
 
   @Get('stats')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   async getMyStats(@Request() req) {
     return this.service.getReferralStats(req.user.id);
   }
 
   @Post('signup/:code')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   async completeSignup(@Param('code') code: string, @Request() req) {
     return this.service.completeSignup(code, req.user.id);
   }
 
   @Post('share')
-  async shareProperty(@Request() req, @Body() body: {
-    propertyId: string;
-    method: string;
-    recipient?: string;
-  }) {
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  async shareProperty(@Request() req, @Body() body: { propertyId: string; method: string; recipient?: string }) {
     return this.service.shareProperty(req.user.id, body.propertyId, body.method, body.recipient);
   }
 
   @Get('share/:propertyId/stats')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   async getShareStats(@Param('propertyId') propertyId: string) {
     return this.service.getShareStats(propertyId);
   }

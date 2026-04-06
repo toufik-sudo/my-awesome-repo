@@ -7,6 +7,8 @@ import { RbacFrontendPermission } from '../entity/rbac-frontend-permission.entit
 import { AppRole } from '../entity/user.entity';
 import { REDIS_CLIENT } from '../../infrastructure/redis/redis.constant';
 import { EventsGateway } from '../../infrastructure/websocket/events.gateway';
+import { generateBackendPermissionKey, type HttpMethod } from '../../rbac/utils/generate-backend-permission-key';
+import { generateUiPermissionKey } from '../../rbac/utils/generate-ui-permission-key';
 
 // ─── Redis keys ───────────────────────────────────────────────────────────────
 const REDIS_KEY_BACKEND = 'rbac:backend:permissions';
@@ -15,35 +17,40 @@ const REDIS_CHANNEL = 'rbac:updated';
 
 // ─── Cache types ──────────────────────────────────────────────────────────────
 interface CachedBackendPerm {
-  allowed: boolean;
+  user_roles: string[];
   scope: RbacScope;
+  allowed: boolean;
   conditions: Record<string, any> | null;
+  controller: string;
+  endpoint: string;
+  method: string;
+  module: string;
+  description: string | null;
 }
 
 interface CachedFrontendPerm {
+  user_roles: string[];
   allowed: boolean;
   conditions: Record<string, any> | null;
+  component: string;
+  sub_view: string | null;
+  element_type: string | null;
+  action_name: string | null;
+  module: string;
+  description: string | null;
 }
 
-// ─── Protected permissions (cannot be disabled by hyper_admin) ────────────────
-const PROTECTED_PERMISSIONS: string[] = [
-  'hyper_admin:manage_users',
-  'hyper_admin:manage_admins',
-  'hyper_admin:view_analytics',
-  'hyper_admin:validate_payments',
-  'hyper_admin:verify_documents',
-];
+// ─── Protected permissions (cannot be disabled) ──────────────────────────────
+const PROTECTED_PERMISSIONS: string[] = [];
 
 @Injectable()
 export class RbacConfigService implements OnModuleInit {
   private readonly logger = new Logger(RbacConfigService.name);
 
-  /** role:permission_key → CachedBackendPerm */
+  /** permission_key → CachedBackendPerm */
   private backendCache = new Map<string, CachedBackendPerm>();
-  /** role:ui_key → CachedFrontendPerm */
+  /** permission_key → CachedFrontendPerm */
   private frontendCache = new Map<string, CachedFrontendPerm>();
-  /** role:resource:action → CachedBackendPerm (secondary index) */
-  private actionCache = new Map<string, CachedBackendPerm>();
 
   private loaded = false;
   private subscriber: Redis | null = null;
@@ -66,54 +73,75 @@ export class RbacConfigService implements OnModuleInit {
   // PUBLIC API — Permission Checks
   // ═══════════════════════════════════════════════════════════════════════════
 
+  /**
+   * Check if a role is allowed for a backend permission key.
+   * The permission_key is generated via generateBackendPermissionKey(controller, endpoint, method).
+   */
   can(role: AppRole, permissionKey: string): boolean {
-    const entry = this.backendCache.get(`${role}:${permissionKey}`);
+    const entry = this.backendCache.get(permissionKey);
     if (!entry) return false;
-    return entry.allowed;
+    if (!entry.allowed) return false;
+    return entry.user_roles.includes(role);
   }
 
-  canAction(role: AppRole, resource: string, action: string): boolean {
-    const entry = this.actionCache.get(`${role}:${resource}:${action}`);
-    if (!entry) return false;
-    return entry.allowed;
+  /**
+   * Check if a role can see/use a frontend UI element.
+   * The permission_key is generated via generateUiPermissionKey(component, subView, element, action).
+   */
+  canUI(role: AppRole, permissionKey: string): boolean {
+    const entry = this.frontendCache.get(permissionKey);
+    if (!entry) return true; // Default allow if not configured
+    if (!entry.allowed) return false;
+    return entry.user_roles.includes(role);
   }
 
-  getScope(role: AppRole, resource: string): RbacScope | null {
-    for (const [key, val] of this.backendCache.entries()) {
-      if (key.startsWith(`${role}:`) && val.scope) {
-        const permKey = key.split(':')[1];
-        if (permKey?.startsWith(resource.replace(/-/g, '_')) || permKey?.includes(resource)) {
-          return val.scope;
-        }
-      }
-    }
-    return null;
+  /**
+   * Get scope for a backend permission.
+   */
+  getScope(permissionKey: string): RbacScope | null {
+    const entry = this.backendCache.get(permissionKey);
+    return entry?.scope ?? null;
   }
 
-  canUI(role: AppRole, uiKey: string): boolean {
-    const entry = this.frontendCache.get(`${role}:${uiKey}`);
-    if (!entry) return true;
-    return entry.allowed;
+  /**
+   * Get backend permission key from controller/endpoint/method.
+   * Uses cache first, falls back to generation.
+   */
+  getBackendPermissionKey(controller: string, endpoint: string, method: HttpMethod): string {
+    return generateBackendPermissionKey(controller, endpoint, method);
   }
 
+  /**
+   * Get all frontend permissions for a role (used by frontend at login).
+   * Returns map of permission_key → boolean
+   */
   getFrontendPermissions(role: AppRole): Record<string, boolean> {
     const result: Record<string, boolean> = {};
     for (const [key, val] of this.frontendCache.entries()) {
-      if (key.startsWith(`${role}:`)) {
-        result[key.substring(role.length + 1)] = val.allowed;
+      result[key] = val.allowed && val.user_roles.includes(role);
+    }
+    return result;
+  }
+
+  /**
+   * Get all backend permissions for a role.
+   * Returns map of permission_key → { allowed, scope }
+   */
+  getBackendPermissions(role: AppRole): Record<string, { allowed: boolean; scope: RbacScope }> {
+    const result: Record<string, { allowed: boolean; scope: RbacScope }> = {};
+    for (const [key, val] of this.backendCache.entries()) {
+      if (val.user_roles.includes(role)) {
+        result[key] = { allowed: val.allowed, scope: val.scope };
       }
     }
     return result;
   }
 
-  getBackendPermissions(role: AppRole): Record<string, { allowed: boolean; scope: RbacScope }> {
-    const result: Record<string, { allowed: boolean; scope: RbacScope }> = {};
-    for (const [key, val] of this.backendCache.entries()) {
-      if (key.startsWith(`${role}:`)) {
-        result[key.substring(role.length + 1)] = { allowed: val.allowed, scope: val.scope };
-      }
-    }
-    return result;
+  /**
+   * Get all backend permissions as flat list (for admin panel).
+   */
+  getAllBackendPermissions(): CachedBackendPerm[] {
+    return Array.from(this.backendCache.values());
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -121,19 +149,21 @@ export class RbacConfigService implements OnModuleInit {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async findAllBackend(): Promise<RbacBackendPermission[]> {
-    return this.backendRepo.find({ order: { role: 'ASC', resource: 'ASC', action: 'ASC' } });
+    return this.backendRepo.find({ order: { module: 'ASC', controller: 'ASC', endpoint: 'ASC' } });
   }
 
   async findAllFrontend(): Promise<RbacFrontendPermission[]> {
-    return this.frontendRepo.find({ order: { role: 'ASC', ui_key: 'ASC' } });
+    return this.frontendRepo.find({ order: { module: 'ASC', component: 'ASC' } });
   }
 
   async updateBackendPermission(
     id: string,
-    updates: Partial<Pick<RbacBackendPermission, 'allowed' | 'scope' | 'conditions'>>,
+    updates: Partial<Pick<RbacBackendPermission, 'allowed' | 'scope' | 'conditions' | 'user_roles'>>,
   ): Promise<RbacBackendPermission> {
     const perm = await this.backendRepo.findOneByOrFail({ id });
-    this.validateSafetyCheck(perm.role, perm.permission_key, updates);
+    if (updates.allowed === false && PROTECTED_PERMISSIONS.includes(perm.permission_key)) {
+      throw new ForbiddenException(`Cannot disable protected permission: ${perm.permission_key}`);
+    }
     await this.backendRepo.update(id, updates);
     await this.syncAndBroadcast();
     return this.backendRepo.findOneByOrFail({ id });
@@ -141,7 +171,7 @@ export class RbacConfigService implements OnModuleInit {
 
   async updateFrontendPermission(
     id: string,
-    updates: Partial<Pick<RbacFrontendPermission, 'allowed' | 'conditions'>>,
+    updates: Partial<Pick<RbacFrontendPermission, 'allowed' | 'conditions' | 'user_roles'>>,
   ): Promise<RbacFrontendPermission> {
     await this.frontendRepo.update(id, updates);
     await this.syncAndBroadcast();
@@ -149,29 +179,30 @@ export class RbacConfigService implements OnModuleInit {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BULK UPDATE — Dynamic RBAC Config
+  // BULK UPDATE
   // ═══════════════════════════════════════════════════════════════════════════
 
   async bulkUpdateBackend(
-    updates: Array<{ role: AppRole; permission_key: string; allowed: boolean; scope?: RbacScope }>,
+    updates: Array<{ permission_key: string; allowed?: boolean; scope?: RbacScope; user_roles?: string[] }>,
   ): Promise<{ updated: number; errors: string[] }> {
     const errors: string[] = [];
     let updated = 0;
 
     for (const u of updates) {
       try {
-        this.validateSafetyCheck(u.role, u.permission_key, { allowed: u.allowed });
-        const perm = await this.backendRepo.findOneBy({ role: u.role, permission_key: u.permission_key });
+        const perm = await this.backendRepo.findOneBy({ permission_key: u.permission_key });
         if (!perm) {
-          errors.push(`Not found: ${u.role}:${u.permission_key}`);
+          errors.push(`Not found: ${u.permission_key}`);
           continue;
         }
-        const updateData: any = { allowed: u.allowed };
+        const updateData: any = {};
+        if (u.allowed !== undefined) updateData.allowed = u.allowed;
         if (u.scope) updateData.scope = u.scope;
+        if (u.user_roles) updateData.user_roles = u.user_roles;
         await this.backendRepo.update(perm.id, updateData);
         updated++;
-      } catch (e:any) {
-        errors.push(`${u.role}:${u.permission_key} → ${e.message}`);
+      } catch (e: any) {
+        errors.push(`${u.permission_key} → ${e.message}`);
       }
     }
 
@@ -180,22 +211,25 @@ export class RbacConfigService implements OnModuleInit {
   }
 
   async bulkUpdateFrontend(
-    updates: Array<{ role: AppRole; permission_key: string; allowed: boolean }>,
+    updates: Array<{ permission_key: string; allowed?: boolean; user_roles?: string[] }>,
   ): Promise<{ updated: number; errors: string[] }> {
     const errors: string[] = [];
     let updated = 0;
 
     for (const u of updates) {
       try {
-        const perm = await this.frontendRepo.findOneBy({ role: u.role, permission_key: u.permission_key });
+        const perm = await this.frontendRepo.findOneBy({ permission_key: u.permission_key });
         if (!perm) {
-          errors.push(`Not found: ${u.role}:${u.permission_key}`);
+          errors.push(`Not found: ${u.permission_key}`);
           continue;
         }
-        await this.frontendRepo.update(perm.id, { allowed: u.allowed });
+        const updateData: any = {};
+        if (u.allowed !== undefined) updateData.allowed = u.allowed;
+        if (u.user_roles) updateData.user_roles = u.user_roles;
+        await this.frontendRepo.update(perm.id, updateData);
         updated++;
-      } catch (e:any) {
-        errors.push(`${u.role}:${u.permission_key} → ${e.message}`);
+      } catch (e: any) {
+        errors.push(`${u.permission_key} → ${e.message}`);
       }
     }
 
@@ -208,31 +242,34 @@ export class RbacConfigService implements OnModuleInit {
   // ═══════════════════════════════════════════════════════════════════════════
 
   async createBackendPermission(data: {
-    role: AppRole;
-    resource: string;
-    action: string;
-    permission_key: string;
+    controller: string;
+    endpoint: string;
+    method: string;
+    user_roles: string[];
     scope?: RbacScope;
     allowed?: boolean;
     conditions?: Record<string, any>;
+    module?: string;
+    description?: string;
+    created_by?: string;
   }): Promise<RbacBackendPermission> {
-    const existing = await this.backendRepo.findOneBy({
-      role: data.role,
-      permission_key: data.permission_key,
-    });
+    const permissionKey = generateBackendPermissionKey(data.controller, data.endpoint, data.method as HttpMethod);
+    const existing = await this.backendRepo.findOneBy({ permission_key: permissionKey });
     if (existing) {
-      throw new ForbiddenException(
-        `Permission '${data.permission_key}' already exists for role '${data.role}'.`,
-      );
+      throw new ForbiddenException(`Permission '${permissionKey}' already exists.`);
     }
     const perm = this.backendRepo.create({
-      role: data.role,
-      resource: data.resource,
-      action: data.action,
-      permission_key: data.permission_key,
+      permission_key: permissionKey,
+      controller: data.controller,
+      endpoint: data.endpoint,
+      method: data.method,
+      user_roles: data.user_roles,
       scope: data.scope || 'global',
       allowed: data.allowed !== undefined ? data.allowed : true,
       conditions: data.conditions || null,
+      module: data.module || 'general',
+      description: data.description || null,
+      created_by: data.created_by || null,
     });
     const saved = await this.backendRepo.save(perm);
     await this.syncAndBroadcast();
@@ -240,27 +277,34 @@ export class RbacConfigService implements OnModuleInit {
   }
 
   async createFrontendPermission(data: {
-    role: AppRole;
-    ui_key: string;
-    permission_key: string;
+    component: string;
+    sub_view?: string;
+    element_type?: string;
+    action_name?: string;
+    user_roles: string[];
     allowed?: boolean;
     conditions?: Record<string, any>;
+    module?: string;
+    description?: string;
+    created_by?: string;
   }): Promise<RbacFrontendPermission> {
-    const existing = await this.frontendRepo.findOneBy({
-      role: data.role,
-      ui_key: data.ui_key,
-    });
+    const permissionKey = generateUiPermissionKey(data.component, data.sub_view, data.element_type, data.action_name);
+    const existing = await this.frontendRepo.findOneBy({ permission_key: permissionKey });
     if (existing) {
-      throw new ForbiddenException(
-        `Frontend permission for UI key '${data.ui_key}' already exists for role '${data.role}'.`,
-      );
+      throw new ForbiddenException(`Frontend permission '${permissionKey}' already exists.`);
     }
     const perm = this.frontendRepo.create({
-      role: data.role,
-      ui_key: data.ui_key,
-      permission_key: data.permission_key,
+      permission_key: permissionKey,
+      component: data.component,
+      sub_view: data.sub_view || null,
+      element_type: data.element_type || null,
+      action_name: data.action_name || null,
+      user_roles: data.user_roles,
       allowed: data.allowed !== undefined ? data.allowed : true,
       conditions: data.conditions || null,
+      module: data.module || 'general',
+      description: data.description || null,
+      created_by: data.created_by || null,
     });
     const saved = await this.frontendRepo.save(perm);
     await this.syncAndBroadcast();
@@ -286,12 +330,9 @@ export class RbacConfigService implements OnModuleInit {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PRIVATE — Loading, Sync, Safety
+  // PRIVATE — Loading, Sync
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /**
-   * Load from Redis first (shared cache), fallback to DB.
-   */
   private async loadAll(): Promise<void> {
     let loadedFromRedis = false;
 
@@ -306,7 +347,7 @@ export class RbacConfigService implements OnModuleInit {
         loadedFromRedis = true;
         this.logger.log('RBAC loaded from Redis cache');
       }
-    } catch (err:any) {
+    } catch (err: any) {
       this.logger.warn(`Redis read failed, falling back to DB: ${err.message}`);
     }
 
@@ -321,48 +362,74 @@ export class RbacConfigService implements OnModuleInit {
       this.frontendRepo.find(),
     ]);
 
-    // Rebuild memory caches
     const newBackend = new Map<string, CachedBackendPerm>();
-    const newAction = new Map<string, CachedBackendPerm>();
     for (const p of backendPerms) {
-      const cached: CachedBackendPerm = { allowed: p.allowed, scope: p.scope, conditions: p.conditions };
-      newBackend.set(`${p.role}:${p.permission_key}`, cached);
-      newAction.set(`${p.role}:${p.resource}:${p.action}`, cached);
+      newBackend.set(p.permission_key, {
+        user_roles: p.user_roles,
+        scope: p.scope,
+        allowed: p.allowed,
+        conditions: p.conditions,
+        controller: p.controller,
+        endpoint: p.endpoint,
+        method: p.method,
+        module: p.module,
+        description: p.description,
+      });
     }
 
     const newFrontend = new Map<string, CachedFrontendPerm>();
     for (const p of frontendPerms) {
-      newFrontend.set(`${p.role}:${p.ui_key}`, { allowed: p.allowed, conditions: p.conditions });
+      newFrontend.set(p.permission_key, {
+        user_roles: p.user_roles,
+        allowed: p.allowed,
+        conditions: p.conditions,
+        component: p.component,
+        sub_view: p.sub_view,
+        element_type: p.element_type,
+        action_name: p.action_name,
+        module: p.module,
+        description: p.description,
+      });
     }
 
     this.backendCache = newBackend;
-    this.actionCache = newAction;
     this.frontendCache = newFrontend;
     this.loaded = true;
 
-    // Persist to Redis
     await this.persistToRedis(backendPerms, frontendPerms);
-
     this.logger.log(`RBAC loaded from DB: ${backendPerms.length} backend + ${frontendPerms.length} frontend`);
   }
 
-  private rebuildFromJson(
-    backendPerms: Array<{ role: string; permission_key: string; resource: string; action: string; allowed: boolean; scope: string; conditions: any }>,
-    frontendPerms: Array<{ role: string; ui_key: string; allowed: boolean; conditions: any }>,
-  ): void {
+  private rebuildFromJson(backendPerms: any[], frontendPerms: any[]): void {
     const newBackend = new Map<string, CachedBackendPerm>();
-    const newAction = new Map<string, CachedBackendPerm>();
     for (const p of backendPerms) {
-      const cached: CachedBackendPerm = { allowed: p.allowed, scope: p.scope as RbacScope, conditions: p.conditions };
-      newBackend.set(`${p.role}:${p.permission_key}`, cached);
-      newAction.set(`${p.role}:${p.resource}:${p.action}`, cached);
+      newBackend.set(p.permission_key, {
+        user_roles: p.user_roles,
+        scope: p.scope as RbacScope,
+        allowed: p.allowed,
+        conditions: p.conditions,
+        controller: p.controller,
+        endpoint: p.endpoint,
+        method: p.method,
+        module: p.module,
+        description: p.description,
+      });
     }
     const newFrontend = new Map<string, CachedFrontendPerm>();
     for (const p of frontendPerms) {
-      newFrontend.set(`${p.role}:${p.ui_key}`, { allowed: p.allowed, conditions: p.conditions });
+      newFrontend.set(p.permission_key, {
+        user_roles: p.user_roles,
+        allowed: p.allowed,
+        conditions: p.conditions,
+        component: p.component,
+        sub_view: p.sub_view,
+        element_type: p.element_type,
+        action_name: p.action_name,
+        module: p.module,
+        description: p.description,
+      });
     }
     this.backendCache = newBackend;
-    this.actionCache = newAction;
     this.frontendCache = newFrontend;
     this.loaded = true;
   }
@@ -373,44 +440,51 @@ export class RbacConfigService implements OnModuleInit {
   ): Promise<void> {
     try {
       const backendJson = backendPerms.map(p => ({
-        role: p.role, permission_key: p.permission_key, resource: p.resource,
-        action: p.action, allowed: p.allowed, scope: p.scope, conditions: p.conditions,
+        permission_key: p.permission_key,
+        user_roles: p.user_roles,
+        scope: p.scope,
+        allowed: p.allowed,
+        conditions: p.conditions,
+        controller: p.controller,
+        endpoint: p.endpoint,
+        method: p.method,
+        module: p.module,
+        description: p.description,
       }));
       const frontendJson = frontendPerms.map(p => ({
-        role: p.role, ui_key: p.ui_key, permission_key: p.permission_key,
-        allowed: p.allowed, conditions: p.conditions,
+        permission_key: p.permission_key,
+        user_roles: p.user_roles,
+        allowed: p.allowed,
+        conditions: p.conditions,
+        component: p.component,
+        sub_view: p.sub_view,
+        element_type: p.element_type,
+        action_name: p.action_name,
+        module: p.module,
+        description: p.description,
       }));
       await Promise.all([
         this.redis.set(REDIS_KEY_BACKEND, JSON.stringify(backendJson), 'EX', 3600),
         this.redis.set(REDIS_KEY_FRONTEND, JSON.stringify(frontendJson), 'EX', 3600),
       ]);
-    } catch (err:any) {
+    } catch (err: any) {
       this.logger.warn(`Redis persist failed: ${err.message}`);
     }
   }
 
-  /**
-   * After DB update: reload from DB, persist to Redis, broadcast via pub/sub + WebSocket.
-   */
   private async syncAndBroadcast(): Promise<void> {
     await this.loadFromDb();
-    // Notify other instances via Redis pub/sub
     try {
       await this.redis.publish(REDIS_CHANNEL, JSON.stringify({ ts: Date.now() }));
-    } catch (err:any) {
+    } catch (err: any) {
       this.logger.warn(`Redis publish failed: ${err.message}`);
     }
-    // Notify connected frontends via WebSocket
     this.eventsGateway.broadcast('rbac:updated', { timestamp: Date.now() });
     this.logger.log('RBAC synced and broadcasted');
   }
 
-  /**
-   * Subscribe to Redis pub/sub for cross-instance sync.
-   */
   private async subscribeToUpdates(): Promise<void> {
     try {
-      // Create a duplicate connection for subscribe (Redis requires separate connections for sub)
       this.subscriber = this.redis.duplicate();
       await this.subscriber.subscribe(REDIS_CHANNEL);
       this.subscriber.on('message', async (channel: string) => {
@@ -420,27 +494,8 @@ export class RbacConfigService implements OnModuleInit {
         }
       });
       this.logger.log('RBAC Redis subscriber connected');
-    } catch (err:any) {
+    } catch (err: any) {
       this.logger.warn(`Redis subscribe failed: ${err.message}. Using DB-only mode.`);
-    }
-  }
-
-  /**
-   * Safety check: prevent hyper_admin from self-locking critical permissions.
-   */
-  private validateSafetyCheck(
-    role: string,
-    permissionKey: string,
-    updates: { allowed?: boolean },
-  ): void {
-    if (updates.allowed === false) {
-      const key = `${role}:${permissionKey}`;
-      if (PROTECTED_PERMISSIONS.includes(key)) {
-        throw new ForbiddenException(
-          `Cannot disable protected permission '${permissionKey}' for '${role}'. ` +
-          `This would break critical system functionality.`,
-        );
-      }
     }
   }
 }

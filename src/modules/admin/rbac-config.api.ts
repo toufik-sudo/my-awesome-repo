@@ -6,10 +6,14 @@ export type RbacScope = 'global' | 'admin' | 'assigned' | 'own' | 'inherited';
 
 export interface RbacBackendPermission {
   id: string;
-  role: string;
-  resource: string;
-  action: string;
+  created_by: string | null;
   permission_key: string;
+  user_roles: string[];
+  controller: string;
+  endpoint: string;
+  method: string;
+  module: string;
+  description: string | null;
   scope: RbacScope;
   allowed: boolean;
   conditions: Record<string, any> | null;
@@ -19,9 +23,15 @@ export interface RbacBackendPermission {
 
 export interface RbacFrontendPermission {
   id: string;
-  role: string;
-  ui_key: string;
+  created_by: string | null;
   permission_key: string;
+  user_roles: string[];
+  component: string;
+  sub_view: string | null;
+  element_type: string | null;
+  action_name: string | null;
+  module: string;
+  description: string | null;
   allowed: boolean;
   conditions: Record<string, any> | null;
   created_at: string;
@@ -31,14 +41,6 @@ export interface RbacFrontendPermission {
 export interface BulkUpdateResult {
   updated: number;
   errors: string[];
-}
-
-export interface RbacBinding {
-  id: string;
-  apiPermissionKey: string;
-  uiPermissionKey: string;
-  module: string;
-  created_at: string;
 }
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
@@ -57,13 +59,23 @@ export const rbacConfigApi = {
   getBackendByRole: (role: string) =>
     api.get<Record<string, { allowed: boolean; scope: RbacScope }>>(`${BASE}/backend/role/${role}`).then(r => r.data),
 
-  updateBackendPermission: (id: string, data: { allowed?: boolean; scope?: string; conditions?: Record<string, any> }) =>
+  updateBackendPermission: (id: string, data: { allowed?: boolean; scope?: string; user_roles?: string[]; conditions?: Record<string, any> }) =>
     api.put<RbacBackendPermission>(`${BASE}/backend/${id}`, data).then(r => r.data),
 
-  bulkUpdateBackend: (updates: Array<{ role: string; permission_key: string; allowed: boolean; scope?: RbacScope }>) =>
+  bulkUpdateBackend: (updates: Array<{ permission_key: string; allowed?: boolean; scope?: RbacScope; user_roles?: string[] }>) =>
     api.put<BulkUpdateResult>(`${BASE}/backend`, { updates }).then(r => r.data),
 
-  createBackendPermission: (data: { role: string; resource: string; action: string; permission_key: string; scope?: RbacScope; allowed?: boolean; conditions?: Record<string, any> }) =>
+  createBackendPermission: (data: {
+    controller: string;
+    endpoint: string;
+    method: string;
+    user_roles: string[];
+    scope?: RbacScope;
+    allowed?: boolean;
+    module?: string;
+    description?: string;
+    conditions?: Record<string, any>;
+  }) =>
     api.post<RbacBackendPermission>(`${BASE}/backend`, data).then(r => r.data),
 
   // Frontend permissions
@@ -73,21 +85,24 @@ export const rbacConfigApi = {
   getFrontendByRole: (role: string) =>
     api.get<Record<string, boolean>>(`${BASE}/frontend/role/${role}`).then(r => r.data),
 
-  updateFrontendPermission: (id: string, data: { allowed?: boolean; conditions?: Record<string, any> }) =>
+  updateFrontendPermission: (id: string, data: { allowed?: boolean; user_roles?: string[]; conditions?: Record<string, any> }) =>
     api.put<RbacFrontendPermission>(`${BASE}/frontend/${id}`, data).then(r => r.data),
 
-  bulkUpdateFrontend: (updates: Array<{ role: string; permission_key: string; allowed: boolean }>) =>
+  bulkUpdateFrontend: (updates: Array<{ permission_key: string; allowed?: boolean; user_roles?: string[] }>) =>
     api.put<BulkUpdateResult>(`${BASE}/frontend`, { updates }).then(r => r.data),
 
-  createFrontendPermission: (data: { role: string; ui_key: string; permission_key: string; allowed?: boolean; conditions?: Record<string, any> }) =>
+  createFrontendPermission: (data: {
+    component: string;
+    sub_view?: string;
+    element_type?: string;
+    action_name?: string;
+    user_roles: string[];
+    allowed?: boolean;
+    module?: string;
+    description?: string;
+    conditions?: Record<string, any>;
+  }) =>
     api.post<RbacFrontendPermission>(`${BASE}/frontend`, data).then(r => r.data),
-
-  // Bindings
-  getBindings: () =>
-    api.get<RbacBinding[]>(`${BASE}/bindings`).then(r => r.data),
-
-  getBindingsForModule: (module: string) =>
-    api.get<RbacBinding[]>(`${BASE}/bindings?module=${module}`).then(r => r.data),
 
   // Cache
   reloadCache: () =>

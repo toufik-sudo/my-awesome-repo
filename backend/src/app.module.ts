@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth.module';
-import { RolesGuard } from './auth/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwtAuth.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from './user/modules/user.module';
 import { RolesModule } from './user/modules/roles.module';
+import { RbacConfigModule } from './rbac/rbac-config.module';
 import { CsrfModule } from '@tekuconcept/nestjs-csrf';
 import { CustomCsrfInterceptor } from './services/interceptors/custom.csrf.interceptor';
 import typeorm from './config/typeorm';
@@ -16,7 +16,6 @@ import { HeaderResolver, I18nModule } from 'nestjs-i18n';
 import { AppService } from './app.service';
 import { NotificationModule } from './notification/modules/notification.module';
 import { SSOModule } from './sso/modules/sso.module';
-import { SsoEnabledGuard } from './sso/guards/sso-enabled.guard';
 import { CommentsModule } from './comments/modules/comments.module';
 import { ReactionsModule } from './reactions/modules/reactions.module';
 import { RankingsModule } from './rankings/modules/rankings.module';
@@ -78,6 +77,7 @@ import { EmailTrackingModule } from './infrastructure/email-tracking';
     // Domain
     UserModule,
     RolesModule,
+    RbacConfigModule,
     AuthModule,
     NotificationModule,
     SSOModule,
@@ -98,15 +98,10 @@ import { EmailTrackingModule } from './infrastructure/email-tracking';
   ],
   controllers: [AppController],
   providers: [
-    // ⚠️ ORDER MATTERS: JwtAuthGuard MUST run before RolesGuard
-    // so that request.user is populated when roles are checked.
+    // Global JWT guard — populates request.user on all routes
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
     },
     {
       provide: APP_GUARD,

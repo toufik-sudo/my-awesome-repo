@@ -1,14 +1,5 @@
 import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  UseInterceptors,
-  Req,
-  Res,
-  Headers,
-  Logger,
+  Controller, Put, Post, Body, UseGuards, Request, UseInterceptors, Req, Res, Headers, Logger,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { LoginDto } from 'src/dtos/login/login.dto';
@@ -31,17 +22,11 @@ export class AuthController {
     Logger.debug('Host accepted !!!');
   }
 
-  // @UseGuards(AuthGuard('jwt'))
   @Public()
   @Post('login')
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async login(
-    @Req() req: Request | any,
-    @Res({ passthrough: true }) res: Response | any,
-    @Body() loginDto: LoginDto,
-    @Headers('authorization') authHeader: string,
-  ) {
+  async login(@Req() req: Request | any, @Res({ passthrough: true }) res: Response | any, @Body() loginDto: LoginDto, @Headers('authorization') authHeader: string) {
     Logger.debug('Hot accepted ?');
     return await this.authService.login(req, res, authHeader, loginDto);
   }
@@ -50,10 +35,7 @@ export class AuthController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @UseGuards(JwtAuthGuard)
-  async logout(
-    @Req() req: any,
-    @Res({ passthrough: true }) res: any,
-  ) {
+  async logout(@Req() req: any, @Res({ passthrough: true }) res: any) {
     return await this.authService.logout(req, res);
   }
 
@@ -75,9 +57,7 @@ export class AuthController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @UseGuards(JwtAuthGuard)
-  async activateUser(
-    @Body() activateUserRequestDto: ActivateUserRequestDto,
-  ): Promise<User> {
+  async activateUser(@Body() activateUserRequestDto: ActivateUserRequestDto): Promise<User> {
     return await this.authService.activateUser(activateUserRequestDto);
   }
 

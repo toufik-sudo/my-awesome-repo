@@ -1,99 +1,79 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, Request, UseGuards, SetMetadata } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { TourismServicesService } from '../services/tourism-services.service';
-import { CreateServiceDto, UpdateServiceDto, ServiceFiltersDto } from '../dto/tourism-service.dto';
+import { CreateServiceDto, UpdateServiceDto } from '../dto/tourism-service.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
-import { RequireRole, RequirePermission } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Tourism Services')
 @ApiBearerAuth()
 @Controller('services')
-@UseGuards(PermissionGuard)
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(CustomCsrfInterceptor)
 export class TourismServicesController {
   constructor(private readonly servicesService: TourismServicesService) {}
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'List all services', description: 'Public. Returns paginated services with filters.' })
+  @ApiOperation({ summary: 'List all services' })
   findAll(
-    @Query('city') city?: string,
-    @Query('category') category?: string,
-    @Query('categories') categories?: string | string[],
-    @Query('minPrice') minPrice?: number,
-    @Query('maxPrice') maxPrice?: number,
-    @Query('participants') participants?: number,
-    @Query('sort') sort?: string,
-    @Query('search') search?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('city') city?: string, @Query('category') category?: string, @Query('categories') categories?: string | string[],
+    @Query('minPrice') minPrice?: number, @Query('maxPrice') maxPrice?: number, @Query('participants') participants?: number,
+    @Query('sort') sort?: string, @Query('search') search?: string, @Query('page') page?: number, @Query('limit') limit?: number,
   ) {
-    const parsedCategories = categories
-      ? (Array.isArray(categories) ? categories : [categories])
-      : undefined;
-
-    return this.servicesService.findAll({
-      city, category, categories: parsedCategories,
-      minPrice, maxPrice, participants,
-      sort, search, page: page || 1, limit: limit || 20,
-    });
+    const parsedCategories = categories ? (Array.isArray(categories) ? categories : [categories]) : undefined;
+    return this.servicesService.findAll({ city, category, categories: parsedCategories, minPrice, maxPrice, participants, sort, search, page: page || 1, limit: limit || 20 });
   }
 
   @Public()
   @Get('categories')
   @ApiOperation({ summary: 'Get service categories' })
-  getCategories() {
-    return this.servicesService.getCategories();
-  }
+  getCategories() { return this.servicesService.getCategories(); }
 
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get service by ID' })
-  @ApiParam({ name: 'id', description: 'Service UUID' })
-  findOne(@Param('id') id: string) {
-    return this.servicesService.findOne(id);
-  }
+  @ApiParam({ name: 'id' })
+  findOne(@Param('id') id: string) { return this.servicesService.findOne(id); }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @RequireRole('admin', 'manager')
-  @ApiOperation({
-    summary: 'Create service',
-    description: `Create a new tourism service.
-    - **admin**: creates with own providerId
-    - **manager**: requires create_service permission`,
-  })
-  @ApiResponse({ status: 201, description: 'Service created' })
-  @ApiResponse({ status: 403, description: 'Role not allowed' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Create service' })
   create(@Request() req: any, @Body() createDto: CreateServiceDto) {
     return this.servicesService.create(createDto, req.user.id);
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
-  @RequireRole('admin', 'manager')
-  @RequirePermission('modify_service', 'id', 'param')
-  @ApiOperation({ summary: 'Update service', description: 'Admin updates own; manager needs modify_service permission.' })
-  @ApiParam({ name: 'id', description: 'Service UUID' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Update service' })
+  @ApiParam({ name: 'id' })
   update(@Param('id') id: string, @Body() updateDto: UpdateServiceDto) {
     return this.servicesService.update(id, updateDto);
   }
 
   @Put(':id/pause')
-  @UseGuards(JwtAuthGuard)
-  @RequireRole('admin', 'manager', 'hyper_admin', 'hyper_manager')
-  @RequirePermission('pause_service', 'id', 'param')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   @ApiOperation({ summary: 'Pause service' })
-  @ApiParam({ name: 'id', description: 'Service UUID' })
+  @ApiParam({ name: 'id' })
   pause(@Param('id') id: string) {
     return this.servicesService.update(id, { status: 'paused' } as any);
   }
 
   @Delete(':id')
-  @RequireRole('admin', 'hyper_admin', 'hyper_manager')
-  @ApiOperation({ summary: 'Delete service', description: 'Admin deletes own; hyper roles can delete any.' })
-  @ApiParam({ name: 'id', description: 'Service UUID' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Delete service' })
+  @ApiParam({ name: 'id' })
   remove(@Param('id') id: string) {
     return this.servicesService.remove(id);
   }

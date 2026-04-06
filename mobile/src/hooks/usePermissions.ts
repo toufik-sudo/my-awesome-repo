@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/axios';
 import type { AppRole } from '@/types/auth.types';
 import { INVITATION_ALLOWED_ROLES, BOOKING_ALLOWED_ROLES } from '@/types/auth.types';
+import { MOBILE_UI_PERM } from '@/utils/rbac/mobile-permission-keys';
 
 const RBAC_CONFIG_BASE = '/rbac-config';
 
@@ -99,23 +100,23 @@ export function usePermissions() {
       canUI,
 
       // ─── Property permissions ─────────────────────
-      canCreateProperty: canUI('show_create_property') || isAdmin,
-      canModifyProperty: canUI('show_edit_property') || isAdmin || isManager,
-      canDeleteProperty: canUI('show_delete_property') || isAdmin || isHyper,
-      canPauseProperty: canUI('show_pause_property') || isAdmin || isManager,
-      canDuplicateProperty: canUI('show_duplicate_property') || isAdmin,
+      canCreateProperty: canUI(MOBILE_UI_PERM.PROPERTY_VIEW) || isAdmin,
+      canModifyProperty: canUI(MOBILE_UI_PERM.PROPERTY_VIEW) || isAdmin || isManager,
+      canDeleteProperty: canUI(MOBILE_UI_PERM.PROPERTY_VIEW) || isAdmin || isHyper,
+      canPauseProperty: canUI(MOBILE_UI_PERM.PROPERTY_VIEW) || isAdmin || isManager,
+      canDuplicateProperty: canUI(MOBILE_UI_PERM.PROPERTY_VIEW) || isAdmin,
 
       // ─── Service permissions ──────────────────────
-      canCreateService: canUI('show_create_service') || isAdmin,
-      canModifyService: canUI('show_edit_service') || isAdmin || isManager,
-      canDeleteService: canUI('show_delete_service') || isAdmin || isHyper,
-      canPauseService: canUI('show_pause_service') || isAdmin || isManager,
-      canDuplicateService: canUI('show_duplicate_service') || isAdmin,
+      canCreateService: canUI(MOBILE_UI_PERM.SERVICE_VIEW) || isAdmin,
+      canModifyService: canUI(MOBILE_UI_PERM.SERVICE_VIEW) || isAdmin || isManager,
+      canDeleteService: canUI(MOBILE_UI_PERM.SERVICE_VIEW) || isAdmin || isHyper,
+      canPauseService: canUI(MOBILE_UI_PERM.SERVICE_VIEW) || isAdmin || isManager,
+      canDuplicateService: canUI(MOBILE_UI_PERM.SERVICE_VIEW) || isAdmin,
 
       // ─── Booking permissions ──────────────────────
       canMakeBooking: BOOKING_ALLOWED_ROLES.includes(role),
-      canViewBookings: canUI('show_bookings_tab') || isAdmin || isManager || isHyper,
-      canAcceptBookings: canUI('show_accept_booking') || isAdmin || isManager,
+      canViewBookings: canUI(MOBILE_UI_PERM.BOOKINGS_TAB) || isAdmin || isManager || isHyper,
+      canAcceptBookings: canUI(MOBILE_UI_PERM.BOOKING_ACCEPT) || isAdmin || isManager,
 
       // ─── Invitation ───────────────────────────────
       allowedInvitationRoles: INVITATION_ALLOWED_ROLES[role] || [],
@@ -127,9 +128,9 @@ export function usePermissions() {
       canInviteGuest: isAdmin || isManager,
 
       // ─── Dashboard visibility ─────────────────────
-      canViewAnalytics: canUI('show_analytics_tab') || isAdmin || isHyper,
-      canViewPayments: canUI('show_payments_tab') || isAdmin || isHyper,
-      canManageUsers: canUI('show_users_management') || isHyper,
+      canViewAnalytics: canUI(MOBILE_UI_PERM.ANALYTICS_TAB) || isAdmin || isHyper,
+      canViewPayments: canUI(MOBILE_UI_PERM.PAYMENTS_TAB) || isAdmin || isHyper,
+      canManageUsers: isHyper,
 
       // ─── Role helpers ─────────────────────────────
       isTargetAdmin: (targetRole: string) => targetRole === 'admin',

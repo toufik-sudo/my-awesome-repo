@@ -1,53 +1,64 @@
 import {
   Controller, Get, Post, Put, Delete,
-  Body, Param, Request, UseGuards,
+  Body, Param, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
-import { RequireRole } from '../../auth/decorators';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 import { CancellationRuleService } from '../services/cancellation-rule.service';
 import { CancellationRule } from '../entity/cancellation-rule.entity';
 
 @ApiTags('Cancellation Rules')
 @ApiBearerAuth('JWT-auth')
 @Controller('cancellation-rules')
-@UseGuards(PermissionGuard)
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(CustomCsrfInterceptor)
 export class CancellationRuleController {
   constructor(private readonly ruleService: CancellationRuleService) {}
 
   @Get()
-  @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
-  @ApiOperation({ summary: 'Get cancellation rules', description: 'Hyper roles see all; admin/manager see own' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Get cancellation rules' })
   getMine(@Request() req: any): Promise<CancellationRule[]> {
     return this.ruleService.getForUser(req.user.id);
   }
 
   @Get('host/:hostId')
-  @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   @ApiOperation({ summary: 'Get cancellation rules for a specific host' })
   getForHost(@Param('hostId') hostId: string): Promise<CancellationRule[]> {
     return this.ruleService.getForHost(Number(hostId));
   }
 
-  // [BE-06] Only admin/manager can create — hyper roles blocked by PermissionGuard
   @Post()
-  @RequireRole('admin', 'manager')
-  @ApiOperation({ summary: 'Create cancellation rule', description: 'Only admin/manager can create. Hyper roles cannot.' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Create cancellation rule' })
   create(@Request() req: any, @Body() data: Partial<CancellationRule>): Promise<CancellationRule> {
     return this.ruleService.create(req.user.id, data);
   }
 
-  // [BE-06] Only admin/manager can update
   @Put(':id')
-  @RequireRole('admin', 'manager')
-  @ApiOperation({ summary: 'Update cancellation rule', description: 'Only admin/manager can update' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Update cancellation rule' })
   update(@Request() req: any, @Param('id') id: string, @Body() data: Partial<CancellationRule>): Promise<CancellationRule> {
     return this.ruleService.update(req.user.id, id, data);
   }
 
   @Delete(':id')
-  @RequireRole('hyper_admin', 'hyper_manager', 'admin', 'manager')
-  @ApiOperation({ summary: 'Delete cancellation rule', description: 'All authorized roles can delete' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Delete cancellation rule' })
   async remove(@Request() req: any, @Param('id') id: string) {
     await this.ruleService.remove(req.user.id, id);
     return { success: true };

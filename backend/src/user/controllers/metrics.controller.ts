@@ -1,9 +1,11 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RequireRole } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { User } from '../entity/user.entity';
@@ -11,7 +13,8 @@ import { User } from '../entity/user.entity';
 @ApiTags('Metrics')
 @ApiBearerAuth('JWT-auth')
 @Controller('metrics')
-@UseGuards(PermissionGuard)
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(CustomCsrfInterceptor)
 export class MetricsController {
   constructor(
     @InjectRepository(Property)
@@ -23,8 +26,10 @@ export class MetricsController {
   ) {}
 
   @Get('properties')
-  @RequireRole('hyper_admin', 'hyper_manager')
-  @ApiOperation({ summary: 'List all properties with metrics', description: 'Paginated list for hyper dashboard' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'List all properties with metrics' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
@@ -78,8 +83,10 @@ export class MetricsController {
   }
 
   @Get('services')
-  @RequireRole('hyper_admin', 'hyper_manager')
-  @ApiOperation({ summary: 'List all services with metrics', description: 'Paginated list for hyper dashboard' })
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'List all services with metrics' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
@@ -128,7 +135,9 @@ export class MetricsController {
   }
 
   @Get('summary')
-  @RequireRole('hyper_admin', 'hyper_manager')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
   @ApiOperation({ summary: 'Platform-wide summary metrics' })
   async getSummary() {
     const [totalProperties, publishedProperties] = await Promise.all([

@@ -3,12 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesController } from '../controllers/roles.controller';
 import { InvitationController } from '../controllers/invitation.controller';
 import { ReferralController } from '../controllers/referral.controller';
-import { RbacConfigController } from '../controllers/rbac-config.controller';
 import { RolesService } from '../services/roles.service';
 import { InvitationService } from '../services/invitation.service';
 import { ReferralService } from '../services/referral.service';
-import { RbacConfigService } from '../services/rbac-config.service';
-import { RbacBindingService } from '../services/rbac-binding.service';
 import { User } from '../entity/user.entity';
 import { ManagerAssignment } from '../entity/manager-assignment.entity';
 import { ManagerPermission } from '../entity/manager-permission.entity';
@@ -18,9 +15,6 @@ import { PropertyGroupMembership } from '../../properties/entity/property-group-
 import { ServiceFeeRule } from '../entity/service-fee-rule.entity';
 import { PointsRule } from '../entity/points-rule.entity';
 import { HostFeeAbsorption } from '../entity/host-fee-absorption.entity';
-import { RbacBackendPermission } from '../entity/rbac-backend-permission.entity';
-import { RbacFrontendPermission } from '../entity/rbac-frontend-permission.entity';
-import { RbacPermissionBinding } from '../entity/rbac-permission-binding.entity';
 import { ServiceFeeController } from '../controllers/service-fee.controller';
 import { PointsRuleController } from '../controllers/points-rule.controller';
 import { HostFeeAbsorptionController } from '../controllers/host-fee-absorption.controller';
@@ -44,9 +38,6 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
       ServiceFeeRule,
       PointsRule,
       HostFeeAbsorption,
-      RbacBackendPermission,
-      RbacFrontendPermission,
-      RbacPermissionBinding,
     ]),
     JobsModule,
     WsModule,
@@ -58,7 +49,6 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
     PointsRuleController,
     HostFeeAbsorptionController,
     ReferralController,
-    RbacConfigController,
   ],
   providers: [
     RolesService,
@@ -67,8 +57,6 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
     PointsRuleService,
     HostFeeAbsorptionService,
     ReferralService,
-    RbacConfigService,
-    RbacBindingService,
   ],
   exports: [
     RolesService,
@@ -77,8 +65,6 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
     PointsRuleService,
     HostFeeAbsorptionService,
     ReferralService,
-    RbacConfigService,
-    RbacBindingService,
   ],
 })
 export class RolesModule {}

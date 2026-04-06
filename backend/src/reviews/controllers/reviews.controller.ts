@@ -1,37 +1,38 @@
-import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ReviewsService } from '../services/reviews.service';
 import { Public } from '../../auth/decorators/public.decorator';
-import { RequirePermission } from '../../auth/decorators';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
+import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
+import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 
 @Controller('reviews')
-@UseGuards(PermissionGuard)
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(CustomCsrfInterceptor)
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) { }
+  constructor(private readonly reviewsService: ReviewsService) {}
 
   @Public()
   @Get('property/:propertyId')
-  findByProperty(@Param('propertyId') propertyId: string) {
-    return this.reviewsService.findByProperty(propertyId);
-  }
+  findByProperty(@Param('propertyId') propertyId: string) { return this.reviewsService.findByProperty(propertyId); }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reviewsService.findOne(id);
-  }
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  findOne(@Param('id') id: string) { return this.reviewsService.findOne(id); }
 
   @Post()
-  create(@Body() createDto: any) {
-    return this.reviewsService.create(createDto);
-  }
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  create(@Body() createDto: any) { return this.reviewsService.create(createDto); }
 
   @Post(':id/reply')
-  @RequirePermission('reply_reviews', 'propertyId', 'body')
-  reply(
-    @Param('id') id: string,
-    @Body() body: { propertyId: string; reply: string },
-  ) {
-    // Delegate to service — reply logic
-    return this.reviewsService.create({ ...body, id: id });
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  reply(@Param('id') id: string, @Body() body: { propertyId: string; reply: string }) {
+    return this.reviewsService.create({ ...body, id });
   }
 }
