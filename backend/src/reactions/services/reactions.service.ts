@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reaction } from '../entity/reaction.entity';
 import { CreateReactionDto } from '../dtos/reaction.dto';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class ReactionsService {
@@ -11,7 +12,7 @@ export class ReactionsService {
     private readonly reactionRepo: Repository<Reaction>,
   ) {}
 
-  async getReactionSummary(targetType: string, targetId: string, currentUserId?: number) {
+  async getReactionSummary(targetType: string, targetId: string, currentUserId?: number, _scopeCtx?: ScopeContext) {
     const reactions = await this.reactionRepo.find({ where: { targetType, targetId } });
 
     const counts: Record<string, number> = {};
@@ -29,24 +30,21 @@ export class ReactionsService {
     };
   }
 
-  async toggle(userId: number, dto: CreateReactionDto) {
+  async toggle(userId: number, dto: CreateReactionDto, _scopeCtx?: ScopeContext) {
     const existing = await this.reactionRepo.findOne({
       where: { userId, targetType: dto.targetType, targetId: dto.targetId },
     });
 
     if (existing) {
       if (existing.type === dto.type) {
-        // Remove reaction (toggle off)
         await this.reactionRepo.remove(existing);
         return { action: 'removed' };
       }
-      // Change reaction type
       existing.type = dto.type;
       await this.reactionRepo.save(existing);
       return { action: 'changed', type: dto.type };
     }
 
-    // Add new reaction
     const reaction = this.reactionRepo.create({
       userId,
       type: dto.type,
@@ -57,7 +55,7 @@ export class ReactionsService {
     return { action: 'added', type: dto.type };
   }
 
-  async remove(userId: number, targetType: string, targetId: string): Promise<void> {
+  async remove(userId: number, targetType: string, targetId: string, _scopeCtx?: ScopeContext): Promise<void> {
     await this.reactionRepo.delete({ userId, targetType, targetId });
   }
 }
