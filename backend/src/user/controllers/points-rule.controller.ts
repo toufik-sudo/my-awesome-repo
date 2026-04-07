@@ -20,7 +20,8 @@ export class PointsRuleController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getAll() {
+  async getAll(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getAll();
   }
 
@@ -28,7 +29,8 @@ export class PointsRuleController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getDefaults() {
+  async getDefaults(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getDefaults();
   }
 
@@ -36,7 +38,8 @@ export class PointsRuleController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getEarning() {
+  async getEarning(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getEarningRules();
   }
 
