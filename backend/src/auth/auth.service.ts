@@ -8,6 +8,7 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ScopeContext } from '../rbac/scope-context';
 import { JwtService } from '@nestjs/jwt';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../infrastructure/redis/redis.constant';
@@ -302,12 +303,13 @@ export class AuthService {
     }
   }
 
-  async registerUser(registerDto: CreateUserRequestDto): Promise<any> {
+  async registerUser(registerDto: CreateUserRequestDto, _scopeCtx?: ScopeContext): Promise<any> {
     return this.userService.createUser(registerDto);
   }
 
   async activateUser(
     activateUserRequestDto: ActivateUserRequestDto,
+    _scopeCtx?: ScopeContext,
   ): Promise<any> {
     return this.userService.activateUser(activateUserRequestDto);
   }
