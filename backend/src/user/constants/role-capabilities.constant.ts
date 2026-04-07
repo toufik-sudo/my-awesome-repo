@@ -1,5 +1,4 @@
 import { AppRole } from '../entity/user.entity';
-import { PermissionType } from '../entity/manager-permission.entity';
 
 /**
  * Defines what each role CANNOT do (restrictions).
@@ -7,22 +6,21 @@ import { PermissionType } from '../entity/manager-permission.entity';
  */
 export const ROLE_RESTRICTIONS: Record<AppRole, string[]> = {
   hyper_admin: [
-    'invite_manager',          // managers are admin-scoped
-    'create_property',         // hyper_admin doesn't own properties
+    'invite_manager',
+    'create_property',
     'modify_property',
-    'create_service',          // hyper_admin doesn't own services
+    'create_service',
     'modify_service',
     'create_absorption_fees',
     'create_cancellation_rules',
-    'accept_bookings',         // booking acceptance is host-level
-    'make_booking',            // hyper_admin cannot book
-    'assign_permissions_non_hypermanager', // can only assign to hyper_managers
-    'create_property_groups',  // property groups are admin-level
+    'accept_bookings',
+    'make_booking',
+    'assign_permissions_non_hypermanager',
+    'create_property_groups',
   ],
   hyper_manager: [
     'invite_manager',
     'make_booking',
-    // Everything else depends on permissions assigned by hyper_admin
   ],
   admin: [
     'access_other_admin_properties',
@@ -33,100 +31,77 @@ export const ROLE_RESTRICTIONS: Record<AppRole, string[]> = {
     'manage_global_fee_rules',
     'make_booking',
   ],
-  manager: [
-    // Restricted to assigned scope; can book for self or others
-  ],
-  user: [
-    // Read + booking only, full platform access
-  ],
-  guest: [
-    // Read + booking only, scoped to inviter's properties/services
-    // No management permissions at all
-  ],
+  manager: [],
+  user: [],
+  guest: [],
 };
 
 /**
- * Permissions that a hyper_admin can assign to hyper_managers.
- * These cover both CRUD on entities and special capabilities.
+ * Backend permission keys that a hyper_admin can assign to hyper_managers.
  */
-export const HYPER_MANAGER_ASSIGNABLE_PERMISSIONS: PermissionType[] = [
-  // Entity CRUD
-  'create_property',
-  'modify_property',
-  'delete_property',
-  'pause_property',
-  'create_service',
-  'modify_service',
-  'delete_service',
-  'pause_service',
-  // Booking & demand management
-  'view_bookings',
-  'accept_bookings',
-  'reject_bookings',
-  'pause_bookings',
-  'refund_users',
-  'answer_demands',
-  'decline_demands',
-  'accept_demands',
-  // Communication
-  'reply_chat',
-  'reply_reviews',
-  'reply_comments',
-  'send_messages',
-  'contact_guests',
-  // Business
-  'view_analytics',
-  'manage_promotions',
-  'modify_offers',
-  // User management
-  'manage_users',
-  'manage_admins',
-  'manage_managers',
-  // Special capabilities
-  'validate_payments',
-  'verify_documents',
-  'manage_fee_rules',
-  'manage_cancellation_rules',
-  'archive_entities',
-  // Dashboard access
-  'view_payments',
-  'view_email_analytics',
-  'manage_fee_absorption',
+export const HYPER_MANAGER_ASSIGNABLE_PERMISSIONS: string[] = [
+  'backend.PropertiesController.create.POST',
+  'backend.PropertiesController.update.PUT',
+  'backend.PropertiesController.delete.DELETE',
+  'backend.PropertiesController.findOne.GET',
+  'backend.PropertiesController.findAll.GET',
+  'backend.ServicesController.create.POST',
+  'backend.ServicesController.update.PUT',
+  'backend.ServicesController.delete.DELETE',
+  'backend.ServicesController.findOne.GET',
+  'backend.ServicesController.findAll.GET',
+  'backend.BookingsController.findAll.GET',
+  'backend.BookingsController.accept.PUT',
+  'backend.BookingsController.reject.PUT',
+  'backend.BookingsController.cancel.PUT',
+  'backend.ChatController.sendMessage.POST',
+  'backend.ChatController.getMessages.GET',
+  'backend.ReviewsController.reply.POST',
+  'backend.AnalyticsController.getStats.GET',
+  'backend.PaymentsController.validate.POST',
+  'backend.VerificationController.verify.POST',
+  'backend.ServiceFeeController.findAll.GET',
+  'backend.ServiceFeeController.delete.DELETE',
+  'backend.CancellationRuleController.findAll.GET',
+  'backend.CancellationRuleController.delete.DELETE',
+  'backend.HostFeeAbsorptionController.findAll.GET',
+  'backend.HostFeeAbsorptionController.delete.DELETE',
+  'backend.RolesController.getAllUsers.GET',
+  'backend.RolesController.updateUserStatus.PUT',
+  'backend.RolesController.deleteUser.DELETE',
+  'backend.HyperManagementController.pauseProperty.POST',
+  'backend.HyperManagementController.resumeProperty.POST',
+  'backend.HyperManagementController.archiveProperty.POST',
+  'backend.HyperManagementController.deleteProperty.DELETE',
+  'backend.HyperManagementController.pauseService.POST',
+  'backend.HyperManagementController.resumeService.POST',
+  'backend.HyperManagementController.pauseUser.POST',
+  'backend.HyperManagementController.resumeUser.POST',
+  'backend.HyperManagementController.archiveUser.POST',
+  'backend.HyperManagementController.reactivateUser.POST',
 ];
 
 /**
- * Permissions that an admin can assign to their managers.
- * Subset — no hyper-level or cross-admin permissions.
+ * Backend permission keys that an admin can assign to their managers.
  */
-export const ADMIN_ASSIGNABLE_PERMISSIONS: PermissionType[] = [
-  'modify_property',
-  'pause_property',
-  'modify_prices',
-  'modify_photos',
-  'modify_title',
-  'modify_description',
-  'manage_availability',
-  'manage_amenities',
-  'view_bookings',
-  'accept_bookings',
-  'reject_bookings',
-  'pause_bookings',
-  'refund_users',
-  'answer_demands',
-  'decline_demands',
-  'accept_demands',
-  'reply_chat',
-  'reply_reviews',
-  'reply_comments',
-  'send_messages',
-  'contact_guests',
-  'manage_reactions',
-  'manage_likes',
-  'view_analytics',
-  'manage_promotions',
-  'modify_offers',
-  'modify_service',
-  'pause_service',
+export const ADMIN_ASSIGNABLE_PERMISSIONS: string[] = [
+  'backend.PropertiesController.update.PUT',
+  'backend.PropertiesController.updatePhotos.PUT',
+  'backend.PropertiesController.updatePrices.PUT',
+  'backend.PropertiesController.updateAvailability.PUT',
+  'backend.PropertiesController.findOne.GET',
+  'backend.PropertiesController.findAll.GET',
+  'backend.ServicesController.update.PUT',
+  'backend.ServicesController.findOne.GET',
+  'backend.ServicesController.findAll.GET',
+  'backend.BookingsController.findAll.GET',
+  'backend.BookingsController.accept.PUT',
+  'backend.BookingsController.reject.PUT',
+  'backend.BookingsController.cancel.PUT',
+  'backend.ChatController.sendMessage.POST',
+  'backend.ChatController.getMessages.GET',
+  'backend.ReviewsController.reply.POST',
+  'backend.AnalyticsController.getStats.GET',
 ];
 
 /**

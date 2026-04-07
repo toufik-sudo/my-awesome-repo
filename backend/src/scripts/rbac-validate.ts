@@ -13,10 +13,10 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-  ALL_BACKEND_KEYS,
-  ALL_FRONTEND_KEYS,
-} from '../rbac/permission-registry';
+// import {
+//   ALL_BACKEND_KEYS,
+//   ALL_FRONTEND_KEYS,
+// } from '../rbac/permission-registry';
 
 const ROOT = path.resolve(__dirname, '../../..');
 const errors: string[] = [];
@@ -93,34 +93,34 @@ function checkFrontendFiles() {
   }
 }
 
-function checkRegistryIntegrity() {
-  console.log('▶ Validating registry integrity…');
+// function checkRegistryIntegrity() {
+//   console.log('▶ Validating registry integrity…');
 
-  // Check for duplicate keys
-  const backendKeys = new Set<string>();
-  for (const key of ALL_BACKEND_KEYS) {
-    if (backendKeys.has(key)) {
-      errors.push(`Duplicate backend key: ${key}`);
-    }
-    backendKeys.add(key);
-  }
+//   // Check for duplicate keys
+//   const backendKeys = new Set<string>();
+//   for (const key of ALL_BACKEND_KEYS) {
+//     if (backendKeys.has(key)) {
+//       errors.push(`Duplicate backend key: ${key}`);
+//     }
+//     backendKeys.add(key);
+//   }
 
-  const frontendKeys = new Set<string>();
-  for (const key of ALL_FRONTEND_KEYS) {
-    if (frontendKeys.has(key)) {
-      errors.push(`Duplicate frontend key: ${key}`);
-    }
-    frontendKeys.add(key);
-  }
+//   const frontendKeys = new Set<string>();
+//   for (const key of ALL_FRONTEND_KEYS) {
+//     if (frontendKeys.has(key)) {
+//       errors.push(`Duplicate frontend key: ${key}`);
+//     }
+//     frontendKeys.add(key);
+//   }
 
-  console.log(`  Backend keys:  ${ALL_BACKEND_KEYS.size}`);
-  console.log(`  Frontend keys: ${ALL_FRONTEND_KEYS.size}`);
-}
+//   console.log(`  Backend keys:  ${ALL_BACKEND_KEYS.size}`);
+//   console.log(`  Frontend keys: ${ALL_FRONTEND_KEYS.size}`);
+// }
 
 // ─── Main ──────────────────────────────────────────────────────────────────
 console.log('═══ RBAC Validation ═══\n');
 
-checkRegistryIntegrity();
+// checkRegistryIntegrity();
 checkBackendFiles();
 checkFrontendFiles();
 

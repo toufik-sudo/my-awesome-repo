@@ -7,6 +7,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 import { PointsTargetRole } from '../entity/points-rule.entity';
 
 @Controller('points-rules')
@@ -60,6 +61,7 @@ export class PointsRuleController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async create(@Request() req, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.create(req.user.id, body);
   }
 
@@ -68,6 +70,7 @@ export class PointsRuleController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async update(@Request() req, @Param('ruleId') ruleId: string, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.update(req.user.id, ruleId, body);
   }
 
@@ -76,6 +79,7 @@ export class PointsRuleController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async remove(@Request() req, @Param('ruleId') ruleId: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.service.remove(req.user.id, ruleId);
     return { success: true };
   }

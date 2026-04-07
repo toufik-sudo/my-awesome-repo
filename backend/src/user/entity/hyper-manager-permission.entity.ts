@@ -11,31 +11,33 @@ import {
 import { User } from './user.entity';
 
 /**
- * Scope defines what subset of resources this permission applies to.
- * - 'all': global scope — all resources
- * - 'properties': specific property IDs
- * - 'services': specific service IDs
- * - 'property_groups': specific property group IDs
- * - 'service_groups': specific service group IDs
+ * Scope for hyper_manager permissions.
+ * Includes 'admins' scope — only available for hyper_manager.
  */
-export type PermissionScope = 'all' | 'properties' | 'services' | 'property_groups' | 'service_groups';
+export type HyperManagerPermissionScope =
+  | 'all'
+  | 'properties'
+  | 'services'
+  | 'property_groups'
+  | 'service_groups'
+  | 'admins';
 
-@Entity('manager_permissions')
-@Index('IDX_MANAGER_PERM_MANAGER', ['managerId'])
-@Index('IDX_MANAGER_PERM_BACKEND_KEY', ['backendPermissionKey'])
-export class ManagerPermission {
+@Entity('hyper_manager_permissions')
+@Index('IDX_HM_PERM_MANAGER', ['hyperManagerId'])
+@Index('IDX_HM_PERM_BACKEND_KEY', ['backendPermissionKey'])
+export class HyperManagerPermission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** The manager this permission is assigned to */
+  /** The hyper_manager this permission is assigned to */
   @Column()
-  managerId: number;
+  hyperManagerId: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'managerId' })
-  manager: User;
+  @JoinColumn({ name: 'hyperManagerId' })
+  hyperManager: User;
 
-  /** Who assigned this permission (admin or hyper role) */
+  /** Who assigned this permission (hyper_admin) */
   @Column()
   assignedById: number;
 
@@ -53,7 +55,7 @@ export class ManagerPermission {
 
   /** Scope of this permission */
   @Column({ type: 'varchar', length: 30 })
-  scope: PermissionScope;
+  scope: HyperManagerPermissionScope;
 
   /** Property IDs — only when scope = 'properties' */
   @Column({ type: 'simple-json', nullable: true })
@@ -70,6 +72,10 @@ export class ManagerPermission {
   /** Service Group IDs — only when scope = 'service_groups' */
   @Column({ type: 'simple-json', nullable: true })
   serviceGroups: string[] | null;
+
+  /** Admin IDs — only when scope = 'admins' (hyper_manager exclusive) */
+  @Column({ type: 'simple-json', nullable: true })
+  admins: number[] | null;
 
   @Column({ default: true })
   isGranted: boolean;

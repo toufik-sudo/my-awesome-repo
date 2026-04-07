@@ -1,18 +1,15 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Property } from '../entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { User } from '../../user/entity/user.entity';
-
-import { ManagerAssignment } from '../../user/entity/manager-assignment.entity';
+import { ManagerPermission } from '../../user/entity/manager-permission.entity';
+import { HyperManagerPermission } from '../../user/entity/hyper-manager-permission.entity';
+import { GuestPermission } from '../../user/entity/guest-permission.entity';
 import { NotificationService } from '../../notification/services/notification.service';
 import { EventsGateway } from '../../infrastructure/websocket';
 
-/**
- * Archive TTL (days) — configured via ARCHIVE_TTL_DAYS env or defaults to 90 days.
- * After this period, archived entities are eligible for permanent cleanup.
- */
 const ARCHIVE_TTL_DAYS = parseInt(process.env.ARCHIVE_TTL_DAYS || '90', 10);
 
 @Injectable()
@@ -26,8 +23,12 @@ export class HyperManagementService {
     private readonly serviceRepo: Repository<TourismService>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(ManagerAssignment)
-    private readonly assignmentRepo: Repository<ManagerAssignment>,
+    @InjectRepository(ManagerPermission)
+    private readonly managerPermRepo: Repository<ManagerPermission>,
+    @InjectRepository(HyperManagerPermission)
+    private readonly hyperPermRepo: Repository<HyperManagerPermission>,
+    @InjectRepository(GuestPermission)
+    private readonly guestPermRepo: Repository<GuestPermission>,
     private readonly notificationService: NotificationService,
     private readonly eventsGateway: EventsGateway,
   ) {}
@@ -48,7 +49,7 @@ export class HyperManagementService {
       `/property/${propertyId}`);
 
     this.logger.log(`Property ${propertyId} paused by admin ${adminId}`);
-    return { success: true, message: `Property "${property.title}" paused`, archiveTtlDays: ARCHIVE_TTL_DAYS };
+    return { success: true, message: 'Property paused' };
   }
 
   async resumeProperty(propertyId: string, adminId: number) {
@@ -65,7 +66,7 @@ export class HyperManagementService {
       `/property/${propertyId}`);
 
     this.logger.log(`Property ${propertyId} resumed by admin ${adminId}`);
-    return { success: true, message: `Property "${property.title}" resumed` };
+    return { success: true, message: 'Property resumed' };
   }
 
   async archiveProperty(propertyId: string, adminId: number, reason?: string) {
@@ -78,21 +79,30 @@ export class HyperManagementService {
 
     await this.notifyUser(property.hostId, 'property_archived',
       'Propriété archivée',
-      `Votre propriété "${property.title}" a été archivée.${reason ? ` Raison: ${reason}` : ''} Elle sera supprimée définitivement dans ${ARCHIVE_TTL_DAYS} jours.`,
+      `Votre propriété "${property.title}" a été archivée.${reason ? ` Raison: ${reason}` : ''}`,
       `/property/${propertyId}`);
 
-    this.logger.log(`Property ${propertyId} archived by admin ${adminId} (TTL: ${ARCHIVE_TTL_DAYS} days)`);
-    return { success: true, message: `Property archived (auto-delete in ${ARCHIVE_TTL_DAYS} days)`, archiveTtlDays: ARCHIVE_TTL_DAYS };
+    this.logger.log(`Property ${propertyId} archived by admin ${adminId}`);
+    return { success: true, message: 'Property archived' };
   }
 
   async deleteProperty(propertyId: string, adminId: number) {
-    const result = await this.propertyRepo.delete(propertyId);
-    if (result.affected === 0) throw new NotFoundException('Property not found');
-    this.logger.log(`Property ${propertyId} permanently deleted by admin ${adminId}`);
-    return { success: true, message: 'Property permanently deleted' };
+    const property = await this.propertyRepo.findOne({ where: { id: propertyId } });
+    if (!property) throw new NotFoundException('Property not found');
+
+    const hostId = property.hostId;
+    await this.propertyRepo.remove(property);
+
+    await this.notifyUser(hostId, 'property_deleted',
+      'Propriété supprimée',
+      `Votre propriété "${property.title}" a été supprimée définitivement.`,
+      '/dashboard');
+
+    this.logger.log(`Property ${propertyId} deleted by admin ${adminId}`);
+    return { success: true, message: 'Property deleted permanently' };
   }
 
-  // ─── Services ─────────────────────────────────────────────────
+  // ─── Services ──────────────────────────────────────────────────
 
   async pauseService(serviceId: string, adminId: number) {
     const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
@@ -102,14 +112,14 @@ export class HyperManagementService {
     service.isAvailable = false;
     await this.serviceRepo.save(service);
 
-    const title = typeof service.title === 'object' ? (service.title['fr'] || service.title['en'] || 'Service') : String(service.title);
+    const serviceTitle = service.title?.fr || service.title?.en || serviceId;
     await this.notifyUser(service.providerId, 'service_paused',
       'Service mis en pause',
-      `Votre service "${title}" a été mis en pause par un administrateur.`,
-      `/services/${serviceId}`);
+      `Votre service "${serviceTitle}" a été mis en pause.`,
+      `/service/${serviceId}`);
 
     this.logger.log(`Service ${serviceId} paused by admin ${adminId}`);
-    return { success: true, message: `Service "${title}" paused` };
+    return { success: true, message: 'Service paused' };
   }
 
   async resumeService(serviceId: string, adminId: number) {
@@ -132,24 +142,39 @@ export class HyperManagementService {
     service.isAvailable = false;
     await this.serviceRepo.save(service);
 
-    this.logger.log(`Service ${serviceId} archived by admin ${adminId} (TTL: ${ARCHIVE_TTL_DAYS} days)`);
-    return { success: true, message: `Service archived (auto-delete in ${ARCHIVE_TTL_DAYS} days)`, archiveTtlDays: ARCHIVE_TTL_DAYS };
+    const serviceTitle = service.title?.fr || service.title?.en || serviceId;
+    await this.notifyUser(service.providerId, 'service_archived',
+      'Service archivé',
+      `Votre service "${serviceTitle}" a été archivé.${reason ? ` Raison: ${reason}` : ''}`,
+      `/service/${serviceId}`);
+
+    this.logger.log(`Service ${serviceId} archived by admin ${adminId}`);
+    return { success: true, message: 'Service archived' };
   }
 
   async deleteService(serviceId: string, adminId: number) {
-    const result = await this.serviceRepo.delete(serviceId);
-    if (result.affected === 0) throw new NotFoundException('Service not found');
-    this.logger.log(`Service ${serviceId} permanently deleted by admin ${adminId}`);
-    return { success: true, message: 'Service permanently deleted' };
+    const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
+    if (!service) throw new NotFoundException('Service not found');
+
+    const providerId = service.providerId;
+    const serviceTitle = service.title?.fr || service.title?.en || serviceId;
+    await this.serviceRepo.remove(service);
+
+    await this.notifyUser(providerId, 'service_deleted',
+      'Service supprimé',
+      `Votre service "${serviceTitle}" a été supprimé définitivement.`,
+      '/dashboard');
+
+    this.logger.log(`Service ${serviceId} deleted by admin ${adminId}`);
+    return { success: true, message: 'Service deleted permanently' };
   }
 
-  // ─── User Management (Host/Admin pause/archive with cascade) ──
+  // ─── Users ─────────────────────────────────────────────────────
 
   async pauseUser(userId: number, adminId: number) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    // Deactivate user
     user.isActive = false;
     await this.userRepo.save(user);
 
@@ -169,19 +194,18 @@ export class HyperManagementService {
       .andWhere('status NOT IN (:...excluded)', { excluded: ['archived'] })
       .execute();
 
-    // Cascade: unassign all managers from this admin
-    await this.assignmentRepo.createQueryBuilder()
-      .update(ManagerAssignment)
-      .set({ isActive: false })
-      .where('assignedByAdminId = :userId', { userId })
+    // Cascade: remove all permissions assigned by this user
+    await this.managerPermRepo.createQueryBuilder()
+      .delete()
+      .where('assignedById = :userId', { userId })
       .execute();
 
     await this.notifyUser(userId, 'account_paused',
       'Compte mis en pause',
-      'Votre compte a été mis en pause par un administrateur. Toutes vos propriétés et services sont temporairement indisponibles.',
+      'Votre compte a été mis en pause par un administrateur.',
       '/dashboard');
 
-    this.logger.log(`User ${userId} paused by admin ${adminId} — all properties/services suspended, managers unassigned`);
+    this.logger.log(`User ${userId} paused by admin ${adminId}`);
     return { success: true, message: 'User paused with cascading effects' };
   }
 
@@ -192,7 +216,6 @@ export class HyperManagementService {
     user.isActive = true;
     await this.userRepo.save(user);
 
-    // Restore properties to published
     await this.propertyRepo.createQueryBuilder()
       .update(Property)
       .set({ status: 'published', isAvailable: true })
@@ -200,7 +223,6 @@ export class HyperManagementService {
       .andWhere('status = :status', { status: 'suspended' })
       .execute();
 
-    // Restore services to published
     await this.serviceRepo.createQueryBuilder()
       .update(TourismService)
       .set({ status: 'published', isAvailable: true })
@@ -208,52 +230,46 @@ export class HyperManagementService {
       .andWhere('status = :status', { status: 'suspended' })
       .execute();
 
-    // Note: manager assignments are NOT auto-restored — admin must reassign manually
-
     await this.notifyUser(userId, 'account_resumed',
       'Compte réactivé',
-      'Votre compte a été réactivé. Vos propriétés et services sont de nouveau disponibles.',
+      'Votre compte a été réactivé.',
       '/dashboard');
 
     this.logger.log(`User ${userId} resumed by admin ${adminId}`);
-    return { success: true, message: 'User resumed — properties and services restored' };
+    return { success: true, message: 'User resumed' };
   }
 
   async archiveUser(userId: number, adminId: number, reason?: string) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    // Deactivate user completely
     user.isActive = false;
     await this.userRepo.save(user);
 
-    // Archive all properties
     await this.propertyRepo.createQueryBuilder()
       .update(Property)
       .set({ status: 'archived', isAvailable: false })
       .where('hostId = :userId', { userId })
       .execute();
 
-    // Archive all services
     await this.serviceRepo.createQueryBuilder()
       .update(TourismService)
       .set({ status: 'archived', isAvailable: false })
       .where('providerId = :userId', { userId })
       .execute();
 
-    // Deactivate all manager assignments
-    await this.assignmentRepo.createQueryBuilder()
-      .update(ManagerAssignment)
-      .set({ isActive: false })
-      .where('assignedByAdminId = :userId', { userId })
+    // Remove all permissions assigned by this user
+    await this.managerPermRepo.createQueryBuilder()
+      .delete()
+      .where('assignedById = :userId', { userId })
       .execute();
 
     await this.notifyUser(userId, 'account_archived',
       'Compte archivé',
-      `Votre compte a été archivé.${reason ? ` Raison: ${reason}` : ''} Il sera supprimé définitivement dans ${ARCHIVE_TTL_DAYS} jours sauf réactivation par un administrateur.`,
+      `Votre compte a été archivé.${reason ? ` Raison: ${reason}` : ''} Suppression dans ${ARCHIVE_TTL_DAYS} jours.`,
       '/dashboard');
 
-    this.logger.log(`User ${userId} archived by admin ${adminId} (TTL: ${ARCHIVE_TTL_DAYS} days)`);
+    this.logger.log(`User ${userId} archived by admin ${adminId}`);
     return { success: true, message: `User archived (auto-delete in ${ARCHIVE_TTL_DAYS} days)`, archiveTtlDays: ARCHIVE_TTL_DAYS };
   }
 
@@ -264,7 +280,6 @@ export class HyperManagementService {
     user.isActive = true;
     await this.userRepo.save(user);
 
-    // Restore archived properties to published
     await this.propertyRepo.createQueryBuilder()
       .update(Property)
       .set({ status: 'published', isAvailable: true })
@@ -272,7 +287,6 @@ export class HyperManagementService {
       .andWhere('status IN (:...statuses)', { statuses: ['archived', 'suspended'] })
       .execute();
 
-    // Restore archived services to published
     await this.serviceRepo.createQueryBuilder()
       .update(TourismService)
       .set({ status: 'published', isAvailable: true })
@@ -282,11 +296,11 @@ export class HyperManagementService {
 
     await this.notifyUser(userId, 'account_reactivated',
       'Compte réactivé',
-      'Votre compte a été réactivé par un administrateur. Toutes vos propriétés et services sont de nouveau accessibles.',
+      'Votre compte a été réactivé par un administrateur.',
       '/dashboard');
 
     this.logger.log(`User ${userId} reactivated by admin ${adminId}`);
-    return { success: true, message: 'User reactivated — all properties and services restored' };
+    return { success: true, message: 'User reactivated' };
   }
 
   // ─── Helper ───────────────────────────────────────────────────
@@ -302,7 +316,7 @@ export class HyperManagementService {
         actionUrl,
       });
       this.eventsGateway.emitNotification(userId, { type, title, message, actionUrl });
-    } catch (err:any) {
+    } catch (err: any) {
       this.logger.warn(`Failed to notify user ${userId}: ${err.message}`);
     }
   }

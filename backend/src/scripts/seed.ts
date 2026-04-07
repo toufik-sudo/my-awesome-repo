@@ -428,116 +428,106 @@ async function seedProperties(ds: DataSource, adminIds: number[]): Promise<strin
   return propertyIds;
 }
 
-async function seedManagerAssignments(ds: DataSource, userIds: number[], propertyIds: string[]) {
-  const qr = ds.createQueryRunner();
-  const assignmentIds: string[] = [];
-
-  // admin1 = userIds[2], admin2 = userIds[3]
-  // manager1 = userIds[4], manager2 = userIds[5]
-  // admin1 owns properties 0-5, admin2 owns properties 6-11
-
-  const assignments = [
-    // manager1 manages some of admin1's properties
-    { managerId: userIds[4], adminId: userIds[2], scope: 'property', propertyId: propertyIds[0], groupId: null },
-    { managerId: userIds[4], adminId: userIds[2], scope: 'property', propertyId: propertyIds[1], groupId: null },
-    { managerId: userIds[4], adminId: userIds[2], scope: 'property', propertyId: propertyIds[2], groupId: null },
-    // manager2 manages all of admin2's properties
-    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[6], groupId: null },
-    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[7], groupId: null },
-    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[8], groupId: null },
-    { managerId: userIds[5], adminId: userIds[3], scope: 'property', propertyId: propertyIds[9], groupId: null },
-    // manager2 also manages some of admin1's properties (cross-admin)
-    { managerId: userIds[5], adminId: userIds[2], scope: 'property', propertyId: propertyIds[3], groupId: null },
-    // hyper_manager gets assigned by hyper_admin with 'all' scope
-    { managerId: userIds[1], adminId: userIds[0], scope: 'all', propertyId: null, groupId: null },
-  ];
-
-  for (const a of assignments) {
-    const id = uuidv4();
-    await qr.query(
-      `INSERT INTO manager_assignments (id, managerId, assignedByAdminId, scope, propertyId, propertyGroupId, isActive)
-       VALUES (?, ?, ?, ?, ?, ?, 1)`,
-      [id, a.managerId, a.adminId, a.scope, a.propertyId, a.groupId]
-    );
-    assignmentIds.push(id);
-  }
-
-  await qr.release();
-  console.log(`✅ Created ${assignmentIds.length} manager assignments`);
-  return assignmentIds;
-}
-
-async function seedManagerPermissions(ds: DataSource, assignmentIds: string[]) {
+async function seedManagerAndHyperPermissions(ds: DataSource, userIds: number[], propertyIds: string[]) {
   const qr = ds.createQueryRunner();
   let count = 0;
 
-  // Full permissions for hyper_manager (last assignment)
-  const allPermissions = [
-    'create_property', 'modify_property', 'delete_property', 'pause_property',
-    'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
-    'manage_availability', 'manage_amenities',
-    'view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users',
-    'answer_demands', 'decline_demands', 'accept_demands',
-    'reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests',
-    'manage_reactions', 'manage_likes',
-    'view_analytics', 'manage_promotions', 'modify_offers',
-    'create_service', 'modify_service', 'delete_service', 'pause_service',
-    'manage_users', 'manage_admins', 'manage_managers',
-    'validate_payments', 'verify_documents', 'manage_fee_rules', 'manage_cancellation_rules', 'archive_entities',
-  ];
+  // admin1 = userIds[2], admin2 = userIds[3]
+  // manager1 = userIds[4], manager2 = userIds[5]
+  // hyper_manager = userIds[1], hyper_admin = userIds[0]
 
-  // Limited permissions for manager1 (assignments 0,1,2)
+  // Manager1 permissions — scoped to specific properties of admin1
   const manager1Perms = [
-    'view_bookings', 'accept_bookings', 'reject_bookings',
-    'answer_demands', 'decline_demands', 'accept_demands',
-    'reply_chat', 'reply_reviews', 'reply_comments', 'contact_guests',
-    'modify_photos', 'modify_description', 'manage_availability',
-    'view_analytics',
+    'backend.BookingsController.findAll.GET',
+    'backend.BookingsController.accept.PUT',
+    'backend.BookingsController.reject.PUT',
+    'backend.ChatController.sendMessage.POST',
+    'backend.ChatController.getMessages.GET',
+    'backend.ReviewsController.reply.POST',
+    'backend.PropertiesController.updatePhotos.PUT',
+    'backend.PropertiesController.updateAvailability.PUT',
+    'backend.AnalyticsController.getStats.GET',
   ];
 
-  // More permissions for manager2 (assignments 3-7)
-  const manager2Perms = [
-    'view_bookings', 'accept_bookings', 'reject_bookings', 'pause_bookings', 'refund_users',
-    'answer_demands', 'decline_demands', 'accept_demands',
-    'reply_chat', 'reply_reviews', 'reply_comments', 'send_messages', 'contact_guests',
-    'modify_prices', 'modify_photos', 'modify_title', 'modify_description',
-    'manage_availability', 'manage_amenities',
-    'view_analytics', 'manage_promotions',
-  ];
-
-  // Manager1 assignments (0,1,2)
-  for (let i = 0; i < 3; i++) {
-    for (const perm of manager1Perms) {
-      await qr.query(
-        `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
-        [uuidv4(), assignmentIds[i], perm]
-      );
-      count++;
-    }
-  }
-
-  // Manager2 assignments (3,4,5,6,7)
-  for (let i = 3; i < 8; i++) {
-    for (const perm of manager2Perms) {
-      await qr.query(
-        `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
-        [uuidv4(), assignmentIds[i], perm]
-      );
-      count++;
-    }
-  }
-
-  // Hyper_manager (assignment 8) gets all permissions
-  for (const perm of allPermissions) {
+  for (const key of manager1Perms) {
     await qr.query(
-      `INSERT INTO manager_permissions (id, assignmentId, permission, isGranted) VALUES (?, ?, ?, 1)`,
-      [uuidv4(), assignmentIds[8], perm]
+      `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, properties, "isGranted", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, 'properties', $5, true, NOW(), NOW())
+       ON CONFLICT DO NOTHING`,
+      [uuidv4(), userIds[4], userIds[2], key, JSON.stringify([propertyIds[0], propertyIds[1], propertyIds[2]])]
+    );
+    count++;
+  }
+
+  // Manager2 permissions — scoped to specific properties of admin2 + some of admin1
+  const manager2Perms = [
+    'backend.BookingsController.findAll.GET',
+    'backend.BookingsController.accept.PUT',
+    'backend.BookingsController.reject.PUT',
+    'backend.BookingsController.cancel.PUT',
+    'backend.ChatController.sendMessage.POST',
+    'backend.ChatController.getMessages.GET',
+    'backend.ReviewsController.reply.POST',
+    'backend.PropertiesController.updatePhotos.PUT',
+    'backend.PropertiesController.updatePrices.PUT',
+    'backend.PropertiesController.updateAvailability.PUT',
+    'backend.AnalyticsController.getStats.GET',
+  ];
+
+  // manager2 assigned by admin2
+  for (const key of manager2Perms) {
+    await qr.query(
+      `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, properties, "isGranted", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, 'properties', $5, true, NOW(), NOW())
+       ON CONFLICT DO NOTHING`,
+      [uuidv4(), userIds[5], userIds[3], key, JSON.stringify([propertyIds[6], propertyIds[7], propertyIds[8], propertyIds[9]])]
+    );
+    count++;
+  }
+
+  // manager2 assigned by admin1 (cross-admin)
+  for (const key of manager2Perms) {
+    await qr.query(
+      `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, properties, "isGranted", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, 'properties', $5, true, NOW(), NOW())
+       ON CONFLICT DO NOTHING`,
+      [uuidv4(), userIds[5], userIds[2], key, JSON.stringify([propertyIds[3]])]
+    );
+    count++;
+  }
+
+  // Hyper_manager — global scope, all permissions
+  const hyperPerms = [
+    'backend.PropertiesController.findAll.GET',
+    'backend.PropertiesController.findOne.GET',
+    'backend.ServicesController.findAll.GET',
+    'backend.ServicesController.findOne.GET',
+    'backend.BookingsController.findAll.GET',
+    'backend.BookingsController.accept.PUT',
+    'backend.BookingsController.reject.PUT',
+    'backend.BookingsController.cancel.PUT',
+    'backend.PaymentsController.validate.POST',
+    'backend.VerificationController.verify.POST',
+    'backend.RolesController.getAllUsers.GET',
+    'backend.RolesController.updateUserStatus.PUT',
+    'backend.HyperManagementController.pauseProperty.POST',
+    'backend.HyperManagementController.resumeProperty.POST',
+    'backend.HyperManagementController.pauseUser.POST',
+    'backend.HyperManagementController.resumeUser.POST',
+  ];
+
+  for (const key of hyperPerms) {
+    await qr.query(
+      `INSERT INTO hyper_manager_permissions (id, "hyperManagerId", "assignedById", "backendPermissionKey", scope, "isGranted", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, 'all', true, NOW(), NOW())
+       ON CONFLICT DO NOTHING`,
+      [uuidv4(), userIds[1], userIds[0], key]
     );
     count++;
   }
 
   await qr.release();
-  console.log(`✅ Created ${count} manager permissions`);
+  console.log(`✅ Created ${count} scoped permissions (manager + hyper_manager)`);
 }
 
 async function seedTourismServices(ds: DataSource, adminIds: number[]): Promise<string[]> {
@@ -1353,9 +1343,8 @@ async function main() {
     const propertyIds = await seedProperties(AppDataSource, adminIds);
     await seedPropertyImages(AppDataSource, propertyIds);
 
-    // 3. Manager assignments & permissions
-    const assignmentIds = await seedManagerAssignments(AppDataSource, userIds, propertyIds);
-    await seedManagerPermissions(AppDataSource, assignmentIds);
+    // 3. Manager & hyper_manager scoped permissions
+    await seedManagerAndHyperPermissions(AppDataSource, userIds, propertyIds);
 
     // 4. Tourism services
     const serviceIds = await seedTourismServices(AppDataSource, adminIds);
@@ -1401,7 +1390,7 @@ async function main() {
     console.log('\n📋 Summary:');
     console.log(`   Users:              ${userIds.length}`);
     console.log(`   Properties:         ${propertyIds.length}`);
-    console.log(`   Manager Assignments: ${assignmentIds.length}`);
+    console.log(`   Manager Permissions: seeded`);
     console.log(`   Tourism Services:   13`);
     console.log(`   Bookings:           ${bookingIds.length}`);
     console.log(`   Reviews:            8`);

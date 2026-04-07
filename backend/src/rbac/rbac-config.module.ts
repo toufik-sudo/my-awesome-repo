@@ -4,7 +4,9 @@ import { RbacConfigController } from '../user/controllers/rbac-config.controller
 import { RbacConfigService } from '../user/services/rbac-config.service';
 import { RbacBackendPermission } from '../user/entity/rbac-backend-permission.entity';
 import { RbacFrontendPermission } from '../user/entity/rbac-frontend-permission.entity';
-import { RbacPermissionBinding } from '../user/entity/rbac-permission-binding.entity';
+import { ManagerPermission } from '../user/entity/manager-permission.entity';
+import { HyperManagerPermission } from '../user/entity/hyper-manager-permission.entity';
+import { GuestPermission } from '../user/entity/guest-permission.entity';
 import { WsModule } from '../infrastructure/websocket/ws.module';
 
 @Global()
@@ -13,7 +15,9 @@ import { WsModule } from '../infrastructure/websocket/ws.module';
     TypeOrmModule.forFeature([
       RbacBackendPermission,
       RbacFrontendPermission,
-      RbacPermissionBinding,
+      ManagerPermission,
+      HyperManagerPermission,
+      GuestPermission,
     ]),
     WsModule,
   ],

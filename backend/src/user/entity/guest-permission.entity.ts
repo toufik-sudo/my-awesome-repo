@@ -11,31 +11,26 @@ import {
 import { User } from './user.entity';
 
 /**
- * Scope defines what subset of resources this permission applies to.
- * - 'all': global scope — all resources
- * - 'properties': specific property IDs
- * - 'services': specific service IDs
- * - 'property_groups': specific property group IDs
- * - 'service_groups': specific service group IDs
+ * Scope for guest permissions.
  */
-export type PermissionScope = 'all' | 'properties' | 'services' | 'property_groups' | 'service_groups';
+export type GuestPermissionScope = 'all' | 'properties' | 'services' | 'property_groups' | 'service_groups';
 
-@Entity('manager_permissions')
-@Index('IDX_MANAGER_PERM_MANAGER', ['managerId'])
-@Index('IDX_MANAGER_PERM_BACKEND_KEY', ['backendPermissionKey'])
-export class ManagerPermission {
+@Entity('guest_permissions')
+@Index('IDX_GUEST_PERM_GUEST', ['guestId'])
+@Index('IDX_GUEST_PERM_BACKEND_KEY', ['backendPermissionKey'])
+export class GuestPermission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** The manager this permission is assigned to */
+  /** The guest this permission is assigned to */
   @Column()
-  managerId: number;
+  guestId: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'managerId' })
-  manager: User;
+  @JoinColumn({ name: 'guestId' })
+  guest: User;
 
-  /** Who assigned this permission (admin or hyper role) */
+  /** Who assigned this permission (admin, manager, or hyper role) */
   @Column()
   assignedById: number;
 
@@ -53,7 +48,7 @@ export class ManagerPermission {
 
   /** Scope of this permission */
   @Column({ type: 'varchar', length: 30 })
-  scope: PermissionScope;
+  scope: GuestPermissionScope;
 
   /** Property IDs — only when scope = 'properties' */
   @Column({ type: 'simple-json', nullable: true })

@@ -14,17 +14,6 @@ import { AppRole } from '../../user/entity/user.entity';
 import { generateBackendPermissionKey, type HttpMethod } from '../../rbac/utils/generate-backend-permission-key';
 import { canMakeBooking, INVITATION_ALLOWED_ROLES } from '../../user/constants/invitation-rules.constant';
 
-/**
- * Unified RBAC PermissionGuard.
- *
- * For every non-public endpoint it:
- * 1. Authenticates via JWT (user must exist on request)
- * 2. Derives the permission key: backend.<ControllerClass>.<handlerName>.<METHOD>
- * 3. Looks up the key in the RBAC cache (memory → Redis → DB)
- * 4. Checks if the user's role is in the allowed user_roles[]
- * 5. Enforces scope (admin ownership, manager property scope, guest scope)
- * 6. Enforces booking and invitation business rules
- */
 @Injectable()
 export class PermissionGuard implements CanActivate {
   private readonly logger = new Logger(PermissionGuard.name);
@@ -57,14 +46,14 @@ export class PermissionGuard implements CanActivate {
     const method = (request.method?.toUpperCase() ?? 'GET') as HttpMethod;
     const path: string = request.route?.path ?? '';
 
-    // 3. Derive the permission key from controller + handler + method
+    // 3. Derive the permission key
     const controllerClass = context.getClass();
     const handler = context.getHandler();
     const controllerName = controllerClass.name;
     const endpointName = handler.name;
     const permissionKey = generateBackendPermissionKey(controllerName, endpointName, method);
 
-    // 4. RBAC lookup — check if role is allowed
+    // 4. RBAC lookup
     if (this.rbacConfig.isLoaded()) {
       const isAllowed = this.rbacConfig.can(userRole, permissionKey);
       if (!isAllowed) {
@@ -74,7 +63,6 @@ export class PermissionGuard implements CanActivate {
         );
       }
     } else {
-      // Cache not loaded yet — deny by default for safety
       this.logger.error('RBAC cache not loaded — denying request');
       throw new ForbiddenException('RBAC system not ready. Please try again.');
     }
@@ -109,15 +97,23 @@ export class PermissionGuard implements CanActivate {
       await this.enforceAdminScope(request, userId, path, method);
     }
 
-    // Manager: property-level scope
+    // Manager: scoped permissions from manager_permissions table
     if (userRole === 'manager') {
       const managerPropertyScope = await this.rolesService.getManagerProperties(userId);
       request.managerPropertyScope = managerPropertyScope;
+      // Attach scoped perms for downstream services
+      request.managerScopedPerms = this.rbacConfig.getManagerScopedPerms(userId);
     }
 
-    // Guest: inherited scope
+    // Hyper Manager: scoped permissions from hyper_manager_permissions table
+    if (userRole === 'hyper_manager') {
+      request.hyperManagerScopedPerms = this.rbacConfig.getHyperManagerScopedPerms(userId);
+    }
+
+    // Guest: scoped permissions from guest_permissions table
     if (userRole === 'guest') {
       await this.enforceGuestScope(request, userId);
+      request.guestScopedPerms = this.rbacConfig.getGuestScopedPerms(userId);
     }
 
     return true;

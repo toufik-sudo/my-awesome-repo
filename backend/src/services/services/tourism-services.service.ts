@@ -1,12 +1,19 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { TourismService } from '../entity/tourism-service.entity';
 import { RedisCacheService } from '../../infrastructure/redis';
 import { CreateServiceDto, UpdateServiceDto } from '../dto/tourism-service.dto';
+import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
+import { ScopeContext, getScopedPerms } from '../../rbac/scope-context';
 
 const CACHE_TTL_DETAIL = 600;
 const CACHE_TTL_SEARCH = 120;
+
+const PERM_KEY_FIND_ALL = 'backend.TourismServicesController.findAll.GET';
+const PERM_KEY_FIND_ONE = 'backend.TourismServicesController.findOne.GET';
+const PERM_KEY_UPDATE = 'backend.TourismServicesController.update.PUT';
+const PERM_KEY_DELETE = 'backend.TourismServicesController.remove.DELETE';
 
 interface FindAllFilters {
   city?: string;
@@ -29,11 +36,36 @@ export class TourismServicesService {
     @InjectRepository(TourismService)
     private readonly serviceRepo: Repository<TourismService>,
     private readonly cache: RedisCacheService,
+    private readonly scopeFilter: ScopeFilterService,
   ) { }
 
-  async findAll(filters: FindAllFilters) {
+  private async resolveAllowedServiceIds(
+    scopeCtx: ScopeContext | undefined,
+    permissionKey: string,
+  ): Promise<string[] | null> {
+    if (!scopeCtx) return null;
+
+    const { userRole } = scopeCtx;
+    if (userRole === 'hyper_admin' || userRole === 'admin' || userRole === 'user') return null;
+
+    const scopedPerms = getScopedPerms(scopeCtx);
+    if (scopedPerms.length === 0) return null;
+
+    return this.scopeFilter.resolveServiceIds(scopedPerms, permissionKey);
+  }
+
+  async findAll(filters: FindAllFilters, scopeCtx?: ScopeContext) {
     const query = this.serviceRepo.createQueryBuilder('svc');
     query.where('svc.status = :status', { status: 'published' });
+
+    // Apply scope filtering
+    const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_FIND_ALL);
+    if (allowedIds !== null) {
+      if (allowedIds.length === 0) {
+        return { data: [], total: 0, page: filters.page, limit: filters.limit, totalPages: 0 };
+      }
+      query.andWhere('svc.id IN (:...allowedIds)', { allowedIds });
+    }
 
     if (filters.city) {
       query.andWhere('(svc.city LIKE :city OR svc.wilaya LIKE :city)', { city: `%${filters.city}%` });
@@ -73,7 +105,8 @@ export class TourismServicesService {
     query.skip(skip).take(filters.limit);
 
     const filterHash = this.cache.hashFilters(filters);
-    const cacheKey = this.cache.key('search', 'services', filterHash);
+    const scopeSuffix = allowedIds ? `:s${allowedIds.sort().join(',')}` : '';
+    const cacheKey = this.cache.key('search', 'services', filterHash + scopeSuffix);
 
     return this.cache.getOrSet(cacheKey, async () => {
       const [data, total] = await query.getManyAndCount();
@@ -87,7 +120,12 @@ export class TourismServicesService {
     }, CACHE_TTL_SEARCH);
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, scopeCtx?: ScopeContext) {
+    const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_FIND_ONE);
+    if (allowedIds !== null && !allowedIds.includes(id)) {
+      throw new ForbiddenException('You do not have access to this service');
+    }
+
     const cacheKey = this.cache.key('service', id);
     return this.cache.getOrSet(cacheKey, () =>
       this.serviceRepo.findOne({
@@ -106,7 +144,12 @@ export class TourismServicesService {
     return this.serviceRepo.save(service);
   }
 
-  async update(id: string, updateDto: UpdateServiceDto) {
+  async update(id: string, updateDto: UpdateServiceDto, scopeCtx?: ScopeContext) {
+    const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_UPDATE);
+    if (allowedIds !== null && !allowedIds.includes(id)) {
+      throw new ForbiddenException('You do not have access to update this service');
+    }
+
     const updateServiceEntity = new TourismService();
     Object.assign(updateServiceEntity, updateDto);
     await this.serviceRepo.update(id, updateServiceEntity);
@@ -115,7 +158,12 @@ export class TourismServicesService {
     return this.findOne(id);
   }
 
-  async remove(id: string) {
+  async remove(id: string, scopeCtx?: ScopeContext) {
+    const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_DELETE);
+    if (allowedIds !== null && !allowedIds.includes(id)) {
+      throw new ForbiddenException('You do not have access to delete this service');
+    }
+
     const result = await this.serviceRepo.delete(id);
     await this.cache.del(this.cache.key('service', id));
     await this.cache.invalidatePattern('app:search:services:*');

@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth('JWT-auth')
@@ -20,6 +21,7 @@ export class DashboardController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get dashboard data for current user' })
   getDashboard(@Request() req: any) {
-    return this.dashboardService.getDashboard(req.user.id);
+    const scopeCtx = extractScopeContext(req);
+    return this.dashboardService.getDashboard(req.user.id, scopeCtx);
   }
 }

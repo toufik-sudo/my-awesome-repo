@@ -7,6 +7,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Payout Accounts')
 @ApiBearerAuth('JWT-auth')
@@ -22,6 +23,7 @@ export class PayoutAccountController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get my payout accounts' })
   async getMine(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getForHost(req.user.id);
   }
 
@@ -40,6 +42,7 @@ export class PayoutAccountController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Add a payout account' })
   async create(@Request() req, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.create(req.user.id, body);
   }
 
@@ -50,6 +53,7 @@ export class PayoutAccountController {
   @ApiOperation({ summary: 'Update a payout account' })
   @ApiParam({ name: 'id', format: 'uuid' })
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.update(req.user.id, id, body);
   }
 
@@ -60,6 +64,7 @@ export class PayoutAccountController {
   @ApiOperation({ summary: 'Delete a payout account' })
   @ApiParam({ name: 'id', format: 'uuid' })
   async remove(@Request() req, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.service.remove(req.user.id, id);
     return { success: true };
   }

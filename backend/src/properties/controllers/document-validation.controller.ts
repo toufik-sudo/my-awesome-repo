@@ -5,6 +5,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Document Validation')
 @ApiBearerAuth()
@@ -30,6 +31,7 @@ export class DocumentValidationController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get pending documents' })
   getPendingDocuments(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.validationService.getPendingDocuments();
   }
 
@@ -40,6 +42,7 @@ export class DocumentValidationController {
   @ApiOperation({ summary: 'Approve document' })
   @ApiParam({ name: 'id', description: 'Document UUID' })
   approveDocument(@Param('id') id: string, @Body() body: { note?: string }, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     const reviewerId = req.user?.id || req.user?.userId;
     return this.validationService.approveDocument(id, reviewerId, body.note);
   }
@@ -51,6 +54,7 @@ export class DocumentValidationController {
   @ApiOperation({ summary: 'Reject document' })
   @ApiParam({ name: 'id', description: 'Document UUID' })
   rejectDocument(@Param('id') id: string, @Body() body: { note?: string }, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     const reviewerId = req.user?.id || req.user?.userId;
     return this.validationService.rejectDocument(id, reviewerId, body.note);
   }

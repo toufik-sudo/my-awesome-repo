@@ -6,6 +6,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Comments')
 @ApiBearerAuth('JWT-auth')
@@ -20,8 +21,9 @@ export class CommentsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get comments for a target' })
-  async getComments(@Param('targetType') targetType: string, @Param('targetId') targetId: string, @Query('page') page: number = 1, @Query('limit') limit: number = 20) {
-    return this.commentsService.getComments(targetType, targetId, page, limit);
+  async getComments(@Request() req: any, @Param('targetType') targetType: string, @Param('targetId') targetId: string, @Query('page') page: number = 1, @Query('limit') limit: number = 20) {
+    const scopeCtx = extractScopeContext(req);
+    return this.commentsService.getComments(targetType, targetId, page, limit, scopeCtx);
   }
 
   @Get(':commentId/replies')
@@ -29,8 +31,9 @@ export class CommentsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get replies for a comment' })
-  async getReplies(@Param('commentId') commentId: string, @Query('page') page: number = 1, @Query('limit') limit: number = 20) {
-    return this.commentsService.getReplies(commentId, page, limit);
+  async getReplies(@Request() req: any, @Param('commentId') commentId: string, @Query('page') page: number = 1, @Query('limit') limit: number = 20) {
+    const scopeCtx = extractScopeContext(req);
+    return this.commentsService.getReplies(commentId, page, limit, scopeCtx);
   }
 
   @Post()
@@ -38,8 +41,9 @@ export class CommentsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create a comment' })
-  async createComment(@Request() req, @Body() dto: CreateCommentDto) {
-    return this.commentsService.create(req.user.id, dto);
+  async createComment(@Request() req: any, @Body() dto: CreateCommentDto) {
+    const scopeCtx = extractScopeContext(req);
+    return this.commentsService.create(req.user.id, dto, scopeCtx);
   }
 
   @Put(':id')
@@ -47,8 +51,9 @@ export class CommentsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update own comment' })
-  async updateComment(@Request() req, @Param('id') id: string, @Body() dto: UpdateCommentDto) {
-    return this.commentsService.update(req.user.id, id, dto);
+  async updateComment(@Request() req: any, @Param('id') id: string, @Body() dto: UpdateCommentDto) {
+    const scopeCtx = extractScopeContext(req);
+    return this.commentsService.update(req.user.id, id, dto, scopeCtx);
   }
 
   @Delete(':id')
@@ -56,7 +61,8 @@ export class CommentsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Delete own comment' })
-  async deleteComment(@Request() req, @Param('id') id: string) {
-    return this.commentsService.delete(req.user.id, id);
+  async deleteComment(@Request() req: any, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
+    return this.commentsService.delete(req.user.id, id, scopeCtx);
   }
 }

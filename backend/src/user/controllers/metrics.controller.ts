@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,6 +6,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { User } from '../entity/user.entity';
@@ -34,10 +35,12 @@ export class MetricsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
   async getProperties(
+    @Request() req: any,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
     @Query('status') status?: string,
   ) {
+    const scopeCtx = extractScopeContext(req);
     const p = Math.max(1, parseInt(page, 10) || 1);
     const l = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
 
@@ -56,29 +59,17 @@ export class MetricsController {
 
     return {
       data: items.map(prop => ({
-        id: prop.id,
-        title: prop.title,
-        propertyType: prop.propertyType,
-        status: prop.status,
-        city: prop.city,
-        wilaya: prop.wilaya,
-        pricePerNight: prop.pricePerNight,
-        currency: prop.currency || 'DZD',
-        hostId: prop.hostId,
-        hostEmail: (prop as any).host?.email || '',
+        id: prop.id, title: prop.title, propertyType: prop.propertyType,
+        status: prop.status, city: prop.city, wilaya: prop.wilaya,
+        pricePerNight: prop.pricePerNight, currency: prop.currency || 'DZD',
+        hostId: prop.hostId, hostEmail: (prop as any).host?.email || '',
         hostName: `${(prop as any).host?.firstName || ''} ${(prop as any).host?.lastName || ''}`.trim(),
-        bedrooms: prop.bedrooms,
-        maxGuests: prop.maxGuests,
-        averageRating: prop.averageRating || 0,
-        trustStars: prop.trustStars || 0,
-        isVerified: prop.isVerified || false,
-        isAvailable: prop.isAvailable !== false,
+        bedrooms: prop.bedrooms, maxGuests: prop.maxGuests,
+        averageRating: prop.averageRating || 0, trustStars: prop.trustStars || 0,
+        isVerified: prop.isVerified || false, isAvailable: prop.isAvailable !== false,
         createdAt: prop.createdAt,
       })),
-      total,
-      page: p,
-      limit: l,
-      totalPages: Math.ceil(total / l),
+      total, page: p, limit: l, totalPages: Math.ceil(total / l),
     };
   }
 
@@ -91,10 +82,12 @@ export class MetricsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
   async getServices(
+    @Request() req: any,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
     @Query('status') status?: string,
   ) {
+    const scopeCtx = extractScopeContext(req);
     const p = Math.max(1, parseInt(page, 10) || 1);
     const l = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
 
@@ -113,24 +106,15 @@ export class MetricsController {
 
     return {
       data: items.map(svc => ({
-        id: svc.id,
-        title: svc.title,
-        category: svc.category,
-        status: svc.status || 'published',
-        city: svc.city,
-        price: svc.price,
-        currency: svc.currency || 'DZD',
-        providerId: svc.providerId,
-        providerEmail: (svc as any).provider?.email || '',
+        id: svc.id, title: svc.title, category: svc.category,
+        status: svc.status || 'published', city: svc.city,
+        price: svc.price, currency: svc.currency || 'DZD',
+        providerId: svc.providerId, providerEmail: (svc as any).provider?.email || '',
         providerName: `${(svc as any).provider?.firstName || ''} ${(svc as any).provider?.lastName || ''}`.trim(),
-        averageRating: svc.averageRating || 0,
-        isAvailable: svc.isAvailable !== false,
+        averageRating: svc.averageRating || 0, isAvailable: svc.isAvailable !== false,
         createdAt: svc.createdAt,
       })),
-      total,
-      page: p,
-      limit: l,
-      totalPages: Math.ceil(total / l),
+      total, page: p, limit: l, totalPages: Math.ceil(total / l),
     };
   }
 
@@ -139,7 +123,8 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Platform-wide summary metrics' })
-  async getSummary() {
+  async getSummary(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     const [totalProperties, publishedProperties] = await Promise.all([
       this.propertyRepo.count(),
       this.propertyRepo.count({ where: { status: 'published' } }),

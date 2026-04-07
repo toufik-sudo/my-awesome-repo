@@ -5,6 +5,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Hyper Management')
 @ApiBearerAuth('JWT-auth')
@@ -23,6 +24,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Pause a property' })
   @ApiParam({ name: 'id', format: 'uuid' })
   pauseProperty(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.pauseProperty(id, req.user.id);
   }
 
@@ -33,6 +35,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Resume a paused property' })
   @ApiParam({ name: 'id', format: 'uuid' })
   resumeProperty(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.resumeProperty(id, req.user.id);
   }
 
@@ -43,6 +46,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Archive a property' })
   @ApiParam({ name: 'id', format: 'uuid' })
   archiveProperty(@Param('id') id: string, @Request() req: any, @Body('reason') reason?: string) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.archiveProperty(id, req.user.id, reason);
   }
 
@@ -53,6 +57,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Permanently delete property' })
   @ApiParam({ name: 'id', format: 'uuid' })
   deleteProperty(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.deleteProperty(id, req.user.id);
   }
 
@@ -65,6 +70,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Pause a service' })
   @ApiParam({ name: 'id', format: 'uuid' })
   pauseService(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.pauseService(id, req.user.id);
   }
 
@@ -75,6 +81,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Resume a paused service' })
   @ApiParam({ name: 'id', format: 'uuid' })
   resumeService(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.resumeService(id, req.user.id);
   }
 
@@ -85,6 +92,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Archive a service' })
   @ApiParam({ name: 'id', format: 'uuid' })
   archiveService(@Param('id') id: string, @Request() req: any, @Body('reason') reason?: string) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.archiveService(id, req.user.id, reason);
   }
 
@@ -95,6 +103,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Permanently delete service' })
   @ApiParam({ name: 'id', format: 'uuid' })
   deleteService(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.deleteService(id, req.user.id);
   }
 
@@ -107,6 +116,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Pause a user (host)' })
   @ApiParam({ name: 'id', type: 'string' })
   pauseUser(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.pauseUser(parseInt(id, 10), req.user.id);
   }
 
@@ -117,6 +127,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Resume a paused user' })
   @ApiParam({ name: 'id', type: 'string' })
   resumeUser(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.resumeUser(parseInt(id, 10), req.user.id);
   }
 
@@ -127,6 +138,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Archive a user' })
   @ApiParam({ name: 'id', type: 'string' })
   archiveUser(@Param('id') id: string, @Request() req: any, @Body('reason') reason?: string) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.archiveUser(parseInt(id, 10), req.user.id, reason);
   }
 
@@ -137,6 +149,7 @@ export class HyperManagementController {
   @ApiOperation({ summary: 'Reactivate archived user' })
   @ApiParam({ name: 'id', type: 'string' })
   reactivateUser(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.hyperService.reactivateUser(parseInt(id, 10), req.user.id);
   }
 }

@@ -11,6 +11,7 @@ import { ServiceBookingsController } from '../controllers/service-bookings.contr
 import { ServiceGroupsController } from '../controllers/service-groups.controller';
 import { TourismServicesService } from '../services/tourism-services.service';
 import { ServiceBookingsService } from '../services/service-bookings.service';
+import { RbacScopeModule } from '../../rbac/rbac-scope.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ServiceBookingsService } from '../services/service-bookings.service';
       ServiceGroup,
       ServiceGroupMembership,
     ]),
+    RbacScopeModule,
   ],
   controllers: [
     TourismServicesController,

@@ -1,10 +1,14 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { PropertyGroup } from '../entity/property-group.entity';
 import { PropertyGroupMembership } from '../entity/property-group-membership.entity';
 import { Property } from '../entity/property.entity';
 import { User } from '../../user/entity/user.entity';
+import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
+import { ScopeContext, getScopedPerms } from '../../rbac/scope-context';
+
+const PERM_KEY_FIND_ALL = 'backend.PropertyGroupsController.findAll.GET';
 
 @Injectable()
 export class PropertyGroupsService {
@@ -17,6 +21,7 @@ export class PropertyGroupsService {
     private readonly propertyRepo: Repository<Property>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly scopeFilter: ScopeFilterService,
   ) {}
 
   private async getUserRoles(userId: number): Promise<string[]> {
@@ -34,15 +39,31 @@ export class PropertyGroupsService {
     }
   }
 
-  async findAll(userId: number): Promise<PropertyGroup[]> {
+  async findAll(userId: number, scopeCtx?: ScopeContext): Promise<PropertyGroup[]> {
     const roles = await this.getUserRoles(userId);
     const isHyper = roles.includes('hyper_admin') || roles.includes('hyper_manager');
+
+    // Apply scope filtering for manager/hyper_manager/guest
+    if (scopeCtx && ['manager', 'hyper_manager', 'guest'].includes(scopeCtx.userRole)) {
+      const scopedPerms = getScopedPerms(scopeCtx);
+      const relevant = scopedPerms.filter(p => p.backendPermissionKey === PERM_KEY_FIND_ALL && p.isGranted);
+
+      if (relevant.length > 0 && !relevant.some(p => p.scope === 'all')) {
+        const groupIds = new Set<string>();
+        for (const perm of relevant) {
+          if (perm.scope === 'property_groups' && perm.propertyGroups) {
+            perm.propertyGroups.forEach(id => groupIds.add(id));
+          }
+        }
+        if (groupIds.size === 0) return [];
+        return this.groupRepo.find({ where: { id: In(Array.from(groupIds)) }, order: { name: 'ASC' } });
+      }
+    }
 
     if (isHyper) {
       return this.groupRepo.find({ order: { name: 'ASC' } });
     }
 
-    // Admin sees only their groups
     return this.groupRepo.find({
       where: { adminId: userId },
       order: { name: 'ASC' },
@@ -60,12 +81,7 @@ export class PropertyGroupsService {
 
   async create(adminId: number, name: string, description?: string): Promise<PropertyGroup> {
     await this.checkAdminAccess(adminId);
-
-    const group = this.groupRepo.create({
-      adminId,
-      name,
-      description,
-    });
+    const group = this.groupRepo.create({ adminId, name, description });
     return this.groupRepo.save(group);
   }
 

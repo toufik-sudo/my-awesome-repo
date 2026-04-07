@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 const AVATAR_UPLOAD_DIR = './uploads/avatars';
 if (!fs.existsSync(AVATAR_UPLOAD_DIR)) { fs.mkdirSync(AVATAR_UPLOAD_DIR, { recursive: true }); }
@@ -30,6 +31,7 @@ export class UserController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async updateLanguage(@Request() req, @Body('language') language: string) {
+    const scopeCtx = extractScopeContext(req);
     const profile = await this.getOrCreateProfile(req.user.id);
     profile.preferredLanguage = language;
     await this.profileRepo.save(profile);
@@ -46,6 +48,7 @@ export class UserController {
     limits: { fileSize: 5 * 1024 * 1024 },
   }))
   async uploadAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+    const scopeCtx = extractScopeContext(req);
     if (!file) throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
     const avatarUrl = `/uploads/avatars/${file.filename}`;
     const profile = await this.getOrCreateProfile(req.user.id);
@@ -60,6 +63,7 @@ export class UserController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async deleteAvatar(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     const profile = await this.profileRepo.findOne({ where: { userId: req.user.id } });
     if (profile?.avatarUrl) { const filePath = `.${profile.avatarUrl}`; if (fs.existsSync(filePath)) fs.unlinkSync(filePath); profile.avatarUrl = null; await this.profileRepo.save(profile); }
     return { message: 'Avatar removed' };
@@ -70,6 +74,7 @@ export class UserController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async completeProfile(@Request() req, @Body() profileData: Record<string, any>) {
+    const scopeCtx = extractScopeContext(req);
     const profile = await this.getOrCreateProfile(req.user.id);
     const allowedFields = ['displayName', 'bio', 'phoneNumber', 'city', 'wilaya', 'country', 'languages', 'preferredLanguage', 'preferredCurrency'];
     for (const field of allowedFields) { if (profileData[field] !== undefined) profile[field] = profileData[field]; }

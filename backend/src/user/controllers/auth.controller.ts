@@ -10,7 +10,9 @@ import { SessionService } from '../../services/session/session.service';
 import { ActivateUserRequestDto } from '../dtos/requests/activate.user.request.dto';
 import { Public } from '../../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
+import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @Controller('auth')
 @UseInterceptors(CustomCsrfInterceptor)
@@ -46,26 +48,29 @@ export class AuthController {
   }
 
   @Post('registerUser')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(JwtAuthGuard)
-  async registerUser(@Body() registerDto: CreateUserRequestDto): Promise<User> {
-    return await this.authService.registerUser(registerDto);
+  async registerUser(@Request() req: any, @Body() registerDto: CreateUserRequestDto): Promise<User> {
+    const scopeCtx = extractScopeContext(req);
+    return await this.authService.registerUser(registerDto, scopeCtx);
   }
 
   @Post('activateUser')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(JwtAuthGuard)
-  async activateUser(@Body() activateUserRequestDto: ActivateUserRequestDto): Promise<User> {
-    return await this.authService.activateUser(activateUserRequestDto);
+  async activateUser(@Request() req: any, @Body() activateUserRequestDto: ActivateUserRequestDto): Promise<User> {
+    const scopeCtx = extractScopeContext(req);
+    return await this.authService.activateUser(activateUserRequestDto, scopeCtx);
   }
 
   @Post('profile')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @UseGuards(JwtAuthGuard)
-  getProfile(@Request() req) {
+  getProfile(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return req.user;
   }
 }

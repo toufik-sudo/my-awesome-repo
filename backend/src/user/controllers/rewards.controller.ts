@@ -7,6 +7,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 import { PointsService } from '../../modules/points/services/points.service';
 
 @ApiTags('Rewards')
@@ -54,6 +55,7 @@ export class RewardsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create a reward' })
   async create(@Request() req, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.create(req.user.id, body);
   }
 
@@ -64,6 +66,7 @@ export class RewardsController {
   @ApiOperation({ summary: 'Update a reward' })
   @ApiParam({ name: 'id', format: 'uuid' })
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.update(req.user.id, id, body);
   }
 
@@ -74,6 +77,7 @@ export class RewardsController {
   @ApiOperation({ summary: 'Delete a reward' })
   @ApiParam({ name: 'id', format: 'uuid' })
   async remove(@Request() req, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.service.remove(req.user.id, id);
     return { success: true };
   }
@@ -85,6 +89,7 @@ export class RewardsController {
   @ApiOperation({ summary: 'Redeem a reward' })
   @ApiParam({ name: 'id', format: 'uuid' })
   async redeem(@Request() req, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.redeem(req.user.id, id, this.pointsService);
   }
 
@@ -94,6 +99,7 @@ export class RewardsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get my redemptions' })
   async getMyRedemptions(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getUserRedemptions(req.user.id);
   }
 
@@ -118,6 +124,7 @@ export class RewardsController {
   @ApiOperation({ summary: 'Cancel a redemption and refund points' })
   @ApiParam({ name: 'id', format: 'uuid' })
   async cancelRedemption(@Request() req, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.service.cancelRedemption(req.user.id, id, this.pointsService);
     return { success: true };
   }

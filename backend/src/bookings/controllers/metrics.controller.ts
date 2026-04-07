@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Query, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { MetricsService, PaginatedResult } from '../services/metrics.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
 import { AppRole } from 'src/user/entity/user.entity';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Metrics')
 @ApiBearerAuth('JWT-auth')
@@ -20,8 +21,9 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Detailed user metrics' })
-  getUsers(@Query('role') role?: AppRole, @Query('status') status?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
-    return this.metricsService.getDetailedUsers({ role, status, page: page || 1, limit: limit || 50 });
+  getUsers(@Request() req: any, @Query('role') role?: AppRole, @Query('status') status?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
+    const scopeCtx = extractScopeContext(req);
+    return this.metricsService.getDetailedUsers({ role, status, page: page || 1, limit: limit || 50 }, scopeCtx);
   }
 
   @Get('bookings')
@@ -29,8 +31,9 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Detailed booking metrics' })
-  getBookings(@Query('status') status?: string, @Query('propertyId') propertyId?: string, @Query('guestId') guestId?: string, @Query('from') from?: string, @Query('to') to?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
-    return this.metricsService.getDetailedBookings({ status, propertyId, guestId, from, to, page: page || 1, limit: limit || 50 });
+  getBookings(@Request() req: any, @Query('status') status?: string, @Query('propertyId') propertyId?: string, @Query('guestId') guestId?: string, @Query('from') from?: string, @Query('to') to?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
+    const scopeCtx = extractScopeContext(req);
+    return this.metricsService.getDetailedBookings({ status, propertyId, guestId, from, to, page: page || 1, limit: limit || 50 }, scopeCtx);
   }
 
   @Get('properties')
@@ -38,8 +41,9 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Detailed property metrics' })
-  getProperties(@Query('status') status?: string, @Query('hostId') hostId?: string, @Query('city') city?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
-    return this.metricsService.getDetailedProperties({ status, hostId, city, page: page || 1, limit: limit || 50 });
+  getProperties(@Request() req: any, @Query('status') status?: string, @Query('hostId') hostId?: string, @Query('city') city?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
+    const scopeCtx = extractScopeContext(req);
+    return this.metricsService.getDetailedProperties({ status, hostId, city, page: page || 1, limit: limit || 50 }, scopeCtx);
   }
 
   @Get('services')
@@ -47,8 +51,9 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Detailed service metrics' })
-  getServices(@Query('status') status?: string, @Query('providerId') providerId?: string, @Query('category') category?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
-    return this.metricsService.getDetailedServices({ status, providerId, category, page: page || 1, limit: limit || 50 });
+  getServices(@Request() req: any, @Query('status') status?: string, @Query('providerId') providerId?: string, @Query('category') category?: string, @Query('page') page?: number, @Query('limit') limit?: number): Promise<PaginatedResult<any>> {
+    const scopeCtx = extractScopeContext(req);
+    return this.metricsService.getDetailedServices({ status, providerId, category, page: page || 1, limit: limit || 50 }, scopeCtx);
   }
 
   @Get('revenue')
@@ -56,8 +61,9 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Revenue breakdown' })
-  getRevenue(@Query('from') from?: string, @Query('to') to?: string, @Query('groupBy') groupBy?: string) {
-    return this.metricsService.getRevenueBreakdown({ from, to, groupBy: groupBy || 'month' });
+  getRevenue(@Request() req: any, @Query('from') from?: string, @Query('to') to?: string, @Query('groupBy') groupBy?: string) {
+    const scopeCtx = extractScopeContext(req);
+    return this.metricsService.getRevenueBreakdown({ from, to, groupBy: groupBy || 'month' }, scopeCtx);
   }
 
   @Get('summary')
@@ -65,7 +71,8 @@ export class MetricsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Platform summary' })
-  getSummary() {
-    return this.metricsService.getPlatformSummary();
+  getSummary(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.metricsService.getPlatformSummary(scopeCtx);
   }
 }

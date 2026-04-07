@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Booking } from '../entity/booking.entity';
 import { Property } from '../../properties/entity/property.entity';
 import { CreateBookingDto } from '../dtos/create-booking.dto';
@@ -9,6 +9,10 @@ import { EventsGateway } from '../../infrastructure/websocket';
 import { JobProducerService } from '../../infrastructure/jobs';
 import { RedisCacheService } from '../../infrastructure/redis';
 import { RolesService } from '../../user/services/roles.service';
+import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
+import { ScopeContext, getScopedPerms } from '../../rbac/scope-context';
+
+const PERM_KEY_FIND_ALL = 'backend.BookingsController.findAll.GET';
 
 interface PricingResult {
   effectiveRate: number;
@@ -29,11 +33,28 @@ export class BookingsService {
     private readonly jobProducer: JobProducerService,
     private readonly cache: RedisCacheService,
     private readonly rolesService: RolesService,
+    private readonly scopeFilter: ScopeFilterService,
   ) {}
 
-  async findAll(status?: string) {
+  async findAll(status?: string, scopeCtx?: ScopeContext) {
     const where: any = {};
     if (status) where.status = status;
+
+    // Apply scope-based property filtering for manager/hyper_manager/guest
+    if (scopeCtx) {
+      const { userRole } = scopeCtx;
+
+      if (['manager', 'hyper_manager', 'guest'].includes(userRole)) {
+        const scopedPerms = getScopedPerms(scopeCtx);
+        const allowedPropertyIds = await this.scopeFilter.resolvePropertyIds(scopedPerms, PERM_KEY_FIND_ALL);
+
+        if (allowedPropertyIds !== null) {
+          if (allowedPropertyIds.length === 0) return [];
+          where.propertyId = In(allowedPropertyIds);
+        }
+      }
+    }
+
     return this.bookingRepository.find({ where, relations: ['property', 'guest'], order: { createdAt: 'DESC' } });
   }
 
@@ -41,9 +62,6 @@ export class BookingsService {
     return this.bookingRepository.findOne({ where: { id }, relations: ['property', 'guest'] });
   }
 
-  /**
-   * [BE-02] Scoped findOne: checks that the caller is the booker OR the property owner/manager.
-   */
   async findOneScoped(id: string, callerId: number) {
     const booking = await this.bookingRepository.findOne({
       where: { id },
@@ -51,22 +69,17 @@ export class BookingsService {
     });
     if (!booking) throw new NotFoundException('Booking not found');
 
-    // Booker can always see their own booking
     if (booking.guestId === callerId) return booking;
 
-    // Check caller role
     const callerRole = await this.rolesService.getUserRole(callerId);
 
-    // Hyper roles can see all
     if (callerRole === 'hyper_admin' || callerRole === 'hyper_manager') return booking;
 
-    // Admin: must own the property
     if (callerRole === 'admin') {
       const isOwner = await this.rolesService.isPropertyOwner(callerId, booking.propertyId);
       if (isOwner) return booking;
     }
 
-    // Manager: must have permission on the property
     if (callerRole === 'manager') {
       const hasAccess = await this.rolesService.hasPermissionForProperty(
         callerId, booking.propertyId, 'view_bookings',
@@ -77,9 +90,6 @@ export class BookingsService {
     throw new ForbiddenException('You do not have access to this booking');
   }
 
-  /**
-   * Calculate the effective nightly rate based on property discount tiers.
-   */
   private calculatePricing(property: Property, nights: number): PricingResult {
     const pricePerNight = Number(property.pricePerNight);
 

@@ -6,6 +6,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @Controller('referrals')
 @UseGuards(JwtAuthGuard)
@@ -18,6 +19,7 @@ export class ReferralController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async getMyCode(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     const code = await this.service.getOrCreateReferralCode(req.user.id);
     return { code };
   }
@@ -27,6 +29,7 @@ export class ReferralController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async createReferral(@Request() req, @Body() body: { method: string; inviteeContact?: string; propertyId?: string }) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.createReferral(req.user.id, body);
   }
 
@@ -35,6 +38,7 @@ export class ReferralController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async getMyReferrals(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getUserReferrals(req.user.id);
   }
 
@@ -43,6 +47,7 @@ export class ReferralController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async getMyStats(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getReferralStats(req.user.id);
   }
 
@@ -51,6 +56,7 @@ export class ReferralController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async completeSignup(@Param('code') code: string, @Request() req) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.completeSignup(code, req.user.id);
   }
 
@@ -59,6 +65,7 @@ export class ReferralController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   async shareProperty(@Request() req, @Body() body: { propertyId: string; method: string; recipient?: string }) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.shareProperty(req.user.id, body.propertyId, body.method, body.recipient);
   }
 

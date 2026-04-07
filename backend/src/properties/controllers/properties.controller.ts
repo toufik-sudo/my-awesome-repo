@@ -6,6 +6,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Properties')
 @ApiBearerAuth()
@@ -19,6 +20,7 @@ export class PropertiesController {
   @Get()
   @ApiOperation({ summary: 'List all properties' })
   findAll(
+    @Request() req: any,
     @Query('city') city?: string,
     @Query('type') type?: string,
     @Query('minPrice') minPrice?: number,
@@ -32,18 +34,20 @@ export class PropertiesController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
+    const scopeCtx = req.user ? extractScopeContext(req) : undefined;
     return this.propertiesService.findAll({
       city, type, minPrice, maxPrice, guests, bedrooms,
       checkIn, checkOut, minTrustStars, sort, page: page || 1, limit: limit || 20,
-    });
+    }, scopeCtx);
   }
 
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Get property by ID' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  findOne(@Param('id') id: string) {
-    return this.propertiesService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = req.user ? extractScopeContext(req) : undefined;
+    return this.propertiesService.findOne(id, scopeCtx);
   }
 
   @Public()
@@ -64,6 +68,7 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create property' })
   create(@Request() req, @Body() createDto: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.create({ ...createDto, hostId: req.user.id });
   }
 
@@ -73,8 +78,9 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update property' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  update(@Param('id') id: string, @Body() updateDto: any) {
-    return this.propertiesService.update(id, updateDto);
+  update(@Param('id') id: string, @Body() updateDto: any, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.propertiesService.update(id, updateDto, scopeCtx);
   }
 
   @Put(':id/prices')
@@ -83,8 +89,9 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update property prices' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  updatePrices(@Param('id') id: string, @Body() priceDto: any) {
-    return this.propertiesService.update(id, priceDto);
+  updatePrices(@Param('id') id: string, @Body() priceDto: any, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.propertiesService.update(id, priceDto, scopeCtx);
   }
 
   @Put(':id/photos')
@@ -93,8 +100,9 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update property photos' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  updatePhotos(@Param('id') id: string, @Body() photosDto: any) {
-    return this.propertiesService.update(id, photosDto);
+  updatePhotos(@Param('id') id: string, @Body() photosDto: any, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.propertiesService.update(id, photosDto, scopeCtx);
   }
 
   @Put(':id/availability')
@@ -103,8 +111,9 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update availability' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  updateAvailability(@Param('id') id: string, @Body() availDto: any) {
-    return this.propertiesService.updateAvailability(id, availDto);
+  updateAvailability(@Param('id') id: string, @Body() availDto: any, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.propertiesService.updateAvailability(id, availDto, scopeCtx);
   }
 
   @Post(':id/promos')
@@ -143,6 +152,7 @@ export class PropertiesController {
   @ApiOperation({ summary: 'Subscribe to promo alerts' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
   subscribePromoAlert(@Param('id') id: string, @Request() req: any, @Body() body: { notifyEmail?: boolean; notifyPhone?: boolean }) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.subscribePromoAlert(id, req.user.id, body);
   }
 
@@ -153,6 +163,7 @@ export class PropertiesController {
   @ApiOperation({ summary: 'Unsubscribe from promo alerts' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
   unsubscribePromoAlert(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.unsubscribePromoAlert(id, req.user.id);
   }
 
@@ -172,8 +183,9 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Delete property' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  remove(@Param('id') id: string) {
-    return this.propertiesService.remove(id);
+  remove(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.propertiesService.remove(id, scopeCtx);
   }
 }
 
@@ -192,6 +204,7 @@ export class SavedSearchAlertsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get my alerts' })
   getMyAlerts(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.getSavedSearchAlerts(req.user.id);
   }
 
@@ -201,6 +214,7 @@ export class SavedSearchAlertsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create alert' })
   createAlert(@Request() req: any, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.createSavedSearchAlert(req.user.id, body);
   }
 
@@ -211,6 +225,7 @@ export class SavedSearchAlertsController {
   @ApiOperation({ summary: 'Update alert' })
   @ApiParam({ name: 'id', description: 'Alert UUID' })
   updateAlert(@Param('id') id: string, @Request() req: any, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.updateSavedSearchAlert(id, req.user.id, body);
   }
 
@@ -221,6 +236,7 @@ export class SavedSearchAlertsController {
   @ApiOperation({ summary: 'Delete alert' })
   @ApiParam({ name: 'id', description: 'Alert UUID' })
   deleteAlert(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.deleteSavedSearchAlert(id, req.user.id);
   }
 }

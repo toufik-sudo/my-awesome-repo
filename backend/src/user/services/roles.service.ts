@@ -2,25 +2,15 @@ import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, AppRole, ROLE_HIERARCHY } from '../entity/user.entity';
-import { ManagerAssignment, AssignmentScope } from '../entity/manager-assignment.entity';
-import { ManagerPermission, PermissionType } from '../entity/manager-permission.entity';
+import { ManagerPermission, PermissionScope } from '../entity/manager-permission.entity';
+import { HyperManagerPermission, HyperManagerPermissionScope } from '../entity/hyper-manager-permission.entity';
+import { GuestPermission, GuestPermissionScope } from '../entity/guest-permission.entity';
 import { PropertyGroupMembership } from '../../properties/entity/property-group-membership.entity';
 import { Invitation } from '../entity/invitation.entity';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INVITATION RULES — table de référence des rôles assignables par inviteur.
-//
-// Utilisée à deux endroits :
-//   1. RolesService.assignRole()   → validation à l'assignation du rôle
-//   2. PermissionGuard             → validation dès la création de l'invitation
-//
-// Règles issues du ticket BE-03 :
-//   hyper_admin   → peut assigner : admin, hyper_manager, guest  (PAS manager)
-//   hyper_manager → peut assigner : admin, guest                 (PAS manager)
-//   admin         → peut assigner : manager, guest               (PAS hyper roles ni user)
-//   manager       → peut assigner : guest uniquement
-//   guest / user  → ne peut rien assigner
+// INVITATION RULES
 // ─────────────────────────────────────────────────────────────────────────────
 const ASSIGNABLE_ROLES_BY_ROLE: Record<AppRole, AppRole[]> = {
   hyper_admin: ['admin', 'hyper_manager', 'guest'],
@@ -37,44 +27,38 @@ export class RolesService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(ManagerAssignment)
-    private readonly assignmentRepo: Repository<ManagerAssignment>,
     @InjectRepository(ManagerPermission)
-    private readonly permissionRepo: Repository<ManagerPermission>,
+    private readonly managerPermRepo: Repository<ManagerPermission>,
+    @InjectRepository(HyperManagerPermission)
+    private readonly hyperPermRepo: Repository<HyperManagerPermission>,
+    @InjectRepository(GuestPermission)
+    private readonly guestPermRepo: Repository<GuestPermission>,
     @InjectRepository(PropertyGroupMembership)
     private readonly membershipRepo: Repository<PropertyGroupMembership>,
     @InjectRepository(Invitation)
     private readonly invitationRepo: Repository<Invitation>,
-  ) { }
+  ) {}
 
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ROLE HELPERS — lecture/écriture du champ users.role
+  // ROLE HELPERS
   // ─────────────────────────────────────────────────────────────────────────
-
 
   async getUserRole(userId: number | string): Promise<AppRole> {
-    if (typeof userId === 'string') {
-      userId = parseInt(userId, 10);
-    }
+    if (typeof userId === 'string') userId = parseInt(userId, 10);
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) return 'user';
     return user.getRole();
   }
 
-
-  /** @deprecated Utiliser getUserRole() — retourne un tableau pour compatibilité ascendante */
+  /** @deprecated Use getUserRole() */
   async getUserRoles(userId: number): Promise<AppRole[]> {
-    const role = await this.getUserRole(userId);
-    return [role];
+    return [await this.getUserRole(userId)];
   }
-
 
   async hasRole(userId: number, role: AppRole): Promise<boolean> {
-    const userRole = await this.getUserRole(userId);
-    return userRole === role;
+    return (await this.getUserRole(userId)) === role;
   }
-
 
   private async setUserRole(userId: number, role: AppRole): Promise<void> {
     await this.userRepo.update(userId, { role });
@@ -82,24 +66,22 @@ export class RolesService {
 
 
   // ─────────────────────────────────────────────────────────────────────────
-  // HELPERS — retrouver les users invités par un user donné
+  // HELPERS — invited user IDs
   // ─────────────────────────────────────────────────────────────────────────
-
 
   private async getInvitedUserIds(inviterId: number): Promise<number[]> {
     const invitations = await this.invitationRepo.find({
       where: { invitedBy: inviterId, status: 'accepted' as any },
     });
 
-    const assignments = await this.assignmentRepo.find({
-      where: { assignedByAdminId: inviterId, isActive: true },
+    // Get manager IDs from manager_permissions assigned by this user
+    const managerPerms = await this.managerPermRepo.find({
+      where: { assignedById: inviterId },
+      select: ['managerId'],
     });
-    const managerIds = [...new Set(assignments.map(a => a.managerId))];
+    const managerIds = [...new Set(managerPerms.map(p => p.managerId))];
 
-    const invitedEmails = invitations
-      .filter(inv => inv.email)
-      .map(inv => inv.email);
-
+    const invitedEmails = invitations.filter(inv => inv.email).map(inv => inv.email);
     let invitedUsers: User[] = [];
     if (invitedEmails.length > 0) {
       invitedUsers = await this.userRepo.find({
@@ -119,14 +101,12 @@ export class RolesService {
   // DASHBOARD STATS
   // ─────────────────────────────────────────────────────────────────────────
 
-
   async getDashboardStats(callerId?: number) {
     const callerRole = callerId ? await this.getUserRole(callerId) : 'hyper_admin';
     const isHyper = callerRole === 'hyper_admin' || callerRole === 'hyper_manager';
 
     if (isHyper) {
       const users = await this.userRepo.find({ where: { isActive: true } });
-
       let totalAdmins = 0, totalManagers = 0, totalRegularUsers = 0,
         totalGuests = 0, hyperAdmins = 0, hyperManagers = 0;
 
@@ -146,15 +126,14 @@ export class RolesService {
         .getRawOne()
         .then(r => parseInt(r.count, 10) || 0);
 
-      const totalAssignments = await this.assignmentRepo.count({
-        where: { isActive: true },
-      });
+      const totalManagerPerms = await this.managerPermRepo.count({ where: { isGranted: true } });
+      const totalHyperPerms = await this.hyperPermRepo.count({ where: { isGranted: true } });
 
       return {
         totalUsers: users.length,
         totalGroups,
         activeManagers: totalManagers,
-        totalAssignments,
+        totalAssignments: totalManagerPerms + totalHyperPerms,
         totalAdmins,
         totalManagers,
         totalRegularUsers,
@@ -164,10 +143,10 @@ export class RolesService {
       };
     }
 
-    // Admin/Manager : stats scopées à leurs invités
+    // Admin/Manager: scoped stats
     const invitedIds = await this.getInvitedUserIds(callerId);
-    const myAssignments = await this.assignmentRepo.count({
-      where: { assignedByAdminId: callerId, isActive: true },
+    const myPerms = await this.managerPermRepo.count({
+      where: { assignedById: callerId, isGranted: true },
     });
 
     let managersCount = 0, guestsCount = 0;
@@ -185,7 +164,7 @@ export class RolesService {
       totalUsers: invitedIds.length,
       totalGroups: 0,
       activeManagers: managersCount,
-      totalAssignments: myAssignments,
+      totalAssignments: myPerms,
       totalAdmins: 0,
       totalManagers: managersCount,
       totalRegularUsers: 0,
@@ -200,55 +179,30 @@ export class RolesService {
   // ROLE ASSIGNMENT
   // ─────────────────────────────────────────────────────────────────────────
 
-
-  /**
-   * Assigner un rôle à un user.
-   *
-   * [FIX BE-03] : remplacement de la logique fragmentée de vérification hiérarchique
-   * par une table déclarative ASSIGNABLE_ROLES_BY_ROLE.
-   *
-   * Problèmes corrigés :
-   *   1. hyper_admin bypassait le check ROLE_HIERARCHY via `assignerRole !== 'hyper_admin'`
-   *      → il pouvait assigner le rôle `manager` librement.
-   *   2. hyper_manager n'avait pas de blocage explicite sur `manager`.
-   *      → le check ne bloquait que `hyper_admin`, pas `manager`.
-   *   3. Logique éparpillée en 5 blocs if/else → remplacée par une seule table.
-   */
   async assignRole(assignerId: number, userId: number, role: AppRole) {
     const assignerRole = await this.getUserRole(assignerId);
-
-    // [FIX BE-03] Vérification centralisée via la table déclarative.
-    // Chaque rôle d'inviteur a une liste explicite de rôles qu'il peut assigner.
-    // Si le rôle cible n'est pas dans la liste → ForbiddenException.
     const allowedRoles = ASSIGNABLE_ROLES_BY_ROLE[assignerRole] ?? [];
     if (!allowedRoles.includes(role)) {
       throw new ForbiddenException(
-        `'${assignerRole}' cannot assign role '${role}'. ` +
-        `Allowed roles to assign: [${allowedRoles.join(', ') || 'none'}].`,
+        `'${assignerRole}' cannot assign role '${role}'. Allowed: [${allowedRoles.join(', ') || 'none'}].`,
       );
     }
 
     const currentRole = await this.getUserRole(userId);
-    if (currentRole === role) {
-      // Idempotent : si le rôle est déjà le bon, on retourne sans erreur
-      return { userId, role: currentRole };
-    }
+    if (currentRole === role) return { userId, role: currentRole };
 
     await this.setUserRole(userId, role);
     return { userId, role };
   }
 
-
   async removeRole(removerId: number, userId: number, _role: AppRole): Promise<void> {
     const removerRole = await this.getUserRole(removerId);
-
     if (!['hyper_admin', 'hyper_manager', 'admin'].includes(removerRole)) {
       throw new ForbiddenException('Insufficient permissions to remove roles');
     }
 
     const currentRole = await this.getUserRole(userId);
 
-    // Admin peut uniquement retirer les rôles de ses propres managers/guests
     if (removerRole === 'admin') {
       if (!['manager', 'guest'].includes(currentRole)) {
         throw new ForbiddenException('Admin can only manage manager and guest roles');
@@ -259,406 +213,337 @@ export class RolesService {
       }
     }
 
-    // Seul hyper_admin peut retirer les rôles hyper
-    if (
-      (currentRole === 'hyper_admin' || currentRole === 'hyper_manager') &&
-      removerRole !== 'hyper_admin'
-    ) {
+    if ((currentRole === 'hyper_admin' || currentRole === 'hyper_manager') && removerRole !== 'hyper_admin') {
       throw new ForbiddenException('Only hyper_admin can remove hyper roles');
     }
 
-    // Rétrograder à 'user' (soft remove)
     await this.setUserRole(userId, 'user');
   }
 
 
   // ─────────────────────────────────────────────────────────────────────────
-  // MANAGER ASSIGNMENT
+  // MANAGER PERMISSION ASSIGNMENT
   // ─────────────────────────────────────────────────────────────────────────
 
-
-  async assignManager(
+  async setManagerPermissions(
     adminId: number,
     managerId: number,
-    scope: AssignmentScope,
-    propertyId?: string,
-    propertyGroupId?: string,
-  ): Promise<ManagerAssignment> {
+    permissions: {
+      backendPermissionKey: string;
+      frontendPermissionKey?: string;
+      scope: PermissionScope;
+      isGranted: boolean;
+      properties?: string[];
+      services?: string[];
+      propertyGroups?: string[];
+      serviceGroups?: string[];
+    }[],
+  ): Promise<ManagerPermission[]> {
     const adminRole = await this.getUserRole(adminId);
     if (!['hyper_admin', 'hyper_manager', 'admin'].includes(adminRole)) {
-      throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can assign managers');
+      throw new ForbiddenException('Insufficient permissions');
     }
 
     const managerRole = await this.getUserRole(managerId);
+    if (managerRole !== 'manager') {
+      throw new ForbiddenException('Target user must have manager role');
+    }
 
-    // Les hyper roles ne peuvent assigner que des hyper_managers
-    if (adminRole === 'hyper_admin' || adminRole === 'hyper_manager') {
-      if (managerRole !== 'hyper_manager') {
-        throw new ForbiddenException(
-          'Hyper roles can only create assignments for hyper_manager users',
-        );
-      }
-    } else {
-      // Admin ne peut assigner que ses propres managers
-      if (managerRole !== 'manager') {
-        throw new ForbiddenException('User must have manager role to be assigned');
-      }
+    if (adminRole === 'admin') {
       const invitedIds = await this.getInvitedUserIds(adminId);
       if (!invitedIds.includes(managerId)) {
-        throw new ForbiddenException('Admin can only assign managers they invited');
+        throw new ForbiddenException('Admin can only manage permissions for their own managers');
       }
     }
 
-    const assignment = this.assignmentRepo.create({
-      managerId,
-      assignedByAdminId: adminId,
-      scope,
-      propertyId: scope === 'property' ? propertyId : null,
-      propertyGroupId: scope === 'property_group' ? propertyGroupId : null,
-    });
+    // Remove existing permissions assigned by this admin for this manager
+    await this.managerPermRepo.delete({ managerId, assignedById: adminId });
 
-    return this.assignmentRepo.save(assignment);
-  }
-
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // PERMISSIONS
-  // ─────────────────────────────────────────────────────────────────────────
-
-
-  async setPermissions(
-    adminId: number,
-    assignmentId: string,
-    permissions: { permission: PermissionType; isGranted: boolean }[],
-  ): Promise<ManagerPermission[]> {
-    const assignment = await this.assignmentRepo.findOne({ where: { id: assignmentId } });
-    if (!assignment) throw new NotFoundException('Assignment not found');
-
-    const adminRole = await this.getUserRole(adminId);
-    if (!['hyper_admin', 'hyper_manager', 'admin'].includes(adminRole)) {
-      throw new ForbiddenException('Only hyper_admin, hyper_manager, or admin can set permissions');
-    }
-
-    // [BE-09] hyper_admin ne peut assigner des permissions fines qu'à des hyper_managers.
-    // Il ne peut pas descendre dans les niveaux inférieurs (admin, manager, guest).
-    if (adminRole === 'hyper_admin') {
-      const targetRole = await this.getUserRole(assignment.managerId);
-      if (targetRole !== 'hyper_manager') {
-        throw new ForbiddenException(
-          'hyper_admin can only assign fine-grained permissions to hyper_manager users',
-        );
-      }
-    }
-
-    // Admin ne peut gérer que les permissions de ses propres assignments
-    if (adminRole === 'admin' && assignment.assignedByAdminId !== adminId) {
-      throw new ForbiddenException('Admin can only manage permissions for their own managers');
-    }
-
-    // Remplacer toutes les permissions existantes de cet assignment
-    await this.permissionRepo.delete({ assignmentId });
-
-    const newPermissions = permissions.map(p =>
-      this.permissionRepo.create({
-        assignmentId,
-        permission: p.permission,
+    const newPerms = permissions.map(p =>
+      this.managerPermRepo.create({
+        managerId,
+        assignedById: adminId,
+        backendPermissionKey: p.backendPermissionKey,
+        frontendPermissionKey: p.frontendPermissionKey || null,
+        scope: p.scope,
         isGranted: p.isGranted,
+        properties: p.scope === 'properties' ? p.properties : null,
+        services: p.scope === 'services' ? p.services : null,
+        propertyGroups: p.scope === 'property_groups' ? p.propertyGroups : null,
+        serviceGroups: p.scope === 'service_groups' ? p.serviceGroups : null,
       }),
     );
 
-    return this.permissionRepo.save(newPermissions);
+    return this.managerPermRepo.save(newPerms);
   }
 
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // HYPER MANAGER PERMISSION ASSIGNMENT
+  // ─────────────────────────────────────────────────────────────────────────
+
+  async setHyperManagerPermissions(
+    hyperAdminId: number,
+    hyperManagerId: number,
+    permissions: {
+      backendPermissionKey: string;
+      frontendPermissionKey?: string;
+      scope: HyperManagerPermissionScope;
+      isGranted: boolean;
+      properties?: string[];
+      services?: string[];
+      propertyGroups?: string[];
+      serviceGroups?: string[];
+      admins?: number[];
+    }[],
+  ): Promise<HyperManagerPermission[]> {
+    const callerRole = await this.getUserRole(hyperAdminId);
+    if (callerRole !== 'hyper_admin') {
+      throw new ForbiddenException('Only hyper_admin can assign hyper_manager permissions');
+    }
+
+    const targetRole = await this.getUserRole(hyperManagerId);
+    if (targetRole !== 'hyper_manager') {
+      throw new ForbiddenException('Target user must have hyper_manager role');
+    }
+
+    await this.hyperPermRepo.delete({ hyperManagerId, assignedById: hyperAdminId });
+
+    const newPerms = permissions.map(p =>
+      this.hyperPermRepo.create({
+        hyperManagerId,
+        assignedById: hyperAdminId,
+        backendPermissionKey: p.backendPermissionKey,
+        frontendPermissionKey: p.frontendPermissionKey || null,
+        scope: p.scope,
+        isGranted: p.isGranted,
+        properties: p.scope === 'properties' ? p.properties : null,
+        services: p.scope === 'services' ? p.services : null,
+        propertyGroups: p.scope === 'property_groups' ? p.propertyGroups : null,
+        serviceGroups: p.scope === 'service_groups' ? p.serviceGroups : null,
+        admins: p.scope === 'admins' ? p.admins : null,
+      }),
+    );
+
+    return this.hyperPermRepo.save(newPerms);
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // GUEST PERMISSION ASSIGNMENT
+  // ─────────────────────────────────────────────────────────────────────────
+
+  async setGuestPermissions(
+    assignerId: number,
+    guestId: number,
+    permissions: {
+      backendPermissionKey: string;
+      frontendPermissionKey?: string;
+      scope: GuestPermissionScope;
+      isGranted: boolean;
+      properties?: string[];
+      services?: string[];
+      propertyGroups?: string[];
+      serviceGroups?: string[];
+    }[],
+  ): Promise<GuestPermission[]> {
+    const callerRole = await this.getUserRole(assignerId);
+    if (!['hyper_admin', 'hyper_manager', 'admin', 'manager'].includes(callerRole)) {
+      throw new ForbiddenException('Insufficient permissions to manage guest permissions');
+    }
+
+    const targetRole = await this.getUserRole(guestId);
+    if (targetRole !== 'guest') {
+      throw new ForbiddenException('Target user must have guest role');
+    }
+
+    await this.guestPermRepo.delete({ guestId, assignedById: assignerId });
+
+    const newPerms = permissions.map(p =>
+      this.guestPermRepo.create({
+        guestId,
+        assignedById: assignerId,
+        backendPermissionKey: p.backendPermissionKey,
+        frontendPermissionKey: p.frontendPermissionKey || null,
+        scope: p.scope,
+        isGranted: p.isGranted,
+        properties: p.scope === 'properties' ? p.properties : null,
+        services: p.scope === 'services' ? p.services : null,
+        propertyGroups: p.scope === 'property_groups' ? p.propertyGroups : null,
+        serviceGroups: p.scope === 'service_groups' ? p.serviceGroups : null,
+      }),
+    );
+
+    return this.guestPermRepo.save(newPerms);
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PERMISSION CHECKS
+  // ─────────────────────────────────────────────────────────────────────────
+
   /**
-   * Vérifie qu'un manager a la permission donnée sur une property spécifique.
-   *
-   * [BE-13] Isolation paire admin↔manager :
-   *   Lors de la vérification, on identifie d'abord l'admin propriétaire de la property
-   *   (via SELECT hostId FROM properties WHERE id = $1).
-   *   On ne vérifie ensuite que les assignments créés par CET admin pour CE manager.
-   *   Exception : les assignments scope 'all' (hyper-level) s'appliquent globalement.
-   *
-   *   Cela évite le problème de merge : si un manager est assigné par deux admins
-   *   différents avec des permissions différentes, les permissions de l'admin A
-   *   ne s'appliquent pas aux propriétés de l'admin B.
+   * Check if a manager has a specific backend permission for a property.
    */
   async hasPermissionForProperty(
     managerId: number,
     propertyId: string,
-    permission: PermissionType,
+    permissionKey: string,
   ): Promise<boolean> {
-    const assignments = await this.assignmentRepo.find({
-      where: { managerId, isActive: true },
-      relations: ['propertyGroup'],
+    const perms = await this.managerPermRepo.find({
+      where: { managerId, backendPermissionKey: permissionKey, isGranted: true },
     });
 
-    // Identifier l'admin propriétaire de cette property pour isoler la paire [BE-13]
-    const ownerResult = await this.assignmentRepo.manager.query(
-      `SELECT "hostId" FROM properties WHERE id = $1 LIMIT 1`,
-      [propertyId],
-    );
-    const propertyOwnerId = ownerResult?.[0]?.hostId;
-
-    for (const assignment of assignments) {
-      // [BE-13] Ignorer les assignments créés par un autre admin que le propriétaire
-      // de cette property — sauf si c'est un assignment scope 'all' (hyper-level).
-      if (propertyOwnerId && assignment.assignedByAdminId !== propertyOwnerId) {
-        if (assignment.scope !== 'all') continue;
-      }
-
-      let coversProperty = false;
-
-      if (assignment.scope === 'all') {
-        coversProperty = true;
-      } else if (assignment.scope === 'property' && assignment.propertyId === propertyId) {
-        coversProperty = true;
-      } else if (assignment.scope === 'property_group' && assignment.propertyGroupId) {
-        const membership = await this.membershipRepo.findOne({
-          where: { propertyId, groupId: assignment.propertyGroupId },
-        });
-        coversProperty = !!membership;
-      }
-
-      if (coversProperty) {
-        const perm = await this.permissionRepo.findOne({
-          where: { assignmentId: assignment.id, permission, isGranted: true },
-        });
-        if (perm) return true;
+    for (const perm of perms) {
+      if (perm.scope === 'all') return true;
+      if (perm.scope === 'properties' && perm.properties?.includes(propertyId)) return true;
+      if (perm.scope === 'property_groups' && perm.propertyGroups?.length) {
+        for (const groupId of perm.propertyGroups) {
+          const membership = await this.membershipRepo.findOne({
+            where: { propertyId, groupId },
+          });
+          if (membership) return true;
+        }
       }
     }
-
     return false;
   }
 
-
-  async getManagerPermissions(
-    managerId: number,
-    callerId?: number,
-  ): Promise<{ assignment: ManagerAssignment; permissions: ManagerPermission[] }[]> {
-    let whereClause: any = { managerId, isActive: true };
-
-    // Un admin ne voit que les assignments qu'il a lui-même créés
-    if (callerId) {
-      const callerRole = await this.getUserRole(callerId);
-      if (callerRole === 'admin') {
-        whereClause.assignedByAdminId = callerId;
-      }
-    }
-
-    const assignments = await this.assignmentRepo.find({
-      where: whereClause,
-      relations: ['property', 'propertyGroup'],
-    });
-
-    const result = [];
-    for (const assignment of assignments) {
-      const permissions = await this.permissionRepo.find({
-        where: { assignmentId: assignment.id },
-      });
-      result.push({ assignment, permissions });
-    }
-
-    return result;
-  }
-
-
   /**
-   * Vérifie qu'un hyper_manager possède une permission globale
-   * (assignée par hyper_admin via setPermissions).
+   * Check if a hyper_manager has a specific permission.
    */
   async hasHyperManagerPermission(
     hyperManagerId: number,
-    permission: PermissionType,
+    permissionKey: string,
   ): Promise<boolean> {
-    const assignments = await this.assignmentRepo.find({
-      where: { managerId: hyperManagerId, isActive: true },
+    const perm = await this.hyperPermRepo.findOne({
+      where: { hyperManagerId, backendPermissionKey: permissionKey, isGranted: true },
     });
+    return !!perm;
+  }
 
-    for (const assignment of assignments) {
-      const perm = await this.permissionRepo.findOne({
-        where: { assignmentId: assignment.id, permission, isGranted: true },
-      });
-      if (perm) return true;
+  /**
+   * Get manager permissions with their scopes.
+   */
+  async getManagerPermissions(
+    managerId: number,
+    callerId?: number,
+  ): Promise<ManagerPermission[]> {
+    let where: any = { managerId, isGranted: true };
+
+    if (callerId) {
+      const callerRole = await this.getUserRole(callerId);
+      if (callerRole === 'admin') {
+        where.assignedById = callerId;
+      }
     }
 
-    return false;
+    return this.managerPermRepo.find({ where });
+  }
+
+  /**
+   * Get hyper_manager permissions.
+   */
+  async getHyperManagerPermissions(hyperManagerId: number): Promise<HyperManagerPermission[]> {
+    return this.hyperPermRepo.find({
+      where: { hyperManagerId, isGranted: true },
+    });
+  }
+
+  /**
+   * Get guest permissions.
+   */
+  async getGuestPermissions(guestId: number, callerId?: number): Promise<GuestPermission[]> {
+    let where: any = { guestId, isGranted: true };
+    if (callerId) {
+      const callerRole = await this.getUserRole(callerId);
+      if (callerRole === 'admin' || callerRole === 'manager') {
+        where.assignedById = callerId;
+      }
+    }
+    return this.guestPermRepo.find({ where });
   }
 
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // SCOPE RESOLUTION — get accessible resource IDs
+  // ─────────────────────────────────────────────────────────────────────────
+
   /**
-   * Retourne les property IDs dans le scope d'un manager.
-   *
-   * [FIX TYPE] : la signature déclare maintenant `Promise<string[] | null>`
-   * car la méthode peut retourner null (scope 'all' = accès global).
-   * L'ancienne signature `Promise<string[]>` était incorrecte TypeScript.
-   *
-   * Retourne :
-   *   null        → scope global (assignment scope 'all')
-   *   string[]    → liste des property IDs accessibles
+   * Returns property IDs in a manager's scope, or null for global scope.
    */
   async getManagerProperties(managerId: number): Promise<string[] | null> {
-    const assignments = await this.assignmentRepo.find({
-      where: { managerId, isActive: true },
+    const perms = await this.managerPermRepo.find({
+      where: { managerId, isGranted: true },
     });
 
     const propertyIds = new Set<string>();
 
-    for (const assignment of assignments) {
-      if (assignment.scope === 'all') {
-        return null; // Accès global — le service ne doit pas filtrer
-      } else if (assignment.scope === 'property' && assignment.propertyId) {
-        propertyIds.add(assignment.propertyId);
-      } else if (assignment.scope === 'property_group' && assignment.propertyGroupId) {
-        const memberships = await this.membershipRepo.find({
-          where: { groupId: assignment.propertyGroupId },
-        });
-        memberships.forEach(m => propertyIds.add(m.propertyId));
+    for (const perm of perms) {
+      if (perm.scope === 'all') return null;
+      if (perm.scope === 'properties' && perm.properties) {
+        perm.properties.forEach(id => propertyIds.add(id));
+      }
+      if (perm.scope === 'property_groups' && perm.propertyGroups) {
+        for (const groupId of perm.propertyGroups) {
+          const memberships = await this.membershipRepo.find({ where: { groupId } });
+          memberships.forEach(m => propertyIds.add(m.propertyId));
+        }
       }
     }
 
     return Array.from(propertyIds);
   }
 
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // GUEST SCOPE RESOLUTION
-  // ─────────────────────────────────────────────────────────────────────────
-
-
   /**
-   * Créer les assignments d'un guest à partir du scope de son inviteur.
-   *
-   * [FIX BE-04] : un guest invité par un admin recevait scope 'all' — il pouvait
-   * voir toutes les propriétés de la plateforme. Le scope doit être restreint
-   * aux propriétés de l'admin inviteur uniquement.
-   *
-   * Logique de scope par inviteur :
-   *   hyper_admin   → scope 'all' (accès global) ✅ intentionnel
-   *   hyper_manager → copie des assignments du hyper_manager inviteur
-   *   admin         → [FIX] scope 'property' par propriété de l'admin (pas 'all')
-   *   manager       → copie des assignments du manager inviteur
-   */
-  async createGuestAssignmentsFromInviter(
-    inviterId: number,
-    guestId: number,
-  ): Promise<void> {
-    const inviterRole = await this.getUserRole(inviterId);
-
-    if (inviterRole === 'hyper_admin') {
-      // Invité par hyper_admin → accès global (intentionnel — hyper scope)
-      const assignment = this.assignmentRepo.create({
-        managerId: guestId,
-        assignedByAdminId: inviterId,
-        scope: 'all' as AssignmentScope,
-      });
-      await this.assignmentRepo.save(assignment);
-
-    } else if (inviterRole === 'admin') {
-      // [FIX BE-04] Invité par admin → scope property par property de l'admin.
-      // Avant : scope 'all' → le guest voyait TOUT. Corrigé : une entrée par property.
-      const adminPropertyIds = await this.getAdminPropertyIds(inviterId);
-
-      if (adminPropertyIds.length === 0) return; // Admin sans property → aucun accès guest
-
-      const assignments = adminPropertyIds.map(propertyId =>
-        this.assignmentRepo.create({
-          managerId: guestId,
-          assignedByAdminId: inviterId,
-          scope: 'property' as AssignmentScope,
-          propertyId,
-        }),
-      );
-
-      await this.assignmentRepo.save(assignments);
-
-    } else if (inviterRole === 'hyper_manager' || inviterRole === 'manager') {
-      // Invité par hyper_manager ou manager → copier leur scope exact
-      const inviterAssignments = await this.assignmentRepo.find({
-        where: { managerId: inviterId, isActive: true },
-      });
-
-      for (const src of inviterAssignments) {
-        const assignment = this.assignmentRepo.create({
-          managerId: guestId,
-          assignedByAdminId: src.assignedByAdminId,
-          scope: src.scope,
-          propertyId: src.propertyId,
-          propertyGroupId: src.propertyGroupId,
-        });
-        await this.assignmentRepo.save(assignment);
-      }
-    }
-    // guest et user ne peuvent pas inviter → rien à faire
-  }
-
-
-  /**
-   * Retourne les property IDs accessibles par un guest.
-   * null = accès global (invité par hyper_admin).
+   * Returns property IDs accessible by a guest, or null for global.
    */
   async getGuestAccessibleProperties(guestId: number): Promise<string[] | null> {
-    const assignments = await this.assignmentRepo.find({
-      where: { managerId: guestId, isActive: true },
+    const perms = await this.guestPermRepo.find({
+      where: { guestId, isGranted: true },
     });
 
-    if (assignments.length === 0) return [];
-
+    if (perms.length === 0) return [];
     const propertyIds = new Set<string>();
 
-    for (const assignment of assignments) {
-      if (assignment.scope === 'all') {
-        return null; // Accès global
-      } else if (assignment.scope === 'property' && assignment.propertyId) {
-        propertyIds.add(assignment.propertyId);
-      } else if (assignment.scope === 'property_group' && assignment.propertyGroupId) {
-        const memberships = await this.membershipRepo.find({
-          where: { groupId: assignment.propertyGroupId },
-        });
-        memberships.forEach(m => propertyIds.add(m.propertyId));
+    for (const perm of perms) {
+      if (perm.scope === 'all') return null;
+      if (perm.scope === 'properties' && perm.properties) {
+        perm.properties.forEach(id => propertyIds.add(id));
+      }
+      if (perm.scope === 'property_groups' && perm.propertyGroups) {
+        for (const groupId of perm.propertyGroups) {
+          const memberships = await this.membershipRepo.find({ where: { groupId } });
+          memberships.forEach(m => propertyIds.add(m.propertyId));
+        }
       }
     }
 
     return Array.from(propertyIds);
   }
 
-
   /**
-   * Retourne les service IDs accessibles par un guest.
-   * Méthode symétrique à getGuestAccessibleProperties() pour les services.
-   *
-   * [FIX BUG-03] : séparation des listes property IDs et service IDs.
-   * Avant, le PermissionGuard utilisait getGuestAccessibleProperties() pour
-   * vérifier l'accès aux services → comparaison incohérente d'IDs différents.
-   *
-   * Logique :
-   *   - scope 'all'      → null (accès global à tous les services)
-   *   - scope 'property' → services du même admin que la property
-   *   - sinon            → services des admins propriétaires des assignments
-   *
-   * Note : ManagerAssignment ne stocke pas de serviceId directement.
-   * Le scope service est déduit des admins (assignedByAdminId) présents
-   * dans les assignments du guest.
+   * Returns service IDs accessible by a guest, or null for global.
    */
   async getGuestAccessibleServices(guestId: number): Promise<string[] | null> {
-    const assignments = await this.assignmentRepo.find({
-      where: { managerId: guestId, isActive: true },
+    const perms = await this.guestPermRepo.find({
+      where: { guestId, isGranted: true },
     });
 
-    if (assignments.length === 0) return [];
+    if (perms.length === 0) return [];
+    if (perms.some(p => p.scope === 'all')) return null;
 
-    // Si un assignment est scope 'all' → accès global aux services aussi
-    if (assignments.some(a => a.scope === 'all')) {
-      return null;
+    const serviceIds = new Set<string>();
+    for (const perm of perms) {
+      if (perm.scope === 'services' && perm.services) {
+        perm.services.forEach(id => serviceIds.add(id));
+      }
     }
 
-    // Récupérer les services appartenant aux admins des assignments du guest.
-    // Un guest scopé à l'admin A voit les services dont providerId = adminId de A.
-    const adminIds = [...new Set(assignments.map(a => a.assignedByAdminId).filter(Boolean))];
-    const serviceIds = new Set<string>();
-
-    for (const adminId of adminIds) {
-      const result = await this.assignmentRepo.manager.query(
+    // Also derive services from assigned admins
+    const assignerIds = [...new Set(perms.map(p => p.assignedById))];
+    for (const adminId of assignerIds) {
+      const result = await this.userRepo.manager.query(
         `SELECT id FROM tourism_services WHERE "providerId" = $1`,
         [adminId],
       );
@@ -668,134 +553,161 @@ export class RolesService {
     return Array.from(serviceIds);
   }
 
+  /**
+   * Create guest permissions from inviter's scope.
+   */
+  async createGuestPermissionsFromInviter(
+    inviterId: number,
+    guestId: number,
+  ): Promise<void> {
+    const inviterRole = await this.getUserRole(inviterId);
+
+    if (inviterRole === 'hyper_admin') {
+      // Global scope
+      const perm = this.guestPermRepo.create({
+        guestId,
+        assignedById: inviterId,
+        backendPermissionKey: 'view_property',
+        scope: 'all' as GuestPermissionScope,
+        isGranted: true,
+      });
+      await this.guestPermRepo.save(perm);
+
+    } else if (inviterRole === 'admin') {
+      const adminPropertyIds = await this.getAdminPropertyIds(inviterId);
+      if (adminPropertyIds.length === 0) return;
+
+      const perm = this.guestPermRepo.create({
+        guestId,
+        assignedById: inviterId,
+        backendPermissionKey: 'view_property',
+        scope: 'properties' as GuestPermissionScope,
+        properties: adminPropertyIds,
+        isGranted: true,
+      });
+      await this.guestPermRepo.save(perm);
+
+    } else if (inviterRole === 'hyper_manager' || inviterRole === 'manager') {
+      // Copy inviter's scope
+      const inviterPerms = inviterRole === 'hyper_manager'
+        ? await this.hyperPermRepo.find({ where: { hyperManagerId: inviterId, isGranted: true } })
+        : await this.managerPermRepo.find({ where: { managerId: inviterId, isGranted: true } });
+
+      for (const src of inviterPerms) {
+        const perm = this.guestPermRepo.create({
+          guestId,
+          assignedById: inviterId,
+          backendPermissionKey: src.backendPermissionKey,
+          frontendPermissionKey: src.frontendPermissionKey,
+          scope: src.scope as GuestPermissionScope,
+          properties: src.properties,
+          services: src.services,
+          propertyGroups: src.propertyGroups,
+          serviceGroups: src.serviceGroups,
+          isGranted: true,
+        });
+        await this.guestPermRepo.save(perm);
+      }
+    }
+  }
+
 
   // ─────────────────────────────────────────────────────────────────────────
   // USER MANAGEMENT
   // ─────────────────────────────────────────────────────────────────────────
 
-
-  /**
-   * Retourne la liste des users avec leurs rôles, scopée selon le caller.
-   *
-   * [FIX FE-06] : un hyper_manager ne doit pas voir les hyper_admin dans la liste.
-   * Avant : la requête retournait tous les users actifs sans distinction pour isHyper.
-   * Après : filtrage ajouté — hyper_manager ne voit que les non-hyper_admin.
-   */
   async getAllUsersWithRoles(callerId?: number): Promise<{
-    id: number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: AppRole;
-    isActive: boolean;
+    id: number; email: string; firstName: string; lastName: string; role: AppRole; isActive: boolean;
   }[]> {
     const callerRole = callerId ? await this.getUserRole(callerId) : 'hyper_admin';
     const isHyper = callerRole === 'hyper_admin' || callerRole === 'hyper_manager';
 
     if (isHyper) {
       const users = await this.userRepo.find({ where: { isActive: true } });
-
       return users
-        .filter(u => {
-          // [FIX FE-06] : un hyper_manager ne peut pas voir ni gérer les hyper_admin.
-          // La visibilité des hyper_admin est réservée aux hyper_admin uniquement.
-          if (callerRole === 'hyper_manager' && u.getRole() === 'hyper_admin') {
-            return false;
-          }
-          return true;
-        })
+        .filter(u => !(callerRole === 'hyper_manager' && u.getRole() === 'hyper_admin'))
         .map(u => ({
-          id: u.id,
-          email: u.email,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          role: u.getRole(),
-          isActive: u.isActive,
+          id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName,
+          role: u.getRole(), isActive: u.isActive,
         }));
     }
 
-    // Admin/Manager : uniquement leurs invités
     const invitedIds = await this.getInvitedUserIds(callerId);
     if (invitedIds.length === 0) return [];
 
-    const users = await this.userRepo.find({
-      where: invitedIds.map(id => ({ id })),
-    });
-
+    const users = await this.userRepo.find({ where: invitedIds.map(id => ({ id })) });
     return users
       .filter(u => {
-        // Admin voit ses managers et guests
-        if (callerRole === 'admin') {
-          return ['manager', 'guest'].includes(u.getRole());
-        }
-        // Manager voit uniquement ses guests
-        if (callerRole === 'manager') {
-          return u.getRole() === 'guest';
-        }
+        if (callerRole === 'admin') return ['manager', 'guest'].includes(u.getRole());
+        if (callerRole === 'manager') return u.getRole() === 'guest';
         return true;
       })
       .map(u => ({
-        id: u.id,
-        email: u.email,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        role: u.getRole(),
-        isActive: u.isActive,
+        id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName,
+        role: u.getRole(), isActive: u.isActive,
       }));
   }
 
-
-  async getAllAssignments(callerId?: string | number): Promise<ManagerAssignment[]> {
-    console.log('getAllAssignments called with callerId:', callerId);
-    if (typeof callerId === 'string') {
-      callerId = parseInt(callerId, 10);
-    }
+  async getAllAssignments(callerId?: string | number) {
+    if (typeof callerId === 'string') callerId = parseInt(callerId, 10);
     const callerRole = callerId ? await this.getUserRole(callerId) : 'hyper_admin';
     const isHyper = callerRole === 'hyper_admin' || callerRole === 'hyper_manager';
 
     if (isHyper) {
-      return this.assignmentRepo.find({
-        where: { isActive: true },
-        relations: ['manager', 'property', 'propertyGroup'],
-      });
+      const [managerPerms, hyperPerms, guestPerms] = await Promise.all([
+        this.managerPermRepo.find({ where: { isGranted: true }, relations: ['manager'] }),
+        this.hyperPermRepo.find({ where: { isGranted: true }, relations: ['hyperManager'] }),
+        this.guestPermRepo.find({ where: { isGranted: true }, relations: ['guest'] }),
+      ]);
+      return { managerPermissions: managerPerms, hyperManagerPermissions: hyperPerms, guestPermissions: guestPerms };
     }
 
     if (callerRole === 'admin') {
-      return this.assignmentRepo.find({
-        where: { assignedByAdminId: callerId, isActive: true },
-        relations: ['manager', 'property', 'propertyGroup'],
-      });
+      const [managerPerms, guestPerms] = await Promise.all([
+        this.managerPermRepo.find({ where: { assignedById: callerId, isGranted: true }, relations: ['manager'] }),
+        this.guestPermRepo.find({ where: { assignedById: callerId, isGranted: true }, relations: ['guest'] }),
+      ]);
+      return { managerPermissions: managerPerms, hyperManagerPermissions: [], guestPermissions: guestPerms };
     }
 
     if (callerRole === 'manager') {
-      return this.assignmentRepo.find({
-        where: { managerId: callerId, isActive: true },
-        relations: ['manager', 'property', 'propertyGroup'],
+      const managerPerms = await this.managerPermRepo.find({
+        where: { managerId: callerId, isGranted: true },
       });
+      const guestPerms = await this.guestPermRepo.find({
+        where: { assignedById: callerId, isGranted: true }, relations: ['guest'],
+      });
+      return { managerPermissions: managerPerms, hyperManagerPermissions: [], guestPermissions: guestPerms };
     }
 
-    return [];
+    return { managerPermissions: [], hyperManagerPermissions: [], guestPermissions: [] };
   }
 
-
-  async removeAssignment(adminId: number, assignmentId: string): Promise<void> {
+  async removePermission(adminId: number, permissionId: string, type: 'manager' | 'hyper_manager' | 'guest'): Promise<void> {
     const adminRole = await this.getUserRole(adminId);
     if (!['hyper_admin', 'hyper_manager', 'admin'].includes(adminRole)) {
       throw new ForbiddenException('Insufficient permissions');
     }
 
-    const assignment = await this.assignmentRepo.findOne({ where: { id: assignmentId } });
-    if (!assignment) throw new NotFoundException('Assignment not found');
-
-    // Admin ne peut supprimer que ses propres assignments
-    if (adminRole === 'admin' && assignment.assignedByAdminId !== adminId) {
-      throw new ForbiddenException('Admin can only manage their own assignments');
+    if (type === 'manager') {
+      const perm = await this.managerPermRepo.findOne({ where: { id: permissionId } });
+      if (!perm) throw new NotFoundException('Permission not found');
+      if (adminRole === 'admin' && perm.assignedById !== adminId) {
+        throw new ForbiddenException('Admin can only manage their own permissions');
+      }
+      await this.managerPermRepo.delete(permissionId);
+    } else if (type === 'hyper_manager') {
+      if (adminRole !== 'hyper_admin') throw new ForbiddenException('Only hyper_admin can manage hyper_manager permissions');
+      await this.hyperPermRepo.delete(permissionId);
+    } else if (type === 'guest') {
+      const perm = await this.guestPermRepo.findOne({ where: { id: permissionId } });
+      if (!perm) throw new NotFoundException('Permission not found');
+      if (adminRole === 'admin' && perm.assignedById !== adminId) {
+        throw new ForbiddenException('Admin can only manage their own permissions');
+      }
+      await this.guestPermRepo.delete(permissionId);
     }
-
-    // Soft delete — conserver l'historique
-    await this.assignmentRepo.update(assignmentId, { isActive: false });
   }
-
 
   async updateUserStatus(adminId: number, userId: number, status: string): Promise<void> {
     const adminRole = await this.getUserRole(adminId);
@@ -803,7 +715,6 @@ export class RolesService {
       throw new ForbiddenException('Insufficient permissions');
     }
 
-    // Admin ne peut gérer que ses managers et guests
     if (adminRole === 'admin') {
       const targetRole = await this.getUserRole(userId);
       if (targetRole !== 'manager' && targetRole !== 'guest') {
@@ -818,7 +729,6 @@ export class RolesService {
     await this.userRepo.update(userId, { isActive: status === 'active' });
   }
 
-
   async deleteUser(adminId: number, userId: number): Promise<void> {
     const adminRole = await this.getUserRole(adminId);
     if (adminRole !== 'hyper_admin' && adminRole !== 'hyper_manager') {
@@ -829,78 +739,58 @@ export class RolesService {
 
 
   // ─────────────────────────────────────────────────────────────────────────
-  // IT MVP HELPERS
+  // MVP HELPERS
   // ─────────────────────────────────────────────────────────────────────────
 
-
-  /** Désactiver tous les assignments d'un user (ex : conversion guest → user) */
-  async removeAllAssignments(userId: number): Promise<void> {
-    await this.assignmentRepo.update(
-      { managerId: userId, isActive: true },
-      { isActive: false },
-    );
+  async removeAllPermissions(userId: number): Promise<void> {
+    await Promise.all([
+      this.managerPermRepo.delete({ managerId: userId }),
+      this.hyperPermRepo.delete({ hyperManagerId: userId }),
+      this.guestPermRepo.delete({ guestId: userId }),
+    ]);
   }
 
-
-  /**
-   * Forcer le rôle d'un user sans vérification de permissions.
-   * Réservé à l'usage interne (ex : conversion de rôle automatique).
-   */
   async setUserRoleDirect(userId: number, role: AppRole): Promise<void> {
     await this.setUserRole(userId, role);
   }
 
 
   // ─────────────────────────────────────────────────────────────────────────
-  // OWNERSHIP CHECKS — utilisés par PermissionGuard (scope admin)
+  // OWNERSHIP CHECKS
   // ─────────────────────────────────────────────────────────────────────────
 
-
-  /**
-   * Vérifie qu'un admin est propriétaire d'une property (hostId = adminId).
-   * Les hyper roles retournent toujours true (accès global).
-   */
   async isPropertyOwner(adminId: number, propertyId: string): Promise<boolean> {
     const role = await this.getUserRole(adminId);
     if (role === 'hyper_admin' || role === 'hyper_manager') return true;
 
-    const result = await this.assignmentRepo.manager.query(
+    const result = await this.userRepo.manager.query(
       `SELECT COUNT(*) as count FROM properties WHERE id = $1 AND "hostId" = $2`,
       [propertyId, adminId],
     );
     return parseInt(result?.[0]?.count, 10) > 0;
   }
 
-
-  /**
-   * Vérifie qu'un admin est propriétaire d'un service (providerId = adminId).
-   * Les hyper roles retournent toujours true (accès global).
-   */
   async isServiceOwner(adminId: number, serviceId: string): Promise<boolean> {
     const role = await this.getUserRole(adminId);
     if (role === 'hyper_admin' || role === 'hyper_manager') return true;
 
-    const result = await this.assignmentRepo.manager.query(
+    const result = await this.userRepo.manager.query(
       `SELECT COUNT(*) as count FROM tourism_services WHERE id = $1 AND "providerId" = $2`,
       [serviceId, adminId],
     );
     return parseInt(result?.[0]?.count, 10) > 0;
   }
 
-
-  /** Retourne tous les property IDs appartenant à un admin */
   async getAdminPropertyIds(adminId: number): Promise<string[]> {
-    const result = await this.assignmentRepo.manager.query(
+    const result = await this.userRepo.manager.query(
       `SELECT id FROM properties WHERE "hostId" = $1`,
       [adminId],
     );
     return result.map((r: any) => String(r.id));
   }
 
-
-  /** Retourne tous les service IDs appartenant à un admin */
   async getAdminServiceIds(adminId: number): Promise<string[]> {
-    const result = await this.assignmentRepo.manager.query(
+    const result = await this.userRepo.manager.query(
       `SELECT id FROM tourism_services WHERE "providerId" = $1`,
       [adminId],
     );

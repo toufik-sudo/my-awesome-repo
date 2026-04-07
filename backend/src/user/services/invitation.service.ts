@@ -149,7 +149,7 @@ export class InvitationService {
 
     // Guest scope: inherit inviter's accessible properties/services (read-only)
     if (targetRole === 'guest') {
-      await this.rolesService.createGuestAssignmentsFromInviter(
+      await this.rolesService.createGuestPermissionsFromInviter(
         invitation.invitedBy,
         userId,
       );
@@ -187,8 +187,8 @@ export class InvitationService {
       throw new BadRequestException(`User is not a guest (current role: ${guestRole})`);
     }
 
-    // Remove guest-scoped assignments
-    await this.rolesService.removeAllAssignments(guestUserId);
+    // Remove guest-scoped permissions
+    await this.rolesService.removeAllPermissions(guestUserId);
 
     // Set role to 'user' — user gets full access to all properties/services
     await this.rolesService.setUserRoleDirect(guestUserId, 'user');

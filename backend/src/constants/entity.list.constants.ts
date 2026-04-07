@@ -1,8 +1,9 @@
 import { User } from '../user/entity/user.entity';
 
 import { UserAddress } from '../user/entity/user.userAddress.entity';
-import { ManagerAssignment } from '../user/entity/manager-assignment.entity';
 import { ManagerPermission } from '../user/entity/manager-permission.entity';
+import { HyperManagerPermission } from '../user/entity/hyper-manager-permission.entity';
+import { GuestPermission } from '../user/entity/guest-permission.entity';
 import { Property } from '../properties/entity/property.entity';
 import { PropertyImage } from '../properties/entity/property-image.entity';
 import { PropertyAvailability } from '../properties/entity/property-availability.entity';
@@ -25,8 +26,9 @@ export const entityList = [
   User,
   
   UserAddress,
-  ManagerAssignment,
   ManagerPermission,
+  HyperManagerPermission,
+  GuestPermission,
   Property,
   PropertyImage,
   PropertyAvailability,

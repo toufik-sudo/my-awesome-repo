@@ -7,7 +7,7 @@ import { PropertyImage } from '../entity/property-image.entity';
 import { PropertyAvailability } from '../entity/property-availability.entity';
 import { PropertyGroup } from '../entity/property-group.entity';
 import { PropertyGroupMembership } from '../entity/property-group-membership.entity';
-import { PropertiesController } from '../controllers/properties.controller';
+import { PropertiesController, SavedSearchAlertsController } from '../controllers/properties.controller';
 import { PropertyGroupsController } from '../controllers/property-groups.controller';
 import { DocumentValidationController } from '../controllers/document-validation.controller';
 import { PropertiesService } from '../services/properties.service';
@@ -17,6 +17,7 @@ import { NotificationModule } from '../../notification/modules/notification.modu
 import { PropertyPromo } from '../entity/property-promo.entity';
 import { PromoAlert } from '../entity/promo-alert.entity';
 import { SavedSearchAlert } from '../entity/saved-search-alert.entity';
+import { RbacScopeModule } from '../../rbac/rbac-scope.module';
 
 @Module({
   imports: [
@@ -33,8 +34,9 @@ import { SavedSearchAlert } from '../entity/saved-search-alert.entity';
       PropertyGroupMembership,
     ]),
     NotificationModule,
+    RbacScopeModule,
   ],
-  controllers: [PropertiesController, PropertyGroupsController, DocumentValidationController],
+  controllers: [PropertiesController, SavedSearchAlertsController, PropertyGroupsController, DocumentValidationController],
   providers: [PropertiesService, PropertyGroupsService, DocumentValidationService],
   exports: [PropertiesService, PropertyGroupsService, DocumentValidationService],
 })

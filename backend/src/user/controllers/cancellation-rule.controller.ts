@@ -7,6 +7,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 import { CancellationRuleService } from '../services/cancellation-rule.service';
 import { CancellationRule } from '../entity/cancellation-rule.entity';
 
@@ -24,6 +25,7 @@ export class CancellationRuleController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get cancellation rules' })
   getMine(@Request() req: any): Promise<CancellationRule[]> {
+    const scopeCtx = extractScopeContext(req);
     return this.ruleService.getForUser(req.user.id);
   }
 
@@ -42,6 +44,7 @@ export class CancellationRuleController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create cancellation rule' })
   create(@Request() req: any, @Body() data: Partial<CancellationRule>): Promise<CancellationRule> {
+    const scopeCtx = extractScopeContext(req);
     return this.ruleService.create(req.user.id, data);
   }
 
@@ -51,6 +54,7 @@ export class CancellationRuleController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update cancellation rule' })
   update(@Request() req: any, @Param('id') id: string, @Body() data: Partial<CancellationRule>): Promise<CancellationRule> {
+    const scopeCtx = extractScopeContext(req);
     return this.ruleService.update(req.user.id, id, data);
   }
 
@@ -60,6 +64,7 @@ export class CancellationRuleController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Delete cancellation rule' })
   async remove(@Request() req: any, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.ruleService.remove(req.user.id, id);
     return { success: true };
   }

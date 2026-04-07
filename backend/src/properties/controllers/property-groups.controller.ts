@@ -1,12 +1,13 @@
 import {
   Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { PropertyGroupsService } from '../services/property-groups.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Property Groups')
 @ApiBearerAuth()
@@ -22,7 +23,8 @@ export class PropertyGroupsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'List property groups' })
   async findAll(@Request() req) {
-    return this.groupsService.findAll(req.user.id);
+    const scopeCtx = extractScopeContext(req);
+    return this.groupsService.findAll(req.user.id, scopeCtx);
   }
 
   @Get(':id')
@@ -41,6 +43,7 @@ export class PropertyGroupsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create property group' })
   async create(@Request() req, @Body() body: { name: string; description?: string }) {
+    const scopeCtx = extractScopeContext(req);
     return this.groupsService.create(req.user.id, body.name, body.description);
   }
 
@@ -51,6 +54,7 @@ export class PropertyGroupsController {
   @ApiOperation({ summary: 'Update property group' })
   @ApiParam({ name: 'id' })
   async update(@Request() req, @Param('id') id: string, @Body() body: { name?: string; description?: string; isActive?: boolean }) {
+    const scopeCtx = extractScopeContext(req);
     return this.groupsService.update(req.user.id, id, body);
   }
 
@@ -61,6 +65,7 @@ export class PropertyGroupsController {
   @ApiOperation({ summary: 'Delete property group' })
   @ApiParam({ name: 'id' })
   async remove(@Request() req, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.groupsService.remove(req.user.id, id);
     return { success: true };
   }
@@ -72,6 +77,7 @@ export class PropertyGroupsController {
   @ApiOperation({ summary: 'Add property to group' })
   @ApiParam({ name: 'id' })
   async addProperty(@Request() req, @Param('id') groupId: string, @Body() body: { propertyId: string }) {
+    const scopeCtx = extractScopeContext(req);
     return this.groupsService.addPropertyToGroup(req.user.id, groupId, body.propertyId);
   }
 
@@ -83,6 +89,7 @@ export class PropertyGroupsController {
   @ApiParam({ name: 'id' })
   @ApiParam({ name: 'propertyId' })
   async removeProperty(@Request() req, @Param('id') groupId: string, @Param('propertyId') propertyId: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.groupsService.removePropertyFromGroup(req.user.id, groupId, propertyId);
     return { success: true };
   }

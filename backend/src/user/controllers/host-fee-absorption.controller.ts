@@ -8,6 +8,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Host Fee Absorptions')
 @ApiBearerAuth('JWT-auth')
@@ -23,6 +24,7 @@ export class HostFeeAbsorptionController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get absorption rules' })
   async getMyAbsorptions(@Request() req) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getForHost(req.user.id);
   }
 
@@ -41,6 +43,7 @@ export class HostFeeAbsorptionController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create absorption rule' })
   async create(@Request() req, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.create(req.user.id, body);
   }
 
@@ -50,6 +53,7 @@ export class HostFeeAbsorptionController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Update absorption rule' })
   async update(@Request() req, @Param('id') id: string, @Body() body: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.update(req.user.id, id, body);
   }
 
@@ -59,6 +63,7 @@ export class HostFeeAbsorptionController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Delete absorption rule' })
   async remove(@Request() req, @Param('id') id: string) {
+    const scopeCtx = extractScopeContext(req);
     await this.service.remove(req.user.id, id);
     return { success: true };
   }

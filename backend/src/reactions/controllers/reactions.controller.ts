@@ -6,6 +6,7 @@ import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 
 @ApiTags('Reactions')
 @ApiBearerAuth('JWT-auth')
@@ -20,8 +21,9 @@ export class ReactionsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get reactions for a target' })
-  async getReactions(@Param('targetType') targetType: string, @Param('targetId') targetId: string, @Request() req) {
-    return this.reactionsService.getReactionSummary(targetType, targetId, req.user.id);
+  async getReactions(@Param('targetType') targetType: string, @Param('targetId') targetId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.reactionsService.getReactionSummary(targetType, targetId, req.user.id, scopeCtx);
   }
 
   @Post()
@@ -29,8 +31,9 @@ export class ReactionsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Toggle reaction' })
-  async toggleReaction(@Request() req, @Body() dto: CreateReactionDto) {
-    return this.reactionsService.toggle(req.user.id, dto);
+  async toggleReaction(@Request() req: any, @Body() dto: CreateReactionDto) {
+    const scopeCtx = extractScopeContext(req);
+    return this.reactionsService.toggle(req.user.id, dto, scopeCtx);
   }
 
   @Delete(':targetType/:targetId')
@@ -38,7 +41,8 @@ export class ReactionsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Remove own reaction' })
-  async removeReaction(@Request() req, @Param('targetType') targetType: string, @Param('targetId') targetId: string) {
-    return this.reactionsService.remove(req.user.id, targetType, targetId);
+  async removeReaction(@Request() req: any, @Param('targetType') targetType: string, @Param('targetId') targetId: string) {
+    const scopeCtx = extractScopeContext(req);
+    return this.reactionsService.remove(req.user.id, targetType, targetId, scopeCtx);
   }
 }

@@ -14,6 +14,7 @@ import { RbacConfigService } from '../services/rbac-config.service';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
 import { CustomCsrfInterceptor } from '../../services/interceptors/custom.csrf.interceptor';
 import { CsrfGenAuth, CsrfCheck } from '@tekuconcept/nestjs-csrf';
+import { extractScopeContext } from '../../rbac/scope-context';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { AppRole } from '../entity/user.entity';
 import { RbacScope } from '../entity/rbac-backend-permission.entity';

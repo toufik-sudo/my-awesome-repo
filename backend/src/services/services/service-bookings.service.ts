@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger, Inject, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, In } from 'typeorm';
 import { ServiceBooking } from '../entity/service-booking.entity';
 import { ServiceAvailability } from '../entity/service-availability.entity';
 import { TourismService } from '../entity/tourism-service.entity';
@@ -9,6 +9,10 @@ import { ServiceFeeService } from '../../user/services/service-fee.service';
 import { HostFeeAbsorptionService } from '../../user/services/host-fee-absorption.service';
 import { PointsRuleService } from '../../user/services/points-rule.service';
 import { RolesService } from '../../user/services/roles.service';
+import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
+import { ScopeContext, getScopedPerms } from '../../rbac/scope-context';
+
+const PERM_KEY_PROVIDER_BOOKINGS = 'backend.ServiceBookingsController.getProviderBookings.GET';
 
 @Injectable()
 export class ServiceBookingsService {
@@ -21,6 +25,7 @@ export class ServiceBookingsService {
     private readonly availRepo: Repository<ServiceAvailability>,
     @InjectRepository(TourismService)
     private readonly serviceRepo: Repository<TourismService>,
+    @Optional() private readonly scopeFilter?: ScopeFilterService,
     @Optional() private readonly feeService?: ServiceFeeService,
     @Optional() private readonly absorptionService?: HostFeeAbsorptionService,
     @Optional() private readonly pointsRuleService?: PointsRuleService,
@@ -134,14 +139,26 @@ export class ServiceBookingsService {
     });
   }
 
-  async getProviderBookings(providerId: number) {
-    return this.bookingRepo
+  async getProviderBookings(providerId: number, scopeCtx?: ScopeContext) {
+    const query = this.bookingRepo
       .createQueryBuilder('sb')
       .leftJoinAndSelect('sb.service', 'service')
       .leftJoinAndSelect('sb.customer', 'customer')
       .where('service.providerId = :providerId', { providerId })
-      .orderBy('sb.createdAt', 'DESC')
-      .getMany();
+      .orderBy('sb.createdAt', 'DESC');
+
+    // Apply scope filtering for manager/hyper_manager/guest
+    if (scopeCtx && this.scopeFilter && ['manager', 'hyper_manager', 'guest'].includes(scopeCtx.userRole)) {
+      const scopedPerms = getScopedPerms(scopeCtx);
+      const allowedServiceIds = await this.scopeFilter.resolveServiceIds(scopedPerms, PERM_KEY_PROVIDER_BOOKINGS);
+
+      if (allowedServiceIds !== null) {
+        if (allowedServiceIds.length === 0) return [];
+        query.andWhere('sb.serviceId IN (:...allowedServiceIds)', { allowedServiceIds });
+      }
+    }
+
+    return query.getMany();
   }
 
   async getOne(id: string) {
@@ -153,30 +170,22 @@ export class ServiceBookingsService {
     return booking;
   }
 
-  /**
-   * [BE-02] Scoped getOne: checks caller is customer or service owner/manager.
-   */
   async getOneScoped(id: string, callerId: number) {
     const booking = await this.getOne(id);
 
-    // Customer can always see their own booking
     if (booking.customerId === callerId) return booking;
 
     if (this.rolesService) {
       const callerRole = await this.rolesService.getUserRole(callerId);
 
-      // Hyper roles see all
       if (callerRole === 'hyper_admin' || callerRole === 'hyper_manager') return booking;
 
-      // Admin: must own the service
       if (callerRole === 'admin') {
         const isOwner = await this.rolesService.isServiceOwner(callerId, booking.serviceId);
         if (isOwner) return booking;
       }
 
-      // Manager: must have permission
       if (callerRole === 'manager') {
-        // Use property-level permission check (services are linked to providers)
         const hasAccess = await this.rolesService.hasPermissionForProperty(
           callerId, booking.serviceId, 'view_bookings',
         );
