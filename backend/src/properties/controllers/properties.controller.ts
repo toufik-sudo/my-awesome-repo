@@ -122,7 +122,8 @@ export class PropertiesController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Create promo' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
-  createPromo(@Param('id') id: string, @Body() promoDto: any) {
+  createPromo(@Param('id') id: string, @Body() promoDto: any, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.propertiesService.createPromo(id, promoDto);
   }
 

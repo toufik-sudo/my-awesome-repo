@@ -26,7 +26,8 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Browse rewards shop' })
-  async getShop() {
+  async getShop(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getShopRewards();
   }
 
@@ -35,7 +36,8 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get all rewards (admin)' })
-  async getAll() {
+  async getAll(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getAll();
   }
 
@@ -134,7 +136,8 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get all redemptions (admin)' })
-  async getAllRedemptions() {
+  async getAllRedemptions(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getAllRedemptions();
   }
 }

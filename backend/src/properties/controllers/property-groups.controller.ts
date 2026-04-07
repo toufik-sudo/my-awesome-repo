@@ -100,7 +100,8 @@ export class PropertyGroupsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'List properties in group' })
   @ApiParam({ name: 'id' })
-  async getGroupProperties(@Param('id') groupId: string) {
+  async getGroupProperties(@Param('id') groupId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.groupsService.getGroupProperties(groupId);
   }
 }
