@@ -142,7 +142,7 @@ export class EmailTrackingController {
 
   /** Analytics endpoint (admin only — JWT guard applies) */
   @Get('analytics')
-  async getAnalytics(@Query('days') days?: string) {
+  async getAnalytics(@Query('days') days?: string, @Req() req?: Request) {
     return this.tracking.getAnalytics(days ? parseInt(days, 10) : 30);
   }
 
