@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ScopeContext } from '../../../rbac/scope-context';
 import { Repository } from 'typeorm';
 import { Badge, UserBadge } from '../entity/badge.entity';
 import { UserPoints, PointTransaction } from '../entity/user-points.entity';
@@ -44,17 +45,17 @@ export class BadgeService {
   }
 
   /** Get all badges with user unlock status */
-  async getAllBadges(): Promise<Badge[]> {
+  async getAllBadges(_scopeCtx?: ScopeContext): Promise<Badge[]> {
     return this.badgeRepo.find({ where: { isActive: true }, order: { sortOrder: 'ASC' } });
   }
 
   /** Get user's unlocked badges */
-  async getUserBadges(userId: number): Promise<UserBadge[]> {
+  async getUserBadges(userId: number, _scopeCtx?: ScopeContext): Promise<UserBadge[]> {
     return this.userBadgeRepo.find({ where: { userId }, relations: ['badge'], order: { unlockedAt: 'DESC' } });
   }
 
   /** Check and unlock badges after points change or action */
-  async checkAndUnlock(userId: number, action?: string): Promise<UserBadge[]> {
+  async checkAndUnlock(userId: number, action?: string, _scopeCtx?: ScopeContext): Promise<UserBadge[]> {
     const unlocked: UserBadge[] = [];
     const allBadges = await this.badgeRepo.find({ where: { isActive: true } });
     const existingBadges = await this.userBadgeRepo.find({ where: { userId } });
@@ -98,7 +99,7 @@ export class BadgeService {
   }
 
   /** Get badge progress for a user */
-  async getBadgeProgress(userId: number): Promise<Array<{ badge: Badge; progress: number; total: number; unlocked: boolean }>> {
+  async getBadgeProgress(userId: number, _scopeCtx?: ScopeContext): Promise<Array<{ badge: Badge; progress: number; total: number; unlocked: boolean }>> {
     const allBadges = await this.badgeRepo.find({ where: { isActive: true }, order: { sortOrder: 'ASC' } });
     const userBadges = await this.userBadgeRepo.find({ where: { userId } });
     const unlockedIds = new Set(userBadges.map(ub => ub.badgeId));
