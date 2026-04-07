@@ -13,6 +13,7 @@ import { UpdatePreferencesDto } from '../dtos/update-preferences.dto';
 import { UpdateNotificationsDto } from '../dtos/update-notifications.dto';
 import { UpdateAccountDto, ChangePasswordDto } from '../dtos/update-account.dto';
 import { UserService } from '../../user/services/user.service';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class SettingsService {
@@ -31,7 +32,7 @@ export class SettingsService {
   /**
    * Get all settings for a user (preferences + notifications + account info)
    */
-  async getSettings(userId: number) {
+  async getSettings(userId: number, _scopeCtx?: ScopeContext) {
     const [preferences, notifications, user] = await Promise.all([
       this.getOrCreatePreferences(userId),
       this.getOrCreateNotifications(userId),
@@ -86,7 +87,7 @@ export class SettingsService {
   /**
    * Update user preferences
    */
-  async updatePreferences(userId: number, dto: UpdatePreferencesDto) {
+  async updatePreferences(userId: number, dto: UpdatePreferencesDto, _scopeCtx?: ScopeContext) {
     const preferences = await this.getOrCreatePreferences(userId);
     Object.assign(preferences, dto);
     return this.preferencesRepo.save(preferences);
@@ -95,7 +96,7 @@ export class SettingsService {
   /**
    * Update notification settings
    */
-  async updateNotifications(userId: number, dto: UpdateNotificationsDto) {
+  async updateNotifications(userId: number, dto: UpdateNotificationsDto, _scopeCtx?: ScopeContext) {
     const notifications = await this.getOrCreateNotifications(userId);
     Object.assign(notifications, dto);
     return this.notificationsRepo.save(notifications);
@@ -104,7 +105,7 @@ export class SettingsService {
   /**
    * Update account information
    */
-  async updateAccount(userId: number, dto: UpdateAccountDto) {
+  async updateAccount(userId: number, dto: UpdateAccountDto, _scopeCtx?: ScopeContext) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -138,7 +139,7 @@ export class SettingsService {
   /**
    * Change password
    */
-  async changePassword(userId: number, dto: ChangePasswordDto) {
+  async changePassword(userId: number, dto: ChangePasswordDto, _scopeCtx?: ScopeContext) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
