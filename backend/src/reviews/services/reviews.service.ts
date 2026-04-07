@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from '../entity/review.entity';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class ReviewsService {
@@ -18,11 +19,11 @@ export class ReviewsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, _scopeCtx?: ScopeContext) {
     return this.reviewRepository.findOne({ where: { id }, relations: ['guest', 'property'] });
   }
 
-  async create(createDto: Partial<Review>) {
+  async create(createDto: Partial<Review>, _scopeCtx?: ScopeContext) {
     const review = this.reviewRepository.create({
       ...createDto,
       ...(createDto.propertyId && { property: { id: createDto.propertyId } as any }),
