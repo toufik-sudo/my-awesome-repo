@@ -5,6 +5,7 @@ import { Booking } from '../entity/booking.entity';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { AppRole, User } from '../../user/entity/user.entity';
+import { ScopeContext } from '../../rbac/scope-context';
 
 
 export interface PaginatedResult<T> {
@@ -35,7 +36,7 @@ export class MetricsService {
     status?: string;
     page: number;
     limit: number;
-  }): Promise<PaginatedResult<any>> {
+  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.userRepo.createQueryBuilder('u');
 
     if (filters.status === 'active') qb.andWhere('u.isActive = :active', { active: true });
@@ -60,7 +61,6 @@ export class MetricsService {
       role: u.getRole(),
     }));
 
-    // Filter by role if specified
     if (filters.role) {
       data = data.filter(u => u.role === filters.role);
     }
@@ -82,7 +82,7 @@ export class MetricsService {
     to?: string;
     page: number;
     limit: number;
-  }): Promise<PaginatedResult<any>> {
+  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.bookingRepo.createQueryBuilder('b')
       .leftJoinAndSelect('b.property', 'p')
       .leftJoinAndSelect('b.guest', 'g');
@@ -133,7 +133,7 @@ export class MetricsService {
     city?: string;
     page: number;
     limit: number;
-  }): Promise<PaginatedResult<any>> {
+  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.propertyRepo.createQueryBuilder('p')
       .leftJoinAndSelect('p.host', 'h');
 
@@ -184,7 +184,7 @@ export class MetricsService {
     category?: string;
     page: number;
     limit: number;
-  }): Promise<PaginatedResult<any>> {
+  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.serviceRepo.createQueryBuilder('s')
       .leftJoinAndSelect('s.provider', 'p');
 
@@ -229,7 +229,7 @@ export class MetricsService {
     from?: string;
     to?: string;
     groupBy: string;
-  }) {
+  }, _scopeCtx?: ScopeContext) {
     const qb = this.bookingRepo.createQueryBuilder('b')
       .select("DATE_FORMAT(b.createdAt, '%Y-%m')", 'month')
       .addSelect('SUM(b.totalPrice)', 'revenue')
@@ -248,7 +248,7 @@ export class MetricsService {
     }));
   }
 
-  async getPlatformSummary() {
+  async getPlatformSummary(_scopeCtx?: ScopeContext) {
     const [
       totalUsers,
       activeUsers,
