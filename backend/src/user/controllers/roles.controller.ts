@@ -86,6 +86,7 @@ export class RolesController {
       }[];
     },
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rolesService.setManagerPermissions(req.user.id, body.managerId, body.permissions);
   }
 
@@ -104,7 +105,8 @@ export class RolesController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get manager accessible properties' })
-  async getManagerProperties(@Param('managerId') managerId: string) {
+  async getManagerProperties(@Param('managerId') managerId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rolesService.getManagerProperties(parseInt(managerId, 10));
   }
 
@@ -132,6 +134,7 @@ export class RolesController {
       }[];
     },
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rolesService.setHyperManagerPermissions(req.user.id, body.hyperManagerId, body.permissions);
   }
 
@@ -140,7 +143,8 @@ export class RolesController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get hyper_manager permissions' })
-  async getHyperManagerPermissions(@Param('hyperManagerId') hyperManagerId: string) {
+  async getHyperManagerPermissions(@Param('hyperManagerId') hyperManagerId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rolesService.getHyperManagerPermissions(parseInt(hyperManagerId, 10));
   }
 
@@ -167,6 +171,7 @@ export class RolesController {
       }[];
     },
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rolesService.setGuestPermissions(req.user.id, body.guestId, body.permissions);
   }
 
@@ -236,6 +241,7 @@ export class RolesController {
     @Param('permissionId') permissionId: string,
     @Param('type') type: 'manager' | 'hyper_manager' | 'guest',
   ) {
+    const scopeCtx = extractScopeContext(req);
     await this.rolesService.removePermission(req.user.id, permissionId, type);
     return { success: true };
   }
@@ -251,7 +257,9 @@ export class RolesController {
     @Param('userId') userId: string,
     @Param('propertyId') propertyId: string,
     @Param('permission') permission: string,
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     const hasPermission = await this.rolesService.hasPermissionForProperty(parseInt(userId, 10), propertyId, permission);
     return { hasPermission };
   }
