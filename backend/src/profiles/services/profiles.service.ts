@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Profile } from '../entity/profile.entity';
 import { RedisCacheService } from '../../infrastructure/redis';
+import { ScopeContext } from '../../rbac/scope-context';
 
 const CACHE_TTL = 600; // 10 min
 
@@ -14,7 +15,7 @@ export class ProfilesService {
     private readonly cache: RedisCacheService,
   ) {}
 
-  async findByUser(userId: number) {
+  async findByUser(userId: number, _scopeCtx?: ScopeContext) {
     const cacheKey = this.cache.key('profile', 'user', String(userId));
     return this.cache.getOrSet(
       cacheKey,
@@ -23,7 +24,7 @@ export class ProfilesService {
     );
   }
 
-  async update(userId: number, updateDto: Partial<Profile>) {
+  async update(userId: number, updateDto: Partial<Profile>, _scopeCtx?: ScopeContext) {
     await this.profileRepository.update({ userId }, updateDto);
     await this.cache.del(this.cache.key('profile', 'user', String(userId)));
     return this.findByUser(userId);

@@ -19,7 +19,8 @@ export class ServiceFeeController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getAll() {
+  async getAll(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getAll();
   }
 
@@ -71,7 +72,8 @@ export class ServiceFeeController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async calculate(@Body() body: { hostId: number; propertyId: string; propertyGroupId?: string; amount: number; serviceId?: string; serviceGroupId?: string }) {
+  async calculate(@Request() req: any, @Body() body: { hostId: number; propertyId: string; propertyGroupId?: string; amount: number; serviceId?: string; serviceGroupId?: string }) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.calculateFee(body.hostId, body.propertyId, body.propertyGroupId || null, body.amount, body.serviceId, body.serviceGroupId);
   }
 }

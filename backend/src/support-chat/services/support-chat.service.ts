@@ -6,6 +6,7 @@ import { SupportMessage } from '../entity/support-message.entity';
 import { CreateSupportThreadDto, SendSupportMessageDto } from '../dtos/support-chat.dto';
 import { EventsGateway } from '../../infrastructure/websocket/events.gateway';
 import { RolesService } from '../../user/services/roles.service';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class SupportChatService {
@@ -44,7 +45,7 @@ export class SupportChatService {
   }
 
   /** Create a new support thread with initial message */
-  async createThread(userId: number, userRole: string, dto: CreateSupportThreadDto) {
+  async createThread(userId: number, userRole: string, dto: CreateSupportThreadDto, _scopeCtx?: ScopeContext) {
     const thread = this.threadRepo.create({
       subject: dto.subject,
       category: dto.category as any || 'general',
@@ -78,7 +79,7 @@ export class SupportChatService {
   }
 
   /** Get all threads for admin inbox — scoped by role */
-  async getAdminThreads(userId: number, userRole: string, page: number, limit: number, status?: string, category?: string) {
+  async getAdminThreads(userId: number, userRole: string, page: number, limit: number, status?: string, category?: string, _scopeCtx?: ScopeContext) {
     const where: any = {};
     if (status) where.status = status;
     if (category) where.category = category;
@@ -112,7 +113,7 @@ export class SupportChatService {
   }
 
   /** Get threads for a specific user */
-  async getUserThreads(userId: number, page: number, limit: number) {
+  async getUserThreads(userId: number, page: number, limit: number, _scopeCtx?: ScopeContext) {
     const [items, total] = await this.threadRepo.findAndCount({
       where: { initiatorId: userId },
       relations: ['assignedAdmin'],
@@ -125,7 +126,7 @@ export class SupportChatService {
   }
 
   /** Get single thread with messages — enforce scope */
-  async getThreadById(threadId: string, userId: number, userRole?: string) {
+  async getThreadById(threadId: string, userId: number, userRole?: string, _scopeCtx?: ScopeContext) {
     const thread = await this.threadRepo.findOne({
       where: { id: threadId },
       relations: ['initiator', 'assignedAdmin'],
@@ -139,7 +140,7 @@ export class SupportChatService {
   }
 
   /** Get messages for a thread with pagination */
-  async getMessages(threadId: string, userId: number, userRole: string, page: number, limit: number) {
+  async getMessages(threadId: string, userId: number, userRole: string, page: number, limit: number, _scopeCtx?: ScopeContext) {
     const thread = await this.threadRepo.findOne({ where: { id: threadId } });
     if (!thread) throw new NotFoundException('Thread not found');
 
@@ -157,7 +158,7 @@ export class SupportChatService {
   }
 
   /** Send a message in a thread */
-  async sendMessage(threadId: string, userId: number, userRole: string, dto: SendSupportMessageDto) {
+  async sendMessage(threadId: string, userId: number, userRole: string, dto: SendSupportMessageDto, _scopeCtx?: ScopeContext) {
     const thread = await this.threadRepo.findOne({ where: { id: threadId } });
     if (!thread) throw new NotFoundException('Thread not found');
     if (thread.status === 'closed') throw new ForbiddenException('Thread is closed');
@@ -202,7 +203,7 @@ export class SupportChatService {
   }
 
   /** Update thread status (admin only) */
-  async updateStatus(threadId: string, status: string) {
+  async updateStatus(threadId: string, status: string, _scopeCtx?: ScopeContext) {
     const thread = await this.threadRepo.findOne({ where: { id: threadId } });
     if (!thread) throw new NotFoundException('Thread not found');
     thread.status = status as any;
@@ -210,7 +211,7 @@ export class SupportChatService {
   }
 
   /** Assign admin to thread */
-  async assignThread(threadId: string, adminId: number) {
+  async assignThread(threadId: string, adminId: number, _scopeCtx?: ScopeContext) {
     const thread = await this.threadRepo.findOne({ where: { id: threadId } });
     if (!thread) throw new NotFoundException('Thread not found');
     thread.assignedAdminId = adminId;
@@ -219,7 +220,7 @@ export class SupportChatService {
   }
 
   /** Mark messages as read */
-  async markRead(threadId: string, userId: number, isAdmin: boolean) {
+  async markRead(threadId: string, userId: number, isAdmin: boolean, _scopeCtx?: ScopeContext) {
     const thread = await this.threadRepo.findOne({ where: { id: threadId } });
     if (!thread) return;
     if (isAdmin) {

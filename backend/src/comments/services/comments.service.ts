@@ -4,6 +4,7 @@ import { Repository, IsNull } from 'typeorm';
 import { Comment } from '../entity/comment.entity';
 import { CreateCommentDto, UpdateCommentDto } from '../dtos/comment.dto';
 import { RolesService } from '../../user/services/roles.service';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class CommentsService {
@@ -13,7 +14,7 @@ export class CommentsService {
     private readonly rolesService: RolesService,
   ) {}
 
-  async getComments(targetType: string, targetId: string, page: number, limit: number) {
+  async getComments(targetType: string, targetId: string, page: number, limit: number, _scopeCtx?: ScopeContext) {
     const [items, total] = await this.commentRepo.findAndCount({
       where: { targetType, targetId, parentId: IsNull() },
       relations: ['user'],
@@ -32,7 +33,7 @@ export class CommentsService {
     return { items: commentsWithCounts, total, page, limit };
   }
 
-  async getReplies(commentId: string, page: number, limit: number) {
+  async getReplies(commentId: string, page: number, limit: number, _scopeCtx?: ScopeContext) {
     const [items, total] = await this.commentRepo.findAndCount({
       where: { parentId: commentId },
       relations: ['user'],
@@ -43,7 +44,7 @@ export class CommentsService {
     return { items, total, page, limit };
   }
 
-  async create(userId: number, dto: CreateCommentDto): Promise<Comment> {
+  async create(userId: number, dto: CreateCommentDto, _scopeCtx?: ScopeContext): Promise<Comment> {
     const comment = this.commentRepo.create({
       userId,
       user: { id: userId } as any,
@@ -57,8 +58,7 @@ export class CommentsService {
     return this.commentRepo.save(comment);
   }
 
-  // [BE-12] Ownership validation: author OR admin/hyper can edit
-  async update(userId: number, commentId: string, dto: UpdateCommentDto): Promise<Comment> {
+  async update(userId: number, commentId: string, dto: UpdateCommentDto, _scopeCtx?: ScopeContext): Promise<Comment> {
     const comment = await this.commentRepo.findOne({ where: { id: commentId } });
     if (!comment) throw new NotFoundException('Comment not found');
 
@@ -75,8 +75,7 @@ export class CommentsService {
     return this.commentRepo.save(comment);
   }
 
-  // [BE-12] Ownership validation: author OR admin/hyper can delete (moderation)
-  async delete(userId: number, commentId: string): Promise<void> {
+  async delete(userId: number, commentId: string, _scopeCtx?: ScopeContext): Promise<void> {
     const comment = await this.commentRepo.findOne({ where: { id: commentId } });
     if (!comment) throw new NotFoundException('Comment not found');
 

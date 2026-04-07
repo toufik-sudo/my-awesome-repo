@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Favorite } from '../entity/favorite.entity';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class FavoritesService {
@@ -10,7 +11,7 @@ export class FavoritesService {
     private readonly favoriteRepository: Repository<Favorite>,
   ) {}
 
-  async findByUser(userId: number) {
+  async findByUser(userId: number, _scopeCtx?: ScopeContext) {
     return this.favoriteRepository.find({
       where: { userId },
       relations: ['property'],
@@ -18,14 +19,14 @@ export class FavoritesService {
     });
   }
 
-  async isFavorited(userId: number, propertyId: string) {
+  async isFavorited(userId: number, propertyId: string, _scopeCtx?: ScopeContext) {
     const count = await this.favoriteRepository.count({
       where: { userId, propertyId },
     });
     return { favorited: count > 0 };
   }
 
-  async toggle(userId: number, propertyId: string) {
+  async toggle(userId: number, propertyId: string, _scopeCtx?: ScopeContext) {
     const existing = await this.favoriteRepository.findOne({
       where: { userId, propertyId },
     });
@@ -45,7 +46,7 @@ export class FavoritesService {
     return { favorited: true };
   }
 
-  async remove(userId: number, propertyId: string) {
+  async remove(userId: number, propertyId: string, _scopeCtx?: ScopeContext) {
     await this.favoriteRepository.delete({ userId, propertyId });
     return { favorited: false };
   }

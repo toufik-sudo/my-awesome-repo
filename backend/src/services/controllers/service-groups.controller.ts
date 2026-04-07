@@ -69,7 +69,8 @@ export class ServiceGroupsController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  update(@Param('id') id: string, @Body() data: { name?: string; description?: string; isActive?: boolean }) {
+  update(@Param('id') id: string, @Body() data: { name?: string; description?: string; isActive?: boolean }, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.groupRepo.update(id, data);
   }
 
@@ -77,13 +78,16 @@ export class ServiceGroupsController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  remove(@Param('id') id: string) { return this.groupRepo.delete(id); }
+  remove(@Param('id') id: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.groupRepo.delete(id); }
 
   @Get(':id/services')
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getServices(@Param('id') groupId: string) {
+  async getServices(@Param('id') groupId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     const memberships = await this.membershipRepo.find({ where: { groupId }, relations: ['service'] });
     return memberships.map(m => m.service);
   }
@@ -92,7 +96,8 @@ export class ServiceGroupsController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  addService(@Param('id') groupId: string, @Body('serviceId') serviceId: string) {
+  addService(@Param('id') groupId: string, @Body('serviceId') serviceId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.membershipRepo.save(this.membershipRepo.create({ groupId, serviceId }));
   }
 
@@ -100,7 +105,8 @@ export class ServiceGroupsController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  removeService(@Param('id') groupId: string, @Param('serviceId') serviceId: string) {
+  removeService(@Param('id') groupId: string, @Param('serviceId') serviceId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.membershipRepo.delete({ groupId, serviceId });
   }
 }

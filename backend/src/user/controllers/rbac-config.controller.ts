@@ -6,6 +6,7 @@ import {
   Body,
   Post,
   Query,
+  Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -34,7 +35,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'List all backend RBAC permissions' })
-  async listBackend() {
+  async listBackend(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.findAllBackend();
   }
 
@@ -43,7 +45,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get backend permissions for a specific role' })
-  async getBackendByRole(@Param('role') role: AppRole) {
+  async getBackendByRole(@Param('role') role: AppRole, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.getBackendPermissions(role);
   }
 
@@ -55,7 +58,9 @@ export class RbacConfigController {
   async updateBackend(
     @Param('id') id: string,
     @Body() body: { allowed?: boolean; scope?: RbacScope; user_roles?: string[]; conditions?: Record<string, any> },
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.updateBackendPermission(id, body);
   }
 
@@ -66,7 +71,9 @@ export class RbacConfigController {
   @ApiOperation({ summary: 'Bulk update backend permissions' })
   async bulkUpdateBackend(
     @Body() body: { updates: Array<{ permission_key: string; allowed?: boolean; scope?: RbacScope; user_roles?: string[] }> },
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.bulkUpdateBackend(body.updates);
   }
 
@@ -87,7 +94,9 @@ export class RbacConfigController {
       description?: string;
       conditions?: Record<string, any>;
     },
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.createBackendPermission(body);
   }
 
@@ -98,7 +107,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'List all frontend RBAC permissions' })
-  async listFrontend() {
+  async listFrontend(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.findAllFrontend();
   }
 
@@ -107,7 +117,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get frontend UI permissions for a role' })
-  async getFrontendByRole(@Param('role') role: AppRole) {
+  async getFrontendByRole(@Param('role') role: AppRole, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.getFrontendPermissions(role);
   }
 
@@ -119,7 +130,9 @@ export class RbacConfigController {
   async updateFrontend(
     @Param('id') id: string,
     @Body() body: { allowed?: boolean; user_roles?: string[]; conditions?: Record<string, any> },
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.updateFrontendPermission(id, body);
   }
 
@@ -140,7 +153,9 @@ export class RbacConfigController {
       description?: string;
       conditions?: Record<string, any>;
     },
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.createFrontendPermission(body);
   }
 
@@ -151,7 +166,9 @@ export class RbacConfigController {
   @ApiOperation({ summary: 'Bulk update frontend permissions' })
   async bulkUpdateFrontend(
     @Body() body: { updates: Array<{ permission_key: string; allowed?: boolean; user_roles?: string[] }> },
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.bulkUpdateFrontend(body.updates);
   }
 
@@ -162,7 +179,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get list of all available roles' })
-  async getRoles() {
+  async getRoles(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.rbacService.getRoles();
   }
 
@@ -173,7 +191,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Force reload RBAC cache' })
-  async reloadCache() {
+  async reloadCache(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     await this.rbacService.reload();
     return { success: true, message: 'RBAC cache reloaded and synced' };
   }
@@ -183,7 +202,8 @@ export class RbacConfigController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Check RBAC cache status' })
-  async status() {
+  async status(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return { loaded: this.rbacService.isLoaded() };
   }
 
@@ -197,7 +217,9 @@ export class RbacConfigController {
   async check(
     @Query('role') role: AppRole,
     @Query('permission') permission: string,
+    @Request() req: any,
   ) {
+    const scopeCtx = extractScopeContext(req);
     return {
       role,
       permission,

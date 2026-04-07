@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ranking } from '../entity/ranking.entity';
+import { ScopeContext } from '../../rbac/scope-context';
 
 @Injectable()
 export class RankingsService {
@@ -10,7 +11,7 @@ export class RankingsService {
     private readonly rankingRepo: Repository<Ranking>,
   ) {}
 
-  async getRankings(category: string, page: number, limit: number) {
+  async getRankings(category: string, page: number, limit: number, _scopeCtx?: ScopeContext) {
     const [items, total] = await this.rankingRepo.findAndCount({
       where: { category },
       order: { score: 'DESC' },
@@ -29,7 +30,7 @@ export class RankingsService {
     };
   }
 
-  async getUserRank(userId: number, category: string) {
+  async getUserRank(userId: number, category: string, _scopeCtx?: ScopeContext) {
     const userRanking = await this.rankingRepo.findOne({ where: { userId, category } });
     if (!userRanking) return { rank: null, score: 0 };
 

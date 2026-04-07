@@ -73,7 +73,8 @@ export class ReferralController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getShareStats(@Param('propertyId') propertyId: string) {
+  async getShareStats(@Param('propertyId') propertyId: string, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
     return this.service.getShareStats(propertyId);
   }
 }

@@ -40,14 +40,11 @@ export class BookingsService {
     const where: any = {};
     if (status) where.status = status;
 
-    // Apply scope-based property filtering for manager/hyper_manager/guest
     if (scopeCtx) {
       const { userRole } = scopeCtx;
-
       if (['manager', 'hyper_manager', 'guest'].includes(userRole)) {
         const scopedPerms = getScopedPerms(scopeCtx);
         const allowedPropertyIds = await this.scopeFilter.resolvePropertyIds(scopedPerms, PERM_KEY_FIND_ALL);
-
         if (allowedPropertyIds !== null) {
           if (allowedPropertyIds.length === 0) return [];
           where.propertyId = In(allowedPropertyIds);
@@ -62,7 +59,7 @@ export class BookingsService {
     return this.bookingRepository.findOne({ where: { id }, relations: ['property', 'guest'] });
   }
 
-  async findOneScoped(id: string, callerId: number) {
+  async findOneScoped(id: string, callerId: number, _scopeCtx?: ScopeContext) {
     const booking = await this.bookingRepository.findOne({
       where: { id },
       relations: ['property', 'guest'],
@@ -123,7 +120,7 @@ export class BookingsService {
     return { effectiveRate: pricePerNight, discount: 0, discountType: '' };
   }
 
-  async create(dto: CreateBookingDto, guestId: number) {
+  async create(dto: CreateBookingDto, guestId: number, _scopeCtx?: ScopeContext) {
     const property = await this.propertyRepository.findOne({ where: { id: dto.propertyId } });
     if (!property) throw new NotFoundException('Property not found');
 
@@ -195,7 +192,7 @@ export class BookingsService {
     return fullBooking;
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string, status: string, _scopeCtx?: ScopeContext) {
     const booking = await this.findOne(id);
     if (!booking) throw new NotFoundException('Booking not found');
 
@@ -224,7 +221,7 @@ export class BookingsService {
     return updated;
   }
 
-  async declineBooking(id: string, reason?: string) {
+  async declineBooking(id: string, reason?: string, _scopeCtx?: ScopeContext) {
     const booking = await this.findOne(id);
     if (!booking) throw new NotFoundException('Booking not found');
 
@@ -254,7 +251,7 @@ export class BookingsService {
     newCheckIn?: string;
     newCheckOut?: string;
     message?: string;
-  }) {
+  }, _scopeCtx?: ScopeContext) {
     const booking = await this.findOne(id);
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.status !== 'pending') throw new BadRequestException('Can only counter-offer pending bookings');
@@ -285,7 +282,7 @@ export class BookingsService {
     return updated;
   }
 
-  async findByGuest(guestId: number) {
+  async findByGuest(guestId: number, _scopeCtx?: ScopeContext) {
     return this.bookingRepository.find({
       where: { guestId },
       relations: ['property'],

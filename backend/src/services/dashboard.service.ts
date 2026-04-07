@@ -5,6 +5,7 @@ import { Property } from '../properties/entity/property.entity';
 import { Booking } from '../bookings/entity/booking.entity';
 import { Favorite } from '../favorites/entity/favorite.entity';
 import { VerificationDocument } from '../properties/entity/verification-document.entity';
+import { ScopeContext } from '../rbac/scope-context';
 
 @Injectable()
 export class DashboardService {
@@ -19,7 +20,7 @@ export class DashboardService {
     private readonly verDocRepo: Repository<VerificationDocument>,
   ) {}
 
-  async getDashboard(userId: number) {
+  async getDashboard(userId: number, _scopeCtx?: ScopeContext) {
     // ── Properties stats ──
     const myProperties = await this.propertyRepo.find({ where: { hostId: userId } });
     const totalProperties = myProperties.length;

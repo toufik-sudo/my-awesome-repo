@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserPoints, PointTransaction, PointAction, PointTier } from '../entity/user-points.entity';
+import { ScopeContext } from '../../../rbac/scope-context';
 
 /** Point values per action */
 const POINT_VALUES: Record<PointAction, number> = {
@@ -58,6 +59,7 @@ export class PointsService {
     userId: number,
     action: PointAction,
     opts?: { customPoints?: number; description?: string; referenceId?: string; referenceType?: string },
+    _scopeCtx?: ScopeContext,
   ): Promise<PointTransaction> {
     const points = opts?.customPoints ?? POINT_VALUES[action];
     if (points <= 0 && action !== 'admin_bonus') return null as any;
@@ -113,7 +115,7 @@ export class PointsService {
   }
 
   /** Apply penalty */
-  async deductPoints(userId: number, points: number, reason: string): Promise<PointTransaction> {
+  async deductPoints(userId: number, points: number, reason: string, _scopeCtx?: ScopeContext): Promise<PointTransaction> {
     const userPoints = await this.getOrCreate(userId);
     userPoints.totalPoints = Math.max(0, userPoints.totalPoints - points);
     userPoints.availablePoints = Math.max(0, userPoints.availablePoints - points);
@@ -133,7 +135,7 @@ export class PointsService {
   }
 
   /** Get user summary */
-  async getUserSummary(userId: number) {
+  async getUserSummary(userId: number, _scopeCtx?: ScopeContext) {
     const userPoints = await this.getOrCreate(userId);
     const recentTransactions = await this.transRepo.find({
       where: { userId },
@@ -152,7 +154,7 @@ export class PointsService {
   }
 
   /** Get leaderboard */
-  async getLeaderboard(limit = 20) {
+  async getLeaderboard(limit = 20, _scopeCtx?: ScopeContext) {
     return this.pointsRepo.find({
       relations: ['user'],
       order: { lifetimePoints: 'DESC' },
@@ -161,7 +163,7 @@ export class PointsService {
   }
 
   /** Get transactions history */
-  async getTransactions(userId: number, page = 1, limit = 20) {
+  async getTransactions(userId: number, page = 1, limit = 20, _scopeCtx?: ScopeContext) {
     const [data, total] = await this.transRepo.findAndCount({
       where: { userId },
       order: { createdAt: 'DESC' },

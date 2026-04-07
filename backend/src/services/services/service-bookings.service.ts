@@ -32,7 +32,7 @@ export class ServiceBookingsService {
     @Optional() private readonly rolesService?: RolesService,
   ) {}
 
-  async create(dto: CreateServiceBookingDto, customerId: number) {
+  async create(dto: CreateServiceBookingDto, customerId: number, _scopeCtx?: ScopeContext) {
     const service = await this.serviceRepo.findOne({ where: { id: dto.serviceId } });
     if (!service) throw new NotFoundException('Service not found');
     if (!service.isAvailable) throw new BadRequestException('Service is not available');
@@ -131,7 +131,7 @@ export class ServiceBookingsService {
     };
   }
 
-  async getMyBookings(customerId: number) {
+  async getMyBookings(customerId: number, _scopeCtx?: ScopeContext) {
     return this.bookingRepo.find({
       where: { customerId },
       relations: ['service'],
@@ -170,7 +170,7 @@ export class ServiceBookingsService {
     return booking;
   }
 
-  async getOneScoped(id: string, callerId: number) {
+  async getOneScoped(id: string, callerId: number, _scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
 
     if (booking.customerId === callerId) return booking;
@@ -196,7 +196,7 @@ export class ServiceBookingsService {
     throw new ForbiddenException('You do not have access to this service booking');
   }
 
-  async accept(id: string) {
+  async accept(id: string, _scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
     if (booking.status !== 'pending') throw new BadRequestException('Booking is not pending');
     booking.status = 'confirmed';
@@ -204,7 +204,7 @@ export class ServiceBookingsService {
     return this.bookingRepo.save(booking);
   }
 
-  async decline(id: string, reason?: string) {
+  async decline(id: string, reason?: string, _scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
     if (booking.status !== 'pending') throw new BadRequestException('Booking is not pending');
     booking.status = 'rejected';
@@ -212,7 +212,7 @@ export class ServiceBookingsService {
     return this.bookingRepo.save(booking);
   }
 
-  async cancel(id: string, reason?: string) {
+  async cancel(id: string, reason?: string, _scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
     if (!['pending', 'confirmed'].includes(booking.status)) throw new BadRequestException('Cannot cancel');
     booking.status = 'cancelled';
@@ -221,7 +221,7 @@ export class ServiceBookingsService {
     return this.bookingRepo.save(booking);
   }
 
-  async getAvailability(serviceId: string, startDate: string, endDate: string) {
+  async getAvailability(serviceId: string, startDate: string, endDate: string, _scopeCtx?: ScopeContext) {
     return this.availRepo.find({
       where: {
         serviceId,
@@ -231,7 +231,7 @@ export class ServiceBookingsService {
     });
   }
 
-  async setAvailability(serviceId: string, dto: ServiceAvailabilityDto) {
+  async setAvailability(serviceId: string, dto: ServiceAvailabilityDto, _scopeCtx?: ScopeContext) {
     let avail = await this.availRepo.findOne({
       where: { serviceId, date: new Date(dto.date) as any },
     });
@@ -246,7 +246,7 @@ export class ServiceBookingsService {
     }));
   }
 
-  async bulkSetAvailability(serviceId: string, dates: ServiceAvailabilityDto[]) {
+  async bulkSetAvailability(serviceId: string, dates: ServiceAvailabilityDto[], _scopeCtx?: ScopeContext) {
     return Promise.all(dates.map(d => this.setAvailability(serviceId, d)));
   }
 }
