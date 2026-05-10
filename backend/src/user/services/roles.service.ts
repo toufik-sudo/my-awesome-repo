@@ -437,7 +437,7 @@ export class RolesService {
   private async isPropertyOwnedBy(propertyId: string, adminId?: number): Promise<boolean> {
     if (!adminId) return false;
     const row = await this.userRepo.manager.query(
-      `SELECT 1 FROM properties WHERE id = $1 AND "hostId" = $2 LIMIT 1`,
+      'SELECT 1 FROM properties WHERE id = ? AND `hostId` = ? LIMIT 1',
       [propertyId, adminId],
     );
     return row.length > 0;
@@ -447,7 +447,7 @@ export class RolesService {
   private async propertyIdsOwnedBy(adminIds: number[]): Promise<string[]> {
     if (adminIds.length === 0) return [];
     const rows = await this.userRepo.manager.query(
-      `SELECT id FROM properties WHERE "hostId" = ANY($1::int[])`,
+      'SELECT id FROM properties WHERE `hostId` IN (?)',
       [adminIds],
     );
     return rows.map((r: any) => String(r.id));
@@ -457,7 +457,7 @@ export class RolesService {
   private async serviceIdsOwnedBy(adminIds: number[]): Promise<string[]> {
     if (adminIds.length === 0) return [];
     const rows = await this.userRepo.manager.query(
-      `SELECT id FROM tourism_services WHERE "providerId" = ANY($1::int[])`,
+      'SELECT id FROM tourism_services WHERE `providerId` IN (?)',
       [adminIds],
     );
     return rows.map((r: any) => String(r.id));
@@ -907,7 +907,7 @@ export class RolesService {
     if (role === 'hyper_admin') return true;
 
     const result = await this.userRepo.manager.query(
-      `SELECT COUNT(*) as count FROM properties WHERE id = $1 AND "hostId" = $2`,
+      'SELECT COUNT(*) as count FROM properties WHERE id = ? AND `hostId` = ?',
       [propertyId, adminId],
     );
     return parseInt(result?.[0]?.count, 10) > 0;
@@ -918,7 +918,7 @@ export class RolesService {
     if (role === 'hyper_admin') return true;
 
     const result = await this.userRepo.manager.query(
-      `SELECT COUNT(*) as count FROM tourism_services WHERE id = $1 AND "providerId" = $2`,
+      'SELECT COUNT(*) as count FROM tourism_services WHERE id = ? AND `providerId` = ?',
       [serviceId, adminId],
     );
     return parseInt(result?.[0]?.count, 10) > 0;
@@ -926,7 +926,7 @@ export class RolesService {
 
   async getAdminPropertyIds(adminId: number): Promise<string[]> {
     const result = await this.userRepo.manager.query(
-      `SELECT id FROM properties WHERE "hostId" = $1`,
+      'SELECT id FROM properties WHERE `hostId` = ?',
       [adminId],
     );
     return result.map((r: any) => String(r.id));
@@ -934,7 +934,7 @@ export class RolesService {
 
   async getAdminServiceIds(adminId: number): Promise<string[]> {
     const result = await this.userRepo.manager.query(
-      `SELECT id FROM tourism_services WHERE "providerId" = $1`,
+      'SELECT id FROM tourism_services WHERE `providerId` = ?',
       [adminId],
     );
     return result.map((r: any) => String(r.id));
