@@ -56,6 +56,24 @@ export class ScopeFilterService {
     return false;
   }
 
+  /**
+   * A "narrow" property perm explicitly targets specific properties or property groups
+   * (non-empty target arrays). When any narrow property perm exists for a manager/guest,
+   * it MUST take precedence over broader 'all' / 'admins' / empty-target perms which
+   * would otherwise inherit the inviter admin's full inventory.
+   */
+  private isNarrowPropertyPerm(p: ScopedPerm): boolean {
+    if (p.scope === 'properties' && p.properties && p.properties.length > 0) return true;
+    if (p.scope === 'property_groups' && p.propertyGroups && p.propertyGroups.length > 0) return true;
+    return false;
+  }
+
+  private isNarrowServicePerm(p: ScopedPerm): boolean {
+    if (p.scope === 'services' && p.services && p.services.length > 0) return true;
+    if (p.scope === 'service_groups' && p.serviceGroups && p.serviceGroups.length > 0) return true;
+    return false;
+  }
+
   async resolvePropertyIds(
     scopedPerms: ScopedPerm[],
     permissionKey: string,
@@ -88,6 +106,17 @@ export class ScopeFilterService {
     // For manager/guest, scope='all' means "all resources owned by the inviter admin".
     const isHyperManager = role === 'hyper_manager';
     if (isHyperManager && relevant.some(p => p.scope === 'all')) return null;
+
+    // RESTRICTIVE precedence: when any narrow-scope perm (specific properties
+    // or property groups) is present for a manager/guest, it overrides broader
+    // 'all' / 'admins' / empty-target perms which would otherwise inherit the
+    // inviter admin's full inventory. Without this, granting both a narrow
+    // "scope=properties" assignment AND any "scope=all" permission would leak
+    // every admin-owned property to the manager.
+    if (!isHyperManager) {
+      const narrow = relevant.filter(p => this.isNarrowPropertyPerm(p));
+      if (narrow.length > 0) relevant = narrow;
+    }
 
     const ids = new Set<string>();
     // Inviters whose full inventory should be inherited (no explicit target on the perm).
@@ -185,6 +214,13 @@ export class ScopeFilterService {
 
     const isHyperManager = role === 'hyper_manager';
     if (isHyperManager && relevant.some(p => p.scope === 'all')) return null;
+
+    // RESTRICTIVE precedence (services): narrow service/service_group perms
+    // override broader 'all'/'admins'/empty-target perms for manager/guest.
+    if (!isHyperManager) {
+      const narrow = relevant.filter(p => this.isNarrowServicePerm(p));
+      if (narrow.length > 0) relevant = narrow;
+    }
 
     const ids = new Set<string>();
     const inheritFromInviters = new Set<number>();

@@ -514,10 +514,20 @@ export class RolesService {
   // ─── SCOPE RESOLUTION ─────────────────────────────────────────────────
 
   async getManagerProperties(managerId: number): Promise<string[] | null> {
-    const perms = await this.managerPermRepo.find({
+    const allPerms = await this.managerPermRepo.find({
       where: { managerId, isGranted: true },
     });
-    if (perms.length === 0) return [];
+    if (allPerms.length === 0) return [];
+
+    // RESTRICTIVE precedence: when any narrow property perm (specific properties
+    // or property groups) exists, ignore broader 'all'/'admins'/empty-target
+    // perms which would otherwise inherit the inviter admin's full property set.
+    const narrow = allPerms.filter(
+      p =>
+        (p.scope === 'properties' && p.properties && p.properties.length > 0) ||
+        (p.scope === 'property_groups' && p.propertyGroups && p.propertyGroups.length > 0),
+    );
+    const perms = narrow.length > 0 ? narrow : allPerms;
 
     const propertyIds = new Set<string>();
     const inheritFromInviters = new Set<number>();
@@ -574,10 +584,18 @@ export class RolesService {
   }
 
   async getGuestAccessibleProperties(guestId: number): Promise<string[] | null> {
-    const perms = await this.guestPermRepo.find({
+    const allPerms = await this.guestPermRepo.find({
       where: { guestId, isGranted: true },
     });
-    if (perms.length === 0) return [];
+    if (allPerms.length === 0) return [];
+
+    // RESTRICTIVE precedence (see getManagerProperties).
+    const narrow = allPerms.filter(
+      p =>
+        (p.scope === 'properties' && p.properties && p.properties.length > 0) ||
+        (p.scope === 'property_groups' && p.propertyGroups && p.propertyGroups.length > 0),
+    );
+    const perms = narrow.length > 0 ? narrow : allPerms;
 
     const propertyIds = new Set<string>();
     const inheritFromInviters = new Set<number>();
@@ -632,10 +650,18 @@ export class RolesService {
   }
 
   async getGuestAccessibleServices(guestId: number): Promise<string[] | null> {
-    const perms = await this.guestPermRepo.find({
+    const allPerms = await this.guestPermRepo.find({
       where: { guestId, isGranted: true },
     });
-    if (perms.length === 0) return [];
+    if (allPerms.length === 0) return [];
+
+    // RESTRICTIVE precedence (services).
+    const narrow = allPerms.filter(
+      p =>
+        (p.scope === 'services' && p.services && p.services.length > 0) ||
+        (p.scope === 'service_groups' && p.serviceGroups && p.serviceGroups.length > 0),
+    );
+    const perms = narrow.length > 0 ? narrow : allPerms;
 
     const serviceIds = new Set<string>();
     const inheritFromInviters = new Set<number>();
