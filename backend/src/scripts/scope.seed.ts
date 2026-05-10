@@ -96,15 +96,13 @@ async function seedScopes(ds: DataSource) {
     let managerCount = 0;
     for (const key of MANAGER_PERMISSION_KEYS) {
       const existing = await qr.query(
-        `SELECT id FROM manager_permissions WHERE "backendPermissionKey" = $1 AND "managerId" = 0`,
+        'SELECT id FROM manager_permissions WHERE `backendPermissionKey` = ? AND `managerId` = 0',
         [key],
       );
       if (existing.length === 0) {
         await qr.query(
-          `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, "isGranted", "createdAt", "updatedAt")
-           VALUES (gen_random_uuid(), 0, 0, $1, 'all', true, NOW(), NOW())
-           ON CONFLICT DO NOTHING`,
-          [key],
+          'INSERT IGNORE INTO manager_permissions (id, `managerId`, `assignedById`, `backendPermissionKey`, scope, `isGranted`, `createdAt`, `updatedAt`) VALUES (UUID(), 0, 0, ?, ?, ?, NOW(), NOW())',
+          [key, 'all', true],
         );
         managerCount++;
       }
@@ -114,15 +112,13 @@ async function seedScopes(ds: DataSource) {
     let hyperCount = 0;
     for (const key of HYPER_MANAGER_PERMISSION_KEYS) {
       const existing = await qr.query(
-        `SELECT id FROM hyper_manager_permissions WHERE "backendPermissionKey" = $1 AND "hyperManagerId" = 0`,
+        'SELECT id FROM hyper_manager_permissions WHERE `backendPermissionKey` = ? AND `hyperManagerId` = 0',
         [key],
       );
       if (existing.length === 0) {
         await qr.query(
-          `INSERT INTO hyper_manager_permissions (id, "hyperManagerId", "assignedById", "backendPermissionKey", scope, "isGranted", "createdAt", "updatedAt")
-           VALUES (gen_random_uuid(), 0, 0, $1, 'all', true, NOW(), NOW())
-           ON CONFLICT DO NOTHING`,
-          [key],
+          'INSERT IGNORE INTO hyper_manager_permissions (id, `hyperManagerId`, `assignedById`, `backendPermissionKey`, scope, `isGranted`, `createdAt`, `updatedAt`) VALUES (UUID(), 0, 0, ?, ?, ?, NOW(), NOW())',
+          [key, 'all', true],
         );
         hyperCount++;
       }
@@ -132,15 +128,13 @@ async function seedScopes(ds: DataSource) {
     let guestCount = 0;
     for (const key of GUEST_PERMISSION_KEYS) {
       const existing = await qr.query(
-        `SELECT id FROM guest_permissions WHERE "backendPermissionKey" = $1 AND "guestId" = 0`,
+        'SELECT id FROM guest_permissions WHERE `backendPermissionKey` = ? AND `guestId` = 0',
         [key],
       );
       if (existing.length === 0) {
         await qr.query(
-          `INSERT INTO guest_permissions (id, "guestId", "assignedById", "backendPermissionKey", scope, "isGranted", "createdAt", "updatedAt")
-           VALUES (gen_random_uuid(), 0, 0, $1, 'all', true, NOW(), NOW())
-           ON CONFLICT DO NOTHING`,
-          [key],
+          'INSERT IGNORE INTO guest_permissions (id, `guestId`, `assignedById`, `backendPermissionKey`, scope, `isGranted`, `createdAt`, `updatedAt`) VALUES (UUID(), 0, 0, ?, ?, ?, NOW(), NOW())',
+          [key, 'all', true],
         );
         guestCount++;
       }
