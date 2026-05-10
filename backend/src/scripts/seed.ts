@@ -451,10 +451,8 @@ async function seedManagerAndHyperPermissions(ds: DataSource, userIds: number[],
 
   for (const key of manager1Perms) {
     await qr.query(
-      `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, properties, "isGranted", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, 'properties', $5, true, NOW(), NOW())
-       ON CONFLICT DO NOTHING`,
-      [uuidv4(), userIds[4], userIds[2], key, JSON.stringify([propertyIds[0], propertyIds[1], propertyIds[2]])]
+      'INSERT IGNORE INTO manager_permissions (id, `managerId`, `assignedById`, `backendPermissionKey`, scope, properties, `isGranted`, `createdAt`, `updatedAt`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+      [uuidv4(), userIds[4], userIds[2], key, 'properties', JSON.stringify([propertyIds[0], propertyIds[1], propertyIds[2]]), true]
     );
     count++;
   }
@@ -477,10 +475,8 @@ async function seedManagerAndHyperPermissions(ds: DataSource, userIds: number[],
   // manager2 assigned by admin2
   for (const key of manager2Perms) {
     await qr.query(
-      `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, properties, "isGranted", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, 'properties', $5, true, NOW(), NOW())
-       ON CONFLICT DO NOTHING`,
-      [uuidv4(), userIds[5], userIds[3], key, JSON.stringify([propertyIds[6], propertyIds[7], propertyIds[8], propertyIds[9]])]
+      'INSERT IGNORE INTO manager_permissions (id, `managerId`, `assignedById`, `backendPermissionKey`, scope, properties, `isGranted`, `createdAt`, `updatedAt`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+      [uuidv4(), userIds[5], userIds[3], key, 'properties', JSON.stringify([propertyIds[6], propertyIds[7], propertyIds[8], propertyIds[9]]), true]
     );
     count++;
   }
@@ -488,10 +484,8 @@ async function seedManagerAndHyperPermissions(ds: DataSource, userIds: number[],
   // manager2 assigned by admin1 (cross-admin)
   for (const key of manager2Perms) {
     await qr.query(
-      `INSERT INTO manager_permissions (id, "managerId", "assignedById", "backendPermissionKey", scope, properties, "isGranted", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, 'properties', $5, true, NOW(), NOW())
-       ON CONFLICT DO NOTHING`,
-      [uuidv4(), userIds[5], userIds[2], key, JSON.stringify([propertyIds[3]])]
+      'INSERT IGNORE INTO manager_permissions (id, `managerId`, `assignedById`, `backendPermissionKey`, scope, properties, `isGranted`, `createdAt`, `updatedAt`) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+      [uuidv4(), userIds[5], userIds[2], key, 'properties', JSON.stringify([propertyIds[3]]), true]
     );
     count++;
   }
