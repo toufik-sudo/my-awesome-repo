@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac, rbacMerge } from '@/lib/api-rbac';
 import type { Property } from '@/types/property.types';
 
 export interface PropertyListResponse {
@@ -93,61 +94,58 @@ export const propertiesApi = {
         params.append(key, String(value));
       }
     });
-    return api.get<PropertyListResponse>(`/properties?${params.toString()}`).then(r => r.data);
+    return api.get<PropertyListResponse>(`/properties?${params.toString()}`, rbac('propertiesApi.getAll.GET')).then(r => r.data);
   },
 
   getById: (id: string) =>
-    api.get<Property>(`/properties/${id}`).then(r => r.data),
+    api.get<Property>(`/properties/${id}`, rbac('propertiesApi.getById.GET')).then(r => r.data),
 
   create: (data: PropertyCreatePayload) =>
-    api.post<Property>('/properties', data).then(r => r.data),
+    api.post<Property>('/properties', data, rbac('propertiesApi.create.POST')).then(r => r.data),
 
   update: (id: string, data: Partial<PropertyCreatePayload>) =>
-    api.put<Property>(`/properties/${id}`, data).then(r => r.data),
+    api.put<Property>(`/properties/${id}`, data, rbac('propertiesApi.update.PUT')).then(r => r.data),
 
   updatePrices: (id: string, data: Partial<PropertyCreatePayload>) =>
-    api.put<Property>(`/properties/${id}/prices`, data).then(r => r.data),
+    api.put<Property>(`/properties/${id}/prices`, data, rbac('propertiesApi.updatePrices.PUT')).then(r => r.data),
 
   updatePhotos: (id: string, data: { images: string[] }) =>
-    api.put<Property>(`/properties/${id}/photos`, data).then(r => r.data),
+    api.put<Property>(`/properties/${id}/photos`, data, rbac('propertiesApi.updatePhotos.PUT')).then(r => r.data),
 
   updateAvailability: (id: string, data: any) =>
-    api.put<Property>(`/properties/${id}/availability`, data).then(r => r.data),
+    api.put<Property>(`/properties/${id}/availability`, data, rbac('propertiesApi.updateAvailability.PUT')).then(r => r.data),
 
   delete: (id: string) =>
-    api.delete(`/properties/${id}`).then(r => r.data),
+    api.delete(`/properties/${id}`, rbac('propertiesApi.delete.DELETE')).then(r => r.data),
 
-  /** Fetch availability for a date window (call per 3-month chunk) */
   getAvailability: (id: string, from: string, to: string) =>
     api.get<AvailabilityEntry[]>(
       `/properties/${id}/availability`,
-      { params: { from, to } }
+      rbacMerge('propertiesApi.getAvailability.GET', { params: { from, to } })
     ).then(r => r.data),
 
-  /** Subscribe to promo alerts on a property */
   subscribePromoAlert: (id: string, data: { notifyEmail: boolean; notifyPhone: boolean }) =>
-    api.post(`/properties/${id}/promo-alerts`, data).then(r => r.data),
+    api.post(`/properties/${id}/promo-alerts`, data, rbac('propertiesApi.subscribePromoAlert.POST')).then(r => r.data),
 
   unsubscribePromoAlert: (id: string) =>
-    api.delete(`/properties/${id}/promo-alerts`).then(r => r.data),
+    api.delete(`/properties/${id}/promo-alerts`, rbac('propertiesApi.unsubscribePromoAlert.DELETE')).then(r => r.data),
 
-  /** Get promos for a property */
   getPromos: (id: string) =>
-    api.get(`/properties/${id}/promos`).then(r => r.data),
+    api.get(`/properties/${id}/promos`, rbac('propertiesApi.getPromos.GET')).then(r => r.data),
 };
 
 // ─── Saved Search Alerts API ─────────────────────────────────────────────────
 
 export const savedSearchAlertsApi = {
   getAll: () =>
-    api.get<SavedSearchAlert[]>('/alerts/saved-searches').then(r => r.data),
+    api.get<SavedSearchAlert[]>('/alerts/saved-searches', rbac('savedSearchAlertsApi.getAll.GET')).then(r => r.data),
 
   create: (data: SavedSearchAlertPayload) =>
-    api.post<SavedSearchAlert>('/alerts/saved-searches', data).then(r => r.data),
+    api.post<SavedSearchAlert>('/alerts/saved-searches', data, rbac('savedSearchAlertsApi.create.POST')).then(r => r.data),
 
   update: (id: string, data: Partial<SavedSearchAlertPayload & { isActive: boolean }>) =>
-    api.put<SavedSearchAlert>(`/alerts/saved-searches/${id}`, data).then(r => r.data),
+    api.put<SavedSearchAlert>(`/alerts/saved-searches/${id}`, data, rbac('savedSearchAlertsApi.update.PUT')).then(r => r.data),
 
   delete: (id: string) =>
-    api.delete(`/alerts/saved-searches/${id}`).then(r => r.data),
+    api.delete(`/alerts/saved-searches/${id}`, rbac('savedSearchAlertsApi.delete.DELETE')).then(r => r.data),
 };

@@ -5,4 +5,5 @@ export * from './MainTabNavigator';
 export * from './HomeStackNavigator';
 export * from './PropertiesStackNavigator';
 export * from './ProfileStackNavigator';
+export * from './MoreStackNavigator';
 export * from './linking';

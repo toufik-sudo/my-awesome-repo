@@ -1,4 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, Unique, Index } from 'typeorm';
+import {
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn,
+  Unique, Index, ManyToOne, JoinColumn,
+} from 'typeorm';
+import { User } from '../../user/entity/user.entity';
 
 @Entity('reactions')
 @Unique(['userId', 'targetType', 'targetId'])
@@ -10,13 +14,21 @@ export class Reaction {
   @Column({ nullable: false })
   userId: number;
 
-  @Column({ nullable: false })
-  type: string; // 'like', 'love', 'haha', 'wow', 'sad', 'angry'
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @Column({ nullable: false })
-  targetType: string; // 'comment', 'post', etc.
+  type: string; // 'like', 'dislike', 'love', etc.
 
-  @Column({ nullable: false })
+  /** Type of the target entity: 'comment', 'property', 'service', 'review' */
+  @Index('IDX_reactions_targetType', ['targetType'])
+  @Column({ type: 'varchar', length: 50, default: 'comment' })
+  targetType: string;
+
+  /** ID of the target entity */
+  @Index('IDX_reactions_targetId', ['targetId'])
+  @Column({ type: 'varchar', length: 100 })
   targetId: string;
 
   @CreateDateColumn()

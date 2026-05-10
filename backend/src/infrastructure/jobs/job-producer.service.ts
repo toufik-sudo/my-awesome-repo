@@ -9,6 +9,7 @@ export interface EmailJobData {
   body: string;
   template?: string;
   context?: Record<string, any>;
+  trackingMeta?: Record<string, any>;
 }
 
 export interface NotificationJobData {

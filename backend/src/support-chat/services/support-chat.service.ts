@@ -26,19 +26,18 @@ export class SupportChatService {
    * Returns null if the user has global access (hyper roles).
    */
   private async getScopedPropertyIds(userId: number, userRole: string): Promise<string[] | null> {
-    if (['hyper_admin', 'hyper_manager'].includes(userRole)) {
-      return null; // global access
+    // Only hyper_admin has global access
+    if (userRole === 'hyper_admin') {
+      return null;
     }
     if (userRole === 'admin') {
-      // Admin sees threads related to their own properties/services
       const propIds = await this.rolesService.getAdminPropertyIds(userId);
       const svcIds = await this.rolesService.getAdminServiceIds(userId);
       return [...propIds, ...svcIds];
     }
-    if (userRole === 'manager') {
-      // Manager sees threads for properties in their assignments
+    if (userRole === 'hyper_manager' || userRole === 'manager') {
       const propIds = await this.rolesService.getManagerProperties(userId);
-      return propIds; // null means all (scope='all' assignment)
+      return propIds;
     }
     // guest/user: only own threads (handled separately)
     return [];
@@ -243,8 +242,8 @@ export class SupportChatService {
   private async assertThreadAccess(thread: SupportThread, userId: number, userRole?: string): Promise<void> {
     if (!userRole) return; // internal calls without role skip check
 
-    // Hyper roles have global access
-    if (['hyper_admin', 'hyper_manager'].includes(userRole)) return;
+    // Only hyper_admin has global access
+    if (userRole === 'hyper_admin') return;
 
     // Thread initiator always has access
     if (thread.initiatorId === userId) return;
@@ -253,19 +252,16 @@ export class SupportChatService {
     if (thread.assignedAdminId === userId) return;
 
     if (userRole === 'admin') {
-      // Admin can access threads related to their properties/services
       if (thread.propertyId) {
         const owns = await this.rolesService.isPropertyOwner(userId, thread.propertyId);
         if (owns) return;
-        // Also check if it's a service
         const ownsService = await this.rolesService.isServiceOwner(userId, thread.propertyId);
         if (ownsService) return;
       }
       throw new ForbiddenException('No access to this support thread');
     }
 
-    if (userRole === 'manager') {
-      // Manager can access threads within their assignment scope
+    if (userRole === 'hyper_manager' || userRole === 'manager') {
       if (thread.propertyId) {
         const hasAccess = await this.rolesService.hasPermissionForProperty(
           userId, thread.propertyId, 'manage_bookings',

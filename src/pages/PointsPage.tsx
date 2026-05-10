@@ -17,6 +17,7 @@ import {
   Award, Target, Zap, Crown, Medal, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 const BADGE_CATEGORIES = ['booking', 'review', 'social', 'loyalty', 'achievement', 'special'] as const;
@@ -31,6 +32,7 @@ const CATEGORY_LABELS: Record<string, { fr: string; en: string; ar: string }> = 
 
 const PointsPage: React.FC = memo(() => {
   const { t, i18n } = useTranslation();
+  const { can } = useRoleAccess('PointsPage');
   const lang = (i18n.language?.split('-')[0] || 'fr') as 'fr' | 'en' | 'ar';
   const { data: summary, loading: summaryLoading } = usePointsSummary();
   const { data: leaderboard } = useLeaderboard(20);

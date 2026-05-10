@@ -19,6 +19,7 @@ import { hostFeeAbsorptionApi, type HostFeeAbsorption } from '../host-fee-absorp
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const SCOPE_LABELS: Record<string, string> = {
   all: 'Toutes mes propriétés/services',
@@ -48,6 +49,7 @@ interface HostFeeAbsorptionPageProps {
 }
 
 export const HostFeeAbsorptionPage: React.FC<HostFeeAbsorptionPageProps> = ({ viewOnly = false }) => {
+  const { can } = useRoleAccess('HostFeeAbsorptionPage');
   const [rules, setRules] = useState<HostFeeAbsorption[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

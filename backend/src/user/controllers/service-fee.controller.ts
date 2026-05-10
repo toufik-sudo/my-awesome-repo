@@ -1,7 +1,8 @@
 import {
   Controller, Get, Post, Put, Delete,
-  Body, Param, Request, UseGuards, UseInterceptors,
+  Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { maybePaginate } from '../../common/pagination.util';
 import { ServiceFeeService } from '../services/service-fee.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
@@ -19,9 +20,10 @@ export class ServiceFeeController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getAll(@Request() req: any) {
+  async getAll(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.service.getAll();
+    const items = await this.service.getAll();
+    return maybePaginate(items, page, limit);
   }
 
   @Get('default')

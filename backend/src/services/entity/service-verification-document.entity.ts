@@ -1,23 +1,13 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { TourismService } from './tourism-service.entity';
+import { User } from '../../user/entity/user.entity';
 
 export type ServiceDocumentType =
-  | 'national_id'
-  | 'registre_commerce'
-  | 'avis_imposition'
-  | 'certificat_tourisme'
-  | 'certificat_culture'
-  | 'certificat_artisanat'
-  | 'licence_activite';
+  | 'national_id' | 'registre_commerce' | 'avis_imposition'
+  | 'certificat_tourisme' | 'certificat_culture' | 'certificat_artisanat' | 'licence_activite';
 
 export type ServiceDocumentStatus = 'pending' | 'approved' | 'rejected';
 
@@ -33,6 +23,14 @@ export class ServiceVerificationDocument {
   @ManyToOne(() => TourismService, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'serviceId' })
   service: TourismService;
+
+  /** The user who uploaded this document */
+  @Column()
+  uploadedByUserId: number;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'uploadedByUserId' })
+  uploadedBy: User;
 
   @Column({ type: 'varchar', length: 30 })
   type: ServiceDocumentType;
@@ -51,6 +49,10 @@ export class ServiceVerificationDocument {
 
   @Column({ nullable: true })
   reviewedBy: number;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'reviewedBy' })
+  reviewer: User;
 
   @Column({ nullable: true, type: 'datetime' })
   reviewedAt: Date;

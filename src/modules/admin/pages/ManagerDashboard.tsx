@@ -47,21 +47,23 @@ export const ManagerDashboard: React.FC = React.memo(() => {
       ]);
 
       if (assignData.status === 'fulfilled') {
-        const myAssignments = assignData.value.filter(a => a.managerId === Number(user?.id));
+        const res = assignData.value;
+        // Build assignments from manager permissions for current user
+        const myPerms = res.managerPermissions.filter((p: any) => p.managerId === Number(user?.id));
+        const myAssignments = myPerms.map((p: any) => ({
+          id: p.id,
+          managerId: p.managerId,
+          assignedByAdminId: p.assignedById,
+          scope: p.scope as any,
+          isActive: p.isGranted,
+          createdAt: p.createdAt,
+        }));
         setAssignments(myAssignments);
 
-        // Load permissions for each assignment
         const permMap: Record<string, ManagerPermission[]> = {};
-        await Promise.all(
-          myAssignments.map(async (a) => {
-            try {
-              const perms = await assignmentsApi.getPermissions(a.id);
-              permMap[a.id] = perms;
-            } catch {
-              permMap[a.id] = [];
-            }
-          })
-        );
+        for (const p of myPerms) {
+          permMap[p.id] = [{ id: p.id, assignmentId: p.id, permission: p.backendPermissionKey, isGranted: p.isGranted }];
+        }
         setPermissionsMap(permMap);
       }
 

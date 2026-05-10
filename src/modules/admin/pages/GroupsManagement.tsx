@@ -18,6 +18,7 @@ import { MultiScopeSelector } from '../components/MultiScopeSelector';
 import type { PropertyGroup } from '../admin.types';
 import type { ServiceGroupResponse } from '@/modules/services/service-bookings.api';
 import type { GridColumn } from '@/types/component.types';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 type GroupType = 'property' | 'service';
 
@@ -26,6 +27,7 @@ interface GroupsManagementProps {
 }
 
 export const GroupsManagement: React.FC<GroupsManagementProps> = memo(({ readOnly = false }) => {
+  const { can } = useRoleAccess('GroupsManagement');
   const [tab, setTab] = useState<GroupType>('property');
   const [propGroups, setPropGroups] = useState<PropertyGroup[]>([]);
   const [svcGroups, setSvcGroups] = useState<ServiceGroupResponse[]>([]);

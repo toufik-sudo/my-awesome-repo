@@ -253,7 +253,7 @@ export const DynamicGrid: React.FC<GridProps> = React.memo(({
         <div className={cn('flex items-center gap-1', col.sortable && 'cursor-pointer select-none hover:text-primary', col.align === 'center' && 'justify-center', col.align === 'right' && 'justify-end')} onClick={() => col.sortable && handleSort(col.key)}>
           <span className="truncate">{col.title}</span>
           {col.sortable && getSortIcon(col.key)}
-          {showFilters && col.filterable && (
+          {showFilters && col.filterable !== false && (
             <Popover open={activeFilterColumn === col.key} onOpenChange={(open) => setActiveFilterColumn(open ? col.key : null)}>
               <PopoverTrigger asChild><button onClick={(e) => e.stopPropagation()} className={cn('p-0.5 rounded hover:bg-muted', hasActiveFilter(col.key) && 'text-primary')}><Filter className="h-3.5 w-3.5" /></button></PopoverTrigger>
               <PopoverContent className="w-56 p-2 bg-popover z-50" align="start"><div className="space-y-2"><p className="text-xs font-medium">{t('grid.filterBy', 'Filter by')} {col.title}</p>{renderFilterInput(col)}{hasActiveFilter(col.key) && (<Button variant="ghost" size="sm" onClick={() => clearFilter(col.key)} className="w-full h-7 text-xs">{t('grid.clearFilter', 'Clear filter')}</Button>)}</div></PopoverContent>

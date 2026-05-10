@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Delete, Body, Param, Request, UseGuards, UseInterceptors,
+  Controller, Get, Post, Delete, Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { maybePaginate } from '../../common/pagination.util';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { InvitationService } from '../services/invitation.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -45,9 +46,10 @@ export class InvitationController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'List my invitations' })
-  async getAll(@Request() req) {
+  async getAll(@Request() req, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.invitationService.getInvitations(req.user.id);
+    const items = await this.invitationService.getInvitations(req.user.id);
+    return maybePaginate(items, page, limit);
   }
 
   @Delete(':id')

@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards, UseInterceptors,
+  Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { maybePaginate } from '../../common/pagination.util';
 import { ApiTags, ApiOperation, ApiParam, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RewardsService } from '../services/rewards.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -26,9 +27,10 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Browse rewards shop' })
-  async getShop(@Request() req: any) {
+  async getShop(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.service.getShopRewards();
+    const items = await this.service.getShopRewards();
+    return maybePaginate(items, page, limit);
   }
 
   @Get()
@@ -36,9 +38,10 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get all rewards (admin)' })
-  async getAll(@Request() req: any) {
+  async getAll(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.service.getAll();
+    const items = await this.service.getAll();
+    return maybePaginate(items, page, limit);
   }
 
   @Get(':id')
@@ -100,9 +103,10 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get my redemptions' })
-  async getMyRedemptions(@Request() req) {
+  async getMyRedemptions(@Request() req, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.service.getUserRedemptions(req.user.id);
+    const items = await this.service.getUserRedemptions(req.user.id);
+    return maybePaginate(items, page, limit);
   }
 
   @Post('redemptions/:code/use')
@@ -136,8 +140,9 @@ export class RewardsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get all redemptions (admin)' })
-  async getAllRedemptions(@Request() req: any) {
+  async getAllRedemptions(@Request() req: any, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.service.getAllRedemptions();
+    const items = await this.service.getAllRedemptions();
+    return maybePaginate(items, page, limit);
   }
 }

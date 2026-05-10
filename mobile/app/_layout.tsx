@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { loadSavedTheme } from '@/contexts/ThemeContext';
 import { LoadingProvider } from '@/contexts/LoadingContext';
+import { RbacProvider } from '@/contexts/RbacContext';
 import { View, ActivityIndicator } from 'react-native';
 import '@/i18n/config';
 import { loadSavedLanguage } from '@/i18n/config';
@@ -35,13 +36,15 @@ export default function RootLayout() {
     <ThemeProvider initialMode={savedTheme}>
       <LoadingProvider>
         <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="property/[id]" options={{ headerShown: true, title: 'Property Details' }} />
-            <Stack.Screen name="verification-review" options={{ headerShown: true, title: 'Verification Review' }} />
-            <Stack.Screen name="index" />
-          </Stack>
+          <RbacProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="property/[id]" options={{ headerShown: true, title: 'Property Details' }} />
+              <Stack.Screen name="verification-review" options={{ headerShown: true, title: 'Verification Review' }} />
+              <Stack.Screen name="index" />
+            </Stack>
+          </RbacProvider>
         </AuthProvider>
       </LoadingProvider>
     </ThemeProvider>

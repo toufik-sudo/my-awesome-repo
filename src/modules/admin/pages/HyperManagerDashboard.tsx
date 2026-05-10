@@ -22,6 +22,7 @@ import { ManagerAssignments } from './ManagerAssignments';
 import { VerificationReview } from './VerificationReview';
 import { statsApi, rolesApi, assignmentsApi, invitationsApi, type AdminStats } from '../admin.api';
 import type { Invitation } from '../admin.types';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import type { AppRole, UserWithRoles } from '../admin.types';
 import type { GridColumn } from '@/types/component.types';
 import {
@@ -50,6 +51,7 @@ import {
 export const HyperManagerDashboard: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { can } = useRoleAccess('HyperManagerDashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -129,12 +131,13 @@ export const HyperManagerDashboard: React.FC = React.memo(() => {
 
   const handleResend = useCallback(async (id: string) => {
     try {
-      await invitationsApi.resend(id);
-      toast.success('Invitation resent');
+      const result = await invitationsApi.resend(id);
+      toast.success(result?.latestEmailSubject || 'Invitation resent');
+      loadInvitations();
     } catch {
       toast.error('Failed to resend invitation');
     }
-  }, []);
+  }, [loadInvitations]);
 
   if (loading) {
     return (

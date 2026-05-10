@@ -73,6 +73,7 @@ import {
 } from '@/types/verification.types';
 import { documentsApi, trustApi } from '../admin.api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 type FilterStatus = 'all' | 'pending' | 'partial' | 'approved' | 'rejected';
 
@@ -129,6 +130,7 @@ function groupDocumentsByProperty(docs: VerificationDocument[]): PendingVerifica
 
 export const VerificationReview: React.FC = () => {
   const queryClient = useQueryClient();
+  const { can } = useRoleAccess('VerificationReview');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<VerificationDocument | null>(null);
@@ -457,7 +459,7 @@ export const VerificationReview: React.FC = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-semibold text-foreground">Submitted Documents</h4>
-                        {verification.documents.some((d) => d.status === 'pending') && (
+                        {verification.documents.some((d) => d.status === 'pending') && can('Actions', 'Button', 'ApproveAll') && (
                           <Button
                             size="sm"
                             onClick={(e) => { e.stopPropagation(); handleApproveAll(verification.id); }}
@@ -551,23 +553,27 @@ export const VerificationReview: React.FC = () => {
                                       {validateMutation.isPending ? 'Analyzing...' : 'AI Check'}
                                     </Button>
                                   )}
-                                  <Button
-                                    size="sm"
-                                    className="gap-1.5 text-xs bg-green-600 hover:bg-green-700"
-                                    onClick={() => handleApproveDoc(doc.id)}
-                                    disabled={approveMutation.isPending}
-                                  >
-                                    <Check className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    className="gap-1.5 text-xs"
-                                    onClick={() => setRejectDialog({ doc, verificationId: verification.id })}
-                                    disabled={rejectMutation.isPending}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
+                                  {can('Actions', 'Button', 'Approve') && (
+                                    <Button
+                                      size="sm"
+                                      className="gap-1.5 text-xs bg-green-600 hover:bg-green-700"
+                                      onClick={() => handleApproveDoc(doc.id)}
+                                      disabled={approveMutation.isPending}
+                                    >
+                                      <Check className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                  {can('Actions', 'Button', 'Reject') && (
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="gap-1.5 text-xs"
+                                      onClick={() => setRejectDialog({ doc, verificationId: verification.id })}
+                                      disabled={rejectMutation.isPending}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                 </>
                               )}
                             </div>

@@ -75,6 +75,12 @@ export class TourismService {
   @Column({ type: 'varchar', length: 20, default: 'draft' })
   status: ServiceStatus;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  previousStatus: ServiceStatus | null;
+
+  @Column({ type: 'boolean', default: false })
+  hostCascade: boolean;
+
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   price: number;
 
@@ -122,6 +128,9 @@ export class TourismService {
 
   @Column({ type: 'json', nullable: true })
   images: string[];
+
+  @Column({ type: 'json', nullable: true })
+  videos: string[];
 
   @Column({ type: 'json', nullable: true })
   includes: Record<string, string[]>;

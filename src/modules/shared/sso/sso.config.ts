@@ -31,9 +31,37 @@ export const ssoConfig: SSOConfig = {
 };
 
 /**
+ * Per-provider client IDs and scope overrides.
+ * Falls back to the shared VITE_SSO_OIDC_CLIENT_ID/SCOPE when an entry is missing.
+ */
+export const ssoProviderClientIds: Record<SSOProviderName, string> = {
+  google: import.meta.env.VITE_SSO_GOOGLE_CLIENT_ID || ssoConfig.clientId,
+  microsoft: import.meta.env.VITE_SSO_MICROSOFT_CLIENT_ID || ssoConfig.clientId,
+  apple: import.meta.env.VITE_SSO_APPLE_CLIENT_ID || ssoConfig.clientId,
+  facebook: import.meta.env.VITE_SSO_FACEBOOK_CLIENT_ID || ssoConfig.clientId,
+  github: import.meta.env.VITE_SSO_GITHUB_CLIENT_ID || ssoConfig.clientId,
+  instagram: import.meta.env.VITE_SSO_INSTAGRAM_CLIENT_ID || ssoConfig.clientId,
+  tiktok: import.meta.env.VITE_SSO_TIKTOK_CLIENT_ID || ssoConfig.clientId,
+};
+
+export const ssoProviderScopes: Partial<Record<SSOProviderName, string>> = {
+  google: 'openid profile email',
+  microsoft: 'openid profile email',
+  apple: 'name email',
+  facebook: 'public_profile email',
+  github: 'read:user user:email',
+  instagram: 'user_profile',
+  tiktok: 'user.info.basic',
+};
+
+/**
  * Check if SSO is properly configured
+ */
+/**
+ * Check if SSO is properly configured (any provider with a client id)
  */
 export const isSSOConfigValid = (): boolean => {
   if (!ssoConfig.enabled) return false;
-  return !!(ssoConfig.clientId && ssoConfig.redirectUri && ssoConfig.providers.length > 0);
+  if (!ssoConfig.providers.length) return false;
+  return ssoConfig.providers.some(p => !!ssoProviderClientIds[p]);
 };

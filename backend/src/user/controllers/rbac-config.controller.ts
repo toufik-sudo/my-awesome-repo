@@ -34,10 +34,19 @@ export class RbacConfigController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @ApiOperation({ summary: 'List all backend RBAC permissions' })
-  async listBackend(@Request() req: any) {
+  @ApiOperation({ summary: 'List all backend RBAC permissions (supports ?page&pageSize&module&search)' })
+  async listBackend(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('module') module?: string,
+    @Query('search') search?: string,
+    @Query('modulesOnly') modulesOnly?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.rbacService.findAllBackend();
+    if (modulesOnly === 'true') return this.rbacService.findAllBackend({ modulesOnly: true });
+    const pagination = page ? { page: parseInt(page, 10), pageSize: pageSize ? parseInt(pageSize, 10) : undefined, module, search } : undefined;
+    return this.rbacService.findAllBackend(pagination);
   }
 
   @Get('backend/role/:role')
@@ -48,6 +57,52 @@ export class RbacConfigController {
   async getBackendByRole(@Param('role') role: AppRole, @Request() req: any) {
     const scopeCtx = extractScopeContext(req);
     return this.rbacService.getBackendPermissions(role);
+  }
+
+  @Get('backend/catalog')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Get backend controllers and endpoints catalog (live route map vs DB)' })
+  async getBackendCatalog(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.rbacService.getBackendApiCatalog();
+  }
+
+  @Get('backend/catalog/diff')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Diff between live backend route map and rbac_backend_permissions DB' })
+  async getBackendCatalogDiff(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.rbacService.getBackendCatalogDiff();
+  }
+
+  @Post('frontend/catalog/diff')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Diff between frontend API catalog (runtime + on-disk) and rbac_frontend_permissions DB' })
+  async getFrontendCatalogDiff(
+    @Body() body: { runtimeCatalog?: Array<{ frontendApiKey: string; module: string; source: string | null }> },
+    @Request() req: any,
+  ) {
+    const scopeCtx = extractScopeContext(req);
+    return this.rbacService.getFrontendCatalogDiff(body?.runtimeCatalog);
+  }
+
+  @Post('frontend/catalog')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Get frontend API catalog merged with optional runtime catalog' })
+  async getFrontendCatalog(
+    @Body() body: { runtimeCatalog?: Array<{ frontendApiKey: string; module: string; source: string | null }> },
+    @Request() req: any,
+  ) {
+    const scopeCtx = extractScopeContext(req);
+    return this.rbacService.getFrontendApiCatalog(body?.runtimeCatalog);
   }
 
   @Put('backend/:id')
@@ -87,6 +142,7 @@ export class RbacConfigController {
       controller: string;
       endpoint: string;
       method: string;
+      endpoint_url?: string;
       user_roles: string[];
       scope?: RbacScope;
       allowed?: boolean;
@@ -106,10 +162,19 @@ export class RbacConfigController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @ApiOperation({ summary: 'List all frontend RBAC permissions' })
-  async listFrontend(@Request() req: any) {
+  @ApiOperation({ summary: 'List all frontend RBAC permissions (supports ?page&pageSize&module&search)' })
+  async listFrontend(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('module') module?: string,
+    @Query('search') search?: string,
+    @Query('modulesOnly') modulesOnly?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.rbacService.findAllFrontend();
+    if (modulesOnly === 'true') return this.rbacService.findAllFrontend({ modulesOnly: true });
+    const pagination = page ? { page: parseInt(page, 10), pageSize: pageSize ? parseInt(pageSize, 10) : undefined, module, search } : undefined;
+    return this.rbacService.findAllFrontend(pagination);
   }
 
   @Get('frontend/role/:role')
@@ -195,6 +260,20 @@ export class RbacConfigController {
     const scopeCtx = extractScopeContext(req);
     await this.rbacService.reload();
     return { success: true, message: 'RBAC cache reloaded and synced' };
+  }
+
+  @Post('catalog/refresh')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({
+    summary:
+      'Re-introspect controllers, regenerate the frontend API catalog, and reload RBAC caches',
+  })
+  async refreshCatalogs(@Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    const result = await this.rbacService.refreshCatalogs();
+    return { success: true, ...result };
   }
 
   @Get('status')

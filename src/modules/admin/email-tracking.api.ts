@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
 
 export interface EmailAnalytics {
   totalSent: number;
@@ -19,6 +20,9 @@ export interface EmailAnalytics {
     clicked: number;
     openRate: number;
     ctr: number;
+    role?: string;
+    language?: string;
+    invitationKind?: string;
   }[];
   byDay: {
     date: string;
@@ -46,11 +50,18 @@ export interface EmailAnalytics {
     isBot: boolean;
     botReason: string;
     jsVerified: boolean;
+    metadata?: {
+      invitationId?: string;
+      invitationRole?: string;
+      inviterRole?: string;
+      language?: string;
+      invitationKind?: string;
+    };
     createdAt: string;
   }[];
 }
 
 export const emailTrackingApi = {
   getAnalytics: (days = 30) =>
-    api.get<EmailAnalytics>(`/email-tracking/analytics?days=${days}`).then(r => r.data),
+    api.get<EmailAnalytics>(`/email-tracking/analytics?days=${days}`, rbac('emailTrackingApi.getAnalytics.GET')).then(r => r.data),
 };

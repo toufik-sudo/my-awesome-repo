@@ -8,6 +8,7 @@ import type { MainTabParamList, SearchStackParamList, NotificationsStackParamLis
 import { HomeStackNavigator } from './HomeStackNavigator';
 import { PropertiesStackNavigator } from './PropertiesStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
+import { MoreStackNavigator } from './MoreStackNavigator';
 import { SearchScreen, NotificationsScreen, NotificationDetailScreen } from '@/screens';
 
 const SearchStack = createNativeStackNavigator<SearchStackParamList>();
@@ -82,6 +83,14 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           title: t('tabs.notifications', 'Notifications'),
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 20 }}>🔔</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="MoreTab"
+        component={MoreStackNavigator}
+        options={{
+          title: t('tabs.more', 'More'),
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>⋯</Text>,
         }}
       />
       <Tab.Screen

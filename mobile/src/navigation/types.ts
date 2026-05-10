@@ -15,7 +15,28 @@ export type MainTabParamList = {
   PropertiesTab: undefined;
   SearchTab: undefined;
   NotificationsTab: undefined;
+  MoreTab: undefined;
   ProfileTab: undefined;
+};
+
+// More Stack (entry point for Bookings/Rewards/Chat/Payments/Referrals/Support)
+export type MoreStackParamList = {
+  MoreMenu: undefined;
+  Bookings: undefined;
+  BookingDetail: { id: string };
+  Services: undefined;
+  Rewards: undefined;
+  RewardDetail: { id: string };
+  Chat: undefined;
+  ChatDetail: { bookingId: string };
+  Payments: undefined;
+  Referrals: undefined;
+  Support: undefined;
+  SupportDetail: { id: string };
+  SupportNew: undefined;
+  AddService: undefined;
+  PayoutAccounts: undefined;
+  Onboarding: undefined;
 };
 
 // Home Stack
@@ -29,6 +50,7 @@ export type PropertiesStackParamList = {
   PropertyListing: undefined;
   PropertyDetail: { propertyId: string };
   DocumentUpload: { propertyId: string };
+  AddProperty: undefined;
 };
 
 // Search Stack

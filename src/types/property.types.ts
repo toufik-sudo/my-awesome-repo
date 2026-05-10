@@ -12,6 +12,10 @@ export interface Property {
     country: string;
   };
   images: string[];
+  videos?: string[];
+  status?: string;
+  previousStatus?: string | null;
+  hostCascade?: boolean;
   bedrooms: number;
   bathrooms: number;
   guests: number;

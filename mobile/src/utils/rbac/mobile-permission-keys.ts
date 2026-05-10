@@ -43,6 +43,39 @@ export const MOBILE_UI_PERM = {
 
   // Chat
   CHAT_REPLY: generateMobileUiPermissionKey('Chat', undefined, 'Screen', 'Reply'),
+
+  // Notifications
+  NOTIFICATIONS_VIEW: generateMobileUiPermissionKey('Notifications', undefined, 'Screen', 'View'),
+
+  // Verification queue (hyper / admin moderation)
+  VERIFICATION_REVIEW_VIEW: generateMobileUiPermissionKey('VerificationReview', undefined, 'Screen', 'View'),
+
+  // Payments (review queue, hyper/admin)
+  PAYMENTS_VIEW: generateMobileUiPermissionKey('Payments', undefined, 'Screen', 'View'),
+  PAYMENT_APPROVE: generateMobileUiPermissionKey('Payments', 'Actions', 'Button', 'Approve'),
+  PAYMENT_REJECT: generateMobileUiPermissionKey('Payments', 'Actions', 'Button', 'Reject'),
+
+  // Referrals
+  REFERRALS_VIEW: generateMobileUiPermissionKey('Referrals', undefined, 'Screen', 'View'),
+
+  // Support
+  SUPPORT_VIEW: generateMobileUiPermissionKey('Support', undefined, 'Screen', 'View'),
+  SUPPORT_CREATE: generateMobileUiPermissionKey('Support', 'Header', 'Button', 'Create'),
+
+  // Onboarding
+  ONBOARDING_VIEW: generateMobileUiPermissionKey('Onboarding', undefined, 'Screen', 'View'),
+
+  // Payout accounts (host)
+  PAYOUT_ACCOUNTS_VIEW: generateMobileUiPermissionKey('PayoutAccounts', undefined, 'Screen', 'View'),
+  PAYOUT_ACCOUNT_CREATE: generateMobileUiPermissionKey('PayoutAccounts', 'Header', 'Button', 'Create'),
+
+  // Comments / reactions (social)
+  COMMENT_VIEW: generateMobileUiPermissionKey('Comments', undefined, 'Section', 'View'),
+  COMMENT_CREATE: generateMobileUiPermissionKey('Comments', 'Composer', 'Button', 'Send'),
+  REACTION_TOGGLE: generateMobileUiPermissionKey('Reactions', undefined, 'Button', 'Toggle'),
+
+  // Receipts (guest upload)
+  RECEIPT_UPLOAD: generateMobileUiPermissionKey('Payments', 'Receipt', 'Button', 'Upload'),
 } as const;
 
 export type MobileUiPermissionKey = (typeof MOBILE_UI_PERM)[keyof typeof MOBILE_UI_PERM];

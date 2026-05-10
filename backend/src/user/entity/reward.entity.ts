@@ -39,7 +39,7 @@ export class Reward {
   discountPercent: number;
 
   /** Fixed discount amount (e.g., 500 DZD off) */
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   discountAmount: number;
 
   /** Currency for fixed discounts */

@@ -78,6 +78,26 @@ export const documentsApi = {
     }
   },
 
+  /**
+   * Server-side paginated pending documents.
+   * Falls back gracefully if the backend still returns a flat array.
+   */
+  async getPendingPaginated(
+    params: { page?: number; limit?: number } = {},
+  ): Promise<PaginatedResponse<VerificationDocument>> {
+    const page = Math.max(1, params.page ?? 1);
+    const limit = Math.min(100, Math.max(1, params.limit ?? 20));
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
+    const response = await api.get<PaginatedResponse<VerificationDocument> | VerificationDocument[]>(
+      `${DOCUMENTS_API.PENDING}?${qs}`,
+    );
+    const body: any = response.data;
+    if (Array.isArray(body)) {
+      return { data: body, total: body.length, page: 1, limit: body.length || 1, totalPages: 1 };
+    }
+    return body;
+  },
+
   async submitForValidation(docId: string): Promise<DocumentValidationResponse> {
     const response = await api.post<DocumentValidationResponse>(DOCUMENTS_API.VALIDATE(docId));
     return response.data;

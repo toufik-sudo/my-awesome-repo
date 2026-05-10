@@ -12,9 +12,11 @@ import {
   defaultQuickActions,
   filterMenuGroups,
   filterMenuGroupsByPermissions,
+  filterMenuGroupsByPermissionKey,
   getDefaultNavigationConfig
 } from '@/config/navigation.config';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface NavigationContextType {
   config: NavigationConfig;
@@ -53,6 +55,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
   apiEndpoint 
 }) => {
   const { user, isAuthenticated } = useAuth();
+  const { canUI } = usePermissions();
   
   // Get user roles from auth context
   const userRoles = useMemo(() => {
@@ -182,9 +185,10 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
   // Build filtered config - apply hidden/disabled filters first, then permission filters
   const filteredGroups = useMemo(() => {
     const hiddenFiltered = filterMenuGroups(menuGroups, hiddenItems, disabledItems);
-    // Apply permission-based filtering using user roles
-    return filterMenuGroupsByPermissions(hiddenFiltered, userRoles);
-  }, [menuGroups, hiddenItems, disabledItems, userRoles]);
+    // Apply legacy role-based filter, then DB-backed UI permission key filter (canUI).
+    const roleFiltered = filterMenuGroupsByPermissions(hiddenFiltered, userRoles);
+    return filterMenuGroupsByPermissionKey(roleFiltered, canUI);
+  }, [menuGroups, hiddenItems, disabledItems, userRoles, canUI]);
 
   const config: NavigationConfig = useMemo(() => ({
     layoutTheme,

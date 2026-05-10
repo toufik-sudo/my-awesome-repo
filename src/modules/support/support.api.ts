@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac, rbacMerge } from '@/lib/api-rbac';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -50,39 +51,36 @@ export interface PaginatedResponse<T> {
 // ─── API ─────────────────────────────────────────────────
 
 export const supportApi = {
-  // Threads
   createThread: (data: CreateThreadDto) =>
-    api.post<SupportThread>('/support/threads', data).then(r => r.data),
+    api.post<SupportThread>('/support/threads', data, rbac('supportApi.createThread.POST')).then(r => r.data),
 
   getMyThreads: (page = 1, limit = 20) =>
-    api.get<PaginatedResponse<SupportThread>>('/support/threads/mine', {
+    api.get<PaginatedResponse<SupportThread>>('/support/threads/mine', rbacMerge('supportApi.getMyThreads.GET', {
       params: { page, limit },
-    }).then(r => r.data),
+    })).then(r => r.data),
 
   getAdminThreads: (page = 1, limit = 20, status?: string, category?: string) =>
-    api.get<PaginatedResponse<SupportThread>>('/support/threads', {
+    api.get<PaginatedResponse<SupportThread>>('/support/threads', rbacMerge('supportApi.getAdminThreads.GET', {
       params: { page, limit, status, category },
-    }).then(r => r.data),
+    })).then(r => r.data),
 
   getThread: (threadId: string) =>
-    api.get<SupportThread>(`/support/threads/${threadId}`).then(r => r.data),
+    api.get<SupportThread>(`/support/threads/${threadId}`, rbac('supportApi.getThread.GET')).then(r => r.data),
 
-  // Messages
   getMessages: (threadId: string, page = 1, limit = 50) =>
-    api.get<PaginatedResponse<SupportMessage>>(`/support/threads/${threadId}/messages`, {
+    api.get<PaginatedResponse<SupportMessage>>(`/support/threads/${threadId}/messages`, rbacMerge('supportApi.getMessages.GET', {
       params: { page, limit },
-    }).then(r => r.data),
+    })).then(r => r.data),
 
   sendMessage: (threadId: string, content: string) =>
-    api.post<SupportMessage>(`/support/threads/${threadId}/messages`, { content }).then(r => r.data),
+    api.post<SupportMessage>(`/support/threads/${threadId}/messages`, { content }, rbac('supportApi.sendMessage.POST')).then(r => r.data),
 
-  // Admin actions
   updateStatus: (threadId: string, status: string) =>
-    api.patch(`/support/threads/${threadId}/status`, { status }).then(r => r.data),
+    api.patch(`/support/threads/${threadId}/status`, { status }, rbac('supportApi.updateStatus.PATCH')).then(r => r.data),
 
   assignThread: (threadId: string, adminId: number) =>
-    api.patch(`/support/threads/${threadId}/assign`, { adminId }).then(r => r.data),
+    api.patch(`/support/threads/${threadId}/assign`, { adminId }, rbac('supportApi.assignThread.PATCH')).then(r => r.data),
 
   markRead: (threadId: string) =>
-    api.post(`/support/threads/${threadId}/read`).then(r => r.data),
+    api.post(`/support/threads/${threadId}/read`, undefined, rbac('supportApi.markRead.POST')).then(r => r.data),
 };

@@ -9,6 +9,21 @@ export const useMyBookings = () => {
   });
 };
 
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export const useMyBookingsPaginated = (params: PaginationParams = {}) => {
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 20;
+  return useQuery({
+    queryKey: ['my-bookings', 'paginated', page, limit],
+    queryFn: () => bookingsApi.getMyBookingsPaginated({ page, limit }),
+    placeholderData: (prev) => prev,
+  });
+};
+
 export const useCancelBooking = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -31,6 +46,16 @@ export const useHostBookings = (filters: HostBookingFilters = {}) => {
   return useQuery({
     queryKey: ['host-bookings', filters],
     queryFn: () => bookingsApi.getHostBookings(filters),
+  });
+};
+
+export const useHostBookingsPaginated = (filters: HostBookingFilters & PaginationParams = {}) => {
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 20;
+  return useQuery({
+    queryKey: ['host-bookings', 'paginated', filters.status, filters.propertyId, page, limit],
+    queryFn: () => bookingsApi.getHostBookingsPaginated({ ...filters, page, limit }),
+    placeholderData: (prev) => prev,
   });
 };
 

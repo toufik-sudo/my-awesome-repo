@@ -14,7 +14,7 @@ export class EmailProcessor extends WorkerHost {
   }
 
   async process(job: Job<EmailJobData>): Promise<any> {
-    const { to, subject, body, template, context } = job.data;
+    const { to, subject, body, template, context, trackingMeta } = job.data;
     const startTime = Date.now();
 
     this.logger.log(`Processing email job ${job.id}: ${subject} → ${to}`);
@@ -26,6 +26,7 @@ export class EmailProcessor extends WorkerHost {
         html: body,
         template,
         context,
+        trackingMeta,
       });
 
       const duration = Date.now() - startTime;

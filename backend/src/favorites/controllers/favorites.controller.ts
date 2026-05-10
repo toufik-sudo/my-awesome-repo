@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Query, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { FavoritesService } from '../services/favorites.service';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
@@ -20,9 +20,16 @@ export class FavoritesController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get my favorites' })
-  findMyFavorites(@Request() req: any) {
+  findMyFavorites(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.favoritesService.findByUser(req.user.id, scopeCtx);
+    return this.favoritesService.findByUser(req.user.id, scopeCtx, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
   }
 
   @Get('check/:propertyId')

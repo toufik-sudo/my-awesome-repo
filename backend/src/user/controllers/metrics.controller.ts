@@ -10,6 +10,7 @@ import { extractScopeContext } from '../../rbac/scope-context';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { User } from '../entity/user.entity';
+import { MaterializedViewService } from '../../services/materialized-view.service';
 
 @ApiTags('Metrics')
 @ApiBearerAuth('JWT-auth')
@@ -24,6 +25,7 @@ export class MetricsController {
     private readonly serviceRepo: Repository<TourismService>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly mv: MaterializedViewService,
   ) {}
 
   @Get('properties')
@@ -124,23 +126,27 @@ export class MetricsController {
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Platform-wide summary metrics' })
   async getSummary(@Request() req: any) {
-    const scopeCtx = extractScopeContext(req);
-    const [totalProperties, publishedProperties] = await Promise.all([
+    const _scopeCtx = extractScopeContext(req);
+    void _scopeCtx;
+
+    // Pre-aggregated row from mv_platform_summary (refreshed by triggers + 1m drainer + 15m full).
+    const mvSummary = await this.mv.getPlatformSummary();
+    if (mvSummary) return mvSummary;
+
+    // Fallback: live counts when MV row missing (first boot before refresh).
+    const [totalProperties, publishedProperties, totalServices, totalUsers, activeUsers] = await Promise.all([
       this.propertyRepo.count(),
       this.propertyRepo.count({ where: { status: 'published' } }),
-    ]);
-
-    const totalServices = await this.serviceRepo.count();
-
-    const [totalUsers, activeUsers] = await Promise.all([
+      this.serviceRepo.count(),
       this.userRepo.count(),
       this.userRepo.count({ where: { isActive: true } }),
     ]);
-
     return {
       users: { total: totalUsers, active: activeUsers, inactive: totalUsers - activeUsers },
       properties: { total: totalProperties, published: publishedProperties },
       services: { total: totalServices },
+      bookings: { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 },
+      revenue: { total: 0 },
     };
   }
 }

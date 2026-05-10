@@ -1,8 +1,10 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In, MoreThan } from 'typeorm';
 import { Property } from '../entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
+import { Booking } from '../../bookings/entity/booking.entity';
+import { ServiceBooking } from '../../services/entity/service-booking.entity';
 import { User } from '../../user/entity/user.entity';
 import { ManagerPermission } from '../../user/entity/manager-permission.entity';
 import { HyperManagerPermission } from '../../user/entity/hyper-manager-permission.entity';
@@ -21,6 +23,10 @@ export class HyperManagementService {
     private readonly propertyRepo: Repository<Property>,
     @InjectRepository(TourismService)
     private readonly serviceRepo: Repository<TourismService>,
+    @InjectRepository(Booking)
+    private readonly bookingRepo: Repository<Booking>,
+    @InjectRepository(ServiceBooking)
+    private readonly serviceBookingRepo: Repository<ServiceBooking>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     @InjectRepository(ManagerPermission)
@@ -171,6 +177,201 @@ export class HyperManagementService {
 
   // ─── Users ─────────────────────────────────────────────────────
 
+  /**
+   * Cascade a host pause/archive across their inventory:
+   *  • Snapshots current property/service status into previousStatus (so resume
+   *    can restore the exact prior state) and sets hostCascade=true.
+   *  • Flags upcoming confirmed bookings with hostCascadeFlag=true so the
+   *    guest can free-cancel without host validation.
+   *  • Notifies every affected guest with a deep link to cancel.
+   *
+   * Cancellation refund rule (enforced in BookingsService.cancelByGuest):
+   *  • Online payment methods (ccp / baridi_mob / bank_transfer / edahabia /
+   *    cib) → full refund.
+   *  • Cash (hand-to-hand) → no refund (nothing was charged through the
+   *    platform), but the cancel demand is auto-approved.
+   */
+  private async cascadeInventoryStatus(
+    userId: number,
+    targetStatus: 'suspended' | 'archived',
+  ) {
+    // Properties: snapshot current status, set new status. Skip rows that
+    // are already in a "frozen" state matching the target.
+    await this.propertyRepo
+      .createQueryBuilder()
+      .update(Property)
+      .set({
+        previousStatus: () => '`status`',
+        status: targetStatus,
+        isAvailable: false,
+        hostCascade: true,
+      })
+      .where('hostId = :userId', { userId })
+      .andWhere('hostCascade = 0')
+      .execute();
+
+    // Services: same snapshot pattern.
+    await this.serviceRepo
+      .createQueryBuilder()
+      .update(TourismService)
+      .set({
+        previousStatus: () => '`status`',
+        status: targetStatus,
+        isAvailable: false,
+        hostCascade: true,
+      })
+      .where('providerId = :userId', { userId })
+      .andWhere('hostCascade = 0')
+      .execute();
+  }
+
+  /**
+   * Restore properties/services that were frozen by a host cascade. Sets
+   * status back to its snapshotted previousStatus (defaulting to 'published'
+   * if no snapshot is present).
+   */
+  private async restoreInventoryStatus(userId: number) {
+    await this.propertyRepo.query(
+      `UPDATE \`properties\`
+         SET \`status\` = COALESCE(\`previousStatus\`, 'published'),
+             \`isAvailable\` = 1,
+             \`previousStatus\` = NULL,
+             \`hostCascade\` = 0
+       WHERE \`hostId\` = ? AND \`hostCascade\` = 1`,
+      [userId],
+    );
+    await this.serviceRepo.query(
+      `UPDATE \`tourism_services\`
+         SET \`status\` = COALESCE(\`previousStatus\`, 'published'),
+             \`isAvailable\` = 1,
+             \`previousStatus\` = NULL,
+             \`hostCascade\` = 0
+       WHERE \`providerId\` = ? AND \`hostCascade\` = 1`,
+      [userId],
+    );
+  }
+
+  /**
+   * Mark every confirmed-but-not-started booking on this host's resources
+   * with hostCascadeFlag=true and notify the guest. Returns the count of
+   * notified guests for logging.
+   */
+  private async flagAndNotifyAffectedBookings(
+    userId: number,
+    reason: 'paused' | 'archived',
+  ): Promise<number> {
+    const now = new Date();
+
+    // Property bookings on this host's properties
+    const propertyIds = (
+      await this.propertyRepo.find({ where: { hostId: userId }, select: ['id'] })
+    ).map(p => p.id);
+
+    let notified = 0;
+
+    if (propertyIds.length > 0) {
+      const upcoming = await this.bookingRepo.find({
+        where: {
+          propertyId: In(propertyIds),
+          status: In(['confirmed', 'pending']) as any,
+          checkInDate: MoreThan(now) as any,
+        },
+        relations: ['property'],
+      });
+
+      if (upcoming.length > 0) {
+        await this.bookingRepo.update(
+          { id: In(upcoming.map(b => b.id)) },
+          { hostCascadeFlag: true },
+        );
+        for (const b of upcoming) {
+          await this.notifyUser(
+            b.guestId,
+            'booking_host_cascade',
+            reason === 'paused' ? 'Hôte indisponible' : 'Hôte archivé',
+            `L'hôte de votre réservation "${b.property?.title || ''}" a été ` +
+              `${reason === 'paused' ? 'mis en pause' : 'archivé'}. ` +
+              `Vous pouvez annuler sans frais et obtenir un remboursement complet ` +
+              `(sauf paiement en main propre).`,
+            `/bookings/${b.id}`,
+          );
+          notified++;
+        }
+      }
+    }
+
+    // Service bookings on this provider's services
+    const serviceIds = (
+      await this.serviceRepo.find({ where: { providerId: userId }, select: ['id'] })
+    ).map(s => s.id);
+
+    if (serviceIds.length > 0) {
+      const upcomingSvc = await this.serviceBookingRepo.find({
+        where: {
+          serviceId: In(serviceIds),
+          status: In(['confirmed', 'pending']) as any,
+          bookingDate: MoreThan(now) as any,
+        },
+        relations: ['service'],
+      });
+
+      if (upcomingSvc.length > 0) {
+        await this.serviceBookingRepo.update(
+          { id: In(upcomingSvc.map(b => b.id)) },
+          { hostCascadeFlag: true },
+        );
+        for (const b of upcomingSvc) {
+          const title =
+            (b.service?.title as any)?.fr ||
+            (b.service?.title as any)?.en ||
+            'service';
+          await this.notifyUser(
+            b.customerId,
+            'booking_host_cascade',
+            reason === 'paused' ? 'Prestataire indisponible' : 'Prestataire archivé',
+            `Le prestataire de votre réservation "${title}" a été ` +
+              `${reason === 'paused' ? 'mis en pause' : 'archivé'}. ` +
+              `Vous pouvez annuler sans frais et obtenir un remboursement complet ` +
+              `(sauf paiement en main propre).`,
+            `/bookings/services/${b.id}`,
+          );
+          notified++;
+        }
+      }
+    }
+
+    return notified;
+  }
+
+  /**
+   * Clear the host-cascade flag on bookings when a host is resumed/reactivated.
+   * Bookings already cancelled by the guest stay cancelled.
+   */
+  private async clearBookingCascadeFlag(userId: number) {
+    const propertyIds = (
+      await this.propertyRepo.find({ where: { hostId: userId }, select: ['id'] })
+    ).map(p => p.id);
+    if (propertyIds.length > 0) {
+      await this.bookingRepo
+        .createQueryBuilder()
+        .update(Booking)
+        .set({ hostCascadeFlag: false })
+        .where('propertyId IN (:...ids) AND hostCascadeFlag = 1', { ids: propertyIds })
+        .execute();
+    }
+    const serviceIds = (
+      await this.serviceRepo.find({ where: { providerId: userId }, select: ['id'] })
+    ).map(s => s.id);
+    if (serviceIds.length > 0) {
+      await this.serviceBookingRepo
+        .createQueryBuilder()
+        .update(ServiceBooking)
+        .set({ hostCascadeFlag: false })
+        .where('serviceId IN (:...ids) AND hostCascadeFlag = 1', { ids: serviceIds })
+        .execute();
+    }
+  }
+
   async pauseUser(userId: number, adminId: number) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -178,35 +379,29 @@ export class HyperManagementService {
     user.isActive = false;
     await this.userRepo.save(user);
 
-    // Cascade: pause all properties
-    await this.propertyRepo.createQueryBuilder()
-      .update(Property)
-      .set({ status: 'suspended', isAvailable: false })
-      .where('hostId = :userId', { userId })
-      .andWhere('status NOT IN (:...excluded)', { excluded: ['archived'] })
-      .execute();
+    await this.cascadeInventoryStatus(userId, 'suspended');
+    const notified = await this.flagAndNotifyAffectedBookings(userId, 'paused');
 
-    // Cascade: pause all services
-    await this.serviceRepo.createQueryBuilder()
-      .update(TourismService)
-      .set({ status: 'suspended', isAvailable: false })
-      .where('providerId = :userId', { userId })
-      .andWhere('status NOT IN (:...excluded)', { excluded: ['archived'] })
-      .execute();
-
-    // Cascade: remove all permissions assigned by this user
-    await this.managerPermRepo.createQueryBuilder()
+    // Cascade: remove permissions assigned by this user (managers/guests
+    // lose their scope while the host is paused).
+    await this.managerPermRepo
+      .createQueryBuilder()
       .delete()
       .where('assignedById = :userId', { userId })
       .execute();
 
-    await this.notifyUser(userId, 'account_paused',
+    await this.notifyUser(
+      userId,
+      'account_paused',
       'Compte mis en pause',
       'Votre compte a été mis en pause par un administrateur.',
-      '/dashboard');
+      '/dashboard',
+    );
 
-    this.logger.log(`User ${userId} paused by admin ${adminId}`);
-    return { success: true, message: 'User paused with cascading effects' };
+    this.logger.log(
+      `User ${userId} paused by admin ${adminId} (notified ${notified} affected guests)`,
+    );
+    return { success: true, message: 'User paused with cascading effects', notified };
   }
 
   async resumeUser(userId: number, adminId: number) {
@@ -216,24 +411,16 @@ export class HyperManagementService {
     user.isActive = true;
     await this.userRepo.save(user);
 
-    await this.propertyRepo.createQueryBuilder()
-      .update(Property)
-      .set({ status: 'published', isAvailable: true })
-      .where('hostId = :userId', { userId })
-      .andWhere('status = :status', { status: 'suspended' })
-      .execute();
+    await this.restoreInventoryStatus(userId);
+    await this.clearBookingCascadeFlag(userId);
 
-    await this.serviceRepo.createQueryBuilder()
-      .update(TourismService)
-      .set({ status: 'published', isAvailable: true })
-      .where('providerId = :userId', { userId })
-      .andWhere('status = :status', { status: 'suspended' })
-      .execute();
-
-    await this.notifyUser(userId, 'account_resumed',
+    await this.notifyUser(
+      userId,
+      'account_resumed',
       'Compte réactivé',
       'Votre compte a été réactivé.',
-      '/dashboard');
+      '/dashboard',
+    );
 
     this.logger.log(`User ${userId} resumed by admin ${adminId}`);
     return { success: true, message: 'User resumed' };
@@ -246,31 +433,32 @@ export class HyperManagementService {
     user.isActive = false;
     await this.userRepo.save(user);
 
-    await this.propertyRepo.createQueryBuilder()
-      .update(Property)
-      .set({ status: 'archived', isAvailable: false })
-      .where('hostId = :userId', { userId })
-      .execute();
+    await this.cascadeInventoryStatus(userId, 'archived');
+    const notified = await this.flagAndNotifyAffectedBookings(userId, 'archived');
 
-    await this.serviceRepo.createQueryBuilder()
-      .update(TourismService)
-      .set({ status: 'archived', isAvailable: false })
-      .where('providerId = :userId', { userId })
-      .execute();
-
-    // Remove all permissions assigned by this user
-    await this.managerPermRepo.createQueryBuilder()
+    await this.managerPermRepo
+      .createQueryBuilder()
       .delete()
       .where('assignedById = :userId', { userId })
       .execute();
 
-    await this.notifyUser(userId, 'account_archived',
+    await this.notifyUser(
+      userId,
+      'account_archived',
       'Compte archivé',
       `Votre compte a été archivé.${reason ? ` Raison: ${reason}` : ''} Suppression dans ${ARCHIVE_TTL_DAYS} jours.`,
-      '/dashboard');
+      '/dashboard',
+    );
 
-    this.logger.log(`User ${userId} archived by admin ${adminId}`);
-    return { success: true, message: `User archived (auto-delete in ${ARCHIVE_TTL_DAYS} days)`, archiveTtlDays: ARCHIVE_TTL_DAYS };
+    this.logger.log(
+      `User ${userId} archived by admin ${adminId} (notified ${notified} affected guests)`,
+    );
+    return {
+      success: true,
+      message: `User archived (auto-delete in ${ARCHIVE_TTL_DAYS} days)`,
+      archiveTtlDays: ARCHIVE_TTL_DAYS,
+      notified,
+    };
   }
 
   async reactivateUser(userId: number, adminId: number) {
@@ -280,24 +468,16 @@ export class HyperManagementService {
     user.isActive = true;
     await this.userRepo.save(user);
 
-    await this.propertyRepo.createQueryBuilder()
-      .update(Property)
-      .set({ status: 'published', isAvailable: true })
-      .where('hostId = :userId', { userId })
-      .andWhere('status IN (:...statuses)', { statuses: ['archived', 'suspended'] })
-      .execute();
+    await this.restoreInventoryStatus(userId);
+    await this.clearBookingCascadeFlag(userId);
 
-    await this.serviceRepo.createQueryBuilder()
-      .update(TourismService)
-      .set({ status: 'published', isAvailable: true })
-      .where('providerId = :userId', { userId })
-      .andWhere('status IN (:...statuses)', { statuses: ['archived', 'suspended'] })
-      .execute();
-
-    await this.notifyUser(userId, 'account_reactivated',
+    await this.notifyUser(
+      userId,
+      'account_reactivated',
       'Compte réactivé',
       'Votre compte a été réactivé par un administrateur.',
-      '/dashboard');
+      '/dashboard',
+    );
 
     this.logger.log(`User ${userId} reactivated by admin ${adminId}`);
     return { success: true, message: 'User reactivated' };

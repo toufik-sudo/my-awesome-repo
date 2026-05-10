@@ -17,7 +17,7 @@ export interface SSOConfig {
   userClaims: string[];
 }
 
-export type SSOProviderName = 'google' | 'microsoft' | 'apple' | 'facebook' | 'github';
+export type SSOProviderName = 'google' | 'microsoft' | 'apple' | 'facebook' | 'github' | 'instagram' | 'tiktok';
 
 export interface SSOProviderConfig {
   name: SSOProviderName;

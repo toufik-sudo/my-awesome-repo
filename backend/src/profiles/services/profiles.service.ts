@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Profile } from '../entity/profile.entity';
@@ -15,7 +15,12 @@ export class ProfilesService {
     private readonly cache: RedisCacheService,
   ) {}
 
-  async findByUser(userId: number, _scopeCtx?: ScopeContext) {
+  async findByUser(userId: number, scopeCtx?: ScopeContext) {
+    // Enforce own-user: only hyper or the user themselves can view a profile
+    if (scopeCtx && scopeCtx.userId !== userId &&
+        !['hyper_admin', 'hyper_manager'].includes(scopeCtx.userRole)) {
+      throw new ForbiddenException('Cannot view profile for another user');
+    }
     const cacheKey = this.cache.key('profile', 'user', String(userId));
     return this.cache.getOrSet(
       cacheKey,
@@ -24,7 +29,11 @@ export class ProfilesService {
     );
   }
 
-  async update(userId: number, updateDto: Partial<Profile>, _scopeCtx?: ScopeContext) {
+  async update(userId: number, updateDto: Partial<Profile>, scopeCtx?: ScopeContext) {
+    if (scopeCtx && scopeCtx.userId !== userId &&
+        !['hyper_admin', 'hyper_manager'].includes(scopeCtx.userRole)) {
+      throw new ForbiddenException('Cannot update profile for another user');
+    }
     await this.profileRepository.update({ userId }, updateDto);
     await this.cache.del(this.cache.key('profile', 'user', String(userId)));
     return this.findByUser(userId);

@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,10 +30,16 @@ export class SettingsService {
     private readonly userService: UserService,
   ) {}
 
-  /**
-   * Get all settings for a user (preferences + notifications + account info)
-   */
-  async getSettings(userId: number, _scopeCtx?: ScopeContext) {
+  private assertOwnUser(userId: number, scopeCtx?: ScopeContext) {
+    if (scopeCtx && scopeCtx.userId !== userId &&
+        !['hyper_admin', 'hyper_manager'].includes(scopeCtx.userRole)) {
+      throw new ForbiddenException('Cannot access settings for another user');
+    }
+  }
+
+  async getSettings(userId: number, scopeCtx?: ScopeContext) {
+    this.assertOwnUser(userId, scopeCtx);
+
     const [preferences, notifications, user] = await Promise.all([
       this.getOrCreatePreferences(userId),
       this.getOrCreateNotifications(userId),
@@ -84,34 +91,27 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Update user preferences
-   */
-  async updatePreferences(userId: number, dto: UpdatePreferencesDto, _scopeCtx?: ScopeContext) {
+  async updatePreferences(userId: number, dto: UpdatePreferencesDto, scopeCtx?: ScopeContext) {
+    this.assertOwnUser(userId, scopeCtx);
     const preferences = await this.getOrCreatePreferences(userId);
     Object.assign(preferences, dto);
     return this.preferencesRepo.save(preferences);
   }
 
-  /**
-   * Update notification settings
-   */
-  async updateNotifications(userId: number, dto: UpdateNotificationsDto, _scopeCtx?: ScopeContext) {
+  async updateNotifications(userId: number, dto: UpdateNotificationsDto, scopeCtx?: ScopeContext) {
+    this.assertOwnUser(userId, scopeCtx);
     const notifications = await this.getOrCreateNotifications(userId);
     Object.assign(notifications, dto);
     return this.notificationsRepo.save(notifications);
   }
 
-  /**
-   * Update account information
-   */
-  async updateAccount(userId: number, dto: UpdateAccountDto, _scopeCtx?: ScopeContext) {
+  async updateAccount(userId: number, dto: UpdateAccountDto, scopeCtx?: ScopeContext) {
+    this.assertOwnUser(userId, scopeCtx);
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    // Check email uniqueness if changing email
     if (dto.email && dto.email !== user.email) {
       const existing = await this.userRepo.findOne({ where: { email: dto.email } });
       if (existing && existing.id !== userId) {
@@ -136,16 +136,13 @@ export class SettingsService {
     };
   }
 
-  /**
-   * Change password
-   */
-  async changePassword(userId: number, dto: ChangePasswordDto, _scopeCtx?: ScopeContext) {
+  async changePassword(userId: number, dto: ChangePasswordDto, scopeCtx?: ScopeContext) {
+    this.assertOwnUser(userId, scopeCtx);
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    // Decode the incoming password (uses legacy encoding)
     const currentDecoded = this.userService.decodePassword(dto.currentPassword);
     const isValid = await this.userService.comparePasswords(currentDecoded, user.password);
 
@@ -161,9 +158,6 @@ export class SettingsService {
     return { message: 'Password updated successfully' };
   }
 
-  /**
-   * Get or create default preferences for user
-   */
   private async getOrCreatePreferences(userId: number): Promise<UserPreferences> {
     let prefs = await this.preferencesRepo.findOne({ where: { userId } });
     if (!prefs) {
@@ -173,9 +167,6 @@ export class SettingsService {
     return prefs;
   }
 
-  /**
-   * Get or create default notification settings for user
-   */
   private async getOrCreateNotifications(userId: number): Promise<NotificationSettings> {
     let notifs = await this.notificationsRepo.findOne({ where: { userId } });
     if (!notifs) {

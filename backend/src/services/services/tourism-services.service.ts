@@ -24,6 +24,7 @@ interface FindAllFilters {
   participants?: number;
   sort?: string;
   search?: string;
+  status?: string;
   page: number;
   limit: number;
 }
@@ -43,22 +44,25 @@ export class TourismServicesService {
     scopeCtx: ScopeContext | undefined,
     permissionKey: string,
   ): Promise<string[] | null> {
-    if (!scopeCtx) return null;
-
-    const { userRole } = scopeCtx;
-    if (userRole === 'hyper_admin' || userRole === 'admin' || userRole === 'user') return null;
-
-    const scopedPerms = getScopedPerms(scopeCtx);
-    if (scopedPerms.length === 0) return null;
-
-    return this.scopeFilter.resolveServiceIds(scopedPerms, permissionKey);
+    return this.scopeFilter.effectiveServiceIds(scopeCtx, permissionKey);
   }
 
   async findAll(filters: FindAllFilters, scopeCtx?: ScopeContext) {
     const query = this.serviceRepo.createQueryBuilder('svc');
-    query.where('svc.status = :status', { status: 'published' });
 
-    // Apply scope filtering
+    // Management roles see ALL statuses for own/managed services.
+    // Public + user/guest listings remain restricted to published.
+    const seeAllStatuses = this.scopeFilter.canSeeAllStatuses(scopeCtx);
+    const ALLOWED = ['draft', 'published', 'archived', 'suspended'];
+    if (!seeAllStatuses) {
+      query.where('svc.status = :status', { status: 'published' });
+    } else if (filters.status && filters.status !== 'all' && ALLOWED.includes(filters.status)) {
+      query.where('svc.status = :status', { status: filters.status });
+    } else {
+      query.where('1 = 1');
+    }
+
+    // Apply scope filtering (admin → own, manager → assigned, hyper → none)
     const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_FIND_ALL);
     if (allowedIds !== null) {
       if (allowedIds.length === 0) {

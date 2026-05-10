@@ -1,4 +1,6 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
+import type { Paginated, PaginationParams } from '@/modules/shared/types/pagination';
 
 export type CancellationPolicyType = 'flexible' | 'moderate' | 'strict' | 'custom';
 
@@ -11,15 +13,10 @@ export interface CancellationRule {
   targetServiceGroupId?: string;
   targetPropertyId?: string;
   targetServiceId?: string;
-  /** Hours before check-in for full refund */
   fullRefundHours: number;
-  /** Hours before check-in for partial refund */
   partialRefundHours: number;
-  /** Partial refund percentage (0-100) */
   partialRefundPercent: number;
-  /** Penalty percentage if cancelled too late (0-100) */
   lateCancelPenalty: number;
-  /** Whether no-show is penalized */
   noShowPenalty: boolean;
   noShowPenaltyPercent: number;
   isActive: boolean;
@@ -28,7 +25,6 @@ export interface CancellationRule {
   updatedAt: string;
 }
 
-/** Preset definitions for quick setup */
 export const CANCELLATION_PRESETS: Record<string, Partial<CancellationRule>> = {
   flexible: {
     policyType: 'flexible',
@@ -65,9 +61,15 @@ export const CANCELLATION_PRESETS: Record<string, Partial<CancellationRule>> = {
 const BASE = '/cancellation-rules';
 
 export const cancellationRulesApi = {
-  getMine: () => api.get<CancellationRule[]>(BASE).then(r => r.data),
-  getForHost: (hostId: number) => api.get<CancellationRule[]>(`${BASE}/host/${hostId}`).then(r => r.data),
-  create: (data: Partial<CancellationRule>) => api.post<CancellationRule>(BASE, data).then(r => r.data),
-  update: (id: string, data: Partial<CancellationRule>) => api.put<CancellationRule>(`${BASE}/${id}`, data).then(r => r.data),
-  remove: (id: string) => api.delete(`${BASE}/${id}`),
+  getMine: () => api.get<CancellationRule[]>(BASE, rbac('cancellationRulesApi.getMine.GET')).then(r => r.data),
+  getAll: () => api.get<CancellationRule[]>(`${BASE}/all`, rbac('cancellationRulesApi.getAll.GET')).then(r => r.data),
+  getAllPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<CancellationRule>>(`${BASE}/all`, {
+      ...rbac('cancellationRulesApi.getAll.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
+  getForHost: (hostId: number) => api.get<CancellationRule[]>(`${BASE}/host/${hostId}`, rbac('cancellationRulesApi.getForHost.GET')).then(r => r.data),
+  create: (data: Partial<CancellationRule>) => api.post<CancellationRule>(BASE, data, rbac('cancellationRulesApi.create.POST')).then(r => r.data),
+  update: (id: string, data: Partial<CancellationRule>) => api.put<CancellationRule>(`${BASE}/${id}`, data, rbac('cancellationRulesApi.update.PUT')).then(r => r.data),
+  remove: (id: string) => api.delete(`${BASE}/${id}`, rbac('cancellationRulesApi.remove.DELETE')),
 };

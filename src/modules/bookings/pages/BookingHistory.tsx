@@ -19,7 +19,7 @@ import {
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { resolveImageUrl } from '@/modules/shared/components/BackendImage';
 
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useHostBookings } from '../bookings.hooks';
 import type { BookingResponse } from '../bookings.api';
 import { exportBookingsToCSV, exportBookingsToPDF } from '../utils/exportBookings';
@@ -42,14 +42,17 @@ type DateRange = 'all' | '7d' | '30d' | '90d' | '365d';
 export const BookingHistory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { canRefundUsers, canViewBookings, isHyper } = usePermissions();
+  const { can } = useRoleAccess('BookingHistory');
 
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_high' | 'price_low'>('newest');
 
-  const isHyperAdmin = isHyper;
+  const canRefund = can('Actions', 'Button', 'Refund');
+  const canExport = can('Actions', 'Button', 'Export');
+  const canManageRequest = can('Actions', 'Button', 'Manage');
+  const isHyperAdmin = can('Header', 'Badge', 'AllProperties');
 
   // Fetch all bookings (backend handles role-based filtering)
   const { data: bookings = [], isLoading } = useHostBookings(

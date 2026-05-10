@@ -56,7 +56,37 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Erreur lors de l\'envoi de l\'invitation');
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const code = data?.code || data?.message?.code;
+      const errMessage = typeof data?.message === 'string' ? data.message : data?.message?.message;
+
+      if (status === 409 && (code === 'INVITATION_ALREADY_EXISTS' || data?.message?.canResend)) {
+        const existingId = data?.existingInvitationId || data?.message?.existingInvitationId;
+        const confirmed = window.confirm(
+          (errMessage || 'Une invitation est déjà en attente pour ce contact.') +
+          '\n\nVoulez-vous renvoyer l\'invitation maintenant ?'
+        );
+        if (confirmed && existingId) {
+          try {
+            await invitationsApi.resend(existingId);
+            toast.success('Invitation renvoyée avec succès.');
+            setEmail('');
+            onOpenChange(false);
+            onSuccess?.();
+          } catch (resendErr: any) {
+            toast.error(resendErr?.response?.data?.message || 'Échec du renvoi de l\'invitation');
+          }
+        }
+        return;
+      }
+
+      if (status === 400 && (code === 'ROLE_CONFLICT' || data?.message?.code === 'ROLE_CONFLICT')) {
+        toast.error(errMessage || 'Conflit de rôle : un utilisateur ne peut pas avoir deux rôles distincts.');
+        return;
+      }
+
+      toast.error(errMessage || data?.message || 'Erreur lors de l\'envoi de l\'invitation');
     } finally {
       setLoading(false);
     }

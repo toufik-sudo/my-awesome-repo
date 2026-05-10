@@ -62,7 +62,8 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN?.split(',') || '*',
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders:
+      'Content-Type, Authorization, x-public-onboarding, x-no-loading, x-requested-with',
   });
 
   // Rate limiting global

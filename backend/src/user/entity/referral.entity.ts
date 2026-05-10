@@ -1,13 +1,9 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Property } from '../../properties/entity/property.entity';
 
 export type ReferralStatus = 'pending' | 'signed_up' | 'first_booking' | 'completed' | 'expired';
 
@@ -16,7 +12,6 @@ export class Referral {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** The user who referred */
   @Column()
   referrerId: number;
 
@@ -24,7 +19,6 @@ export class Referral {
   @JoinColumn({ name: 'referrerId' })
   referrer: User;
 
-  /** The referred user (null until signup) */
   @Column({ nullable: true })
   referredUserId: number;
 
@@ -32,35 +26,27 @@ export class Referral {
   @JoinColumn({ name: 'referredUserId' })
   referredUser: User;
 
-  /** Unique referral code */
   @Column({ type: 'varchar', length: 20, unique: true })
   code: string;
 
-  /** Email or phone of the invited person */
   @Column({ type: 'varchar', length: 100, nullable: true })
   inviteeContact: string;
 
-  /** Method used: email, sms, link, social */
   @Column({ type: 'varchar', length: 20, default: 'link' })
   method: string;
 
-  /** Status of the referral */
   @Column({ type: 'varchar', length: 20, default: 'pending' })
   status: ReferralStatus;
 
-  /** Points awarded to referrer */
   @Column({ type: 'int', default: 0 })
   referrerPointsAwarded: number;
 
-  /** Points awarded to referred user */
   @Column({ type: 'int', default: 0 })
   referredPointsAwarded: number;
 
-  /** Property ID if shared via property share */
   @Column({ type: 'uuid', nullable: true })
   sharedPropertyId: string;
 
-  /** Expiry date */
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
 
@@ -71,6 +57,9 @@ export class Referral {
   updatedAt: Date;
 }
 
+/**
+ * Property shares — now with FK to properties table.
+ */
 @Entity('property_shares')
 export class PropertyShare {
   @PrimaryGeneratedColumn('uuid')
@@ -86,11 +75,13 @@ export class PropertyShare {
   @Column({ type: 'uuid' })
   propertyId: string;
 
-  /** Share method: email, whatsapp, facebook, twitter, copy_link */
+  @ManyToOne(() => Property, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'propertyId' })
+  property: Property;
+
   @Column({ type: 'varchar', length: 30 })
   method: string;
 
-  /** Recipient info (optional) */
   @Column({ type: 'varchar', length: 100, nullable: true })
   recipient: string;
 

@@ -3,12 +3,14 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { authSlice } from './slices/auth.slice';
 import { mediaCacheSlice } from './slices/mediaCache.slice';
 import { appConfigSlice } from './slices/appConfig.slice';
+import { rbacSlice } from './slices/rbac.slice';
 
 export const store = configureStore({
   reducer: {
     auth: authSlice.reducer,
     mediaCache: mediaCacheSlice.reducer,
     appConfig: appConfigSlice.reducer,
+    rbac: rbacSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

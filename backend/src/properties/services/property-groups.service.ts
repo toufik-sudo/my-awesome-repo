@@ -2,7 +2,6 @@ import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { PropertyGroup } from '../entity/property-group.entity';
-import { PropertyGroupMembership } from '../entity/property-group-membership.entity';
 import { Property } from '../entity/property.entity';
 import { User } from '../../user/entity/user.entity';
 import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
@@ -15,8 +14,6 @@ export class PropertyGroupsService {
   constructor(
     @InjectRepository(PropertyGroup)
     private readonly groupRepo: Repository<PropertyGroup>,
-    @InjectRepository(PropertyGroupMembership)
-    private readonly membershipRepo: Repository<PropertyGroupMembership>,
     @InjectRepository(Property)
     private readonly propertyRepo: Repository<Property>,
     @InjectRepository(User)
@@ -24,27 +21,23 @@ export class PropertyGroupsService {
     private readonly scopeFilter: ScopeFilterService,
   ) {}
 
-  private async getUserRoles(userId: number): Promise<string[]> {
+  private async getUserRole(userId: number): Promise<string> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    return user ? user.getRoles() : [];
+    return user ? user.getRole() : 'user';
   }
 
   private async checkAdminAccess(userId: number): Promise<void> {
-    const roles = await this.getUserRoles(userId);
-    const hasAccess = roles.some(r =>
-      r === 'hyper_admin' || r === 'hyper_manager' || r === 'admin'
-    );
-    if (!hasAccess) {
+    const role = await this.getUserRole(userId);
+    if (!['hyper_admin', 'hyper_manager', 'admin'].includes(role)) {
       throw new ForbiddenException('Admin access required');
     }
   }
 
   async findAll(userId: number, scopeCtx?: ScopeContext): Promise<PropertyGroup[]> {
-    const roles = await this.getUserRoles(userId);
-    const isHyper = roles.includes('hyper_admin') || roles.includes('hyper_manager');
+    const role = scopeCtx?.userRole || await this.getUserRole(userId);
 
-    // Apply scope filtering for manager/hyper_manager/guest
-    if (scopeCtx && ['manager', 'hyper_manager', 'guest'].includes(scopeCtx.userRole)) {
+    // hyper_manager, manager, guest: use scoped perms
+    if (scopeCtx && ['hyper_manager', 'manager', 'guest'].includes(role)) {
       const scopedPerms = getScopedPerms(scopeCtx);
       const relevant = scopedPerms.filter(p => p.backendPermissionKey === PERM_KEY_FIND_ALL && p.isGranted);
 
@@ -60,10 +53,12 @@ export class PropertyGroupsService {
       }
     }
 
-    if (isHyper) {
+    // Only hyper_admin has unrestricted global access
+    if (role === 'hyper_admin') {
       return this.groupRepo.find({ order: { name: 'ASC' } });
     }
 
+    // Admin: filter by adminId (ownership)
     return this.groupRepo.find({
       where: { adminId: userId },
       order: { name: 'ASC' },
@@ -73,7 +68,7 @@ export class PropertyGroupsService {
   async findOne(id: string): Promise<PropertyGroup> {
     const group = await this.groupRepo.findOne({
       where: { id },
-      relations: ['admin'],
+      relations: ['admin', 'properties'],
     });
     if (!group) throw new NotFoundException('Property group not found');
     return group;
@@ -91,11 +86,10 @@ export class PropertyGroupsService {
     data: { name?: string; description?: string; isActive?: boolean },
   ): Promise<PropertyGroup> {
     const group = await this.findOne(groupId);
+    const role = await this.getUserRole(userId);
 
-    const roles = await this.getUserRoles(userId);
-    const isHyper = roles.includes('hyper_admin') || roles.includes('hyper_manager');
-
-    if (!isHyper && group.adminId !== userId) {
+    // Only hyper_admin has global access
+    if (role !== 'hyper_admin' && group.adminId !== userId) {
       throw new ForbiddenException('Cannot update this group');
     }
 
@@ -105,11 +99,9 @@ export class PropertyGroupsService {
 
   async remove(userId: number, groupId: string): Promise<void> {
     const group = await this.findOne(groupId);
+    const role = await this.getUserRole(userId);
 
-    const roles = await this.getUserRoles(userId);
-    const isHyper = roles.includes('hyper_admin') || roles.includes('hyper_manager');
-
-    if (!isHyper && group.adminId !== userId) {
+    if (role !== 'hyper_admin' && group.adminId !== userId) {
       throw new ForbiddenException('Cannot delete this group');
     }
 
@@ -120,26 +112,22 @@ export class PropertyGroupsService {
     userId: number,
     groupId: string,
     propertyId: string,
-  ): Promise<PropertyGroupMembership> {
+  ): Promise<PropertyGroup> {
     const group = await this.findOne(groupId);
+    const role = await this.getUserRole(userId);
 
-    const roles = await this.getUserRoles(userId);
-    const isHyper = roles.includes('hyper_admin') || roles.includes('hyper_manager');
-
-    if (!isHyper && group.adminId !== userId) {
+    if (role !== 'hyper_admin' && group.adminId !== userId) {
       throw new ForbiddenException('Cannot modify this group');
     }
 
     const property = await this.propertyRepo.findOne({ where: { id: propertyId } });
     if (!property) throw new NotFoundException('Property not found');
 
-    const existing = await this.membershipRepo.findOne({
-      where: { propertyId, groupId },
-    });
-    if (existing) return existing;
-
-    const membership = this.membershipRepo.create({ propertyId, groupId });
-    return this.membershipRepo.save(membership);
+    if (!group.properties) group.properties = [];
+    if (!group.properties.some(p => p.id === propertyId)) {
+      group.properties.push(property);
+    }
+    return this.groupRepo.save(group);
   }
 
   async removePropertyFromGroup(
@@ -148,22 +136,23 @@ export class PropertyGroupsService {
     propertyId: string,
   ): Promise<void> {
     const group = await this.findOne(groupId);
+    const role = await this.getUserRole(userId);
 
-    const roles = await this.getUserRoles(userId);
-    const isHyper = roles.includes('hyper_admin') || roles.includes('hyper_manager');
-
-    if (!isHyper && group.adminId !== userId) {
+    if (role !== 'hyper_admin' && group.adminId !== userId) {
       throw new ForbiddenException('Cannot modify this group');
     }
 
-    await this.membershipRepo.delete({ propertyId, groupId });
+    if (group.properties) {
+      group.properties = group.properties.filter(p => p.id !== propertyId);
+      await this.groupRepo.save(group);
+    }
   }
 
   async getGroupProperties(groupId: string): Promise<Property[]> {
-    const memberships = await this.membershipRepo.find({
-      where: { groupId },
-      relations: ['property'],
+    const group = await this.groupRepo.findOne({
+      where: { id: groupId },
+      relations: ['properties'],
     });
-    return memberships.map(m => m.property);
+    return group?.properties || [];
   }
 }

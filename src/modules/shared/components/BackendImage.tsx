@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageOff } from 'lucide-react';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8095';
+const HOST_ORIGIN_HOST = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8095';
 
 /**
  * Resolves an image path: if it starts with `/media/`, prepend the backend URL.
@@ -12,7 +12,7 @@ const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http:/
 export const resolveImageUrl = (path: string): string => {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  if (path.startsWith('/media/')) return `${BACKEND_URL}${path}`;
+  if (path.startsWith('/media/')) return `${HOST_ORIGIN_HOST}${path}`;
   return path;
 };
 

@@ -5,13 +5,13 @@ import { ServiceVerificationDocument } from '../entity/service-verification-docu
 import { ServiceBooking } from '../entity/service-booking.entity';
 import { ServiceAvailability } from '../entity/service-availability.entity';
 import { ServiceGroup } from '../entity/service-group.entity';
-import { ServiceGroupMembership } from '../entity/service-group-membership.entity';
 import { TourismServicesController } from '../controllers/tourism-services.controller';
 import { ServiceBookingsController } from '../controllers/service-bookings.controller';
 import { ServiceGroupsController } from '../controllers/service-groups.controller';
 import { TourismServicesService } from '../services/tourism-services.service';
 import { ServiceBookingsService } from '../services/service-bookings.service';
 import { RbacScopeModule } from '../../rbac/rbac-scope.module';
+import { UserModule } from '../../user/modules/user.module';
 
 @Module({
   imports: [
@@ -21,9 +21,9 @@ import { RbacScopeModule } from '../../rbac/rbac-scope.module';
       ServiceBooking,
       ServiceAvailability,
       ServiceGroup,
-      ServiceGroupMembership,
     ]),
     RbacScopeModule,
+    UserModule,
   ],
   controllers: [
     TourismServicesController,

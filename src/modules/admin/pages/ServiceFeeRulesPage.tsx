@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,9 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { Percent, DollarSign, Plus, Edit, Trash2, Star, Info, ArrowDown, Globe, Users, Building, Layers } from 'lucide-react';
 import { serviceFeesApi, type ServiceFeeRule } from '../service-fees.api';
 import { cn } from '@/lib/utils';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { usePaginatedList } from '@/modules/shared/hooks/usePaginatedList';
+import PaginationFooter from '@/modules/shared/components/PaginationFooter';
 
 const SCOPE_LABELS: Record<string, string> = {
   global: 'Global (tous)',
@@ -57,19 +60,19 @@ const emptyForm = (): Partial<ServiceFeeRule> => ({
 });
 
 export const ServiceFeeRulesPage: React.FC = () => {
-  const [rules, setRules] = useState<ServiceFeeRule[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { can } = useRoleAccess('ServiceFeeRulesPage');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<ServiceFeeRule>>(emptyForm());
 
-  const loadRules = useCallback(async () => {
-    setLoading(true);
-    try { setRules(await serviceFeesApi.getAll()); } catch { toast.error('Erreur de chargement'); }
-    finally { setLoading(false); }
-  }, []);
+  const paginated = usePaginatedList<ServiceFeeRule>({
+    queryKey: ['service-fees', 'all'],
+    fetcher: (p) => serviceFeesApi.getAllPaginated(p),
+  });
 
-  useEffect(() => { loadRules(); }, [loadRules]);
+  const rules = paginated.items;
+  const loading = paginated.isLoading;
+  const loadRules = () => paginated.refetch();
 
   const openCreate = () => { setEditingId(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (rule: ServiceFeeRule) => { setEditingId(rule.id); setForm({ ...rule }); setModalOpen(true); };
@@ -197,6 +200,8 @@ export const ServiceFeeRulesPage: React.FC = () => {
           <Card><CardContent className="p-8 text-center text-muted-foreground">Aucune règle de frais configurée</CardContent></Card>
         )}
       </div>
+
+      <PaginationFooter paginated={paginated} loadMoreLabel="Charger plus" />
 
       <DynamicModal open={modalOpen} onOpenChange={open => { if (!open) setModalOpen(false); }}
         title={editingId ? 'Modifier la règle de frais' : 'Nouvelle règle de frais'}>

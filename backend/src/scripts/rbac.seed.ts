@@ -37,6 +37,7 @@ interface BackendPerm {
   controller: string;
   endpoint: string;
   method: HttpMethod;
+  endpoint_url?: string;
   user_roles: string[];
   module: string;
   description: string;
@@ -56,9 +57,76 @@ interface FrontendPerm {
 // ─── All Roles ────────────────────────────────────────────────────────────────
 const ALL = ['hyper_admin', 'hyper_manager', 'admin', 'manager', 'user', 'guest'];
 const HYPER = ['hyper_admin', 'hyper_manager'];
+const HYPER_ADMIN = ['hyper_admin'];
 const HOST = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
 const ADMIN_UP = ['hyper_admin', 'hyper_manager', 'admin'];
 const AUTHENTICATED = ALL;
+
+/**
+ * Global API prefix applied by NestJS (`app.setGlobalPrefix('api')` in main.ts).
+ * Every backend endpoint_url stored in DB MUST be the FULL path
+ * (prefix + controller route + endpoint route), e.g. `/api/rbac-config/backend`.
+ */
+const API_GLOBAL_PREFIX = '/api';
+
+const CONTROLLER_BASE_PATHS: Record<string, string> = {
+  RbacConfigController: '/rbac-config',
+};
+
+// All overrides are stored WITHOUT the `/api` prefix; it is prepended in
+// `buildEndpointUrl` so we have a single source of truth for the prefix.
+const ENDPOINT_URL_OVERRIDES: Record<string, string> = {
+  'RbacConfigController.listBackend.GET': '/rbac-config/backend',
+  'RbacConfigController.getBackendByRole.GET': '/rbac-config/backend/role/:role',
+  'RbacConfigController.getBackendCatalog.GET': '/rbac-config/backend/catalog',
+  'RbacConfigController.getBackendCatalogDiff.GET': '/rbac-config/backend/catalog/diff',
+  'RbacConfigController.getFrontendCatalogDiff.POST': '/rbac-config/frontend/catalog/diff',
+  'RbacConfigController.refreshCatalogs.POST': '/rbac-config/catalog/refresh',
+  'RbacConfigController.listFrontend.GET': '/rbac-config/frontend',
+  'RbacConfigController.getFrontendByRole.GET': '/rbac-config/frontend/role/:role',
+  'RbacConfigController.updateBackend.PUT': '/rbac-config/backend/:id',
+  'RbacConfigController.bulkUpdateBackend.PUT': '/rbac-config/backend',
+  'RbacConfigController.createBackend.POST': '/rbac-config/backend',
+  'RbacConfigController.updateFrontend.PUT': '/rbac-config/frontend/:id',
+  'RbacConfigController.bulkUpdateFrontend.PUT': '/rbac-config/frontend',
+  'RbacConfigController.createFrontend.POST': '/rbac-config/frontend',
+  'RbacConfigController.getRoles.GET': '/rbac-config/roles',
+  'RbacConfigController.reloadCache.POST': '/rbac-config/reload',
+  'RbacConfigController.status.GET': '/rbac-config/status',
+  'RbacConfigController.check.GET': '/rbac-config/check',
+};
+
+const toKebabCase = (value: string) =>
+  value
+    .replace(/Controller$/, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/_/g, '-')
+    .toLowerCase();
+
+/** Ensure exactly one leading `/api` prefix on the resulting URL. */
+const withApiPrefix = (path: string): string => {
+  const clean = ('/' + String(path || '').replace(/^\/+/, '')).replace(/\/+$/, '') || '/';
+  if (clean === API_GLOBAL_PREFIX || clean.startsWith(`${API_GLOBAL_PREFIX}/`)) return clean;
+  return `${API_GLOBAL_PREFIX}${clean}`;
+};
+
+const buildEndpointUrl = (perm: BackendPerm): string => {
+  const override = ENDPOINT_URL_OVERRIDES[`${perm.controller}.${perm.endpoint}.${perm.method}`];
+  if (override) return withApiPrefix(override);
+  if (perm.endpoint_url) return withApiPrefix(perm.endpoint_url);
+
+  const base = CONTROLLER_BASE_PATHS[perm.controller] || `/${toKebabCase(perm.controller)}`;
+
+  if (['findAll', 'getAll', 'listBackend', 'listFrontend', 'getMine', 'getRoles', 'status'].includes(perm.endpoint)) {
+    return withApiPrefix(base);
+  }
+
+  if (['findOne', 'getOne'].includes(perm.endpoint)) {
+    return withApiPrefix(`${base}/:id`);
+  }
+
+  return withApiPrefix(`${base}/${toKebabCase(perm.endpoint)}`);
+};
 
 // ─── Backend Permissions ──────────────────────────────────────────────────────
 // Handler names MUST match the actual method names in each controller class.
@@ -104,6 +172,7 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
   { controller: 'BookingsController', endpoint: 'counterOffer', method: 'PUT', user_roles: ['admin', 'manager'], module: 'bookings', description: 'Counter-offer on booking', scope: 'own' },
   { controller: 'BookingsController', endpoint: 'refund', method: 'PUT', user_roles: ['hyper_admin', 'admin'], module: 'bookings', description: 'Refund a booking', scope: 'own' },
   { controller: 'BookingsController', endpoint: 'updateStatus', method: 'PUT', user_roles: ['admin', 'manager'], module: 'bookings', description: 'Update booking status', scope: 'own' },
+  { controller: 'BookingsController', endpoint: 'cancelByGuest', method: 'PUT', user_roles: ['manager', 'user', 'guest'], module: 'bookings', description: 'Guest-initiated booking cancel (auto-approved when host paused/archived)' },
   { controller: 'BookingsController', endpoint: 'checkAvailability', method: 'GET', user_roles: AUTHENTICATED, module: 'bookings', description: 'Check booking availability' },
 
   // ── Service Bookings (ServiceBookingsController) ───────────────────────
@@ -148,7 +217,7 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
   { controller: 'RolesController', endpoint: 'assignRole', method: 'POST', user_roles: ADMIN_UP, module: 'roles', description: 'Assign a role' },
   { controller: 'RolesController', endpoint: 'removeRole', method: 'DELETE', user_roles: ADMIN_UP, module: 'roles', description: 'Remove a role' },
   { controller: 'RolesController', endpoint: 'assignManager', method: 'POST', user_roles: ['admin'], module: 'roles', description: 'Assign manager to properties' },
-  { controller: 'RolesController', endpoint: 'setPermissions', method: 'POST', user_roles: ['admin'], module: 'roles', description: 'Set manager permissions' },
+  { controller: 'RolesController', endpoint: 'setManagerPermissions', method: 'POST', user_roles: ['admin'], module: 'roles', description: 'Set manager permissions' },
   { controller: 'RolesController', endpoint: 'getManagerPermissions', method: 'GET', user_roles: ADMIN_UP, module: 'roles', description: 'Get manager permissions' },
   { controller: 'RolesController', endpoint: 'getManagerProperties', method: 'GET', user_roles: ADMIN_UP, module: 'roles', description: 'Get manager properties' },
   { controller: 'RolesController', endpoint: 'getAllUsers', method: 'GET', user_roles: HYPER, module: 'roles', description: 'List all users' },
@@ -170,6 +239,7 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
   // ── RBAC Config (RbacConfigController) ─────────────────────────────────
   { controller: 'RbacConfigController', endpoint: 'listBackend', method: 'GET', user_roles: ADMIN_UP, module: 'rbac_config', description: 'List backend RBAC' },
   { controller: 'RbacConfigController', endpoint: 'getBackendByRole', method: 'GET', user_roles: HYPER, module: 'rbac_config', description: 'Get backend perms by role' },
+  { controller: 'RbacConfigController', endpoint: 'getBackendCatalog', method: 'GET', user_roles: ['hyper_admin'], module: 'rbac_config', description: 'Get backend API catalog for RBAC builders' },
   { controller: 'RbacConfigController', endpoint: 'listFrontend', method: 'GET', user_roles: ADMIN_UP, module: 'rbac_config', description: 'List frontend RBAC' },
   { controller: 'RbacConfigController', endpoint: 'getFrontendByRole', method: 'GET', user_roles: AUTHENTICATED, module: 'rbac_config', description: 'Get frontend perms by role' },
   { controller: 'RbacConfigController', endpoint: 'updateBackend', method: 'PUT', user_roles: ['hyper_admin'], module: 'rbac_config', description: 'Update backend perm' },
@@ -211,6 +281,7 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
 
   // ── Cancellation Rules (CancellationRuleController) ────────────────────
   { controller: 'CancellationRuleController', endpoint: 'getMine', method: 'GET', user_roles: ['admin'], module: 'cancellation_rules', description: 'List cancellation rules' },
+  { controller: 'CancellationRuleController', endpoint: 'getAll', method: 'GET', user_roles: ADMIN_UP, module: 'cancellation_rules', description: 'Get all cancellation rules (hyper admin)', scope: 'global' },
   { controller: 'CancellationRuleController', endpoint: 'getForHost', method: 'GET', user_roles: ADMIN_UP, module: 'cancellation_rules', description: 'Get rules for host' },
   { controller: 'CancellationRuleController', endpoint: 'create', method: 'POST', user_roles: ['admin'], module: 'cancellation_rules', description: 'Create cancellation rule', scope: 'own' },
   { controller: 'CancellationRuleController', endpoint: 'update', method: 'PUT', user_roles: ['admin'], module: 'cancellation_rules', description: 'Update cancellation rule', scope: 'own' },
@@ -323,8 +394,8 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
   { controller: 'RewardsController', endpoint: 'remove', method: 'DELETE', user_roles: HYPER, module: 'rewards', description: 'Delete reward' },
   { controller: 'RewardsController', endpoint: 'redeem', method: 'POST', user_roles: ['user', 'guest', 'manager'], module: 'rewards', description: 'Redeem reward' },
   { controller: 'RewardsController', endpoint: 'getMyRedemptions', method: 'GET', user_roles: AUTHENTICATED, module: 'rewards', description: 'My redemptions' },
-  { controller: 'RewardsController', endpoint: 'useRedemption', method: 'PUT', user_roles: AUTHENTICATED, module: 'rewards', description: 'Use redemption' },
-  { controller: 'RewardsController', endpoint: 'cancelRedemption', method: 'PUT', user_roles: AUTHENTICATED, module: 'rewards', description: 'Cancel redemption' },
+  { controller: 'RewardsController', endpoint: 'useRedemption', method: 'POST', user_roles: AUTHENTICATED, module: 'rewards', description: 'Use redemption' },
+  { controller: 'RewardsController', endpoint: 'cancelRedemption', method: 'DELETE', user_roles: AUTHENTICATED, module: 'rewards', description: 'Cancel redemption' },
   { controller: 'RewardsController', endpoint: 'getAllRedemptions', method: 'GET', user_roles: HYPER, module: 'rewards', description: 'All redemptions (admin)' },
 
   // ── Referrals (ReferralController) ─────────────────────────────────────
@@ -335,6 +406,7 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
   { controller: 'ReferralController', endpoint: 'completeSignup', method: 'POST', user_roles: ALL, module: 'referrals', description: 'Complete referral signup' },
   { controller: 'ReferralController', endpoint: 'shareProperty', method: 'POST', user_roles: AUTHENTICATED, module: 'referrals', description: 'Share property' },
   { controller: 'ReferralController', endpoint: 'getShareStats', method: 'GET', user_roles: AUTHENTICATED, module: 'referrals', description: 'Get share stats' },
+  { controller: 'ReferralController', endpoint: 'getScopedReferrals', method: 'GET', user_roles: AUTHENTICATED, module: 'referrals', description: 'Scoped referrals (admin/hyper)' },
 
   // ── Profiles (ProfilesController) ─────────────────────────────────────
   { controller: 'ProfilesController', endpoint: 'findMyProfile', method: 'GET', user_roles: AUTHENTICATED, module: 'profiles', description: 'Get my profile' },
@@ -356,9 +428,40 @@ const BACKEND_PERMISSIONS: BackendPerm[] = [
   // ── Notifications (NotificationController) ─────────────────────────────
   { controller: 'NotificationController', endpoint: 'get', method: 'GET', user_roles: AUTHENTICATED, module: 'notifications', description: 'Get all notifications' },
   { controller: 'NotificationController', endpoint: 'getNew', method: 'GET', user_roles: AUTHENTICATED, module: 'notifications', description: 'Get new notifications' },
+  { controller: 'NotificationController', endpoint: 'markRead', method: 'PUT', user_roles: AUTHENTICATED, module: 'notifications', description: 'Mark notification read' },
+  { controller: 'NotificationController', endpoint: 'markAllRead', method: 'PUT', user_roles: AUTHENTICATED, module: 'notifications', description: 'Mark all notifications read' },
+  { controller: 'NotificationController', endpoint: 'delete', method: 'DELETE', user_roles: AUTHENTICATED, module: 'notifications', description: 'Delete notification' },
+
+  // ── Auth (AuthController) ─────────────────────────────────────────────
+  { controller: 'AuthController', endpoint: 'login', method: 'POST', user_roles: ALL, module: 'auth', description: 'Login' },
+  { controller: 'AuthController', endpoint: 'logout', method: 'POST', user_roles: AUTHENTICATED, module: 'auth', description: 'Logout' },
+  { controller: 'AuthController', endpoint: 'registerUser', method: 'POST', user_roles: ALL, module: 'auth', description: 'Register' },
+  { controller: 'AuthController', endpoint: 'refresh', method: 'POST', user_roles: AUTHENTICATED, module: 'auth', description: 'Refresh token' },
+  { controller: 'AuthController', endpoint: 'getProfile', method: 'POST', user_roles: AUTHENTICATED, module: 'auth', description: 'Get auth profile' },
+
+  // ── Payments extra (PaymentsController) ────────────────────────────────
+  { controller: 'PaymentsController', endpoint: 'createPaymentIntent', method: 'POST', user_roles: AUTHENTICATED, module: 'payments', description: 'Create payment intent' },
+
+  // ── Documents (DocumentsController) ────────────────────────────────────
+  { controller: 'DocumentsController', endpoint: 'upload', method: 'POST', user_roles: HOST, module: 'documents', description: 'Upload document' },
+  { controller: 'DocumentsController', endpoint: 'getByProperty', method: 'GET', user_roles: HOST, module: 'documents', description: 'Get documents by property' },
+
+  // ── Tourism Services extra ─────────────────────────────────────────────
+  { controller: 'TourismServicesController', endpoint: 'uploadDocument', method: 'POST', user_roles: ['admin', 'manager'], module: 'services', description: 'Upload service document', scope: 'own' },
+  { controller: 'TourismServicesController', endpoint: 'getDocuments', method: 'GET', user_roles: ADMIN_UP, module: 'services', description: 'Get service documents' },
+
+  // ── Stats (StatsController / DashboardController) ──────────────────────
+  { controller: 'StatsController', endpoint: 'getDashboardStats', method: 'GET', user_roles: ADMIN_UP, module: 'stats', description: 'Get dashboard statistics' },
 
   // ── Email Tracking (EmailTrackingController) — mostly public ──────────
   { controller: 'EmailTrackingController', endpoint: 'getAnalytics', method: 'GET', user_roles: ADMIN_UP, module: 'email_tracking', description: 'Email analytics' },
+
+  // ── Backend PermissionBinding Frontend APIs --> Backend APIs (PermissionBindingController) — mostly Hyper admin ──────────
+
+  { controller: 'PermissionBindingController', endpoint: 'findAll', method: 'GET', user_roles: HYPER_ADMIN, module: 'PermissionBinding', description: 'Backend Permisions APIs module' },
+  { controller: 'PermissionBindingController', endpoint: 'getBindingMap', method: 'GET', user_roles: HYPER_ADMIN, module: 'PermissionBinding', description: 'Backend Permisions APIs module' },
+  { controller: 'PermissionBindingController', endpoint: 'create', method: 'POST', user_roles: ADMIN_UP, module: 'PermissionBinding', description: 'Backend Permisions APIs module' },
+  { controller: 'PermissionBindingController', endpoint: 'remove', method: 'DELETE', user_roles: HYPER_ADMIN, module: 'PermissionBinding', description: 'Backend Permisions APIs module' },
 ];
 
 // ─── Frontend Permissions ─────────────────────────────────────────────────────
@@ -383,6 +486,7 @@ const FRONTEND_PERMISSIONS: FrontendPerm[] = [
   { component: 'BookingsPage', sub_view: 'Detail', element_type: 'Button', action_name: 'Accept', user_roles: ['admin', 'manager'], module: 'bookings', description: 'Show accept booking button' },
   { component: 'BookingsPage', sub_view: 'Detail', element_type: 'Button', action_name: 'Reject', user_roles: ['admin', 'manager'], module: 'bookings', description: 'Show reject booking button' },
   { component: 'BookingsPage', sub_view: 'Detail', element_type: 'Button', action_name: 'Refund', user_roles: ['hyper_admin', 'admin'], module: 'bookings', description: 'Show refund booking button' },
+  { component: 'BookingsPage', sub_view: 'Detail', element_type: 'Button', action_name: 'Cancel', user_roles: ['manager', 'user', 'guest'], module: 'bookings', description: 'Show guest cancel button (auto-approved when host paused/archived)' },
 
   // Dashboard
   { component: 'Dashboard', sub_view: 'Analytics', element_type: 'Tab', action_name: 'View', user_roles: ADMIN_UP, module: 'dashboard', description: 'Show analytics tab' },
@@ -446,14 +550,14 @@ export async function seedRbac(): Promise<void> {
 
       await queryRunner.query(
         `INSERT INTO rbac_backend_permissions
-          (id, permission_key, user_roles, controller, endpoint, method, module, description, scope, allowed)
+          (id, permission_key, user_roles, controller, endpoint, method, endpoint_url, module, description, scope, allowed)
          VALUES
-          (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, true)
+          (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, true)
          ON DUPLICATE KEY UPDATE
-          user_roles    = VALUES(user_roles),
           controller    = VALUES(controller),
           endpoint      = VALUES(endpoint),
           method        = VALUES(method),
+          endpoint_url  = VALUES(endpoint_url),
           module        = VALUES(module),
           description   = VALUES(description),
           scope         = VALUES(scope)`,
@@ -463,6 +567,7 @@ export async function seedRbac(): Promise<void> {
           perm.controller,
           perm.endpoint,
           perm.method,
+          buildEndpointUrl(perm),
           perm.module,
           perm.description,
           perm.scope ?? 'global',
@@ -472,40 +577,40 @@ export async function seedRbac(): Promise<void> {
     }
 
     // ── Seed frontend permissions ─────────────────────────────────────────
-    for (const perm of FRONTEND_PERMISSIONS) {
-      const permKey = generateUiPermissionKey(
-        perm.component,
-        perm.sub_view,
-        perm.element_type,
-        perm.action_name,
-      );
+    // for (const perm of FRONTEND_PERMISSIONS) {
+    //   const permKey = generateUiPermissionKey(
+    //     perm.component,
+    //     perm.sub_view,
+    //     perm.element_type,
+    //     perm.action_name,
+    //   );
 
-      await queryRunner.query(
-        `INSERT INTO rbac_frontend_permissions
-          (id, permission_key, user_roles, component, sub_view, element_type, action_name, module, description, allowed)
-         VALUES
-          (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, true)
-         ON DUPLICATE KEY UPDATE
-          user_roles   = VALUES(user_roles),
-          component    = VALUES(component),
-          sub_view     = VALUES(sub_view),
-          element_type = VALUES(element_type),
-          action_name  = VALUES(action_name),
-          module       = VALUES(module),
-          description  = VALUES(description)`,
-        [
-          permKey,
-          JSON.stringify(perm.user_roles),
-          perm.component,
-          perm.sub_view ?? null,
-          perm.element_type ?? null,
-          perm.action_name ?? null,
-          perm.module,
-          perm.description,
-        ],
-      );
-      frontendCount++;
-    }
+    //   await queryRunner.query(
+    //     `INSERT INTO rbac_frontend_permissions
+    //       (id, permission_key, user_roles, component, sub_view, element_type, action_name, module, description, allowed)
+    //      VALUES
+    //       (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, true)
+    //      ON DUPLICATE KEY UPDATE
+    //       user_roles   = VALUES(user_roles),
+    //       component    = VALUES(component),
+    //       sub_view     = VALUES(sub_view),
+    //       element_type = VALUES(element_type),
+    //       action_name  = VALUES(action_name),
+    //       module       = VALUES(module),
+    //       description  = VALUES(description)`,
+    //     [
+    //       permKey,
+    //       JSON.stringify(perm.user_roles),
+    //       perm.component,
+    //       perm.sub_view ?? null,
+    //       perm.element_type ?? null,
+    //       perm.action_name ?? null,
+    //       perm.module,
+    //       perm.description,
+    //     ],
+    //   );
+    //   frontendCount++;
+    // }
 
     await queryRunner.commitTransaction();
     console.log(`✅ RBAC seed complete — ${backendCount} backend / ${frontendCount} frontend permissions`);

@@ -21,6 +21,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 interface UserStatusActionsProps {
   userId: number;
@@ -46,36 +47,39 @@ export const UserStatusActions: React.FC<UserStatusActionsProps> = ({
   userName = 'User',
   onStatusChange,
 }) => {
+  const { guardAction } = useRoleAccess('HyperDashboard');
   const [loading, setLoading] = useState(false);
 
   const handleAction = useCallback(async (action: string, newStatus: UserStatus) => {
-    const result = await Swal.fire({
-      title: `${action} ${userName}?`,
-      text: `This will ${action.toLowerCase()} the user account.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: `Yes, ${action}`,
-      cancelButtonText: 'Cancel',
-      customClass: {
-        popup: 'swal-themed',
-        confirmButton: 'swal-confirm-btn',
-        cancelButton: 'swal-cancel-btn',
-      },
+    await guardAction('Users', 'Button', action === 'Pause' ? 'Pause' : action === 'Disable' ? 'Archive' : 'Pause', async () => {
+      const result = await Swal.fire({
+        title: `${action} ${userName}?`,
+        text: `This will ${action.toLowerCase()} the user account.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: `Yes, ${action}`,
+        cancelButtonText: 'Cancel',
+        customClass: {
+          popup: 'swal-themed',
+          confirmButton: 'swal-confirm-btn',
+          cancelButton: 'swal-cancel-btn',
+        },
+      });
+
+      if (!result.isConfirmed) return;
+
+      setLoading(true);
+      try {
+        await invitationsApi.updateUserStatus(userId, newStatus);
+        toast.success(`User ${action.toLowerCase()}d successfully`);
+        onStatusChange?.();
+      } catch {
+        toast.error(`Failed to ${action.toLowerCase()} user`);
+      } finally {
+        setLoading(false);
+      }
     });
-
-    if (!result.isConfirmed) return;
-
-    setLoading(true);
-    try {
-      await invitationsApi.updateUserStatus(userId, newStatus);
-      toast.success(`User ${action.toLowerCase()}d successfully`);
-      onStatusChange?.();
-    } catch {
-      toast.error(`Failed to ${action.toLowerCase()} user`);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, userName, onStatusChange]);
+  }, [userId, userName, onStatusChange, guardAction]);
 
   const handleDelete = useCallback(async () => {
     const result = await Swal.fire({

@@ -13,6 +13,10 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { Plus, Edit, Trash2, CreditCard, Building2, Banknote } from 'lucide-react';
 import { payoutAccountsApi, type PayoutAccount } from '../payout-accounts.api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { usePaginatedList } from '@/modules/shared/hooks/usePaginatedList';
+import ServerPagination from '@/modules/shared/components/ServerPagination';
+import { Loader2 } from 'lucide-react';
 
 const ACCOUNT_TYPES = [
   { value: 'ccp', label: 'CCP' },
@@ -39,7 +43,8 @@ const emptyForm = (): Partial<PayoutAccount> => ({
 export const PayoutAccountsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<PayoutAccount[]>([]);
+  const { can } = useRoleAccess('PayoutAccountsPage');
+  const [mineAccounts, setMineAccounts] = useState<PayoutAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,15 +55,26 @@ export const PayoutAccountsPage: React.FC = () => {
     [user]
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setAccounts(isHyper ? await payoutAccountsApi.getAll() : await payoutAccountsApi.getMine());
-    } catch { toast.error(t('payoutAccounts.loadError', 'Erreur de chargement')); }
-    finally { setLoading(false); }
-  }, [isHyper, t]);
+  // Hyper: server-side paginated list (desktop = numbered, mobile = infinite scroll)
+  const paginated = usePaginatedList<PayoutAccount>({
+    queryKey: ['payout-accounts', 'all'],
+    fetcher: (p) => payoutAccountsApi.getAllPaginated(p),
+    enabled: isHyper,
+  });
 
-  useEffect(() => { load(); }, [load]);
+  const loadMine = useCallback(async () => {
+    setLoading(true);
+    try { setMineAccounts(await payoutAccountsApi.getMine()); }
+    catch { toast.error(t('payoutAccounts.loadError', 'Erreur de chargement')); }
+    finally { setLoading(false); }
+  }, [t]);
+
+  useEffect(() => { if (!isHyper) loadMine(); }, [isHyper, loadMine]);
+
+  const accounts = isHyper ? paginated.items : mineAccounts;
+  const isLoading = isHyper ? paginated.isLoading : loading;
+
+  const refresh = () => { if (isHyper) paginated.refetch(); else loadMine(); };
 
   const openCreate = () => { setEditingId(null); setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (a: PayoutAccount) => { setEditingId(a.id); setForm({ ...a }); setModalOpen(true); };
@@ -68,12 +84,12 @@ export const PayoutAccountsPage: React.FC = () => {
     try {
       if (editingId) { await payoutAccountsApi.update(editingId, form); toast.success(t('payoutAccounts.updated', 'Mis à jour')); }
       else { await payoutAccountsApi.create(form); toast.success(t('payoutAccounts.created', 'Compte ajouté')); }
-      setModalOpen(false); load();
+      setModalOpen(false); refresh();
     } catch { toast.error(t('payoutAccounts.saveError', 'Erreur')); }
   };
 
   const handleDelete = async (id: string) => {
-    try { await payoutAccountsApi.remove(id); toast.success(t('payoutAccounts.deleted', 'Supprimé')); load(); }
+    try { await payoutAccountsApi.remove(id); toast.success(t('payoutAccounts.deleted', 'Supprimé')); refresh(); }
     catch { toast.error(t('payoutAccounts.deleteError', 'Erreur')); }
   };
 
@@ -143,12 +159,40 @@ export const PayoutAccountsPage: React.FC = () => {
             </CardContent>
           </Card>
         ))}
-        {accounts.length === 0 && !loading && (
+        {accounts.length === 0 && !isLoading && (
           <Card className="col-span-full"><CardContent className="p-8 text-center text-muted-foreground">
             {t('payoutAccounts.empty', 'Aucun compte de versement configuré')}
           </CardContent></Card>
         )}
+        {isLoading && accounts.length === 0 && (
+          <div className="col-span-full flex justify-center p-6">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
       </div>
+
+      {isHyper && (
+        paginated.isMobile ? (
+          paginated.hasMore && (
+            <div className="flex justify-center mt-4">
+              <DynamicButton variant="outline" size="sm" onClick={paginated.loadMore} disabled={paginated.isFetching}>
+                {paginated.isFetching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {t('common.loadMore', 'Charger plus')}
+              </DynamicButton>
+            </div>
+          )
+        ) : (
+          <ServerPagination
+            page={paginated.page}
+            limit={paginated.limit}
+            total={paginated.total}
+            totalPages={paginated.totalPages}
+            onPageChange={paginated.setPage}
+            onLimitChange={paginated.setLimit}
+            isLoading={paginated.isFetching}
+          />
+        )
+      )}
 
       {!isHyper && (
         <DynamicModal open={modalOpen} onOpenChange={o => !o && setModalOpen(false)}

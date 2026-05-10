@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Request, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ReviewsService } from '../services/reviews.service';
 import { Public } from '../../auth/decorators/public.decorator';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -15,7 +15,16 @@ export class ReviewsController {
 
   @Public()
   @Get('property/:propertyId')
-  findByProperty(@Param('propertyId') propertyId: string) { return this.reviewsService.findByProperty(propertyId); }
+  findByProperty(
+    @Param('propertyId') propertyId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.reviewsService.findByProperty(propertyId, undefined, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
 
   @Get(':id')
   @UseGuards(PermissionGuard)

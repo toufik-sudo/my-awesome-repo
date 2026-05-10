@@ -18,6 +18,7 @@ import {
 } from '../support.hooks';
 import type { SupportMessage } from '../support.api';
 import { cn } from '@/lib/utils';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const STATUS_BADGES: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   open: { label: 'Open', variant: 'default' },
@@ -28,6 +29,7 @@ const STATUS_BADGES: Record<string, { label: string; variant: 'default' | 'secon
 
 export const SupportThreadChat: React.FC = () => {
   const { threadId } = useParams<{ threadId: string }>();
+  const { can } = useRoleAccess('SupportThreadChat');
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();

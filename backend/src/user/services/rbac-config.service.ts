@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, Logger, ForbiddenException, Inject } from '@n
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Redis from 'ioredis';
+import { HttpAdapterHost } from '@nestjs/core';
 import { RbacBackendPermission, RbacScope } from '../entity/rbac-backend-permission.entity';
 import { RbacFrontendPermission } from '../entity/rbac-frontend-permission.entity';
 import { ManagerPermission } from '../entity/manager-permission.entity';
@@ -12,6 +13,8 @@ import { REDIS_CLIENT } from '../../infrastructure/redis/redis.constant';
 import { EventsGateway } from '../../infrastructure/websocket/events.gateway';
 import { generateBackendPermissionKey, type HttpMethod } from '../../rbac/utils/generate-backend-permission-key';
 import { generateUiPermissionKey } from '../../rbac/utils/generate-ui-permission-key';
+import { BackendRouteMapperService, type MappedBackendController } from '../../rbac/services/backend-route-mapper.service';
+import { FrontendApiCatalogService, type FrontendApiEntry } from '../../rbac/services/frontend-api-catalog.service';
 
 // ─── Redis keys ───────────────────────────────────────────────────────────────
 const REDIS_KEY_BACKEND = 'rbac:backend:permissions';
@@ -30,6 +33,7 @@ interface CachedBackendPerm {
   controller: string;
   endpoint: string;
   method: string;
+  endpoint_url: string | null;
   module: string;
   description: string | null;
 }
@@ -91,8 +95,11 @@ export class RbacConfigService implements OnModuleInit {
     private readonly hyperPermRepo: Repository<HyperManagerPermission>,
     @InjectRepository(GuestPermission)
     private readonly guestPermRepo: Repository<GuestPermission>,
+    private readonly httpAdapterHost: HttpAdapterHost,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private readonly eventsGateway: EventsGateway,
+    private readonly routeMapper: BackendRouteMapperService,
+    private readonly frontendCatalog: FrontendApiCatalogService,
   ) {}
 
   async onModuleInit() {
@@ -105,8 +112,9 @@ export class RbacConfigService implements OnModuleInit {
   // ═══════════════════════════════════════════════════════════════════════════
 
   can(role: AppRole, permissionKey: string): boolean {
+    if (role === 'hyper_admin') return true;
     const entry = this.backendCache.get(permissionKey);
-    if (!entry) return false;
+    if (!entry) return true;
     if (!entry.allowed) return false;
     return entry.user_roles.includes(role);
   }
@@ -147,6 +155,182 @@ export class RbacConfigService implements OnModuleInit {
   getAllBackendPermissions(): CachedBackendPerm[] {
     return Array.from(this.backendCache.values());
   }
+
+  /**
+   * Live backend API catalog.
+   *
+   * Source of truth: NestJS controller introspection (BackendRouteMapperService).
+   * Each entry is annotated with `inDb` so callers can quickly tell which keys
+   * are missing from the rbac_backend_permissions table.
+   */
+  getBackendApiCatalog(): Array<{
+    controller: string;
+    endpoints: Array<{
+      endpoint: string;
+      method: string;
+      endpoint_url: string | null;
+      permission_key: string;
+      module: string;
+      description: string | null;
+      inDb: boolean;
+    }>;
+  }> {
+    const live = this.routeMapper.list();
+    return live.map(c => ({
+      controller: c.controller,
+      endpoints: c.endpoints.map(e => {
+        const dbEntry = this.backendCache.get(e.permission_key);
+        return {
+          endpoint: e.endpoint,
+          method: e.method,
+          endpoint_url: dbEntry?.endpoint_url || e.endpoint_url,
+          permission_key: e.permission_key,
+          module: dbEntry?.module || e.module,
+          description: dbEntry?.description || null,
+          inDb: !!dbEntry,
+        };
+      }),
+    }));
+  }
+
+  /**
+   * Diff the live route map against the DB cache.
+   *  - missing: keys present in code but not in DB → admins should "Create"
+   *  - orphan : keys in DB but no longer in code → admins can prune them
+   *  - matched: keys present in both
+   */
+  getBackendCatalogDiff(): {
+    missing: Array<{ permission_key: string; controller: string; endpoint: string; method: string; endpoint_url: string; module: string }>;
+    orphan: Array<{ permission_key: string; controller: string; endpoint: string; method: string; endpoint_url: string | null; module: string }>;
+    matchedCount: number;
+    liveCount: number;
+    dbCount: number;
+  } {
+    const live = this.routeMapper.list();
+    const liveKeys = new Set<string>();
+    const missing: Array<any> = [];
+
+    for (const c of live) {
+      for (const e of c.endpoints) {
+        liveKeys.add(e.permission_key);
+        if (!this.backendCache.has(e.permission_key)) {
+          missing.push({
+            permission_key: e.permission_key,
+            controller: e.controller,
+            endpoint: e.endpoint,
+            method: e.method,
+            endpoint_url: e.endpoint_url,
+            module: e.module,
+          });
+        }
+      }
+    }
+
+    const orphan: Array<any> = [];
+    for (const [key, val] of this.backendCache.entries()) {
+      if (!liveKeys.has(key)) {
+        orphan.push({
+          permission_key: key,
+          controller: val.controller,
+          endpoint: val.endpoint,
+          method: val.method,
+          endpoint_url: val.endpoint_url,
+          module: val.module,
+        });
+      }
+    }
+
+    return {
+      missing,
+      orphan,
+      matchedCount: liveKeys.size - missing.length,
+      liveCount: liveKeys.size,
+      dbCount: this.backendCache.size,
+    };
+  }
+
+  /**
+   * Frontend API catalog with `inDb` annotation.
+   *
+   * Source: a static catalog produced by the web `generate-frontend-api-catalog`
+   * script, optionally enriched with a runtime catalog supplied by the client
+   * so the diff reflects the currently shipped web build.
+   */
+  getFrontendApiCatalog(runtimeCatalog?: FrontendApiEntry[]): Array<{
+    frontendApiKey: string;
+    module: string;
+    source: string | null;
+    inDb: boolean;
+    bindingExists: boolean;
+  }> {
+    const merged = this.frontendCatalog.mergeRuntime(runtimeCatalog);
+    return merged.map(e => ({
+      frontendApiKey: e.frontendApiKey,
+      module: e.module,
+      source: e.source,
+      // a frontend API key is "in DB" once a binding exists OR the key matches
+      // a known frontend permission key
+      inDb: this.frontendCache.has(e.frontendApiKey),
+      bindingExists: false, // bindings are tracked by PermissionBindingsService — UI fills this in
+    }));
+  }
+
+  getFrontendCatalogDiff(runtimeCatalog?: FrontendApiEntry[]): {
+    missing: FrontendApiEntry[];
+    orphan: Array<{ frontendApiKey: string }>;
+    matchedCount: number;
+    liveCount: number;
+    dbCount: number;
+    meta: ReturnType<FrontendApiCatalogService['meta']>;
+  } {
+    const merged = this.frontendCatalog.mergeRuntime(runtimeCatalog);
+    const liveKeys = new Set(merged.map(e => e.frontendApiKey));
+    const missing = merged.filter(e => !this.frontendCache.has(e.frontendApiKey));
+    const orphan: Array<{ frontendApiKey: string }> = [];
+    for (const key of this.frontendCache.keys()) {
+      if (!liveKeys.has(key)) orphan.push({ frontendApiKey: key });
+    }
+    return {
+      missing,
+      orphan,
+      matchedCount: merged.length - missing.length,
+      liveCount: merged.length,
+      dbCount: this.frontendCache.size,
+      meta: this.frontendCatalog.meta(),
+    };
+  }
+
+  /**
+   * Force a full re-introspection: invalidate the live route map, attempt to
+   * regenerate the on-disk frontend API catalog, then reload all RBAC caches
+   * (DB → memory + Redis broadcast).
+   *
+   * Used by RBAC Settings → Diff tab "Refresh diff" so admins can resync
+   * without redeploying or restarting the backend.
+   */
+  async refreshCatalogs(): Promise<{
+    routesRescanned: number;
+    frontendRegenerated: boolean;
+    frontendOutput: string;
+  }> {
+    this.routeMapper.invalidate();
+    const liveRoutes = this.routeMapper.list();
+    const routesCount = liveRoutes.reduce((acc, c) => acc + c.endpoints.length, 0);
+
+    const regen = this.frontendCatalog.regenerate();
+    // Always invalidate even if regen failed so we re-read the on-disk file.
+    this.frontendCatalog.invalidate();
+
+    await this.loadFromDb();
+    await this.syncAndBroadcast();
+
+    return {
+      routesRescanned: routesCount,
+      frontendRegenerated: regen.ok,
+      frontendOutput: regen.output,
+    };
+  }
+
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SCOPED PERMISSION CHECKS — manager / hyper_manager / guest
@@ -207,14 +391,35 @@ export class RbacConfigService implements OnModuleInit {
   // CRUD — Admin Panel
   // ═══════════════════════════════════════════════════════════════════════════
 
-  async findAllBackend(): Promise<RbacBackendPermission[]> {
-    return this.backendRepo.find({ order: { module: 'ASC', controller: 'ASC', endpoint: 'ASC' } });
+  async findAllBackend(pagination?: { page?: number; pageSize?: number; module?: string; search?: string; modulesOnly?: boolean }): Promise<any> {
+    if (pagination?.modulesOnly) {
+      const rows = await this.backendRepo.createQueryBuilder('p').select('DISTINCT p.module', 'module').orderBy('p.module', 'ASC').getRawMany();
+      return rows.map(r => r.module).filter(Boolean);
+    }
+    const qb = this.backendRepo.createQueryBuilder('p').orderBy('p.module', 'ASC').addOrderBy('p.controller', 'ASC').addOrderBy('p.endpoint', 'ASC');
+    if (pagination?.module) qb.andWhere('p.module = :m', { m: pagination.module });
+    if (pagination?.search) qb.andWhere('(p.permission_key LIKE :s OR p.controller LIKE :s OR p.endpoint LIKE :s)', { s: `%${pagination.search}%` });
+    if (!pagination?.page) return qb.getMany();
+    const page = Math.max(1, pagination.page);
+    const pageSize = Math.max(1, Math.min(500, pagination.pageSize ?? 50));
+    const [data, total] = await qb.skip((page - 1) * pageSize).take(pageSize).getManyAndCount();
+    return { data, total, page, pageSize };
   }
 
-  async findAllFrontend(): Promise<RbacFrontendPermission[]> {
-    return this.frontendRepo.find({ order: { module: 'ASC', component: 'ASC' } });
+  async findAllFrontend(pagination?: { page?: number; pageSize?: number; module?: string; search?: string; modulesOnly?: boolean }): Promise<any> {
+    if (pagination?.modulesOnly) {
+      const rows = await this.frontendRepo.createQueryBuilder('p').select('DISTINCT p.module', 'module').orderBy('p.module', 'ASC').getRawMany();
+      return rows.map(r => r.module).filter(Boolean);
+    }
+    const qb = this.frontendRepo.createQueryBuilder('p').orderBy('p.module', 'ASC').addOrderBy('p.component', 'ASC');
+    if (pagination?.module) qb.andWhere('p.module = :m', { m: pagination.module });
+    if (pagination?.search) qb.andWhere('(p.permission_key LIKE :s OR p.component LIKE :s)', { s: `%${pagination.search}%` });
+    if (!pagination?.page) return qb.getMany();
+    const page = Math.max(1, pagination.page);
+    const pageSize = Math.max(1, Math.min(500, pagination.pageSize ?? 50));
+    const [data, total] = await qb.skip((page - 1) * pageSize).take(pageSize).getManyAndCount();
+    return { data, total, page, pageSize };
   }
-
   async updateBackendPermission(
     id: string,
     updates: Partial<Pick<RbacBackendPermission, 'allowed' | 'scope' | 'conditions' | 'user_roles'>>,
@@ -289,7 +494,7 @@ export class RbacConfigService implements OnModuleInit {
   async createBackendPermission(data: {
     controller: string; endpoint: string; method: string; user_roles: string[];
     scope?: RbacScope; allowed?: boolean; conditions?: Record<string, any>;
-    module?: string; description?: string; created_by?: string;
+    module?: string; description?: string; created_by?: string; endpoint_url?: string;
   }): Promise<RbacBackendPermission> {
     const permissionKey = generateBackendPermissionKey(data.controller, data.endpoint, data.method as HttpMethod);
     const existing = await this.backendRepo.findOneBy({ permission_key: permissionKey });
@@ -297,6 +502,7 @@ export class RbacConfigService implements OnModuleInit {
     const perm = this.backendRepo.create({
       permission_key: permissionKey,
       controller: data.controller, endpoint: data.endpoint, method: data.method,
+      endpoint_url: data.endpoint_url || null,
       user_roles: data.user_roles, scope: data.scope || 'global',
       allowed: data.allowed !== undefined ? data.allowed : true,
       conditions: data.conditions || null, module: data.module || 'general',
@@ -395,7 +601,7 @@ export class RbacConfigService implements OnModuleInit {
       newBackend.set(p.permission_key, {
         user_roles: p.user_roles, scope: p.scope, allowed: p.allowed,
         conditions: p.conditions, controller: p.controller, endpoint: p.endpoint,
-        method: p.method, module: p.module, description: p.description,
+        method: p.method, endpoint_url: p.endpoint_url, module: p.module, description: p.description,
       });
     }
 
@@ -478,7 +684,7 @@ export class RbacConfigService implements OnModuleInit {
       newBackend.set(p.permission_key, {
         user_roles: p.user_roles, scope: p.scope as RbacScope, allowed: p.allowed,
         conditions: p.conditions, controller: p.controller, endpoint: p.endpoint,
-        method: p.method, module: p.module, description: p.description,
+        method: p.method, endpoint_url: p.endpoint_url ?? null, module: p.module, description: p.description,
       });
     }
     const newFrontend = new Map<string, CachedFrontendPerm>();
@@ -506,7 +712,7 @@ export class RbacConfigService implements OnModuleInit {
       const backendJson = backendPerms.map(p => ({
         permission_key: p.permission_key, user_roles: p.user_roles, scope: p.scope,
         allowed: p.allowed, conditions: p.conditions, controller: p.controller,
-        endpoint: p.endpoint, method: p.method, module: p.module, description: p.description,
+        endpoint: p.endpoint, method: p.method, endpoint_url: p.endpoint_url, module: p.module, description: p.description,
       }));
       const frontendJson = frontendPerms.map(p => ({
         permission_key: p.permission_key, user_roles: p.user_roles, allowed: p.allowed,

@@ -7,22 +7,26 @@ import { Sidebar } from './Sidebar';
 import { Content } from './Content';
 import { LayoutProps } from '@/types/component.types';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { generateUiPermissionKey } from '@/utils/rbac/generate-ui-permission-key';
 import {
   LayoutDashboard,
   Home,
   Building2,
   CalendarCheck,
   Settings,
-  Shield,
   Palette,
   History,
   MessageSquare,
-  PlusCircle,
   Headphones,
   Compass,
   Trophy,
   Calendar,
+  Shield,
+  Bug,
+  Receipt,
+  AlertTriangle,
+  RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -32,6 +36,7 @@ import {
   BOOKING_ROUTES,
   DASHBOARD_ROUTES,
   SUPPORT_ROUTES,
+  ADMIN_ROUTES,
   DEMO_ROUTES,
 } from '@/routes/routes.constants';
 
@@ -48,9 +53,10 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   requireAuth?: boolean;
+  /** Sidebar permission key: ui.Sidebar.<section>.Link.View */
+  sidebarSection: string;
   roles?: string[];
 }
-
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
   headerProps = {},
@@ -64,7 +70,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { canUI, role, frontendPermCache } = useRoleAccess();
+  const user = role ? { role } : null;
 
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
@@ -74,26 +81,37 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const navItems: NavItem[] = [
-    { path: PUBLIC_ROUTES.HOME, label: t('nav.home') || 'Home', icon: Home },
-    { path: DASHBOARD_ROUTES.ROOT, label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true },
-    { path: PROPERTY_ROUTES.LIST, label: t('nav.properties') || 'Properties', icon: Building2 },
-    { path: SERVICE_ROUTES.LIST, label: t('nav.services') || 'Services', icon: Compass },
-    { path: BOOKING_ROUTES.LIST, label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true },
-    { path: BOOKING_ROUTES.CALENDAR, label: t('nav.bookingCalendar') || 'Calendar', icon: Calendar, requireAuth: true },
-    { path: DASHBOARD_ROUTES.POINTS, label: t('nav.points', 'Points') || 'Points', icon: Trophy, requireAuth: true },
-    { path: BOOKING_ROUTES.HOST, label: t('nav.bookingRequests') || 'Requests', icon: MessageSquare, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager'] },
-    { path: BOOKING_ROUTES.HISTORY, label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, roles: ['admin', 'manager', 'hyper_manager', 'hyper_admin'] },
-    { path: DASHBOARD_ROUTES.SETTINGS, label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true },
-    { path: SUPPORT_ROUTES.INBOX, label: t('nav.support') || 'Support', icon: Headphones, requireAuth: true },
-    { path: DEMO_ROUTES.ROOT, label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true },
+    { path: PUBLIC_ROUTES.HOME, label: t('nav.home') || 'Home', icon: Home, sidebarSection: 'Home' },
+    { path: DASHBOARD_ROUTES.ROOT, label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true, sidebarSection: 'Dashboard' },
+    { path: PROPERTY_ROUTES.LIST, label: t('nav.properties') || 'Properties', icon: Building2, sidebarSection: 'Properties' },
+    { path: SERVICE_ROUTES.LIST, label: t('nav.services') || 'Services', icon: Compass, sidebarSection: 'Services' },
+    { path: BOOKING_ROUTES.LIST, label: t('nav.bookings') || 'Bookings', icon: CalendarCheck, requireAuth: true, sidebarSection: 'Bookings' },
+    { path: BOOKING_ROUTES.CALENDAR, label: t('nav.bookingCalendar') || 'Calendar', icon: Calendar, requireAuth: true, sidebarSection: 'Calendar' },
+    { path: DASHBOARD_ROUTES.POINTS, label: t('nav.points', 'Points') || 'Points', icon: Trophy, requireAuth: true, sidebarSection: 'Points' },
+    { path: BOOKING_ROUTES.HOST, label: t('nav.bookingRequests') || 'Requests', icon: MessageSquare, requireAuth: true, sidebarSection: 'Requests' },
+    { path: BOOKING_ROUTES.HISTORY, label: t('nav.bookingHistory') || 'History', icon: History, requireAuth: true, sidebarSection: 'History' },
+    { path: DASHBOARD_ROUTES.SETTINGS, label: t('nav.settings') || 'Settings', icon: Settings, requireAuth: true, sidebarSection: 'Settings' },
+    { path: SUPPORT_ROUTES.INBOX, label: t('nav.support') || 'Support', icon: Headphones, requireAuth: true, sidebarSection: 'Support' },
+    { path: ADMIN_ROUTES.RBAC_SETTINGS, label: t('nav.rbacSettings') || 'RBAC Settings', icon: Shield, requireAuth: true, sidebarSection: 'RbacSettings' },
+    { path: ADMIN_ROUTES.RBAC_DEBUG, label: t('nav.rbacDebug', 'RBAC Debug') || 'RBAC Debug', icon: Bug, requireAuth: true, sidebarSection: 'RbacDebug' },
+    { path: ADMIN_ROUTES.ESCROW, label: t('nav.escrow', 'Escrow') || 'Escrow', icon: Receipt, requireAuth: true, sidebarSection: 'Escrow' },
+    { path: ADMIN_ROUTES.HOST_REACTIVATION, label: t('nav.hostReactivation', 'Host Reactivation') || 'Host Reactivation', icon: RotateCcw, requireAuth: true, sidebarSection: 'HostReactivation' },
+    { path: ADMIN_ROUTES.MY_DISPUTES, label: t('nav.myDisputes', 'My Disputes') || 'My Disputes', icon: AlertTriangle, requireAuth: true, sidebarSection: 'MyDisputes' },
+    { path: DEMO_ROUTES.ROOT, label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true, sidebarSection: 'Demo' },
   ];
 
   const filteredNavItems = navItems.filter((item) => {
     if (item.requireAuth && !user) return false;
-    if (item.roles && item.roles.length > 0) {
-      const userRole = user?.role || 'user';
-      if (!item.roles.includes(userRole)) return false;
+    if (item.roles && !item.roles.includes(role)) return false;
+    // Dynamic RBAC: check ui.Sidebar.<section>.Link.View
+    const permKey = generateUiPermissionKey('Sidebar', item.sidebarSection, 'Link', 'View');
+    if (frontendPermCache.loaded) {
+      const permEntry = frontendPermCache.byKey[permKey];
+      if (permEntry) {
+        return canUI(permKey);
+      }
     }
+    // Not in DB yet — allow by default
     return true;
   });
 

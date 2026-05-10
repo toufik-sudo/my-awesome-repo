@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Body, Param, Request, UseGuards, UseInterceptors,
+  Controller, Get, Post, Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ReferralService } from '../services/referral.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -37,9 +37,16 @@ export class ReferralController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  async getMyReferrals(@Request() req) {
+  async getMyReferrals(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.service.getUserReferrals(req.user.id);
+    return this.service.getUserReferrals(req.user.id, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
   }
 
   @Get('stats')
@@ -49,6 +56,25 @@ export class ReferralController {
   async getMyStats(@Request() req) {
     const scopeCtx = extractScopeContext(req);
     return this.service.getReferralStats(req.user.id);
+  }
+
+  @Get('scoped')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  async getScopedReferrals(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const scopeCtx = extractScopeContext(req);
+    return this.service.getScopedReferrals(
+      { userId: req.user.id, userRole: scopeCtx.userRole },
+      {
+        page: page ? parseInt(page, 10) : 1,
+        limit: limit ? parseInt(limit, 10) : 20,
+      },
+    );
   }
 
   @Post('signup/:code')

@@ -1,18 +1,11 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { User } from './user.entity';
+import { RbacBackendPermission } from './rbac-backend-permission.entity';
+import { RbacFrontendPermission } from './rbac-frontend-permission.entity';
 
-/**
- * Scope for guest permissions.
- */
 export type GuestPermissionScope = 'all' | 'properties' | 'services' | 'property_groups' | 'service_groups';
 
 @Entity('guest_permissions')
@@ -22,7 +15,6 @@ export class GuestPermission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** The guest this permission is assigned to */
   @Column()
   guestId: number;
 
@@ -30,7 +22,6 @@ export class GuestPermission {
   @JoinColumn({ name: 'guestId' })
   guest: User;
 
-  /** Who assigned this permission (admin, manager, or hyper role) */
   @Column()
   assignedById: number;
 
@@ -38,31 +29,32 @@ export class GuestPermission {
   @JoinColumn({ name: 'assignedById' })
   assignedBy: User;
 
-  /** FK to rbac_backend_permissions.permission_key */
   @Column({ type: 'varchar', length: 200 })
   backendPermissionKey: string;
 
-  /** FK to rbac_frontend_permissions.permission_key (nullable) */
+  @ManyToOne(() => RbacBackendPermission, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'backendPermissionKey', referencedColumnName: 'permission_key' })
+  backendPermission: RbacBackendPermission;
+
   @Column({ type: 'varchar', length: 200, nullable: true })
   frontendPermissionKey: string | null;
 
-  /** Scope of this permission */
+  @ManyToOne(() => RbacFrontendPermission, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'frontendPermissionKey', referencedColumnName: 'permission_key' })
+  frontendPermission: RbacFrontendPermission;
+
   @Column({ type: 'varchar', length: 30 })
   scope: GuestPermissionScope;
 
-  /** Property IDs — only when scope = 'properties' */
   @Column({ type: 'simple-json', nullable: true })
   properties: string[] | null;
 
-  /** Service IDs — only when scope = 'services' */
   @Column({ type: 'simple-json', nullable: true })
   services: string[] | null;
 
-  /** Property Group IDs — only when scope = 'property_groups' */
   @Column({ type: 'simple-json', nullable: true })
   propertyGroups: string[] | null;
 
-  /** Service Group IDs — only when scope = 'service_groups' */
   @Column({ type: 'simple-json', nullable: true })
   serviceGroups: string[] | null;
 

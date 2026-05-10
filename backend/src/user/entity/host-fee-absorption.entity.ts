@@ -1,17 +1,21 @@
 import {
-  Entity, Column, PrimaryGeneratedColumn,
-  CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Property } from '../../properties/entity/property.entity';
+import { TourismService } from '../../services/entity/tourism-service.entity';
+import { PropertyGroup } from '../../properties/entity/property-group.entity';
+import { ServiceGroup } from '../../services/entity/service-group.entity';
 
 export type AbsorptionScope = 'all' | 'property_group' | 'service_group' | 'property' | 'service';
 
 @Entity('host_fee_absorptions')
+@Index('IDX_host_fee_absorptions_hostUserId', ['hostUserId'])
 export class HostFeeAbsorption {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** Host userId who absorbs the fees */
   @Column()
   hostUserId: number;
 
@@ -22,24 +26,37 @@ export class HostFeeAbsorption {
   @Column({ type: 'varchar', length: 30, default: 'all' })
   scope: AbsorptionScope;
 
-  /** Target IDs depending on scope */
   @Column({ type: 'uuid', nullable: true })
   targetPropertyGroupId: string;
+
+  @ManyToOne(() => PropertyGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetPropertyGroupId' })
+  targetPropertyGroup: PropertyGroup;
 
   @Column({ type: 'uuid', nullable: true })
   targetServiceGroupId: string;
 
+  @ManyToOne(() => ServiceGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetServiceGroupId' })
+  targetServiceGroup: ServiceGroup;
+
   @Column({ type: 'uuid', nullable: true })
   targetPropertyId: string;
+
+  @ManyToOne(() => Property, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetPropertyId' })
+  targetProperty: Property;
 
   @Column({ type: 'uuid', nullable: true })
   targetServiceId: string;
 
-  /** Percentage of fee the host absorbs (0-100). 100 = host pays all fees */
+  @ManyToOne(() => TourismService, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetServiceId' })
+  targetService: TourismService;
+
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 100 })
   absorptionPercent: number;
 
-  /** Optional period restriction */
   @Column({ type: 'date', nullable: true })
   validFrom: Date;
 

@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
 
 export interface Badge {
   id: string;
@@ -31,8 +32,8 @@ export interface BadgeProgress {
 }
 
 export const badgesApi = {
-  getAll: () => api.get<Badge[]>('/badges').then(r => r.data),
-  getMine: () => api.get<UserBadge[]>('/badges/me').then(r => r.data),
-  getProgress: () => api.get<BadgeProgress[]>('/badges/me/progress').then(r => r.data),
-  checkUnlocks: () => api.post<UserBadge[]>('/badges/me/check').then(r => r.data),
+  getAll: () => api.get<Badge[]>('/badges', rbac('badgesApi.getAll.GET')).then(r => r.data),
+  getMine: () => api.get<UserBadge[]>('/badges/me', rbac('badgesApi.getMine.GET')).then(r => r.data),
+  getProgress: () => api.get<BadgeProgress[]>('/badges/me/progress', rbac('badgesApi.getProgress.GET')).then(r => r.data),
+  checkUnlocks: () => api.post<UserBadge[]>('/badges/me/check', undefined, rbac('badgesApi.checkUnlocks.POST')).then(r => r.data),
 };

@@ -191,10 +191,17 @@ export class RolesController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @ApiOperation({ summary: 'List users with roles' })
-  async getAllUsers(@Request() req) {
+  @ApiOperation({ summary: 'List users with roles (supports ?page&pageSize&search&role)' })
+  async getAllUsers(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.rolesService.getAllUsersWithRoles(req.user.id);
+    const pagination = page ? { page: parseInt(page, 10), pageSize: pageSize ? parseInt(pageSize, 10) : undefined, search, role } : undefined;
+    return this.rolesService.getAllUsersWithRoles(req.user.id, pagination);
   }
 
   @Put('users/:userId/status')
@@ -224,10 +231,16 @@ export class RolesController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @ApiOperation({ summary: 'List all permissions/assignments' })
-  async getAllAssignments(@Request() req) {
+  @ApiOperation({ summary: 'List all permissions/assignments (supports ?page&pageSize&type)' })
+  async getAllAssignments(
+    @Request() req,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('type') type?: 'manager' | 'hyper_manager' | 'guest',
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.rolesService.getAllAssignments(req.user.id);
+    const pagination = page ? { page: parseInt(page, 10), pageSize: pageSize ? parseInt(pageSize, 10) : undefined, type } : undefined;
+    return this.rolesService.getAllAssignments(req.user.id, pagination);
   }
 
   @Delete('assignments/:permissionId/:type')

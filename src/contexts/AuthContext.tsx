@@ -29,9 +29,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const userData = await authService.checkAuth();
       setUser(userData);
+      setLoading(false);
     } catch (error) {
       console.error('Auth check failed:', error);
       setUser(null);
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       const userData = await authService.login(email, password);
-      setUser(userData);
+      // setUser(userData);
+      await checkAuth(); // Refresh auth state after login
+
     } catch (error) {
       console.error('Login error:', error);
       throw error;

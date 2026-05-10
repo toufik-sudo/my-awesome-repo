@@ -11,8 +11,10 @@ import { Plus, Pencil, Trash2, Building2, FolderPlus, X } from 'lucide-react';
 import { groupsApi } from '../admin.api';
 import type { PropertyGroup } from '../admin.types';
 import type { GridColumn, DynamicFormField } from '@/types/component.types';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export const PropertyGroupsManagement: React.FC = React.memo(() => {
+  const { can, guardAction } = useRoleAccess('PropertyGroupsManagement');
   const [groups, setGroups] = useState<PropertyGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -65,10 +67,14 @@ export const PropertyGroupsManagement: React.FC = React.memo(() => {
             onClick={() => { setDetailGroup(row); loadGroupProperties(row.id); }}>
             Properties
           </DynamicButton>
-          <DynamicButton variant="ghost" size="sm" icon={<Pencil className="h-3.5 w-3.5" />}
-            onClick={() => setEditGroup(row)} />
-          <DynamicButton variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5 text-destructive" />}
-            onClick={() => handleDelete(row.id)} />
+          {can('Card', 'Button', 'Edit') && (
+            <DynamicButton variant="ghost" size="sm" icon={<Pencil className="h-3.5 w-3.5" />}
+              onClick={() => setEditGroup(row)} />
+          )}
+          {can('Card', 'Button', 'Delete') && (
+            <DynamicButton variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5 text-destructive" />}
+              onClick={() => handleDelete(row.id)} />
+          )}
         </div>
       ),
     },
@@ -141,11 +147,11 @@ export const PropertyGroupsManagement: React.FC = React.memo(() => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      {can('Header', 'Button', 'Create') && (
         <DynamicButton variant="primary" icon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>
           New Group
         </DynamicButton>
-      </div>
+      )}
 
       <DynamicGrid columns={columns} data={groups} loading={loading} striped hoverable emptyMessage="No property groups yet" />
 

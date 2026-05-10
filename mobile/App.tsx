@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LoadingProvider } from '@/contexts/LoadingContext';
+import { RbacProvider } from '@/contexts/RbacContext';
 import { RootNavigator } from '@/navigation';
 import { linking } from '@/navigation/linking';
 import { notificationService } from '@/services/notification.service';
@@ -33,9 +34,11 @@ export default function App() {
     <ThemeProvider>
       <LoadingProvider>
         <AuthProvider>
-          <NavigationContainer linking={linking}>
-            <RootNavigator />
-          </NavigationContainer>
+          <RbacProvider>
+            <NavigationContainer linking={linking}>
+              <RootNavigator />
+            </NavigationContainer>
+          </RbacProvider>
         </AuthProvider>
       </LoadingProvider>
     </ThemeProvider>

@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useServices, useServiceCategories } from '@/modules/services/services.hooks';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useServicesInfinite, useServiceCategories } from '@/modules/services/services.hooks';
+import { useInfiniteScroll } from '@/modules/shared/hooks/useInfiniteScroll';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import type { TourismServiceFilters, TourismService } from '@/types/tourism-service.types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,16 +13,21 @@ import { ServiceCard } from '@/modules/services/components/ServiceCard';
 import { ServiceCategoryFilter } from '@/modules/services/components/ServiceCategoryFilter';
 import { UnifiedMapSearch } from '@/modules/shared/components/UnifiedMapSearch';
 import { SERVICE_ROUTES } from '@/routes/routes.constants';
+import { AccessSourcePanel } from '@/modules/admin/components/AccessSourcePanel';
+import { StatusFilterChips, type ResourceStatus } from '@/modules/shared/components/StatusFilterChips';
 
 const ServiceListing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const lang = i18n.language?.split('-')[0] || 'fr';
-  const { canCreateService } = usePermissions();
+  const { can } = useRoleAccess('ServiceListPage');
+  const canCreateService = can('Header', 'Button', 'Add');
+  const canDuplicateService = can('Card', 'Button', 'Duplicate');
 
   const [filters, setFilters] = useState<TourismServiceFilters>({ page: 1, limit: 20 });
   const [searchInput, setSearchInput] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<ResourceStatus | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   const activeFilters = useMemo(() => ({
@@ -29,9 +35,25 @@ const ServiceListing: React.FC = () => {
     category: selectedCategories.length === 1 ? selectedCategories[0] : undefined,
     categories: selectedCategories.length > 1 ? selectedCategories : undefined,
     search: searchInput || undefined,
-  }), [filters, selectedCategories, searchInput]);
+    status: statusFilter,
+  }), [filters, selectedCategories, searchInput, statusFilter]);
 
-  const { data, isLoading } = useServices(activeFilters);
+  const {
+    items: serviceItems,
+    total: serviceTotal,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useServicesInfinite(activeFilters, 20);
+  const data = useMemo(
+    () => ({ data: serviceItems as TourismService[], total: serviceTotal }),
+    [serviceItems, serviceTotal],
+  );
+  const sentinelRef = useInfiniteScroll<HTMLDivElement>(
+    () => { if (hasNextPage && !isFetchingNextPage) fetchNextPage(); },
+    { enabled: hasNextPage },
+  );
   const { data: categoryCounts } = useServiceCategories();
 
   const handleSearch = useCallback((e: React.FormEvent) => {
@@ -68,6 +90,10 @@ const ServiceListing: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
+      <AccessSourcePanel
+        permissionKey="backend.TourismServicesController.findAll.GET"
+        resourceKind="service"
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -124,6 +150,9 @@ const ServiceListing: React.FC = () => {
         </Select>
       </div>
 
+      {/* Status filter (privileged roles only) */}
+      <StatusFilterChips value={statusFilter} onChange={setStatusFilter} />
+
       {/* Dynamic Category Filter */}
       <ServiceCategoryFilter
         categoryCounts={categoryCounts || []}
@@ -161,6 +190,13 @@ const ServiceListing: React.FC = () => {
               />
             ))}
           </div>
+          {(hasNextPage || isFetchingNextPage) && (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              {isFetchingNextPage && (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          )}
           {filteredServices.length === 0 && (
             <div className="text-center py-20 text-muted-foreground">
               <p className="text-lg">{t('services.noResults')}</p>

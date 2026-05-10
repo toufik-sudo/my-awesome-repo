@@ -123,6 +123,9 @@ export interface Invitation {
   updatedAt?: string;
   expiresAt: string;
   acceptedAt?: string;
+  latestEmailSubject?: string;
+  latestEmailLanguage?: 'fr' | 'en' | 'ar';
+  latestEmailKind?: 'initial' | 'reminder';
 }
 
 export interface CreateInvitationRequest {

@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PermissionRoute } from "@/components/PermissionRoute";
 import { MainLayout } from "@/modules/shared/layout/MainLayout";
 import { useLoadingIntegration } from "@/modules/shared/hooks/useLoadingIntegration";
 import { ErrorBoundary } from "@/modules/shared/components/ErrorBoundary";
@@ -10,6 +11,7 @@ import PropertyDetail from "@/pages/PropertyDetail";
 import MyBookings from "@/pages/MyBookings";
 import AddPropertyWizard from "@/modules/admin/pages/AddPropertyWizard";
 import Auth from "@/modules/auth/auth.component";
+import { OnboardingPage } from "@/modules/onboarding/OnboardingPage";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/modules/dashboard/Dashboard";
 import { HyperDashboard } from "@/modules/dashboard/HyperDashboard";
@@ -38,10 +40,18 @@ import ServiceListing from "@/pages/ServiceListing";
 import ServiceDetail from "@/pages/ServiceDetail";
 import AddServiceWizard from "@/modules/admin/pages/AddServiceWizard";
 import PointsPage from "@/pages/PointsPage";
+import { MyReferralsPage } from "@/modules/referrals/MyReferralsPage";
 import { HostFeeAbsorptionPage } from "@/modules/admin/pages/HostFeeAbsorptionPage";
 import { CancellationRulesPage } from "@/modules/admin/pages/CancellationRulesPage";
 import { BookingCalendarPage } from "@/modules/admin/pages/BookingCalendarPage";
 import { RbacSettingsPage } from "@/modules/admin/pages/RbacSettingsPage";
+import RbacDebugPage from "@/modules/admin/pages/RbacDebugPage";
+import EscrowAdminPage from "@/modules/admin/pages/EscrowAdminPage";
+import BlamesAdminPage from "@/modules/admin/pages/BlamesAdminPage";
+import HostReactivationPage from "@/modules/payments/pages/HostReactivationPage";
+import MyDisputesPage from "@/modules/payments/pages/MyDisputesPage";
+import DisputeDetailPage from "@/modules/payments/pages/DisputeDetailPage";
+import PayoutsDashboardPage from "@/modules/payments/pages/PayoutsDashboardPage";
 
 import {
   PUBLIC_ROUTES,
@@ -55,19 +65,12 @@ import {
   DEMO_ROUTES,
 } from './routes.constants';
 
-import { PermissionRoute } from '@/components/PermissionRoute';
-import type { AppRole } from '@/modules/auth/auth.types';
-
-const HYPER_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager'];
-const ADMIN_ROLE_LIST: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin'];
-const MANAGER_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin', 'manager'];
-/** Roles that can make bookings */
-const BOOKING_ROLES: AppRole[] = ['manager', 'guest', 'user'];
 
 const PublicRoutes = () => (
   <>
     <Route path={PUBLIC_ROUTES.HOME} element={<ErrorBoundary><Index /></ErrorBoundary>} />
     <Route path={PUBLIC_ROUTES.LOGIN} element={<ProtectedRoute requireAuth={false}><ErrorBoundary><Auth /></ErrorBoundary></ProtectedRoute>} />
+    <Route path={PUBLIC_ROUTES.ONBOARDING} element={<ProtectedRoute requireAuth={false}><ErrorBoundary><OnboardingPage /></ErrorBoundary></ProtectedRoute>} />
     <Route path={SSO_ROUTES.CALLBACK} element={<ErrorBoundary><SSOCallback /></ErrorBoundary>} />
     <Route path={PUBLIC_ROUTES.NOT_FOUND} element={<NotFound />} />
   </>
@@ -75,61 +78,64 @@ const PublicRoutes = () => (
 
 const PropertyRoutes = () => (
   <>
-    <Route path={PROPERTY_ROUTES.LIST} element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={PROPERTY_ROUTES.LIST} element={<PermissionRoute componentName="PropertyListPage"><MainLayout><ErrorBoundary><PropertyListing /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={PROPERTY_ROUTES.DETAIL} element={<ProtectedRoute><MainLayout><ErrorBoundary><PropertyDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={PROPERTY_ROUTES.NEW} element={<PermissionRoute requiredPermission="canCreateProperty"><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
-    <Route path={PROPERTY_ROUTES.EDIT} element={<PermissionRoute requiredPermission="canModifyProperty"><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
-    <Route path={SERVICE_ROUTES.LIST} element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceListing /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={PROPERTY_ROUTES.NEW} element={<PermissionRoute componentName="AddPropertyWizard"><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={PROPERTY_ROUTES.EDIT} element={<PermissionRoute componentName="AddPropertyWizard"><MainLayout><ErrorBoundary><AddPropertyWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={SERVICE_ROUTES.LIST} element={<PermissionRoute componentName="ServiceListPage"><MainLayout><ErrorBoundary><ServiceListing /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={SERVICE_ROUTES.DETAIL} element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={SERVICE_ROUTES.NEW} element={<PermissionRoute requiredPermission="canCreateService"><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={SERVICE_ROUTES.NEW} element={<PermissionRoute componentName="AddServiceWizard"><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
   </>
 );
 
 const BookingRoutes = () => (
   <>
-    <Route path={BOOKING_ROUTES.LIST} element={<ProtectedRoute requireBookingAccess><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={BOOKING_ROUTES.HOST} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={BOOKING_ROUTES.HISTORY} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={BOOKING_ROUTES.LIST} element={<PermissionRoute componentName="BookingsPage" elementType="Tab"><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={BOOKING_ROUTES.HOST} element={<PermissionRoute componentName="HostBookings"><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={BOOKING_ROUTES.HISTORY} element={<PermissionRoute componentName="BookingHistory"><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={BOOKING_ROUTES.CHAT} element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={BOOKING_ROUTES.CALENDAR} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><BookingCalendarPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={SUPPORT_ROUTES.INBOX} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={BOOKING_ROUTES.CALENDAR} element={<PermissionRoute componentName="BookingCalendarPage"><MainLayout><ErrorBoundary><BookingCalendarPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={SUPPORT_ROUTES.INBOX} element={<PermissionRoute componentName="SupportInbox"><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={SUPPORT_ROUTES.THREAD} element={<ProtectedRoute><MainLayout><ErrorBoundary><SupportThreadChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={SUPPORT_ROUTES.REVIEW} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={SUPPORT_ROUTES.REVIEW} element={<PermissionRoute componentName="SupportInbox"><MainLayout><ErrorBoundary><SupportInbox /></ErrorBoundary></MainLayout></PermissionRoute>} />
   </>
 );
 
 const AdminRoutes = () => (
   <>
-    <Route path={DASHBOARD_ROUTES.HYPER} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><HyperDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={DASHBOARD_ROUTES.ADMIN} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><AdminManagerDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={DASHBOARD_ROUTES.GUEST} element={<ProtectedRoute requiredRoles={['guest']}><MainLayout><ErrorBoundary><GuestDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={DASHBOARD_ROUTES.USER} element={<ProtectedRoute requiredRoles={['user']}><MainLayout><ErrorBoundary><UserDashboard /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    {/* Legacy redirects */}
+    <Route path={DASHBOARD_ROUTES.HYPER} element={<PermissionRoute componentName="HyperDashboard"><MainLayout><ErrorBoundary><HyperDashboard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={DASHBOARD_ROUTES.ADMIN} element={<PermissionRoute check={p => p.canUI('ui.AdminDashboard.Page.View') || p.canUI('ui.ManagerDashboard.Page.View')}><MainLayout><ErrorBoundary><AdminManagerDashboard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={DASHBOARD_ROUTES.GUEST} element={<PermissionRoute componentName="GuestDashboard"><MainLayout><ErrorBoundary><GuestDashboard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={DASHBOARD_ROUTES.USER} element={<PermissionRoute componentName="UserDashboard"><MainLayout><ErrorBoundary><UserDashboard /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={LEGACY_ROUTES.HYPER_ADMIN} element={<Navigate to={DASHBOARD_ROUTES.HYPER} replace />} />
     <Route path={LEGACY_ROUTES.ADMIN} element={<Navigate to={DASHBOARD_ROUTES.ADMIN} replace />} />
     <Route path={LEGACY_ROUTES.MANAGER} element={<Navigate to={DASHBOARD_ROUTES.ADMIN} replace />} />
-    {/* Admin sub-pages */}
-    <Route path={ADMIN_ROUTES.VERIFICATION_REVIEW} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.DOCUMENT_VALIDATION} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.PAYMENT_VALIDATION} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><ErrorBoundary><PaymentValidation /></ErrorBoundary></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.EMAIL_ANALYTICS} element={<ProtectedRoute requiredRoles={ADMIN_ROLE_LIST}><MainLayout><ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.FEE_ABSORPTION} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.CANCELLATION_RULES} element={<ProtectedRoute requiredRoles={MANAGER_ROLES}><MainLayout><ErrorBoundary><CancellationRulesPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={ADMIN_ROUTES.RBAC_SETTINGS} element={<ProtectedRoute requiredRoles={HYPER_ROLES}><MainLayout><ErrorBoundary><RbacSettingsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={ADMIN_ROUTES.VERIFICATION_REVIEW} element={<PermissionRoute componentName="VerificationReview"><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.DOCUMENT_VALIDATION} element={<PermissionRoute componentName="VerificationReview"><MainLayout><ErrorBoundary><VerificationReview /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.PAYMENT_VALIDATION} element={<PermissionRoute check={p => p.canUI('ui.PaymentsPage.Page.View')}><MainLayout><ErrorBoundary><PaymentValidation /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.EMAIL_ANALYTICS} element={<PermissionRoute componentName="EmailAnalyticsPage"><MainLayout><ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.FEE_ABSORPTION} element={<PermissionRoute componentName="HostFeeAbsorptionPage"><MainLayout><ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.CANCELLATION_RULES} element={<PermissionRoute componentName="CancellationRulesPage"><MainLayout><ErrorBoundary><CancellationRulesPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.RBAC_SETTINGS} element={<PermissionRoute componentName="RbacSettings"><MainLayout><ErrorBoundary><RbacSettingsPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.RBAC_DEBUG} element={<PermissionRoute componentName="RbacDebugPage"><MainLayout><ErrorBoundary><RbacDebugPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.ESCROW} element={<PermissionRoute componentName="EscrowAdminPage"><MainLayout><ErrorBoundary><EscrowAdminPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.HOST_REACTIVATION} element={<PermissionRoute componentName="HostReactivationPage"><MainLayout><ErrorBoundary><HostReactivationPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.PAYOUTS_DASHBOARD} element={<PermissionRoute componentName="PayoutsDashboardPage"><MainLayout><ErrorBoundary><PayoutsDashboardPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.MY_DISPUTES} element={<PermissionRoute componentName="MyDisputesPage"><MainLayout><ErrorBoundary><MyDisputesPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={ADMIN_ROUTES.DISPUTE_DETAIL} element={<PermissionRoute componentName="DisputeDetailPage"><MainLayout><ErrorBoundary><DisputeDetailPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path="/admin/blames" element={<MainLayout><ErrorBoundary><BlamesAdminPage /></ErrorBoundary></MainLayout>} />
   </>
 );
 
 const DashboardRoutes = () => (
   <>
     <Route path={DASHBOARD_ROUTES.ROOT} element={<ProtectedRoute><MainLayout><ErrorBoundary><DashboardWithRedirect /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={DASHBOARD_ROUTES.POINTS} element={<ProtectedRoute><MainLayout><ErrorBoundary><PointsPage /></ErrorBoundary></MainLayout></ProtectedRoute>} />
-    <Route path={DASHBOARD_ROUTES.SETTINGS} element={<ProtectedRoute><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></ProtectedRoute>} />
+    <Route path={DASHBOARD_ROUTES.POINTS} element={<PermissionRoute componentName="PointsPage"><MainLayout><ErrorBoundary><PointsPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={DASHBOARD_ROUTES.REFERRALS} element={<PermissionRoute componentName="ReferralsPage"><MainLayout><ErrorBoundary><MyReferralsPage /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={DASHBOARD_ROUTES.SETTINGS} element={<PermissionRoute componentName="SettingsPage"><MainLayout><ErrorBoundary><Settings /></ErrorBoundary></MainLayout></PermissionRoute>} />
   </>
 );
 
-/**
- * Smart dashboard: redirects role-specific users to their consolidated dashboard.
- */
 const DashboardWithRedirect: React.FC = memo(() => {
   const redirectTo = useDashboardRedirect();
   if (redirectTo) {

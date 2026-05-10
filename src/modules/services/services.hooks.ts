@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { tourismServicesApi } from './services.api';
 import type { TourismServiceFilters } from '@/types/tourism-service.types';
 import { MOCK_SERVICES } from './services.mock';
@@ -93,4 +94,64 @@ export const useDeleteService = () => {
       queryClient.invalidateQueries({ queryKey: ['service-categories'] });
     },
   });
+};
+
+
+/**
+ * Infinite-scroll variant of useServices.
+ * Loads pages server-side; exposes a flat array of services.
+ */
+export const useServicesInfinite = (
+  filters: Omit<TourismServiceFilters, 'page'> = {},
+  pageSize = 20,
+) => {
+  const query = useInfiniteQuery({
+    queryKey: ['tourism-services', 'infinite', { ...filters, limit: pageSize }],
+    queryFn: async ({ pageParam = 1 }) => {
+      try {
+        const res = await tourismServicesApi.getAll({ ...filters, page: pageParam, limit: pageSize });
+        if (res?.data?.length || !USE_MOCK) {
+          return {
+            data: res?.data ?? [],
+            total: res?.total ?? 0,
+            page: res?.page ?? pageParam,
+            limit: res?.limit ?? pageSize,
+            totalPages: res?.totalPages ?? Math.max(1, Math.ceil((res?.total ?? 0) / pageSize)),
+          };
+        }
+        const start = (pageParam - 1) * pageSize;
+        const slice = MOCK_SERVICES.slice(start, start + pageSize);
+        return {
+          data: slice,
+          total: MOCK_SERVICES.length,
+          page: pageParam,
+          limit: pageSize,
+          totalPages: Math.max(1, Math.ceil(MOCK_SERVICES.length / pageSize)),
+        };
+      } catch {
+        if (USE_MOCK) {
+          const start = (pageParam - 1) * pageSize;
+          const slice = MOCK_SERVICES.slice(start, start + pageSize);
+          return {
+            data: slice,
+            total: MOCK_SERVICES.length,
+            page: pageParam,
+            limit: pageSize,
+            totalPages: Math.max(1, Math.ceil(MOCK_SERVICES.length / pageSize)),
+          };
+        }
+        return { data: [], total: 0, page: pageParam, limit: pageSize, totalPages: 1 };
+      }
+    },
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
+  });
+
+  const items = useMemo(
+    () => (query.data?.pages ?? []).flatMap((p: any) => p.data),
+    [query.data],
+  );
+  const total = query.data?.pages?.[0]?.total ?? items.length;
+
+  return { ...query, items, total };
 };

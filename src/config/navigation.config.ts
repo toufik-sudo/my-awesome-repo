@@ -19,7 +19,12 @@ import {
   MessageSquare,
   BarChart3,
   Layers,
-  Palette
+  Palette,
+  Wallet,
+  AlertTriangle,
+  Receipt,
+  Bug,
+  RotateCcw
 } from 'lucide-react';
 import { 
   NavMenuGroup, 
@@ -27,6 +32,7 @@ import {
   LayoutThemeConfig, 
   NavigationConfig 
 } from '@/types/navigation.types';
+import { UI_PERM } from '@/utils/rbac/ui-permission-keys';
 
 // Layout theme configurations
 export const layoutThemes: Record<string, LayoutThemeConfig> = {
@@ -187,29 +193,8 @@ export const defaultMenuGroups: NavMenuGroup[] = [
     collapsible: false,
     defaultOpen: true,
     items: [
-      {
-        id: 'home',
-        label: 'Home',
-        translationKey: 'navigation.home',
-        url: '/',
-        icon: Home
-      },
-      {
-        id: 'my-bookings',
-        label: 'My Bookings',
-        translationKey: 'navigation.myBookings',
-        url: '/bookings',
-        icon: CreditCard
-      },
-      {
-        id: 'dashboard',
-        label: 'Dashboard',
-        translationKey: 'navigation.dashboard',
-        url: '/dashboard',
-        icon: LayoutDashboard,
-        badge: 'New',
-        badgeVariant: 'success'
-      }
+      { id: 'my-bookings', label: 'My Bookings', translationKey: 'navigation.myBookings', url: '/bookings', icon: CreditCard, permissionKey: UI_PERM.NAV_MY_BOOKINGS },
+      { id: 'dashboard', label: 'Dashboard', translationKey: 'navigation.dashboard', url: '/dashboard', icon: LayoutDashboard, badge: 'New', badgeVariant: 'success', permissionKey: UI_PERM.NAV_DASHBOARD }
     ]
   },
   {
@@ -218,73 +203,20 @@ export const defaultMenuGroups: NavMenuGroup[] = [
     collapsible: true,
     defaultOpen: true,
     items: [
+      { id: 'grid', label: 'Grid Demo', translationKey: 'navigation.gridDemo', url: '/demo/grid', icon: Grid3X3, permissionKey: UI_PERM.NAV_GRID_DEMO },
+      { id: 'filter', label: 'Filter Demo', translationKey: 'navigation.filterDemo', url: '/demo/filter', icon: Filter, permissionKey: UI_PERM.NAV_FILTER_DEMO },
       {
-        id: 'components',
-        label: 'Components',
-        translationKey: 'navigation.components',
-        url: '/demo',
-        icon: Layers
-      },
-      {
-        id: 'grid',
-        label: 'Grid Demo',
-        translationKey: 'navigation.gridDemo',
-        url: '/demo/grid',
-        icon: Grid3X3
-      },
-      {
-        id: 'filter',
-        label: 'Filter Demo',
-        translationKey: 'navigation.filterDemo',
-        url: '/demo/filter',
-        icon: Filter
-      },
-      {
-        id: 'map',
-        label: 'Map Search',
-        translationKey: 'navigation.mapSearch',
-        url: '/map',
-        icon: Map,
+        id: 'map', label: 'Map Search', translationKey: 'navigation.mapSearch', url: '/map', icon: Map, permissionKey: UI_PERM.NAV_MAP,
         children: [
-          {
-            id: 'map-search',
-            label: 'Search Properties',
-            translationKey: 'navigation.searchProperties',
-            url: '/map/search',
-            icon: Map
-          },
-          {
-            id: 'map-saved',
-            label: 'Saved Locations',
-            translationKey: 'navigation.savedLocations',
-            url: '/map/saved',
-            icon: Building2
-          }
+          { id: 'map-search', label: 'Search Properties', translationKey: 'navigation.searchProperties', url: '/map/search', icon: Map, permissionKey: UI_PERM.NAV_MAP_SEARCH },
+          { id: 'map-saved', label: 'Saved Locations', translationKey: 'navigation.savedLocations', url: '/map/saved', icon: Building2, permissionKey: UI_PERM.NAV_MAP_SAVED }
         ]
       },
       {
-        id: 'calendar',
-        label: 'Calendar',
-        translationKey: 'navigation.calendar',
-        url: '/calendar',
-        icon: Calendar,
+        id: 'calendar', label: 'Calendar', translationKey: 'navigation.calendar', url: '/calendar', icon: Calendar, permissionKey: UI_PERM.NAV_CALENDAR,
         children: [
-          {
-            id: 'calendar-events',
-            label: 'Events',
-            translationKey: 'navigation.events',
-            url: '/calendar/events',
-            icon: Calendar
-          },
-          {
-            id: 'calendar-bookings',
-            label: 'Bookings',
-            translationKey: 'navigation.bookings',
-            url: '/calendar/bookings',
-            icon: CreditCard,
-            badge: 3,
-            badgeVariant: 'warning'
-          }
+          { id: 'calendar-events', label: 'Events', translationKey: 'navigation.events', url: '/calendar/events', icon: Calendar, permissionKey: UI_PERM.NAV_CALENDAR_EVENTS },
+          { id: 'calendar-bookings', label: 'Bookings', translationKey: 'navigation.bookings', url: '/calendar/bookings', icon: CreditCard, badge: 3, badgeVariant: 'warning', permissionKey: UI_PERM.NAV_CALENDAR_BOOKINGS }
         ]
       }
     ]
@@ -296,41 +228,28 @@ export const defaultMenuGroups: NavMenuGroup[] = [
     defaultOpen: false,
     items: [
       {
-        id: 'pages',
-        label: 'Pages',
-        translationKey: 'navigation.pages',
-        icon: FileText,
+        id: 'pages', label: 'Pages', translationKey: 'navigation.pages', icon: FileText, permissionKey: UI_PERM.NAV_PAGES,
         children: [
-          {
-            id: 'page-list',
-            label: 'All Pages',
-            translationKey: 'navigation.allPages',
-            url: '/pages'
-          },
-          {
-            id: 'page-create',
-            label: 'Create Page',
-            translationKey: 'navigation.createPage',
-            url: '/pages/new'
-          }
+          { id: 'page-list', label: 'All Pages', translationKey: 'navigation.allPages', url: '/pages', permissionKey: UI_PERM.NAV_PAGES_LIST },
+          { id: 'page-create', label: 'Create Page', translationKey: 'navigation.createPage', url: '/pages/new', permissionKey: UI_PERM.NAV_PAGES_CREATE }
         ]
       },
-      {
-        id: 'media',
-        label: 'Media',
-        translationKey: 'navigation.media',
-        url: '/media',
-        icon: Image
-      },
-      {
-        id: 'messages',
-        label: 'Messages',
-        translationKey: 'navigation.messages',
-        url: '/messages',
-        icon: MessageSquare,
-        badge: 12,
-        badgeVariant: 'error'
-      }
+      { id: 'media', label: 'Media', translationKey: 'navigation.media', url: '/media', icon: Image, permissionKey: UI_PERM.NAV_MEDIA },
+      { id: 'messages', label: 'Messages', translationKey: 'navigation.messages', url: '/messages', icon: MessageSquare, badge: 12, badgeVariant: 'error', permissionKey: UI_PERM.NAV_MESSAGES }
+    ]
+  },
+  {
+    id: 'payments',
+    translationKey: 'navigation.groups.payments',
+    label: 'Payments',
+    collapsible: true,
+    defaultOpen: true,
+    items: [
+      { id: 'my-disputes', label: 'My Disputes', translationKey: 'navigation.myDisputes', url: '/my-disputes', icon: AlertTriangle, permissionKey: UI_PERM.NAV_MY_DISPUTES },
+      { id: 'payment-validation', label: 'Payment Validation', translationKey: 'navigation.paymentValidation', url: '/admin/payment-validation', icon: CreditCard, permissionKey: UI_PERM.NAV_PAYMENT_VALIDATION },
+      { id: 'payouts-dashboard', label: 'Payouts', translationKey: 'navigation.payouts', url: '/admin/payouts', icon: Wallet, permissionKey: UI_PERM.NAV_PAYOUTS },
+      { id: 'escrow-admin', label: 'Escrow & Disputes', translationKey: 'navigation.escrow', url: '/admin/escrow', icon: Receipt, permissionKey: UI_PERM.NAV_ESCROW },
+      { id: 'host-reactivation', label: 'Host Reactivation', translationKey: 'navigation.hostReactivation', url: '/host/reactivation', icon: RotateCcw, permissionKey: UI_PERM.NAV_HOST_REACTIVATION }
     ]
   },
   {
@@ -339,124 +258,27 @@ export const defaultMenuGroups: NavMenuGroup[] = [
     collapsible: true,
     defaultOpen: true,
     items: [
-      {
-        id: 'booking-calendar',
-        label: 'Booking Calendar',
-        translationKey: 'navigation.bookingCalendar',
-        url: '/booking-calendar',
-        icon: Calendar,
-      },
-      {
-        id: 'admin-dashboard',
-        label: 'Administration',
-        translationKey: 'navigation.administration',
-        url: '/admin',
-        icon: Shield,
-        roles: ['hyper_manager', 'admin']
-      },
-      {
-        id: 'cancellation-rules',
-        label: 'Cancellation Rules',
-        translationKey: 'navigation.cancellationRules',
-        url: '/admin/cancellation-rules',
-        icon: Shield,
-        roles: ['hyper_admin', 'hyper_manager', 'admin', 'manager']
-      },
-      {
-        id: 'admin-chat',
-        label: 'Support Chat',
-        translationKey: 'navigation.supportChat',
-        url: '/support',
-        icon: MessageSquare,
-        roles: ['hyper_admin', 'hyper_manager', 'admin'],
-        badge: 'Live',
-        badgeVariant: 'success'
-      },
-      {
-        id: 'users',
-        label: 'Users',
-        translationKey: 'navigation.users',
-        url: '/admin/users',
-        icon: Users,
-        permissions: ['admin', 'manage_users'],
-        roles: ['hyper_manager', 'admin']
-      },
-      {
-        id: 'analytics',
-        label: 'Analytics',
-        translationKey: 'navigation.analytics',
-        url: '/admin/analytics',
-        icon: BarChart3,
-        permissions: ['admin', 'view_analytics'],
-        roles: ['admin', 'analyst']
-      },
-      {
-        id: 'security',
-        label: 'Security',
-        translationKey: 'navigation.security',
-        url: '/admin/security',
-        icon: Shield,
-        permissions: ['admin'],
-        roles: ['admin']
-      },
-      {
-        id: 'appearance',
-        label: 'Appearance',
-        translationKey: 'navigation.appearance',
-        url: '/admin/appearance',
-        icon: Palette,
-        permissions: ['admin', 'manage_appearance'],
-        roles: ['admin', 'designer']
-      },
-      {
-        id: 'rbac-settings',
-        label: 'RBAC Settings',
-        translationKey: 'navigation.rbacSettings',
-        url: '/admin/rbac-settings',
-        icon: Shield,
-        roles: ['hyper_admin', 'hyper_manager', 'admin']
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        translationKey: 'navigation.settings',
-        url: '/settings',
-        icon: Settings
-      }
+      { id: 'booking-calendar', label: 'Booking Calendar', translationKey: 'navigation.bookingCalendar', url: '/booking-calendar', icon: Calendar, permissionKey: UI_PERM.NAV_BOOKING_CALENDAR },
+      { id: 'admin-dashboard', label: 'Administration', translationKey: 'navigation.administration', url: '/admin', icon: Shield, permissionKey: UI_PERM.NAV_ADMIN_DASHBOARD },
+      { id: 'cancellation-rules', label: 'Cancellation Rules', translationKey: 'navigation.cancellationRules', url: '/admin/cancellation-rules', icon: Shield, permissionKey: UI_PERM.NAV_CANCELLATION_RULES },
+      { id: 'admin-chat', label: 'Support Chat', translationKey: 'navigation.supportChat', url: '/support', icon: MessageSquare, badge: 'Live', badgeVariant: 'success', permissionKey: UI_PERM.NAV_SUPPORT_CHAT },
+      { id: 'users', label: 'Users', translationKey: 'navigation.users', url: '/admin/users', icon: Users, permissionKey: UI_PERM.NAV_USERS },
+      { id: 'analytics', label: 'Analytics', translationKey: 'navigation.analytics', url: '/admin/analytics', icon: BarChart3, permissionKey: UI_PERM.NAV_ANALYTICS },
+      { id: 'security', label: 'Security', translationKey: 'navigation.security', url: '/admin/security', icon: Shield, permissionKey: UI_PERM.NAV_SECURITY },
+      { id: 'appearance', label: 'Appearance', translationKey: 'navigation.appearance', url: '/admin/appearance', icon: Palette, permissionKey: UI_PERM.NAV_APPEARANCE },
+      { id: 'rbac-settings', label: 'RBAC Settings', translationKey: 'navigation.rbacSettings', url: '/admin/rbac-settings', icon: Shield, permissionKey: UI_PERM.NAV_RBAC_SETTINGS },
+      { id: 'rbac-debug', label: 'RBAC Debug', translationKey: 'navigation.rbacDebug', url: '/admin/rbac-debug', icon: Bug, permissionKey: UI_PERM.NAV_RBAC_DEBUG },
+      { id: 'settings', label: 'Settings', translationKey: 'navigation.settings', url: '/settings', icon: Settings, permissionKey: UI_PERM.NAV_SETTINGS }
     ]
   }
 ];
 
 // User menu items
 export const defaultUserMenuItems: NavMenuItem[] = [
-  {
-    id: 'profile',
-    label: 'Profile',
-    translationKey: 'navigation.profile',
-    url: '/settings',
-    icon: User
-  },
-  {
-    id: 'notifications',
-    label: 'Notifications',
-    translationKey: 'navigation.notifications',
-    url: '/notifications',
-    icon: Bell,
-    badge: 5
-  },
-  {
-    id: 'help',
-    label: 'Help & Support',
-    translationKey: 'navigation.help',
-    url: '/help',
-    icon: HelpCircle
-  },
-  {
-    id: 'logout',
-    label: 'Logout',
-    translationKey: 'auth.logout',
-    icon: LogOut
-  }
+  { id: 'profile', label: 'Profile', translationKey: 'navigation.profile', url: '/settings', icon: User, permissionKey: UI_PERM.NAV_PROFILE },
+  { id: 'notifications', label: 'Notifications', translationKey: 'navigation.notifications', url: '/notifications', icon: Bell, badge: 5, permissionKey: UI_PERM.NAV_NOTIFICATIONS },
+  { id: 'help', label: 'Help & Support', translationKey: 'navigation.help', url: '/help', icon: HelpCircle, permissionKey: UI_PERM.NAV_HELP },
+  { id: 'logout', label: 'Logout', translationKey: 'auth.logout', icon: LogOut },
 ];
 
 // Quick action items
@@ -563,5 +385,30 @@ export const filterMenuGroupsByPermissions = (
       ...group,
       items: filterMenuByPermissions(group.items, userRoles)
     }))
+    .filter(group => group.items.length > 0);
+};
+
+/**
+ * Filter menu items by UI permission key (preferred — DB-backed).
+ * `canUI(key)` is provided by usePermissions(). Items without `permissionKey` always pass.
+ */
+export const filterMenuByPermissionKey = (
+  items: NavMenuItem[],
+  canUI: (key: string) => boolean,
+): NavMenuItem[] => {
+  return items
+    .filter(item => !item.permissionKey || canUI(item.permissionKey))
+    .map(item => ({
+      ...item,
+      children: item.children ? filterMenuByPermissionKey(item.children, canUI) : undefined,
+    }));
+};
+
+export const filterMenuGroupsByPermissionKey = (
+  groups: NavMenuGroup[],
+  canUI: (key: string) => boolean,
+): NavMenuGroup[] => {
+  return groups
+    .map(group => ({ ...group, items: filterMenuByPermissionKey(group.items, canUI) }))
     .filter(group => group.items.length > 0);
 };

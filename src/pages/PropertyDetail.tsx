@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { LocationPicker } from '@/components/maps/LocationPicker';
 import {
   MapPin,
   Star,
@@ -60,7 +61,10 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { canModifyProperty: canEdit, canMakeBooking } = usePermissions();
+  const { can } = useRoleAccess('PropertyDetailPage');
+  const canEdit = can('Actions', 'Button', 'Edit');
+  const canDuplicate = can('Actions', 'Button', 'Duplicate');
+  const canMakeBooking = can('Booking', 'Widget', 'View');
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -379,13 +383,7 @@ const PropertyDetail = () => {
               </h2>
               <p className="text-muted-foreground mb-4">{address}</p>
               <div className="aspect-video rounded-xl overflow-hidden bg-muted">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.02}%2C${latitude - 0.01}%2C${longitude + 0.02}%2C${latitude + 0.01}&layer=mapnik&marker=${latitude}%2C${longitude}`}
-                />
+                <LocationPicker latitude={latitude} longitude={longitude} height="100%" readOnly />
               </div>
             </div>
 

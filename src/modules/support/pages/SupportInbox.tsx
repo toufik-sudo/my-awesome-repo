@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 // MainLayout removed — provided by Routes
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import {
   useSupportMyThreads, useSupportAdminThreads, useCreateSupportThread,
 } from '../support.hooks';
@@ -47,7 +47,7 @@ export const SupportInbox: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const rbac = usePermissions();
+  const rbac = useRoleAccess('SupportInbox');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showNewThread, setShowNewThread] = useState(false);
@@ -55,7 +55,7 @@ export const SupportInbox: React.FC = () => {
   const [newCategory, setNewCategory] = useState('general');
   const [newContent, setNewContent] = useState('');
 
-  const isAdmin = rbac.isHyper || rbac.isAdmin;
+  const isAdmin = rbac.can('Admin', 'Tab', 'View') || rbac.isHyper || rbac.isAdmin;
 
   const adminQuery = useSupportAdminThreads(
     1,

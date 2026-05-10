@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import {
   Eye, Check, X, RefreshCw, Plus, Pencil, Trash2,
   CheckCircle2, FileText, CreditCard, Building2, Clock,
@@ -23,6 +24,7 @@ import { paymentsApi, type PaymentReceipt, type TransferAccount } from '../payme
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 
 export const PaymentValidation: React.FC = () => {
+  const { can } = useRoleAccess('PaymentValidation');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [rejectDialog, setRejectDialog] = useState<PaymentReceipt | null>(null);
@@ -139,9 +141,11 @@ export const PaymentValidation: React.FC = () => {
                   <p className="text-xs text-muted-foreground">Gérer les comptes affichés aux utilisateurs</p>
                 </div>
               </div>
-              <Button size="sm" variant="outline" onClick={() => { setEditAccount({}); setAccountDialog(true); }} className="gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Ajouter
-              </Button>
+              {can('Accounts', 'Button', 'Add') && (
+                <Button size="sm" variant="outline" onClick={() => { setEditAccount({}); setAccountDialog(true); }} className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" /> Ajouter
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -255,22 +259,26 @@ export const PaymentValidation: React.FC = () => {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-2 mt-3">
-                          <Button
-                            size="sm"
-                            className="h-8 text-xs gap-1.5 flex-1"
-                            onClick={() => approveMutation.mutate(receipt.id)}
-                            disabled={approveMutation.isPending}
-                          >
-                            <Check className="h-3.5 w-3.5" /> Approuver
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="h-8 text-xs gap-1.5 flex-1"
-                            onClick={() => setRejectDialog(receipt)}
-                          >
-                            <X className="h-3.5 w-3.5" /> Rejeter
-                          </Button>
+                          {can('Receipts', 'Button', 'Approve') && (
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs gap-1.5 flex-1"
+                              onClick={() => approveMutation.mutate(receipt.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              <Check className="h-3.5 w-3.5" /> Approuver
+                            </Button>
+                          )}
+                          {can('Receipts', 'Button', 'Reject') && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="h-8 text-xs gap-1.5 flex-1"
+                              onClick={() => setRejectDialog(receipt)}
+                            >
+                              <X className="h-3.5 w-3.5" /> Rejeter
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

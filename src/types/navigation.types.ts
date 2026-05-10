@@ -16,6 +16,8 @@ export interface NavMenuItem {
   children?: NavMenuItem[];
   permissions?: string[];
   roles?: string[];
+  /** UI permission key (ui.<Component>.<SubView>.<Element>.<Action>) — when set, item is gated via usePermissions().canUI(). */
+  permissionKey?: string;
 }
 
 export interface NavMenuGroup {

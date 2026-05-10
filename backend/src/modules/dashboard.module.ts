@@ -6,10 +6,12 @@ import { Property } from '../properties/entity/property.entity';
 import { Booking } from '../bookings/entity/booking.entity';
 import { Favorite } from '../favorites/entity/favorite.entity';
 import { VerificationDocument } from '../properties/entity/verification-document.entity';
+import { RbacScopeModule } from 'src/rbac/rbac-scope.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Property, Booking, Favorite, VerificationDocument]),
+    RbacScopeModule
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,15 @@ import {
   Dimensions,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
-import { TrustBadge, DiscountBadge, Badge, DocumentUploader } from '@/components';
+import { TrustBadge, DiscountBadge, Badge, DocumentUploader, CommentSkeletonList } from '@/components';
 import { propertiesApi } from '@/services/properties.api';
+import { socialApi, type CommentItem } from '@/services/social.api';
+import { usePermissions } from '@/hooks/usePermissions';
+import { CommentReactions } from '@/components/CommentReactions';
 import type { Property, VerificationDocument } from '@/types/property.types';
 import { spacing } from '@/constants/theme.constants';
 
@@ -25,16 +29,67 @@ const { width } = Dimensions.get('window');
 
 export const PropertyDetailScreen: React.FC<PropertyDetailScreenProps> = ({ route, navigation }) => {
   const { theme } = useTheme();
+  const { MOBILE_UI_PERM: PERM, canUI, permissionsLoaded } = usePermissions();
   const propertyId = route?.params?.propertyId || '';
 
   const [property, setProperty] = useState<Property | null>(null);
   const [documents, setDocuments] = useState<VerificationDocument[]>([]);
+  const [comments, setComments] = useState<CommentItem[]>([]);
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [commentsTotalPages, setCommentsTotalPages] = useState(1);
+  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showUploader, setShowUploader] = useState(false);
+
+  const COMMENTS_LIMIT = 10;
+
+  const canViewComments = canUI(PERM.COMMENT_VIEW);
+  const canCreateComment = canUI(PERM.COMMENT_CREATE);
+  const canReact = canUI(PERM.REACTION_TOGGLE);
 
   useEffect(() => {
     fetchPropertyDetails();
   }, [propertyId]);
+
+  /** Token bumped on every reset; appends with stale tokens are dropped. */
+  const commentsResetToken = useRef(0);
+
+  const loadComments = async (page: number, mode: 'reset' | 'append') => {
+    if (!canViewComments) return;
+    if (mode === 'append' && commentsLoading) return;
+    let myToken = commentsResetToken.current;
+    if (mode === 'reset') {
+      commentsResetToken.current += 1;
+      myToken = commentsResetToken.current;
+      // Wipe state synchronously — prevents end-of-list flicker during refresh.
+      setComments([]);
+      setCommentsPage(1);
+      setCommentsTotalPages(1);
+      setCommentsTotal(0);
+    }
+    try {
+      setCommentsLoading(true);
+      const res = await socialApi.getCommentsPaginated('property', propertyId, { page, limit: COMMENTS_LIMIT });
+      if (myToken !== commentsResetToken.current) return; // stale
+      setCommentsPage(res.page);
+      setCommentsTotalPages(res.totalPages);
+      setCommentsTotal(res.total);
+      setComments((prev) => {
+        if (mode === 'reset') return res.data;
+        // Dedupe by id when appending — protects against double-emit / double-tap.
+        const seen = new Set(prev.map((c) => c.id));
+        const additions = res.data.filter((c) => !seen.has(c.id));
+        return [...prev, ...additions];
+      });
+    } catch (e) {
+      if (myToken === commentsResetToken.current && mode === 'reset') setComments([]);
+    } finally {
+      if (myToken === commentsResetToken.current) setCommentsLoading(false);
+    }
+  };
 
   const fetchPropertyDetails = async () => {
     try {
@@ -45,10 +100,27 @@ export const PropertyDetailScreen: React.FC<PropertyDetailScreenProps> = ({ rout
       ]);
       setProperty(propertyData);
       setDocuments(docsData);
+      if (canViewComments) {
+        loadComments(1, 'reset');
+      }
     } catch (error) {
       console.error('Failed to fetch property:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitComment = async () => {
+    if (!commentDraft.trim() || postingComment) return;
+    try {
+      setPostingComment(true);
+      await socialApi.createComment({ targetType: 'property', targetId: propertyId, content: commentDraft.trim() });
+      setCommentDraft('');
+      loadComments(1, 'reset');
+    } catch (e) {
+      console.error('Failed to post comment', e);
+    } finally {
+      setPostingComment(false);
     }
   };
 
@@ -233,6 +305,72 @@ export const PropertyDetailScreen: React.FC<PropertyDetailScreenProps> = ({ rout
             )}
           </View>
 
+          {/* Comments (RBAC-gated, paginated) */}
+          {canViewComments && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.foreground }]}>
+                Comments ({commentsTotal || comments.length})
+              </Text>
+              {/* Initial-load skeleton (no comments yet, loading first page). */}
+              {commentsLoading && comments.length === 0 && <CommentSkeletonList count={3} />}
+
+              {comments.length === 0 && !commentsLoading && (
+                <Text style={{ color: theme.mutedForeground, fontSize: 13 }}>No comments yet.</Text>
+              )}
+              {comments.map((c) => (
+                <View key={c.id} style={[styles.commentItem, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  <Text style={{ color: theme.foreground, fontWeight: '600', fontSize: 13 }}>{c.userName || 'User'}</Text>
+                  <Text style={{ color: theme.foreground, fontSize: 13, marginTop: 2 }}>{c.content}</Text>
+                  <Text style={{ color: theme.mutedForeground, fontSize: 11, marginTop: 4 }}>
+                    {new Date(c.createdAt).toLocaleDateString()}
+                  </Text>
+                  {/* Per-comment reactions (RBAC: REACTION_TOGGLE) */}
+                  <CommentReactions commentId={c.id} canToggle={canReact} />
+                </View>
+              ))}
+
+              {/* Page-change skeleton: appended page is loading. */}
+              {commentsLoading && comments.length > 0 && <CommentSkeletonList count={2} />}
+
+              {!commentsLoading && commentsPage < commentsTotalPages ? (
+                <TouchableOpacity
+                  onPress={() => loadComments(commentsPage + 1, 'append')}
+                  style={[styles.loadMoreBtn, { borderColor: theme.border }]}
+                >
+                  <Text style={{ color: theme.primary, fontWeight: '600' }}>Load more comments</Text>
+                </TouchableOpacity>
+              ) : !commentsLoading && comments.length > 0 && commentsPage >= commentsTotalPages ? (
+                <View style={styles.endIndicator}>
+                  <View style={[styles.endLine, { backgroundColor: theme.border }]} />
+                  <Text style={[styles.endText, { color: theme.mutedForeground }]}>
+                    — End of comments —
+                  </Text>
+                  <View style={[styles.endLine, { backgroundColor: theme.border }]} />
+                </View>
+              ) : null}
+
+              {canCreateComment && (
+                <View style={styles.commentComposer}>
+                  <TextInput
+                    value={commentDraft}
+                    onChangeText={setCommentDraft}
+                    placeholder="Write a comment…"
+                    placeholderTextColor={theme.mutedForeground}
+                    style={[styles.commentInput, { color: theme.foreground, backgroundColor: theme.card, borderColor: theme.border }]}
+                    multiline
+                  />
+                  <TouchableOpacity
+                    disabled={!commentDraft.trim() || postingComment}
+                    onPress={submitComment}
+                    style={[styles.commentSend, { backgroundColor: theme.primary, opacity: !commentDraft.trim() ? 0.5 : 1 }]}
+                  >
+                    <Text style={{ color: theme.primaryForeground, fontWeight: '700' }}>{postingComment ? '…' : 'Post'}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
           {/* House Rules */}
           {property.houseRules?.length > 0 && (
             <View style={styles.section}>
@@ -371,6 +509,14 @@ const styles = StyleSheet.create({
   uploaderContainer: {
     marginTop: spacing.md,
   },
+  commentItem: { padding: 10, borderRadius: 8, borderWidth: 1, marginTop: 8 },
+  loadMoreBtn: { marginTop: 10, paddingVertical: 10, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
+  endIndicator: { flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 8 },
+  endLine: { flex: 1, height: 1 },
+  endText: { fontSize: 12, fontStyle: 'italic' },
+  commentComposer: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'flex-end' },
+  commentInput: { flex: 1, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, maxHeight: 80 },
+  commentSend: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
   ruleItem: {
     fontSize: 14,
     marginBottom: 4,

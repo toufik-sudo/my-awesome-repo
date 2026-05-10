@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reaction } from '../entity/reaction.entity';
@@ -13,6 +13,7 @@ export class ReactionsService {
   ) {}
 
   async getReactionSummary(targetType: string, targetId: string, currentUserId?: number, _scopeCtx?: ScopeContext) {
+    // Reactions are public data — no scope filtering needed
     const reactions = await this.reactionRepo.find({ where: { targetType, targetId } });
 
     const counts: Record<string, number> = {};
@@ -30,7 +31,11 @@ export class ReactionsService {
     };
   }
 
-  async toggle(userId: number, dto: CreateReactionDto, _scopeCtx?: ScopeContext) {
+  async toggle(userId: number, dto: CreateReactionDto, scopeCtx?: ScopeContext) {
+    // Enforce own-user: can only react as yourself
+    if (scopeCtx && scopeCtx.userId !== userId) {
+      throw new ForbiddenException('Cannot react as another user');
+    }
     const existing = await this.reactionRepo.findOne({
       where: { userId, targetType: dto.targetType, targetId: dto.targetId },
     });
@@ -55,7 +60,10 @@ export class ReactionsService {
     return { action: 'added', type: dto.type };
   }
 
-  async remove(userId: number, targetType: string, targetId: string, _scopeCtx?: ScopeContext): Promise<void> {
+  async remove(userId: number, targetType: string, targetId: string, scopeCtx?: ScopeContext): Promise<void> {
+    if (scopeCtx && scopeCtx.userId !== userId) {
+      throw new ForbiddenException('Cannot remove reaction for another user');
+    }
     await this.reactionRepo.delete({ userId, targetType, targetId });
   }
 }

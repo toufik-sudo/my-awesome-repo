@@ -7,7 +7,7 @@ export type DocumentType =
   | 'utility_bill'
   | 'management_declaration';
 
-export type DocumentStatus = 'pending' | 'approved' | 'rejected';
+export type DocumentStatus = 'pending' | 'approved' | 'rejected' | 'archived';
 
 export interface AIAnalysisResult {
   isValid: boolean;
@@ -28,6 +28,7 @@ export interface VerificationDocument {
   reviewedAt?: string;
   createdAt: string;
   updatedAt: string;
+  replacesDocumentId?: string;
   // AI Analysis fields
   aiAnalyzed?: boolean;
   aiValidationResult?: boolean;

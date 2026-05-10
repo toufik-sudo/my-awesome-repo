@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac, rbacMerge } from '@/lib/api-rbac';
 
 export interface TransferAccount {
   id: string;
@@ -40,23 +41,18 @@ export interface PaymentReceipt {
 const PAYMENTS_BASE = '/payments';
 
 export const paymentsApi = {
-  /** Get active transfer accounts (public) */
   getTransferAccounts: () =>
-    api.get<TransferAccount[]>(`${PAYMENTS_BASE}/transfer-accounts`).then(r => r.data),
+    api.get<TransferAccount[]>(`${PAYMENTS_BASE}/transfer-accounts`, rbac('paymentsApi.getTransferAccounts.GET')).then(r => r.data),
 
-  /** Admin: get all transfer accounts */
   getAllTransferAccounts: () =>
-    api.get<TransferAccount[]>(`${PAYMENTS_BASE}/transfer-accounts/all`).then(r => r.data),
+    api.get<TransferAccount[]>(`${PAYMENTS_BASE}/transfer-accounts/all`, rbac('paymentsApi.getAllTransferAccounts.GET')).then(r => r.data),
 
-  /** Admin: Create/update transfer account */
   upsertTransferAccount: (data: Partial<TransferAccount>) =>
-    api.post<TransferAccount>(`${PAYMENTS_BASE}/transfer-accounts`, data).then(r => r.data),
+    api.post<TransferAccount>(`${PAYMENTS_BASE}/transfer-accounts`, data, rbac('paymentsApi.upsertTransferAccount.POST')).then(r => r.data),
 
-  /** Admin: Delete transfer account */
   deleteTransferAccount: (id: string) =>
-    api.delete(`${PAYMENTS_BASE}/transfer-accounts/${id}`),
+    api.delete(`${PAYMENTS_BASE}/transfer-accounts/${id}`, rbac('paymentsApi.deleteTransferAccount.DELETE')),
 
-  /** Upload a payment receipt for a booking */
   uploadReceipt: (bookingId: string, file: File, amount?: number, transferAccountId?: string, guestNote?: string) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -64,28 +60,23 @@ export const paymentsApi = {
     if (amount) formData.append('amount', String(amount));
     if (transferAccountId) formData.append('transferAccountId', transferAccountId);
     if (guestNote) formData.append('guestNote', guestNote);
-    return api.post<PaymentReceipt>(`${PAYMENTS_BASE}/receipts`, formData, {
+    return api.post<PaymentReceipt>(`${PAYMENTS_BASE}/receipts`, formData, rbacMerge('paymentsApi.uploadReceipt.POST', {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }).then(r => r.data);
+    })).then(r => r.data);
   },
 
-  /** Get pending receipts (hyper admin) */
   getPendingReceipts: () =>
-    api.get<PaymentReceipt[]>(`${PAYMENTS_BASE}/receipts/pending`).then(r => r.data),
+    api.get<PaymentReceipt[]>(`${PAYMENTS_BASE}/receipts/pending`, rbac('paymentsApi.getPendingReceipts.GET')).then(r => r.data),
 
-  /** Get receipts for a booking */
   getReceiptsByBooking: (bookingId: string) =>
-    api.get<PaymentReceipt[]>(`${PAYMENTS_BASE}/receipts/booking/${bookingId}`).then(r => r.data),
+    api.get<PaymentReceipt[]>(`${PAYMENTS_BASE}/receipts/booking/${bookingId}`, rbac('paymentsApi.getReceiptsByBooking.GET')).then(r => r.data),
 
-  /** Approve receipt (hyper admin) */
   approveReceipt: (id: string, note?: string) =>
-    api.put<PaymentReceipt>(`${PAYMENTS_BASE}/receipts/${id}/approve`, { note }).then(r => r.data),
+    api.put<PaymentReceipt>(`${PAYMENTS_BASE}/receipts/${id}/approve`, { note }, rbac('paymentsApi.approveReceipt.PUT')).then(r => r.data),
 
-  /** Reject receipt (hyper admin) */
   rejectReceipt: (id: string, note?: string) =>
-    api.put<PaymentReceipt>(`${PAYMENTS_BASE}/receipts/${id}/reject`, { note }).then(r => r.data),
+    api.put<PaymentReceipt>(`${PAYMENTS_BASE}/receipts/${id}/reject`, { note }, rbac('paymentsApi.rejectReceipt.PUT')).then(r => r.data),
 
-  /** Mock Stripe payment intent */
   createPaymentIntent: (bookingId: string, amount: number) =>
-    api.post<{ clientSecret: string; paymentIntentId: string }>(`${PAYMENTS_BASE}/stripe/intent`, { bookingId, amount }).then(r => r.data),
+    api.post<{ clientSecret: string; paymentIntentId: string }>(`${PAYMENTS_BASE}/stripe/intent`, { bookingId, amount }, rbac('paymentsApi.createPaymentIntent.POST')).then(r => r.data),
 };

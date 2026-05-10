@@ -11,6 +11,21 @@ export function usePropertyReviews(propertyId: string) {
   });
 }
 
+export function usePropertyReviewsPaginated(
+  propertyId: string,
+  params: { page?: number; limit?: number } = {},
+) {
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 10;
+  return useQuery({
+    queryKey: ['reviews', 'property', propertyId, 'paginated', page, limit],
+    queryFn: () => reviewsApi.getByPropertyPaginated(propertyId, { page, limit }),
+    enabled: !!propertyId,
+    staleTime: 1000 * 60 * 5,
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useCreateReview() {
   const queryClient = useQueryClient();
 

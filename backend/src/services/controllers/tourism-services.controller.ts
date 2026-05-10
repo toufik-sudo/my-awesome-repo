@@ -19,16 +19,21 @@ export class TourismServicesController {
 
   @Public()
   @Get()
+  @UseGuards(PermissionGuard)
   @ApiOperation({ summary: 'List all services' })
   findAll(
     @Request() req: any,
     @Query('city') city?: string, @Query('category') category?: string, @Query('categories') categories?: string | string[],
     @Query('minPrice') minPrice?: number, @Query('maxPrice') maxPrice?: number, @Query('participants') participants?: number,
-    @Query('sort') sort?: string, @Query('search') search?: string, @Query('page') page?: number, @Query('limit') limit?: number,
+    @Query('sort') sort?: string, @Query('search') search?: string,
+    // Privileged roles only — see services in any status. Forced to
+    // "published" for public/user/guest callers.
+    @Query('status') status?: string,
+    @Query('page') page?: number, @Query('limit') limit?: number,
   ) {
     const parsedCategories = categories ? (Array.isArray(categories) ? categories : [categories]) : undefined;
     const scopeCtx = req.user ? extractScopeContext(req) : undefined;
-    return this.servicesService.findAll({ city, category, categories: parsedCategories, minPrice, maxPrice, participants, sort, search, page: page || 1, limit: limit || 20 }, scopeCtx);
+    return this.servicesService.findAll({ city, category, categories: parsedCategories, minPrice, maxPrice, participants, sort, search, status, page: Math.max(1, Number(page) || 1), limit: Math.min(100, Math.max(1, Number(limit) || 20)) }, scopeCtx);
   }
 
   @Public()
@@ -38,6 +43,7 @@ export class TourismServicesController {
 
   @Public()
   @Get(':id')
+  @UseGuards(PermissionGuard)
   @ApiOperation({ summary: 'Get service by ID' })
   @ApiParam({ name: 'id' })
   findOne(@Param('id') id: string, @Request() req: any) {

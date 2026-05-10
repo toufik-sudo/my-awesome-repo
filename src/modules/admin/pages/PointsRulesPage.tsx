@@ -19,6 +19,7 @@ import { ACTION_LABELS } from '@/modules/points/points.api';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const ROLE_LABELS: Record<string, string> = { guest: 'Voyageur (Guest)', manager: 'Manager' };
 const PERIOD_LABELS: Record<string, string> = { daily: 'Quotidien', weekly: 'Hebdomadaire', monthly: 'Mensuel' };
@@ -71,6 +72,7 @@ const emptyForm = (): Partial<PointsRule> => ({
 });
 
 export const PointsRulesPage: React.FC = () => {
+  const { can } = useRoleAccess('PointsRulesPage');
   const [rules, setRules] = useState<PointsRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

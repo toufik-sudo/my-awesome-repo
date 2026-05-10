@@ -1,29 +1,24 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Unique,
-  Index,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Unique, Index,
 } from 'typeorm';
 import { User } from '../../user/entity/user.entity';
 import { Property } from '../../properties/entity/property.entity';
 import { Booking } from '../../bookings/entity/booking.entity';
+import { TourismService } from '../../services/entity/tourism-service.entity';
+import { ServiceBooking } from '../../services/entity/service-booking.entity';
 
 @Entity('reviews')
-@Unique(['bookingId']) // One review per booking
+@Unique(['bookingId'])
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Index('IDX_reviews_propertyId', ['propertyId'])
-  @Column()
+  @Column({ nullable: true })
   propertyId: string;
 
-  @ManyToOne(() => Property, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Property, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
 
@@ -35,14 +30,30 @@ export class Review {
   @JoinColumn({ name: 'guestId' })
   guest: User;
 
-  @Column()
+  @Column({ nullable: true })
   bookingId: string;
 
-  @ManyToOne(() => Booking, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Booking, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'bookingId' })
   booking: Booking;
 
-  // Ratings (1-5)
+  /** FK to tourism_services — set when reviewing a service */
+  @Index('IDX_reviews_serviceId', ['serviceId'])
+  @Column({ type: 'uuid', nullable: true })
+  serviceId: string;
+
+  @ManyToOne(() => TourismService, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'serviceId' })
+  service: TourismService;
+
+  /** FK to service_bookings — set when reviewing a service */
+  @Column({ type: 'uuid', nullable: true })
+  serviceBookingId: string;
+
+  @ManyToOne(() => ServiceBooking, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'serviceBookingId' })
+  serviceBooking: ServiceBooking;
+
   @Column({ type: 'int' })
   overallRating: number;
 
@@ -70,7 +81,6 @@ export class Review {
   @Column({ type: 'text' })
   comment: string;
 
-  // Host reply
   @Column({ type: 'text', nullable: true })
   hostReply: string;
 

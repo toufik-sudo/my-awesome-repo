@@ -1,23 +1,15 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { User } from './user.entity';
+import { RbacBackendPermission } from './rbac-backend-permission.entity';
+import { RbacFrontendPermission } from './rbac-frontend-permission.entity';
+import { Property } from '../../properties/entity/property.entity';
+import { TourismService } from '../../services/entity/tourism-service.entity';
+import { PropertyGroup } from '../../properties/entity/property-group.entity';
+import { ServiceGroup } from '../../services/entity/service-group.entity';
 
-/**
- * Scope defines what subset of resources this permission applies to.
- * - 'all': global scope — all resources
- * - 'properties': specific property IDs
- * - 'services': specific service IDs
- * - 'property_groups': specific property group IDs
- * - 'service_groups': specific service group IDs
- */
 export type PermissionScope = 'all' | 'properties' | 'services' | 'property_groups' | 'service_groups';
 
 @Entity('manager_permissions')
@@ -27,7 +19,6 @@ export class ManagerPermission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** The manager this permission is assigned to */
   @Column()
   managerId: number;
 
@@ -35,7 +26,6 @@ export class ManagerPermission {
   @JoinColumn({ name: 'managerId' })
   manager: User;
 
-  /** Who assigned this permission (admin or hyper role) */
   @Column()
   assignedById: number;
 
@@ -47,11 +37,18 @@ export class ManagerPermission {
   @Column({ type: 'varchar', length: 200 })
   backendPermissionKey: string;
 
+  @ManyToOne(() => RbacBackendPermission, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'backendPermissionKey', referencedColumnName: 'permission_key' })
+  backendPermission: RbacBackendPermission;
+
   /** FK to rbac_frontend_permissions.permission_key (nullable) */
   @Column({ type: 'varchar', length: 200, nullable: true })
   frontendPermissionKey: string | null;
 
-  /** Scope of this permission */
+  @ManyToOne(() => RbacFrontendPermission, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'frontendPermissionKey', referencedColumnName: 'permission_key' })
+  frontendPermission: RbacFrontendPermission;
+
   @Column({ type: 'varchar', length: 30 })
   scope: PermissionScope;
 

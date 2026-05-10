@@ -12,6 +12,8 @@ import { DynamicButton } from './DynamicButton';
 import { AddressAutocomplete, type NominatimSuggestion } from './AddressAutocomplete';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { resolveImageUrl } from './BackendImage';
+import { MapPopupMediaCarousel } from './MapPopupMediaCarousel';
+import { StatusBadge } from './StatusBadge';
 import { CATEGORY_ICONS } from '@/modules/services/services.constants';
 import type { Property } from '@/types/property.types';
 import type { TourismService } from '@/types/tourism-service.types';
@@ -148,15 +150,23 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         root.render(
           <div className="w-72 p-0">
             <div className="relative">
-              {property.images[0] && (
-                <img src={resolveImageUrl(property.images[0])} alt={property.title} className="w-full h-36 object-cover rounded-t-xl" />
-              )}
-              <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold">
+              <MapPopupMediaCarousel
+                images={property.images}
+                videos={property.videos}
+                alt={property.title}
+                height={144}
+              />
+              <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold z-10">
                 ⭐ {property.rating || 'N/A'}
               </div>
-              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'hsl(198 80% 48% / 0.9)', color: 'white' }}>
+              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold z-10" style={{ background: 'hsl(198 80% 48% / 0.9)', color: 'white' }}>
                 🏠 Propriété
               </div>
+              {property.status && property.status !== 'published' && (
+                <div className="absolute bottom-2 left-2 z-10">
+                  <StatusBadge status={property.status} hostCascade={property.hostCascade} />
+                </div>
+              )}
             </div>
             <div className="p-3 space-y-2">
               <h3 className="font-semibold text-sm line-clamp-1">{property.title}</h3>
@@ -235,15 +245,23 @@ export const UnifiedMapSearch: React.FC<UnifiedMapSearchProps> = ({
         root.render(
           <div className="w-72 p-0">
             <div className="relative">
-              {service.images?.[0] && (
-                <img src={resolveImageUrl(service.images[0])} alt={title} className="w-full h-36 object-cover rounded-t-xl" />
-              )}
-              <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold">
+              <MapPopupMediaCarousel
+                images={service.images || []}
+                videos={service.videos}
+                alt={title}
+                height={144}
+              />
+              <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold z-10">
                 ⭐ {service.averageRating}
               </div>
-              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: 'hsl(16 85% 62% / 0.9)', color: 'white' }}>
+              <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold z-10" style={{ background: 'hsl(16 85% 62% / 0.9)', color: 'white' }}>
                 {icon} Service
               </div>
+              {service.status && service.status !== 'published' && (
+                <div className="absolute bottom-2 left-2 z-10">
+                  <StatusBadge status={service.status} hostCascade={service.hostCascade} />
+                </div>
+              )}
             </div>
             <div className="p-3 space-y-2">
               <h3 className="font-semibold text-sm line-clamp-1">{icon} {title}</h3>

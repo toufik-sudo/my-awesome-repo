@@ -46,6 +46,9 @@ export class RbacBackendPermission {
   @Column({ type: 'varchar', length: 10 })
   method: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  endpoint_url: string | null;
+
   /** Module grouping for filtering */
   @Column({ type: 'varchar', length: 50, default: 'general' })
   module: string;

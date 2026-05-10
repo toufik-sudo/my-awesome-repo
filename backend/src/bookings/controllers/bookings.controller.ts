@@ -18,18 +18,33 @@ export class BookingsController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  findAll(@Request() req: any, @Query('status') status?: string) {
+  findAll(
+    @Request() req: any,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.bookingsService.findAll(status, scopeCtx);
+    return this.bookingsService.findAll(status, scopeCtx, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
   }
 
   @Get('my')
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  getMyBookings(@Request() req: any) {
+  getMyBookings(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.bookingsService.findByGuest(req.user.id, scopeCtx);
+    return this.bookingsService.findByGuest(req.user.id, scopeCtx, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
   }
 
   @Get(':id')
@@ -56,7 +71,8 @@ export class BookingsController {
   @CsrfCheck(true)
   accept(@Param('id') id: string, @Body('propertyId') propertyId: string, @Request() req: any) {
     const scopeCtx = extractScopeContext(req);
-    return this.bookingsService.updateStatus(id, 'confirmed', scopeCtx);
+    // Host accepts → status moves to 'accepted' (awaiting guest payment)
+    return this.bookingsService.updateStatus(id, 'accepted', scopeCtx);
   }
 
   @Put(':id/decline')
@@ -75,6 +91,14 @@ export class BookingsController {
   counterOffer(@Param('id') id: string, @Body() body: { propertyId: string; newPrice: number; newCheckIn?: string; newCheckOut?: string; message?: string }, @Request() req: any) {
     const scopeCtx = extractScopeContext(req);
     return this.bookingsService.createCounterOffer(id, body, scopeCtx);
+  }
+
+  @Put(':id/cancel')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  cancelByGuest(@Param('id') id: string, @Body('reason') reason: string, @Request() req: any) {
+    return this.bookingsService.cancelByGuest(id, req.user.id, reason);
   }
 
   @Put(':id/refund')

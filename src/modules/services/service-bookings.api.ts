@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac, rbacMerge } from '@/lib/api-rbac';
 
 export interface ServiceBookingDto {
   serviceId: string;
@@ -53,39 +54,62 @@ export interface ServiceAvailabilitySlot {
   timeSlots?: string[];
 }
 
+export interface PaginatedServiceBookings {
+  data: ServiceBookingResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const serviceBookingsApi = {
   create: (data: ServiceBookingDto) =>
-    api.post<ServiceBookingResponse>('/service-bookings', data).then(r => r.data),
+    api.post<ServiceBookingResponse>('/service-bookings', data, rbac('serviceBookingsApi.create.POST')).then(r => r.data),
 
+  /** @deprecated Use getMyBookingsPaginated for server-side pagination. */
   getMyBookings: () =>
-    api.get<ServiceBookingResponse[]>('/service-bookings/my').then(r => r.data),
+    api.get<PaginatedServiceBookings>('/service-bookings/my', rbacMerge('serviceBookingsApi.getMyBookings.GET', {
+      params: { page: 1, limit: 1000 },
+    })).then(r => r.data.data),
 
+  getMyBookingsPaginated: (params: { page?: number; limit?: number } = {}) =>
+    api.get<PaginatedServiceBookings>('/service-bookings/my', rbacMerge('serviceBookingsApi.getMyBookings.GET', {
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    })).then(r => r.data),
+
+  /** @deprecated Use getProviderBookingsPaginated for server-side pagination. */
   getProviderBookings: () =>
-    api.get<ServiceBookingResponse[]>('/service-bookings/provider').then(r => r.data),
+    api.get<PaginatedServiceBookings>('/service-bookings/provider', rbacMerge('serviceBookingsApi.getProviderBookings.GET', {
+      params: { page: 1, limit: 1000 },
+    })).then(r => r.data.data),
+
+  getProviderBookingsPaginated: (params: { page?: number; limit?: number } = {}) =>
+    api.get<PaginatedServiceBookings>('/service-bookings/provider', rbacMerge('serviceBookingsApi.getProviderBookings.GET', {
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    })).then(r => r.data),
 
   getOne: (id: string) =>
-    api.get<ServiceBookingResponse>(`/service-bookings/${id}`).then(r => r.data),
+    api.get<ServiceBookingResponse>(`/service-bookings/${id}`, rbac('serviceBookingsApi.getOne.GET')).then(r => r.data),
 
   accept: (id: string) =>
-    api.put<ServiceBookingResponse>(`/service-bookings/${id}/accept`).then(r => r.data),
+    api.put<ServiceBookingResponse>(`/service-bookings/${id}/accept`, undefined, rbac('serviceBookingsApi.accept.PUT')).then(r => r.data),
 
   decline: (id: string, reason?: string) =>
-    api.put<ServiceBookingResponse>(`/service-bookings/${id}/decline`, { reason }).then(r => r.data),
+    api.put<ServiceBookingResponse>(`/service-bookings/${id}/decline`, { reason }, rbac('serviceBookingsApi.decline.PUT')).then(r => r.data),
 
   cancel: (id: string, reason?: string) =>
-    api.put<ServiceBookingResponse>(`/service-bookings/${id}/cancel`, { reason }).then(r => r.data),
+    api.put<ServiceBookingResponse>(`/service-bookings/${id}/cancel`, { reason }, rbac('serviceBookingsApi.cancel.PUT')).then(r => r.data),
 
-  // Availability
   getAvailability: (serviceId: string, startDate: string, endDate: string) =>
-    api.get<ServiceAvailabilitySlot[]>(`/service-bookings/availability/${serviceId}`, {
+    api.get<ServiceAvailabilitySlot[]>(`/service-bookings/availability/${serviceId}`, rbacMerge('serviceBookingsApi.getAvailability.GET', {
       params: { startDate, endDate },
-    }).then(r => r.data),
+    })).then(r => r.data),
 
   setAvailability: (serviceId: string, data: { date: string; isBlocked?: boolean; customPrice?: number; maxSlots?: number; timeSlots?: string[] }) =>
-    api.post(`/service-bookings/availability/${serviceId}`, data).then(r => r.data),
+    api.post(`/service-bookings/availability/${serviceId}`, data, rbac('serviceBookingsApi.setAvailability.POST')).then(r => r.data),
 
   bulkSetAvailability: (serviceId: string, dates: Array<{ date: string; isBlocked?: boolean; customPrice?: number; maxSlots?: number; timeSlots?: string[] }>) =>
-    api.post(`/service-bookings/availability/${serviceId}/bulk`, { dates }).then(r => r.data),
+    api.post(`/service-bookings/availability/${serviceId}/bulk`, { dates }, rbac('serviceBookingsApi.bulkSetAvailability.POST')).then(r => r.data),
 };
 
 // Service groups API
@@ -101,26 +125,26 @@ export interface ServiceGroupResponse {
 
 export const serviceGroupsApi = {
   getAll: () =>
-    api.get<ServiceGroupResponse[]>('/service-groups').then(r => r.data),
+    api.get<ServiceGroupResponse[]>('/service-groups', rbac('serviceGroupsApi.getAll.GET')).then(r => r.data),
 
   getOne: (id: string) =>
-    api.get<ServiceGroupResponse>(`/service-groups/${id}`).then(r => r.data),
+    api.get<ServiceGroupResponse>(`/service-groups/${id}`, rbac('serviceGroupsApi.getOne.GET')).then(r => r.data),
 
   create: (data: { name: string; description?: string }) =>
-    api.post<ServiceGroupResponse>('/service-groups', data).then(r => r.data),
+    api.post<ServiceGroupResponse>('/service-groups', data, rbac('serviceGroupsApi.create.POST')).then(r => r.data),
 
   update: (id: string, data: { name?: string; description?: string; isActive?: boolean }) =>
-    api.put(`/service-groups/${id}`, data).then(r => r.data),
+    api.put(`/service-groups/${id}`, data, rbac('serviceGroupsApi.update.PUT')).then(r => r.data),
 
   remove: (id: string) =>
-    api.delete(`/service-groups/${id}`),
+    api.delete(`/service-groups/${id}`, rbac('serviceGroupsApi.remove.DELETE')),
 
   getServices: (groupId: string) =>
-    api.get(`/service-groups/${groupId}/services`).then(r => r.data),
+    api.get(`/service-groups/${groupId}/services`, rbac('serviceGroupsApi.getServices.GET')).then(r => r.data),
 
   addService: (groupId: string, serviceId: string) =>
-    api.post(`/service-groups/${groupId}/services`, { serviceId }).then(r => r.data),
+    api.post(`/service-groups/${groupId}/services`, { serviceId }, rbac('serviceGroupsApi.addService.POST')).then(r => r.data),
 
   removeService: (groupId: string, serviceId: string) =>
-    api.delete(`/service-groups/${groupId}/services/${serviceId}`),
+    api.delete(`/service-groups/${groupId}/services/${serviceId}`, rbac('serviceGroupsApi.removeService.DELETE')),
 };

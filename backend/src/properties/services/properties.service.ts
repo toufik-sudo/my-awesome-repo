@@ -54,17 +54,7 @@ export class PropertiesService {
     scopeCtx: ScopeContext | undefined,
     permissionKey: string,
   ): Promise<string[] | null> {
-    if (!scopeCtx) return null; // Public endpoint, no filtering
-
-    const { userRole } = scopeCtx;
-
-    // hyper_admin and admin see all (admin scoped via PermissionGuard ownership)
-    if (userRole === 'hyper_admin' || userRole === 'admin' || userRole === 'user') return null;
-
-    const scopedPerms = getScopedPerms(scopeCtx);
-    if (scopedPerms.length === 0) return null; // No scoped perms = no additional filtering
-
-    return this.scopeFilter.resolvePropertyIds(scopedPerms, permissionKey);
+    return this.scopeFilter.effectivePropertyIds(scopeCtx, permissionKey);
   }
 
   async findAll(filters: {
@@ -78,14 +68,26 @@ export class PropertiesService {
     checkOut?: string;
     minTrustStars?: number;
     sort?: string;
+    status?: string;
     page: number;
     limit: number;
   }, scopeCtx?: ScopeContext) {
     const query = this.propertyRepository.createQueryBuilder('property');
 
-    query.where('property.status = :status', { status: 'published' });
+    // Management roles (hyper_admin, hyper_manager, admin, manager) may see
+    // ALL statuses for resources they own/manage. Public + 'user'/'guest'
+    // listings are always restricted to 'published'.
+    const seeAllStatuses = this.scopeFilter.canSeeAllStatuses(scopeCtx);
+    const ALLOWED = ['draft', 'published', 'archived', 'suspended'];
+    if (!seeAllStatuses) {
+      query.where('property.status = :status', { status: 'published' });
+    } else if (filters.status && filters.status !== 'all' && ALLOWED.includes(filters.status)) {
+      query.where('property.status = :status', { status: filters.status });
+    } else {
+      query.where('1 = 1');
+    }
 
-    // Apply scope filtering
+    // Apply scope filtering (admin → own, manager → assigned, hyper → none)
     const allowedIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_FIND_ALL);
     if (allowedIds !== null) {
       if (allowedIds.length === 0) {

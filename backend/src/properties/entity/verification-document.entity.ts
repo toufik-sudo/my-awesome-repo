@@ -1,23 +1,13 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
-import { Property } from '../../properties/entity/property.entity';
+import { Property } from './property.entity';
+import { User } from '../../user/entity/user.entity';
 
 export type DocumentType =
-  | 'national_id'
-  | 'passport'
-  | 'permit'
-  | 'notarized_deed'
-  | 'land_registry'
-  | 'utility_bill'
-  | 'management_declaration';
+  | 'national_id' | 'passport' | 'permit' | 'notarized_deed'
+  | 'land_registry' | 'utility_bill' | 'management_declaration';
 
 export type DocumentStatus = 'pending' | 'approved' | 'rejected';
 
@@ -33,6 +23,14 @@ export class VerificationDocument {
   @ManyToOne(() => Property, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'propertyId' })
   property: Property;
+
+  /** The user who uploaded this document */
+  @Column()
+  uploadedByUserId: number;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'uploadedByUserId' })
+  uploadedBy: User;
 
   @Column({ type: 'varchar', length: 30 })
   type: DocumentType;
@@ -52,10 +50,13 @@ export class VerificationDocument {
   @Column({ nullable: true })
   reviewedBy: number;
 
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'reviewedBy' })
+  reviewer: User;
+
   @Column({ nullable: true, type: 'datetime' })
   reviewedAt: Date;
 
-  // AI Analysis fields
   @Column({ type: 'boolean', nullable: true })
   aiAnalyzed: boolean;
 

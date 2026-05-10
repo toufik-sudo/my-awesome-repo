@@ -8,6 +8,7 @@
 export const PUBLIC_ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  ONBOARDING: '/onboarding',
   NOT_FOUND: '*',
 } as const;
 
@@ -53,6 +54,7 @@ export const DASHBOARD_ROUTES = {
   GUEST: '/dashboard/guest',
   USER: '/dashboard/user',
   POINTS: '/points',
+  REFERRALS: '/referrals',
   SETTINGS: '/settings',
 } as const;
 
@@ -66,6 +68,12 @@ export const ADMIN_ROUTES = {
   FEE_ABSORPTION: '/admin/fee-absorption',
   CANCELLATION_RULES: '/admin/cancellation-rules',
   RBAC_SETTINGS: '/admin/rbac-settings',
+  RBAC_DEBUG: '/admin/rbac-debug',
+  ESCROW: '/admin/escrow',
+  HOST_REACTIVATION: '/host/reactivation',
+  PAYOUTS_DASHBOARD: '/admin/payouts',
+  MY_DISPUTES: '/my-disputes',
+  DISPUTE_DETAIL: '/my-disputes/:id',
 } as const;
 
 // ─── Legacy Redirects ───────────────────────────────────────────────────────

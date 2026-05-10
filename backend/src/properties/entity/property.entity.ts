@@ -39,6 +39,16 @@ export class Property {
   @Column({ type: 'varchar', length: 20, default: 'draft' })
   status: PropertyStatus;
 
+  // Stores the prior status before a host-cascade pause/archive, so we can
+  // restore on resume. Null when not under host-cascade.
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  previousStatus: PropertyStatus | null;
+
+  // True when the current status was set by a host pause/archive cascade
+  // (vs. an explicit owner action). Used to drive read-only behavior.
+  @Column({ type: 'boolean', default: false })
+  hostCascade: boolean;
+
   // Pricing
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   pricePerNight: number;
@@ -111,6 +121,9 @@ export class Property {
   // Media
   @Column({ type: 'json' })
   images: string[];
+
+  @Column({ type: 'json', nullable: true })
+  videos: string[];
 
   // Amenities & rules
   @Column({ type: 'json' })

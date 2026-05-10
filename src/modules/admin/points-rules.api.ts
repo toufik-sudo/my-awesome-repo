@@ -1,4 +1,6 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
+import type { Paginated, PaginationParams } from '@/modules/shared/types/pagination';
 
 const RULES_BASE = '/points-rules';
 
@@ -31,7 +33,6 @@ export interface PointsRule {
   updatedAt: string;
 }
 
-/** Actions available for points rules */
 export const POINTS_ACTIONS = [
   'booking_completed',
   'review_submitted',
@@ -51,26 +52,32 @@ export const POINTS_ACTIONS = [
 
 export const pointsRulesApi = {
   getAll: () =>
-    api.get<PointsRule[]>(RULES_BASE).then(r => r.data),
+    api.get<PointsRule[]>(RULES_BASE, rbac('pointsRulesApi.getAll.GET')).then(r => r.data),
+
+  getAllPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<PointsRule>>(RULES_BASE, {
+      ...rbac('pointsRulesApi.getAll.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
 
   getDefaults: () =>
-    api.get<PointsRule[]>(`${RULES_BASE}/defaults`).then(r => r.data),
+    api.get<PointsRule[]>(`${RULES_BASE}/defaults`, rbac('pointsRulesApi.getDefaults.GET')).then(r => r.data),
 
   getEarning: () =>
-    api.get<PointsRule[]>(`${RULES_BASE}/earning`).then(r => r.data),
+    api.get<PointsRule[]>(`${RULES_BASE}/earning`, rbac('pointsRulesApi.getEarning.GET')).then(r => r.data),
 
   getConversion: () =>
-    api.get<PointsRule[]>(`${RULES_BASE}/conversion`).then(r => r.data),
+    api.get<PointsRule[]>(`${RULES_BASE}/conversion`, rbac('pointsRulesApi.getConversion.GET')).then(r => r.data),
 
   getByRole: (role: 'guest' | 'manager') =>
-    api.get<PointsRule[]>(`${RULES_BASE}/role/${role}`).then(r => r.data),
+    api.get<PointsRule[]>(`${RULES_BASE}/role/${role}`, rbac('pointsRulesApi.getByRole.GET')).then(r => r.data),
 
   create: (data: Partial<PointsRule>) =>
-    api.post<PointsRule>(RULES_BASE, data).then(r => r.data),
+    api.post<PointsRule>(RULES_BASE, data, rbac('pointsRulesApi.create.POST')).then(r => r.data),
 
   update: (ruleId: string, data: Partial<PointsRule>) =>
-    api.put<PointsRule>(`${RULES_BASE}/${ruleId}`, data).then(r => r.data),
+    api.put<PointsRule>(`${RULES_BASE}/${ruleId}`, data, rbac('pointsRulesApi.update.PUT')).then(r => r.data),
 
   remove: (ruleId: string) =>
-    api.delete(`${RULES_BASE}/${ruleId}`),
+    api.delete(`${RULES_BASE}/${ruleId}`, rbac('pointsRulesApi.remove.DELETE')),
 };

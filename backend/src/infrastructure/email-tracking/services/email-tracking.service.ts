@@ -38,6 +38,9 @@ interface TemplateStats {
   clicked: number;
   openRate: number;
   ctr: number;
+  role?: string;
+  language?: string;
+  invitationKind?: string;
 }
 
 interface DailyStats {
@@ -60,6 +63,15 @@ interface LinkStats {
 export class EmailTrackingService {
   private readonly logger = new Logger(EmailTrackingService.name);
   private readonly backendUrl: string;
+  private readonly apiPrefix: string;
+  private readonly frontendUrl: string;
+  private readonly allowedRedirectHosts: Set<string>;
+
+  /** Strict tracking-ID format: 32 hex chars (matches generateTrackingId) */
+  private static readonly TRACKING_ID_REGEX = /^[a-f0-9]{32}$/i;
+
+  /** Schemes that may be redirected to. Anything else (javascript:, data:, vbscript:, file:, etc.) is blocked. */
+  private static readonly ALLOWED_REDIRECT_SCHEMES = new Set(['http:', 'https:']);
 
   constructor(
     @InjectRepository(EmailEvent)
@@ -69,7 +81,26 @@ export class EmailTrackingService {
     private readonly botDetection: BotDetectionService,
     private readonly config: ConfigService,
   ) {
-    this.backendUrl = this.config.get<string>('BACKEND_URL', 'http://localhost:3000');
+    const rawBackend = this.config.get<string>('HOST_ORIGIN_HOST', 'http://localhost:8095');
+    // Strip trailing slash
+    const base = rawBackend.replace(/\/$/, '');
+    // Ensure /api prefix is present (matches app.setGlobalPrefix('api') in main.ts)
+    this.backendUrl = base.endsWith('/api') ? base : `${base}/api`;
+    this.apiPrefix = '/api';
+
+    // Frontend URL — used as the safe redirect target after click tracking
+    const rawFrontend = this.config.get<string>('HOST_FRONTEND_URL', 'http://localhost:8080');
+    this.frontendUrl = rawFrontend.replace(/\/$/, '');
+
+    // Build allow-list of acceptable redirect hosts
+    this.allowedRedirectHosts = new Set<string>();
+    for (const url of [this.frontendUrl, rawBackend]) {
+      try {
+        this.allowedRedirectHosts.add(new URL(url).host.toLowerCase());
+      } catch {
+        // ignore malformed env values
+      }
+    }
   }
 
   // ─── Tracking Injection ──────────────────────────────────────────
@@ -97,7 +128,16 @@ export class EmailTrackingService {
         const tag = this.extractLinkTag(before + after, linkIndex);
         linkIndex++;
 
-        trackedLinks.push({ trackingId, originalUrl: url, tag });
+        // Normalize the original URL: if it accidentally points to the backend,
+        // rewrite it to the configured frontend host so post-click redirects
+        // land on the user-facing app, never on an API endpoint.
+        const safeUrl = this.normalizeOriginalUrl(url);
+        if (!safeUrl) {
+          // Unsafe URL (javascript:, data:, etc.) → leave the original anchor untouched.
+          return match;
+        }
+
+        trackedLinks.push({ trackingId, originalUrl: safeUrl, tag });
 
         const trackedUrl = `${this.backendUrl}/email-tracking/click?tid=${trackingId}`;
         return `<a ${before}href="${trackedUrl}"${after}>`;
@@ -127,6 +167,7 @@ export class EmailTrackingService {
     recipientEmail: string,
     subject: string,
     templateName?: string,
+    metadata?: Record<string, any>,
   ): Promise<void> {
     await this.eventRepo.save({
       messageId,
@@ -134,6 +175,7 @@ export class EmailTrackingService {
       recipientEmail,
       subject,
       templateName,
+      metadata,
     });
   }
 
@@ -169,8 +211,22 @@ export class EmailTrackingService {
     responseTimeMs?: number,
     jsVerified = false,
   ): Promise<{ redirectUrl: string } | null> {
+    // Reject malformed tracking IDs early — prevents SQL probing & enumeration noise
+    if (!trackingId || !EmailTrackingService.TRACKING_ID_REGEX.test(trackingId)) {
+      this.logger.warn(`Rejected click with invalid trackingId format: ${String(trackingId).slice(0, 64)}`);
+      return null;
+    }
+
     const link = await this.linkRepo.findOne({ where: { trackingId } });
     if (!link) return null;
+
+    // Re-validate the stored URL at redirect time (defense in depth) — even if
+    // a malicious URL somehow landed in the DB, we refuse to redirect to it.
+    const safeRedirect = this.normalizeOriginalUrl(link.originalUrl);
+    if (!safeRedirect) {
+      this.logger.error(`Refusing to redirect tracked link ${trackingId}: unsafe stored URL`);
+      return null;
+    }
 
     const botResult = this.botDetection.detect({
       userAgent,
@@ -199,7 +255,7 @@ export class EmailTrackingService {
       jsVerified,
     });
 
-    return { redirectUrl: link.originalUrl };
+    return { redirectUrl: safeRedirect };
   }
 
   async saveTrackedLinks(
@@ -294,17 +350,28 @@ export class EmailTrackingService {
   }
 
   private aggregateByTemplate(events: EmailEvent[]): TemplateStats[] {
-    const map = new Map<string, { sent: number; opened: number; clicked: number }>();
+    const map = new Map<string, { sent: number; opened: number; clicked: number; templateName: string; role?: string; language?: string; invitationKind?: string }>();
     for (const e of events) {
-      const tpl = e.templateName || 'unknown';
-      if (!map.has(tpl)) map.set(tpl, { sent: 0, opened: 0, clicked: 0 });
+      const role = e.metadata?.invitationRole || e.metadata?.role;
+      const language = e.metadata?.language;
+      const invitationKind = e.metadata?.invitationKind;
+      const tpl = [e.templateName || 'unknown', role || 'all-roles', language || 'all-languages', invitationKind || 'all-types'].join('::');
+      if (!map.has(tpl)) map.set(tpl, {
+        sent: 0,
+        opened: 0,
+        clicked: 0,
+        templateName: e.templateName || 'unknown',
+        role,
+        language,
+        invitationKind,
+      });
       const s = map.get(tpl)!;
       if (e.eventType === 'sent') s.sent++;
       if (e.eventType === 'opened' && !e.isBot) s.opened++;
       if (e.eventType === 'clicked' && !e.isBot) s.clicked++;
     }
-    return Array.from(map.entries()).map(([templateName, s]) => ({
-      templateName,
+    return Array.from(map.values()).map((s) => ({
+      templateName: s.templateName,
       ...s,
       openRate: s.sent > 0 ? (s.opened / s.sent) * 100 : 0,
       ctr: s.opened > 0 ? (s.clicked / s.opened) * 100 : 0,
@@ -358,5 +425,73 @@ export class EmailTrackingService {
     const classMatch = attrs.match(/class=["']([^"']+)["']/i);
     if (classMatch) return classMatch[1];
     return `link_${index}`;
+  }
+  /**
+   * Encode common HTML entities in a string to prevent breaking the HTML structure when inserting tracking pixels or links. This is a basic implementation and can be expanded as needed.
+   */
+  private decodeHtmlEntities(str: string): string {
+    return str
+      .replace(/&amp;/g, '&')
+      .replace(/&#x3D;/g, '=')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+
+  /**
+   * Validate and normalize a URL extracted from an email body before we
+   * either store it as a tracked redirect target or serve it as a 302.
+   *
+   * Security rules:
+   *  - Must parse as a valid absolute URL
+   *  - Scheme must be http or https (blocks `javascript:`, `data:`,
+   *    `vbscript:`, `file:`, etc. — i.e. any XSS / script-injection vector)
+   *  - No embedded credentials (`user:pass@host`)
+   *  - No control characters or whitespace
+   *  - If the URL points to the backend host, rewrite it to the configured
+   *    frontend host so post-tracking redirects always land on the user-facing app
+   *
+   * Returns the safe URL string, or null if the URL must be rejected.
+   */
+  private normalizeOriginalUrl(rawUrl: string): string | null {
+    if (typeof rawUrl !== 'string') return null;
+    const trimmed = this.decodeHtmlEntities(rawUrl.trim());
+    if (!trimmed || trimmed.length > 2000) return null;
+    // Reject control chars / whitespace inside the URL (CRLF injection, etc.)
+    if (/[\u0000-\u001F\u007F\s]/.test(trimmed)) return null;
+
+    let parsed: URL;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      return null;
+    }
+
+    if (!EmailTrackingService.ALLOWED_REDIRECT_SCHEMES.has(parsed.protocol)) {
+      this.logger.warn(`Blocked unsafe URL scheme in tracked link: ${parsed.protocol}`);
+      return null;
+    }
+    if (parsed.username || parsed.password) {
+      this.logger.warn('Blocked tracked link containing embedded credentials');
+      return null;
+    }
+
+    // If the link accidentally points at the backend host, swap it for the
+    // frontend host. This handles cases where invitation/signup URLs were
+    // generated with the backend base URL.
+    try {
+      const backendHost = new URL(this.backendUrl.replace(/\/api$/, '')).host.toLowerCase();
+      if (parsed.host.toLowerCase() === backendHost) {
+        const frontend = new URL(this.frontendUrl);
+        parsed.protocol = frontend.protocol;
+        parsed.host = frontend.host;
+        parsed.port = frontend.port;
+      }
+    } catch {
+      // ignore — fall through with the original parsed URL
+    }
+
+    return parsed.toString();
   }
 }

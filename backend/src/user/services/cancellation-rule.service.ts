@@ -26,6 +26,13 @@ export class CancellationRuleService {
     });
   }
 
+  /** Get all cancellation rules across all hosts (hyper admin only) */
+  async getAll(): Promise<CancellationRule[]> {
+    return this.ruleRepo.find({
+      order: { hostUserId: 'ASC', createdAt: 'DESC' },
+    });
+  }
+
   async create(userId: number, data: Partial<CancellationRule>): Promise<CancellationRule> {
     await this.assertHostRole(userId);
     const rule = this.ruleRepo.create({ ...data, hostUserId: userId });

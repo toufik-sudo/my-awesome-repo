@@ -11,6 +11,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import { ErrorBoundary } from "@/modules/shared/components/ErrorBoundary";
+import { RbacBootstrap } from "@/components/RbacBootstrap";
 import { Routes } from "@/routes/Routes";
 import { initRBACInterceptor } from "@/lib/rbac-interceptor";
 import '@/i18n/config';
@@ -34,7 +35,9 @@ const App = () => (
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
-                      <Routes />
+                      <RbacBootstrap>
+                        <Routes />
+                      </RbacBootstrap>
                     </BrowserRouter>
                   </TooltipProvider>
                 </NavigationProvider>

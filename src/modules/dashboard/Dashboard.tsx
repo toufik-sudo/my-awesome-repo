@@ -19,6 +19,7 @@ import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { ErrorBoundary } from '@/modules/shared/components/ErrorBoundary';
 import { PointsDashboardWidget } from '@/modules/points/PointsDashboardWidget';
 import { useDashboard } from './useDashboard';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { format, parseISO } from 'date-fns';
 import { BookingDetailModal } from './components/BookingDetailModal';
 import { PropertyDetailModal } from './components/PropertyDetailModal';
@@ -40,6 +41,7 @@ export const Dashboard = memo(() => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data, loading, error, refetch } = useDashboard();
+  const { can } = useRoleAccess('Dashboard');
 
   // Modal states
   const [selectedBooking, setSelectedBooking] = useState<RecentBooking | null>(null);
@@ -47,20 +49,9 @@ export const Dashboard = memo(() => {
   const [selectedRequest, setSelectedRequest] = useState<HostRequest | null>(null);
   const [createUserOpen, setCreateUserOpen] = useState(false);
 
-  const canAddProperty = useMemo(() => {
-    if (!user?.role) return false;
-    return ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(user.role);
-  }, [user]);
-
-  const canManageBookings = useMemo(() => {
-    if (!user?.role) return false;
-    return ['hyper_admin', 'admin', 'hyper_manager', 'manager'].includes(user.role);
-  }, [user]);
-
-  const canCreateUsers = useMemo(() => {
-    if (!user?.role) return false;
-    return ['hyper_admin', 'hyper_manager'].includes(user.role);
-  }, [user]);
+  const canAddProperty = can('Properties', 'Button', 'Add');
+  const canManageBookings = can('Bookings', 'Button', 'Manage');
+  const canCreateUsers = can('Users', 'Button', 'Create');
 
   const createUserRoles = useMemo(() => {
     if (!user?.role) return [] as import('@/modules/admin/admin.types').AppRole[];

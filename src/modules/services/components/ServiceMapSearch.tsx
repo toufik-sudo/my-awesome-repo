@@ -173,13 +173,17 @@ export const ServiceMapSearch: React.FC<ServiceMapSearchProps> = ({
         .setLngLat([service.longitude!, service.latitude!])
         .addTo(map.current!);
 
-      markerEl.addEventListener('click', (e) => {
+      const showPopup = (e: Event) => {
         e.stopPropagation();
-        document.querySelectorAll('.maplibregl-popup').forEach(p => p.classList.add('hidden-marker'));
+        // Close other popups and deactivate other markers
+        popups.current.forEach(p => p.remove());
         document.querySelectorAll('.custom-marker.active-marker').forEach(m => m.classList.remove('active-marker'));
         popup.setLngLat([service.longitude!, service.latitude!]).addTo(map.current!);
         markerEl.className = 'custom-marker active-marker';
-      });
+      };
+
+      markerEl.addEventListener('click', showPopup);
+      markerEl.addEventListener('mouseenter', showPopup);
 
       markers.current.push(marker);
     });

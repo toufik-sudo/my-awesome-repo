@@ -32,9 +32,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import { statsApi, type AdminStats } from '../admin.api';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export const AdminDashboard: React.FC = React.memo(() => {
   const navigate = useNavigate();
+  const { can } = useRoleAccess('AdminDashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -217,18 +219,26 @@ export const AdminDashboard: React.FC = React.memo(() => {
                   <p className="text-sm text-muted-foreground mt-1">Manage your properties and team</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => setInviteOpen(true)} className="gap-2">
-                    <UserPlus className="h-4 w-4" /> Invite Manager
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate('/properties/new')} className="gap-2">
-                    <PlusCircle className="h-4 w-4" /> Add Property
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate('/services/new')} className="gap-2">
-                    <PlusCircle className="h-4 w-4" /> Add Service
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate('/properties')} className="gap-2">
-                    <Building2 className="h-4 w-4" /> My Properties
-                  </Button>
+                  {can('QuickActions', 'Button', 'InviteManager') && (
+                    <Button onClick={() => setInviteOpen(true)} className="gap-2">
+                      <UserPlus className="h-4 w-4" /> Invite Manager
+                    </Button>
+                  )}
+                  {can('QuickActions', 'Button', 'AddProperty') && (
+                    <Button variant="outline" onClick={() => navigate('/properties/new')} className="gap-2">
+                      <PlusCircle className="h-4 w-4" /> Add Property
+                    </Button>
+                  )}
+                  {can('QuickActions', 'Button', 'AddService') && (
+                    <Button variant="outline" onClick={() => navigate('/services/new')} className="gap-2">
+                      <PlusCircle className="h-4 w-4" /> Add Service
+                    </Button>
+                  )}
+                  {can('QuickActions', 'Button', 'MyProperties') && (
+                    <Button variant="outline" onClick={() => navigate('/properties')} className="gap-2">
+                      <Building2 className="h-4 w-4" /> My Properties
+                    </Button>
+                  )}
                 </div>
               </div>
             </GlassCard>
@@ -296,11 +306,13 @@ export const AdminDashboard: React.FC = React.memo(() => {
               <p className="text-muted-foreground mt-1">Manage your properties, teams, and verifications</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setInviteOpen(true)} size="lg" className="gap-2 shadow-lg shadow-primary/20">
-              <UserPlus className="h-5 w-5" /> Invite
-            </Button>
-          </div>
+          {can('Header', 'Button', 'Invite') && (
+            <div className="flex gap-2">
+              <Button onClick={() => setInviteOpen(true)} size="lg" className="gap-2 shadow-lg shadow-primary/20">
+                <UserPlus className="h-5 w-5" /> Invite
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

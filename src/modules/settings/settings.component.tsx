@@ -12,8 +12,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProfileForm } from './ProfileForm';
 import { NotificationPreferences } from './NotificationPreferences';
 import { AlertsSettings } from './AlertsSettings';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export const Settings: React.FC = () => {
+  const { can } = useRoleAccess('SettingsPage');
   const { t } = useTranslation();
   const { user } = useAuth();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
@@ -161,11 +163,11 @@ export const Settings: React.FC = () => {
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="profile">{t('settings.tabs.profile')}</TabsTrigger>
-            <TabsTrigger value="preferences">{t('settings.tabs.preferences')}</TabsTrigger>
-            <TabsTrigger value="notifications">{t('settings.tabs.notifications')}</TabsTrigger>
-            <TabsTrigger value="alerts">{t('settings.tabs.alerts', 'Alertes')}</TabsTrigger>
-            <TabsTrigger value="account">{t('settings.tabs.account')}</TabsTrigger>
+            {can('Profile', 'Tab', 'View') && <TabsTrigger value="profile">{t('settings.tabs.profile')}</TabsTrigger>}
+            {can('Preferences', 'Tab', 'View') && <TabsTrigger value="preferences">{t('settings.tabs.preferences')}</TabsTrigger>}
+            {can('Notifications', 'Tab', 'View') && <TabsTrigger value="notifications">{t('settings.tabs.notifications')}</TabsTrigger>}
+            {can('Alerts', 'Tab', 'View') && <TabsTrigger value="alerts">{t('settings.tabs.alerts', 'Alertes')}</TabsTrigger>}
+            {can('Account', 'Tab', 'View') && <TabsTrigger value="account">{t('settings.tabs.account')}</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="profile">

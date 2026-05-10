@@ -2,10 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ScopeContext } from '../../../rbac/scope-context';
 import { Repository } from 'typeorm';
-import { Badge, UserBadge } from '../entity/badge.entity';
+import { Badge, BadgeUser } from '../entity/badge.entity';
 import { UserPoints, PointTransaction } from '../entity/user-points.entity';
 
-/** Default badges seeded on first run */
 const DEFAULT_BADGES: Partial<Badge>[] = [
   { code: 'first_booking', name: { fr: 'Première réservation', en: 'First Booking', ar: 'أول حجز' }, description: { fr: 'Complétez votre première réservation', en: 'Complete your first booking', ar: 'أكمل حجزك الأول' }, icon: '🎯', category: 'booking', actionRequired: 'booking_completed', actionCountRequired: 1, bonusPoints: 50, sortOrder: 1 },
   { code: 'explorer_5', name: { fr: 'Explorateur', en: 'Explorer', ar: 'مستكشف' }, description: { fr: '5 réservations complétées', en: '5 bookings completed', ar: '5 حجوزات مكتملة' }, icon: '🧭', category: 'booking', actionRequired: 'booking_completed', actionCountRequired: 5, bonusPoints: 100, sortOrder: 2 },
@@ -28,7 +27,7 @@ export class BadgeService {
 
   constructor(
     @InjectRepository(Badge) private readonly badgeRepo: Repository<Badge>,
-    @InjectRepository(UserBadge) private readonly userBadgeRepo: Repository<UserBadge>,
+    @InjectRepository(BadgeUser) private readonly badgeUserRepo: Repository<BadgeUser>,
     @InjectRepository(UserPoints) private readonly pointsRepo: Repository<UserPoints>,
     @InjectRepository(PointTransaction) private readonly transRepo: Repository<PointTransaction>,
   ) {
@@ -44,21 +43,18 @@ export class BadgeService {
     this.logger.log(`Seeded ${DEFAULT_BADGES.length} default badges`);
   }
 
-  /** Get all badges with user unlock status */
   async getAllBadges(_scopeCtx?: ScopeContext): Promise<Badge[]> {
     return this.badgeRepo.find({ where: { isActive: true }, order: { sortOrder: 'ASC' } });
   }
 
-  /** Get user's unlocked badges */
-  async getUserBadges(userId: number, _scopeCtx?: ScopeContext): Promise<UserBadge[]> {
-    return this.userBadgeRepo.find({ where: { userId }, relations: ['badge'], order: { unlockedAt: 'DESC' } });
+  async getUserBadges(userId: number, _scopeCtx?: ScopeContext): Promise<BadgeUser[]> {
+    return this.badgeUserRepo.find({ where: { userId }, relations: ['badge'], order: { unlockedAt: 'DESC' } });
   }
 
-  /** Check and unlock badges after points change or action */
-  async checkAndUnlock(userId: number, action?: string, _scopeCtx?: ScopeContext): Promise<UserBadge[]> {
-    const unlocked: UserBadge[] = [];
+  async checkAndUnlock(userId: number, _scopeCtx?: ScopeContext): Promise<BadgeUser[]> {
+    const unlocked: BadgeUser[] = [];
     const allBadges = await this.badgeRepo.find({ where: { isActive: true } });
-    const existingBadges = await this.userBadgeRepo.find({ where: { userId } });
+    const existingBadges = await this.badgeUserRepo.find({ where: { userId } });
     const existingCodes = new Set(existingBadges.map(ub => ub.badge?.code || ub.badgeId));
 
     const userPoints = await this.pointsRepo.findOne({ where: { userId } });
@@ -69,12 +65,10 @@ export class BadgeService {
 
       let qualified = false;
 
-      // Points threshold check
       if (badge.pointsThreshold > 0 && lifetimePoints >= badge.pointsThreshold) {
         qualified = true;
       }
 
-      // Action count check
       if (badge.actionRequired && badge.actionCountRequired > 0) {
         const actionCount = await this.transRepo.count({
           where: { userId, action: badge.actionRequired as any },
@@ -85,10 +79,8 @@ export class BadgeService {
       }
 
       if (qualified) {
-        const userBadge = this.userBadgeRepo.create({
-          userId, badgeId: badge.id, user: { id: userId } as any,
-        });
-        const saved = await this.userBadgeRepo.save(userBadge);
+        const bu = this.badgeUserRepo.create({ userId, badgeId: badge.id });
+        const saved = await this.badgeUserRepo.save(bu);
         saved.badge = badge;
         unlocked.push(saved);
         this.logger.log(`Badge "${badge.code}" unlocked for user ${userId}`);
@@ -98,10 +90,9 @@ export class BadgeService {
     return unlocked;
   }
 
-  /** Get badge progress for a user */
   async getBadgeProgress(userId: number, _scopeCtx?: ScopeContext): Promise<Array<{ badge: Badge; progress: number; total: number; unlocked: boolean }>> {
     const allBadges = await this.badgeRepo.find({ where: { isActive: true }, order: { sortOrder: 'ASC' } });
-    const userBadges = await this.userBadgeRepo.find({ where: { userId } });
+    const userBadges = await this.badgeUserRepo.find({ where: { userId } });
     const unlockedIds = new Set(userBadges.map(ub => ub.badgeId));
 
     const userPoints = await this.pointsRepo.findOne({ where: { userId } });

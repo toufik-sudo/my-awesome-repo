@@ -37,7 +37,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   private logger = new Logger(UserService.name);
   private pwdHash: string = process.env.PASSWORD_HASH;
@@ -133,7 +133,7 @@ export class UserService {
     }
   }
 
-  async createUserOtp(createUserRequestDto: CreateUserRequestDto){
+  async createUserOtp(createUserRequestDto: CreateUserRequestDto) {
     await this.checkCreateUserDto(createUserRequestDto);
     return Math.random().toString(36).substring(2);
   }
@@ -141,22 +141,12 @@ export class UserService {
   async createUser(createUserRequestDto: CreateUserRequestDto) {
     const otp = await this.createUserOtp(createUserRequestDto);
     const userEntity = new User();
-    // userEntity.firstName = createUserRequestDto.firstName;
-    // userEntity.lastName = createUserRequestDto.lastName;
-    // userEntity.phoneNbr = createUserRequestDto.phoneNbr;
-    // userEntity.address = createUserRequestDto.address;
-    // userEntity.zipcode = createUserRequestDto.zipcode;
-    // userEntity.country = createUserRequestDto.country;
-    // userEntity.cardId = createUserRequestDto.cardId;
-    // userEntity.passportId = createUserRequestDto.passportId;
-    // userEntity.secondPhoneNbr = createUserRequestDto.secondPhoneNbr;
-    // userEntity.city = createUserRequestDto.city;
-    // userEntity.title = createUserRequestDto.title;
-    // userEntity.email = createUserRequestDto.email;
     Object.assign(userEntity, createUserRequestDto);
     userEntity.role = (createUserRequestDto.role as any) || 'user';
     const pswd = this.decodePassword(createUserRequestDto.password);
     userEntity.password = await this.hashPassword(pswd);
+    console.log('Decoded password in createUser:', `"${pswd}"`);
+    console.log('hashed password :', `"${userEntity.password}"`); // Debug log to check hashed password
     const today = new Date();
     const token =
       (createUserRequestDto.phoneNbr || Math.random().toString(36)) +
@@ -176,7 +166,7 @@ export class UserService {
     // User is just created but not activated
     userEntity.isActive = false;
     // Save the created user
-    await this.saveUser(userEntity, USER_CREATED_OK, USER_CREATED_KO);
+    return await this.saveUser(userEntity, USER_CREATED_OK, USER_CREATED_KO);
   }
 
   async saveUser(user: User, userStatusOk: string, userStatusKo: string) {
@@ -189,6 +179,7 @@ export class UserService {
       await this.usersRepository.save(newUser);
       saveUserResponseDto.message = userStatusOk;
       saveUserResponseDto.code = HttpStatus.CREATED;
+      saveUserResponseDto.id = newUser.id;
       return saveUserResponseDto;
     } catch (error) {
       throw new HttpException(userStatusKo, HttpStatus.INTERNAL_SERVER_ERROR, {
@@ -201,7 +192,7 @@ export class UserService {
   async findUserById(id: number): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { id } });
   }
-  
+
   async findUserByPhoneNbr(phoneNbr: string): Promise<User[] | undefined> {
     // Fetch user by username from the database
     const users: User[] = await this.usersRepository.findBy({

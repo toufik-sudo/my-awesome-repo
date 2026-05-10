@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useServiceDetail } from '@/modules/services/services.hooks';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { CATEGORY_ICONS } from '@/modules/services/services.constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,10 @@ const ServiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { canModifyService, canMakeBooking } = usePermissions();
+  const { can } = useRoleAccess('ServiceDetailPage');
+  const canModifyService = can('Actions', 'Button', 'Edit');
+  const canDuplicateService = can('Actions', 'Button', 'Duplicate');
+  const canMakeBooking = can('Booking', 'Button', 'View');
   const lang = i18n.language?.split('-')[0] || 'fr';
   const { data: service, isLoading } = useServiceDetail(id || '');
 

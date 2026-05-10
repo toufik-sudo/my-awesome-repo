@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Calendar, MapPin, Users, Clock, CheckCircle2, XCircle, AlertCircle,
-  Loader2, ArrowLeft, Eye, DollarSign, MessageSquare, Send,
+  Loader2, ArrowLeft, Eye, DollarSign, MessageSquare, Send, CreditCard, Archive, Timer, X,
 } from 'lucide-react';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -24,37 +24,63 @@ import {
 } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 
-import { useHostBookings, useAcceptBooking, useDeclineBooking, useCounterOfferBooking } from '../bookings.hooks';
+import { useHostBookingsPaginated, useAcceptBooking, useDeclineBooking, useCounterOfferBooking, useCancelBooking } from '../bookings.hooks';
+import { ServerPagination } from '@/modules/shared/components/ServerPagination';
 import type { BookingResponse } from '../bookings.api';
 
 type BookingStatus = BookingResponse['status'];
 
-const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
-  pending: { icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100 dark:bg-amber-900/30' },
-  confirmed: { icon: CheckCircle2, color: 'text-emerald-600', bgColor: 'bg-emerald-100 dark:bg-emerald-900/30' },
-  completed: { icon: CheckCircle2, color: 'text-primary', bgColor: 'bg-primary/10' },
-  cancelled: { icon: XCircle, color: 'text-destructive', bgColor: 'bg-destructive/10' },
-  rejected: { icon: XCircle, color: 'text-destructive', bgColor: 'bg-destructive/10' },
-  counter_offer: { icon: DollarSign, color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
+const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bgColor: string; label: string }> = {
+  pending:       { icon: Clock,        color: 'text-amber-600',     bgColor: 'bg-amber-100 dark:bg-amber-900/30',     label: 'Pending' },
+  accepted:      { icon: CreditCard,   color: 'text-blue-600',      bgColor: 'bg-blue-100 dark:bg-blue-900/30',       label: 'Awaiting Payment' },
+  confirmed:     { icon: CheckCircle2, color: 'text-emerald-600',   bgColor: 'bg-emerald-100 dark:bg-emerald-900/30', label: 'Confirmed' },
+  completed:     { icon: CheckCircle2, color: 'text-primary',       bgColor: 'bg-primary/10',                         label: 'Completed' },
+  cancelled:     { icon: XCircle,      color: 'text-destructive',   bgColor: 'bg-destructive/10',                     label: 'Cancelled' },
+  rejected:      { icon: XCircle,      color: 'text-destructive',   bgColor: 'bg-destructive/10',                     label: 'Rejected' },
+  counter_offer: { icon: DollarSign,   color: 'text-blue-600',      bgColor: 'bg-blue-100 dark:bg-blue-900/30',       label: 'Counter Offer' },
+  archived:      { icon: Archive,      color: 'text-muted-foreground', bgColor: 'bg-muted',                           label: 'Archived' },
 };
+
+function formatCountdown(target: string | null | undefined): string | null {
+  if (!target) return null;
+  const ms = new Date(target).getTime() - Date.now();
+  if (ms <= 0) return 'expired';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
+}
 
 export const HostBookings: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { canAcceptBookings, canRejectBookings, canRefundUsers } = usePermissions();
+  const { can } = useRoleAccess('HostBookings');
+  const canAcceptBookings = can('Actions', 'Button', 'Accept');
+  const canRejectBookings = can('Actions', 'Button', 'Reject');
+  const canCounterOffer = can('Actions', 'Button', 'CounterOffer');
   const [activeTab, setActiveTab] = useState('pending');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [declineDialog, setDeclineDialog] = useState<BookingResponse | null>(null);
   const [declineReason, setDeclineReason] = useState('');
   const [counterDialog, setCounterDialog] = useState<BookingResponse | null>(null);
   const [counterPrice, setCounterPrice] = useState('');
   const [counterMessage, setCounterMessage] = useState('');
 
-  const { data: bookings = [], isLoading } = useHostBookings(
-    activeTab !== 'all' ? { status: activeTab } : {}
-  );
+  const [cancelDialog, setCancelDialog] = useState<BookingResponse | null>(null);
+
+  // Reset to page 1 when changing tab/page-size
+  React.useEffect(() => { setPage(1); }, [activeTab, pageSize]);
+
+  const { data: bookingsPage, isLoading, isFetching } = useHostBookingsPaginated({
+    ...(activeTab !== 'all' ? { status: activeTab } : {}),
+    page,
+    limit: pageSize,
+  });
+  const bookings: BookingResponse[] = bookingsPage?.data ?? [];
   const acceptMutation = useAcceptBooking();
   const declineMutation = useDeclineBooking();
   const counterMutation = useCounterOfferBooking();
+  const cancelMutation = useCancelBooking();
 
   const handleAccept = useCallback((booking: BookingResponse) => {
     acceptMutation.mutate({ id: booking.id, propertyId: booking.propertyId });
@@ -84,11 +110,19 @@ export const HostBookings: React.FC = () => {
     setCounterMessage('');
   }, [counterDialog, counterPrice, counterMessage, counterMutation]);
 
+  const handleCancel = useCallback(() => {
+    if (!cancelDialog) return;
+    cancelMutation.mutate(cancelDialog.id);
+    setCancelDialog(null);
+  }, [cancelDialog, cancelMutation]);
+
   const tabs = [
     { value: 'all', label: 'All' },
     { value: 'pending', label: 'Pending' },
+    { value: 'accepted', label: 'Awaiting Payment' },
     { value: 'confirmed', label: 'Confirmed' },
     { value: 'completed', label: 'Completed' },
+    { value: 'archived', label: 'Archived' },
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
@@ -144,6 +178,12 @@ export const HostBookings: React.FC = () => {
               const StatusIcon = cfg.icon;
               const nights = booking.numberOfNights || differenceInDays(parseISO(booking.checkOutDate), parseISO(booking.checkInDate));
               const isPending = booking.status === 'pending';
+              const isAccepted = booking.status === 'accepted';
+              const acceptCountdown = isPending ? formatCountdown(booking.acceptDeadlineAt) : null;
+              const paymentCountdown = isAccepted ? formatCountdown(booking.paymentDeadlineAt) : null;
+              const acceptDeadlinePassed = isPending && booking.acceptDeadlineAt && new Date(booking.acceptDeadlineAt).getTime() < Date.now();
+              // Host can cancel a confirmed booking before check-in
+              const canHostCancel = booking.status === 'confirmed' && new Date(booking.checkInDate).getTime() > Date.now();
 
               return (
                 <Card key={booking.id} className="overflow-hidden border-border/60 hover:shadow-md transition-shadow">
@@ -159,7 +199,7 @@ export const HostBookings: React.FC = () => {
                           />
                           <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bgColor} ${cfg.color}`}>
                             <StatusIcon className="h-3.5 w-3.5" />
-                            {booking.status}
+                            {cfg.label}
                           </div>
                         </div>
                       )}
@@ -240,36 +280,82 @@ export const HostBookings: React.FC = () => {
                           </p>
                         )}
 
-                        {/* Actions for pending bookings */}
-                        {isPending && (
+                        {/* Lifecycle banners */}
+                        {isPending && acceptCountdown && !acceptDeadlinePassed && (
+                          <div className="mt-3 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+                            <Timer className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>Respond to this request — <span className="font-semibold">{acceptCountdown}</span></span>
+                          </div>
+                        )}
+                        {acceptDeadlinePassed && (
+                          <div className="mt-3 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>Acceptance deadline expired (48h). Guest may cancel without penalty.</span>
+                          </div>
+                        )}
+                        {isAccepted && (
+                          <div className="mt-3 flex items-center gap-2 rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+                            <CreditCard className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>
+                              Awaiting guest payment
+                              {paymentCountdown && <span className="font-semibold"> · {paymentCountdown}</span>}
+                            </span>
+                          </div>
+                        )}
+                        {booking.status === 'archived' && (
+                          <div className="mt-3 flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
+                            <Archive className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span>Auto-archived — guest didn't pay within 24h of acceptance.</span>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        {(isPending || canHostCancel) && (
                           <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/50">
-                            <Button
-                              size="sm"
-                              onClick={() => handleAccept(booking)}
-                              disabled={acceptMutation.isPending}
-                              className="gap-1"
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Accept
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setCounterDialog(booking)}
-                              className="gap-1"
-                            >
-                              <DollarSign className="h-3.5 w-3.5" />
-                              Counter-Offer
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => setDeclineDialog(booking)}
-                              className="gap-1"
-                            >
-                              <XCircle className="h-3.5 w-3.5" />
-                              Decline
-                            </Button>
+                            {isPending && canAcceptBookings && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAccept(booking)}
+                                disabled={acceptMutation.isPending}
+                                className="gap-1"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Accept
+                              </Button>
+                            )}
+                            {isPending && canCounterOffer && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCounterDialog(booking)}
+                                className="gap-1"
+                              >
+                                <DollarSign className="h-3.5 w-3.5" />
+                                Counter-Offer
+                              </Button>
+                            )}
+                            {isPending && canRejectBookings && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setDeclineDialog(booking)}
+                                className="gap-1"
+                              >
+                                <XCircle className="h-3.5 w-3.5" />
+                                Decline
+                              </Button>
+                            )}
+                            {canHostCancel && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setCancelDialog(booking)}
+                                className="gap-1"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                                Cancel
+                              </Button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -279,6 +365,18 @@ export const HostBookings: React.FC = () => {
               );
             })}
           </div>
+        )}
+
+        {bookingsPage && bookingsPage.total > 0 && (
+          <ServerPagination
+            page={bookingsPage.page}
+            limit={bookingsPage.limit}
+            total={bookingsPage.total}
+            totalPages={bookingsPage.totalPages}
+            onPageChange={setPage}
+            onLimitChange={setPageSize}
+            isLoading={isFetching}
+          />
         )}
       </div>
 
@@ -348,6 +446,28 @@ export const HostBookings: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel confirmed booking */}
+      <AlertDialog open={!!cancelDialog} onOpenChange={(o) => { if (!o) setCancelDialog(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this confirmed booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The guest will be notified and refunded according to the cancellation policy. This may affect your reliability score.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelMutation.isPending}>Keep Booking</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              disabled={cancelMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Cancelling...</> : 'Yes, Cancel'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

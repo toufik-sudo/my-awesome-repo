@@ -19,6 +19,7 @@ import {
   Banknote,
   Copy,
 } from 'lucide-react';
+import { LocationPicker } from '@/components/maps/LocationPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,6 +57,8 @@ import {
 } from '@/types/verification.types';
 import { PricingPaymentStep, PricingData, INITIAL_PRICING_DATA } from '@/modules/admin/components/PricingPaymentStep';
 import { propertiesApi, type PropertyCreatePayload } from '@/modules/properties/properties.api';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { reverseGeocode } from '@/utils/geocode';
 
 const PROPERTY_TYPES = [
   { value: 'apartment', label: 'Apartment' },
@@ -84,6 +87,8 @@ interface PropertyFormData {
   address: string;
   city: string;
   wilaya: string;
+  latitude: string;
+  longitude: string;
   maxGuests: string;
   bedrooms: string;
   bathrooms: string;
@@ -146,6 +151,7 @@ export const AddPropertyWizard: React.FC = () => {
   const isDuplicateMode = !!duplicateFromId;
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { can } = useRoleAccess('AddPropertyWizard');
 
   // Load draft from localStorage for new properties (not edit mode)
   const draft = useMemo(() => (!isEditMode && !isDuplicateMode) ? loadDraft() : null, []);
@@ -175,6 +181,8 @@ export const AddPropertyWizard: React.FC = () => {
     address: '',
     city: '',
     wilaya: '',
+    latitude: '',
+    longitude: '',
     maxGuests: '',
     bedrooms: '',
     bathrooms: '',
@@ -227,6 +235,8 @@ export const AddPropertyWizard: React.FC = () => {
         address: p.location?.address || p.address || '',
         city: p.location?.city || p.city || '',
         wilaya: p.wilaya || '',
+        latitude: String(p.location?.latitude || p.latitude || ''),
+        longitude: String(p.location?.longitude || p.longitude || ''),
         maxGuests: String(p.guests || p.maxGuests || ''),
         bedrooms: String(p.bedrooms || ''),
         bathrooms: String(p.bathrooms || ''),
@@ -386,6 +396,8 @@ export const AddPropertyWizard: React.FC = () => {
     address: formData.address,
     city: formData.city,
     wilaya: formData.wilaya,
+    latitude: parseFloat(formData.latitude) || undefined,
+    longitude: parseFloat(formData.longitude) || undefined,
     maxGuests: parseInt(formData.maxGuests) || 1,
     bedrooms: parseInt(formData.bedrooms) || 0,
     bathrooms: parseInt(formData.bathrooms) || 0,
@@ -576,6 +588,88 @@ export const AddPropertyWizard: React.FC = () => {
                       </Select>
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Latitude</Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formData.latitude}
+                        onChange={(e) => updateField('latitude', e.target.value)}
+                        placeholder="e.g. 36.7538"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Longitude</Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={formData.longitude}
+                        onChange={(e) => updateField('longitude', e.target.value)}
+                        placeholder="e.g. 3.0588"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!navigator.geolocation) {
+                        toast.error('Geolocation is not supported by your browser');
+                        return;
+                      }
+                      navigator.geolocation.getCurrentPosition(
+                        async pos => {
+                          const lat = pos.coords.latitude;
+                          const lng = pos.coords.longitude;
+                          updateField('latitude', String(lat));
+                          updateField('longitude', String(lng));
+                          toast.success('Location detected');
+                          // Reverse-geocode to autofill address fields
+                          const geo = await reverseGeocode(lat, lng);
+                          if (geo) {
+                            setFormData(prev => ({
+                              ...prev,
+                              address: prev.address || geo.address,
+                              city: prev.city || geo.city,
+                              wilaya: prev.wilaya || (WILAYAS.includes(geo.wilaya) ? geo.wilaya : prev.wilaya),
+                            }));
+                            toast.success('Address autofilled');
+                          }
+                        },
+                        err => toast.error(`Unable to get location: ${err.message}`),
+                        { enableHighAccuracy: true, timeout: 10000 },
+                      );
+                    }}
+                  >
+                    📍 Detect my location
+                  </Button>
+                  {formData.latitude && formData.longitude && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        💡 Drag the pin or click on the map to fine-tune the exact location.
+                      </p>
+                      <LocationPicker
+                        latitude={parseFloat(formData.latitude)}
+                        longitude={parseFloat(formData.longitude)}
+                        height={240}
+                        onChange={async ({ lat, lng }) => {
+                          updateField('latitude', String(lat));
+                          updateField('longitude', String(lng));
+                          const geo = await reverseGeocode(lat, lng);
+                          if (geo) {
+                            setFormData(prev => ({
+                              ...prev,
+                              address: geo.address || prev.address,
+                              city: geo.city || prev.city,
+                              wilaya: WILAYAS.includes(geo.wilaya) ? geo.wilaya : prev.wilaya,
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <Separator />

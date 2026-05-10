@@ -129,6 +129,24 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  // ─── Sanction lifecycle (escrow / dispute fallout) ────────────────────
+
+  /** Set when the host is suspended for unpaid platform debts or severe disputes. */
+  @Column({ type: 'datetime', nullable: true })
+  suspendedAt: Date;
+
+  /** Reason free-text shown in admin UI. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  suspendedReason: string;
+
+  /** Set when properties/services are archived after the grace period elapses. */
+  @Column({ type: 'datetime', nullable: true })
+  archivedAt: Date;
+
+  /** Outstanding amount the host must pay to be reactivated (debts + penalty). */
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  reactivationDueAmount: number;
+
   // ─── Helper methods ───────────────────────────────────────────────────
 
   getRole(): AppRole {

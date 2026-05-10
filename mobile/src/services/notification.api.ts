@@ -10,9 +10,17 @@ export interface NotificationItem {
   type?: 'info' | 'success' | 'warning' | 'error';
 }
 
+export interface PaginatedNotifications {
+  data: NotificationItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const notificationApi = {
   /**
-   * Get all notifications
+   * Get all notifications (legacy non-paginated; kept for backward compat).
    */
   async getAll(): Promise<NotificationItem[]> {
     try {
@@ -22,6 +30,24 @@ export const notificationApi = {
       console.error('Failed to fetch notifications:', error);
       return [];
     }
+  },
+
+  /**
+   * Server-side paginated list. Defaults: page=1, limit=20, max=100.
+   */
+  async getAllPaginated(params: { page?: number; limit?: number } = {}): Promise<PaginatedNotifications> {
+    const page = Math.max(1, params.page ?? 1);
+    const limit = Math.min(100, Math.max(1, params.limit ?? 20));
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
+    const response = await api.get<PaginatedNotifications | NotificationItem[]>(
+      `${API_BASE.NOTIFICATIONS}?${qs}`,
+    );
+    // Backwards-compatible: if backend returns a flat array, wrap it.
+    const body: any = response.data;
+    if (Array.isArray(body)) {
+      return { data: body, total: body.length, page: 1, limit: body.length, totalPages: 1 };
+    }
+    return body;
   },
 
   /**

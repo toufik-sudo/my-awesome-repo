@@ -10,8 +10,10 @@ import { Plus, Pencil, Trash2, Compass, FolderPlus, X } from 'lucide-react';
 import { serviceGroupsApi } from '@/modules/services/service-bookings.api';
 import type { ServiceGroupResponse } from '@/modules/services/service-bookings.api';
 import type { GridColumn, DynamicFormField } from '@/types/component.types';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export const ServiceGroupsManagement: React.FC = React.memo(() => {
+  const { can, guardAction } = useRoleAccess('ServiceGroupsManagement');
   const [groups, setGroups] = useState<ServiceGroupResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -51,8 +53,12 @@ export const ServiceGroupsManagement: React.FC = React.memo(() => {
     { key: 'actions', title: 'Actions', width: '200px', render: (_: any, row: ServiceGroupResponse) => (
       <div className="flex gap-1">
         <DynamicButton variant="ghost" size="sm" icon={<Compass className="h-3.5 w-3.5" />} onClick={() => { setDetailGroup(row); loadGroupServices(row.id); }}>Services</DynamicButton>
-        <DynamicButton variant="ghost" size="sm" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => setEditGroup(row)} />
-        <DynamicButton variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5 text-destructive" />} onClick={() => handleDelete(row.id)} />
+        {can('Card', 'Button', 'Edit') && (
+          <DynamicButton variant="ghost" size="sm" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => setEditGroup(row)} />
+        )}
+        {can('Card', 'Button', 'Delete') && (
+          <DynamicButton variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5 text-destructive" />} onClick={() => handleDelete(row.id)} />
+        )}
       </div>
     ) },
   ], []);
@@ -114,11 +120,11 @@ export const ServiceGroupsManagement: React.FC = React.memo(() => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      {can('Header', 'Button', 'Create') && (
         <DynamicButton variant="primary" icon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>
           Nouveau Groupe
         </DynamicButton>
-      </div>
+      )}
 
       <DynamicGrid columns={columns} data={groups} loading={loading} striped hoverable emptyMessage="Aucun groupe de services" />
 

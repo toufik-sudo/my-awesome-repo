@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac, rbacMerge } from '@/lib/api-rbac';
 
 const BASE = '/metrics';
 
@@ -104,23 +105,23 @@ export interface MetricServiceBooking {
 
 export const metricsApi = {
   getUsers: (params?: Record<string, any>) =>
-    api.get<PaginatedResult<MetricUser>>(`${BASE}/users`, { params }).then(r => r.data),
+    api.get<PaginatedResult<MetricUser>>(`${BASE}/users`, rbacMerge('metricsApi.getUsers.GET', { params })).then(r => r.data),
 
   getBookings: (params?: Record<string, any>) =>
-    api.get<PaginatedResult<MetricBooking>>(`${BASE}/bookings`, { params }).then(r => r.data),
+    api.get<PaginatedResult<MetricBooking>>(`${BASE}/bookings`, rbacMerge('metricsApi.getBookings.GET', { params })).then(r => r.data),
 
   getServiceBookings: (params?: Record<string, any>) =>
-    api.get<PaginatedResult<MetricServiceBooking>>(`${BASE}/service-bookings`, { params }).then(r => r.data),
+    api.get<PaginatedResult<MetricServiceBooking>>(`${BASE}/service-bookings`, rbacMerge('metricsApi.getServiceBookings.GET', { params })).then(r => r.data),
 
   getProperties: (params?: Record<string, any>) =>
-    api.get<PaginatedResult<MetricProperty>>(`${BASE}/properties`, { params }).then(r => r.data),
+    api.get<PaginatedResult<MetricProperty>>(`${BASE}/properties`, rbacMerge('metricsApi.getProperties.GET', { params })).then(r => r.data),
 
   getServices: (params?: Record<string, any>) =>
-    api.get<PaginatedResult<MetricService>>(`${BASE}/services`, { params }).then(r => r.data),
+    api.get<PaginatedResult<MetricService>>(`${BASE}/services`, rbacMerge('metricsApi.getServices.GET', { params })).then(r => r.data),
 
   getRevenue: (params?: Record<string, any>) =>
-    api.get(`${BASE}/revenue`, { params }).then(r => r.data),
+    api.get(`${BASE}/revenue`, rbacMerge('metricsApi.getRevenue.GET', { params })).then(r => r.data),
 
   getSummary: () =>
-    api.get<PlatformSummary>(`${BASE}/summary`).then(r => r.data),
+    api.get<PlatformSummary>(`${BASE}/summary`, rbac('metricsApi.getSummary.GET')).then(r => r.data),
 };

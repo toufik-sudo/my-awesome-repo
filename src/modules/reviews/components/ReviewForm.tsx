@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useCreateReview } from '@/modules/reviews/reviews.hooks';
 import type { CreateReviewDto } from '@/modules/reviews/reviews.api';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 interface StarRatingInputProps {
   value: number;
@@ -64,6 +65,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   onCancel,
 }) => {
   const { t } = useTranslation();
+  const { can } = useRoleAccess('PropertyDetailPage');
   const { mutate: createReview, isPending } = useCreateReview();
 
   const [ratings, setRatings] = useState({
@@ -106,6 +108,9 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   };
 
   const isValid = ratings.overallRating > 0 && comment.trim().length >= 10;
+  const canAddReview = can('Reviews', 'Button', 'Add');
+
+  if (!canAddReview) return null;
 
   return (
     <Card className="border-border/60">

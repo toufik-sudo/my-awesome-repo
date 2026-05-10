@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { ErrorBoundary } from '@/modules/shared/components/ErrorBoundary';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { DynamicTabs } from '@/modules/shared/components/DynamicTabs';
@@ -30,6 +30,11 @@ import { PaymentValidation } from '@/modules/payments/pages/PaymentValidation';
 import { EmailAnalyticsPage } from '@/modules/admin/pages/EmailAnalyticsPage';
 import { HostFeeAbsorptionPage } from '@/modules/admin/pages/HostFeeAbsorptionPage';
 import { PayoutAccountsPage } from '@/modules/admin/pages/PayoutAccountsPage';
+import RbacDebugPage from '@/modules/admin/pages/RbacDebugPage';
+import EscrowAdminPage from '@/modules/admin/pages/EscrowAdminPage';
+import HostReactivationPage from '@/modules/payments/pages/HostReactivationPage';
+import MyDisputesPage from '@/modules/payments/pages/MyDisputesPage';
+import { MyReferralsPage } from '@/modules/referrals/MyReferralsPage';
 import { statsApi, assignmentsApi, type AdminStats } from '@/modules/admin/admin.api';
 import { useDashboard } from '@/modules/dashboard/useDashboard';
 import type { AppRole, ManagerAssignment, ManagerPermission, PermissionType } from '@/modules/admin/admin.types';
@@ -40,6 +45,7 @@ import {
   CheckCircle2, Clock, XCircle, CalendarCheck, MessageSquare,
   DollarSign, Lock, Unlock, Star, PlusCircle, Compass,
   MapPin, ArrowRight, Trophy, CreditCard, Mail, Percent, Wallet,
+  Bug, Receipt, AlertTriangle, RotateCcw, Gift,
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { color: string }> = {
@@ -53,8 +59,21 @@ export const AdminManagerDashboard: React.FC = memo(() => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const access = usePermissions();
-  const { isAdmin, isManager, isHost, canInviteManager, canInviteGuest } = access;
+  const access = useRoleAccess('AdminManagerDashboard');
+  const { can, isAdmin, isManager, isHost, canUI } = access;
+  const canInviteManager = can('QuickActions', 'Button', 'InviteManager');
+  const canInviteGuest = can('QuickActions', 'Button', 'InviteGuest');
+  const canCreateProperty = can('QuickActions', 'Button', 'AddProperty');
+  const canCreateService = can('QuickActions', 'Button', 'AddService');
+  const canViewAnalytics = can('Analytics', 'Tab', 'View');
+  const canManageFeeAbsorption = can('FeeAbsorption', 'Tab', 'View');
+  const canManageCancellationRules = can('CancellationRules', 'Tab', 'View');
+  const canViewPayments = can('Payments', 'Tab', 'View');
+  const canViewEmailAnalytics = can('EmailAnalytics', 'Tab', 'View');
+  const canVerifyDocuments = can('Verifications', 'Tab', 'View');
+  const canManageGroups = can('Groups', 'Tab', 'View');
+  const canManageRoles = can('Roles', 'Tab', 'View');
+  const canViewPayoutAccounts = can('PayoutAccounts', 'Tab', 'View');
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,20 +91,29 @@ export const AdminManagerDashboard: React.FC = memo(() => {
       ]);
       if (statsResult.status === 'fulfilled') setStats(statsResult.value);
       if (assignResult.status === 'fulfilled') {
+        const res = assignResult.value;
+        const allPerms = [
+          ...res.managerPermissions.map((p: any) => ({ ...p, _type: 'manager' })),
+          ...res.hyperManagerPermissions.map((p: any) => ({ ...p, _type: 'hyper_manager' })),
+          ...res.guestPermissions.map((p: any) => ({ ...p, _type: 'guest' })),
+        ];
         const myAssignments = isManager
-          ? assignResult.value.filter(a => a.managerId === Number(user?.id))
-          : assignResult.value;
-        setAssignments(myAssignments);
+          ? allPerms.filter((p: any) => p.managerId === Number(user?.id))
+          : allPerms;
+        const assignments = myAssignments.map((p: any) => ({
+          id: p.id,
+          managerId: p.managerId || p.hyperManagerId || p.guestId,
+          assignedByAdminId: p.assignedById,
+          scope: p.scope as any,
+          isActive: p.isGranted,
+          createdAt: p.createdAt,
+        }));
+        setAssignments(assignments);
 
         const permMap: Record<string, ManagerPermission[]> = {};
-        await Promise.all(
-          myAssignments.map(async (a) => {
-            try {
-              const perms = await assignmentsApi.getPermissions(a.id);
-              permMap[a.id] = perms;
-            } catch { permMap[a.id] = []; }
-          })
-        );
+        for (const p of myAssignments) {
+          permMap[p.id] = [{ id: p.id, assignmentId: p.id, permission: p.backendPermissionKey, isGranted: p.isGranted }];
+        }
         setPermissionsMap(permMap);
       }
     } catch { /* silent */ } finally {
@@ -315,8 +343,8 @@ export const AdminManagerDashboard: React.FC = memo(() => {
           <div className="flex flex-wrap gap-2">
             {canInviteManager && <Button onClick={() => setInviteOpen(true)} className="gap-2"><UserPlus className="h-4 w-4" /> {t('dashboard.inviteManager', 'Inviter Manager')}</Button>}
             {canInviteGuest && !canInviteManager && <Button onClick={() => setInviteOpen(true)} className="gap-2"><UserPlus className="h-4 w-4" /> {t('dashboard.inviteGuest', 'Inviter Guest')}</Button>}
-            {access.canCreateProperty && <Button variant="outline" onClick={() => navigate('/properties/new')} className="gap-2"><PlusCircle className="h-4 w-4" /> {t('dashboard.newProperty', 'Propriété')}</Button>}
-            {access.canCreateService && <Button variant="outline" onClick={() => navigate('/services/new')} className="gap-2"><Compass className="h-4 w-4" /> {t('dashboard.newService', 'Service')}</Button>}
+            {canCreateProperty && <Button variant="outline" onClick={() => navigate('/properties/new')} className="gap-2"><PlusCircle className="h-4 w-4" /> {t('dashboard.newProperty', 'Propriété')}</Button>}
+            {canCreateService && <Button variant="outline" onClick={() => navigate('/services/new')} className="gap-2"><Compass className="h-4 w-4" /> {t('dashboard.newService', 'Service')}</Button>}
             <Button variant="outline" onClick={() => navigate('/properties')} className="gap-2"><Building2 className="h-4 w-4" /> {t('dashboard.myProperties', 'Mes Propriétés')}</Button>
           </div>
         </GlassCard>
@@ -383,8 +411,7 @@ export const AdminManagerDashboard: React.FC = memo(() => {
   const tabs = [
     { value: 'overview', label: t('dashboard.tabs.overview', 'Vue d\'ensemble'), icon: <BarChart3 className="h-4 w-4" />, content: <ErrorBoundary>{overviewContent}</ErrorBoundary> },
 
-    // Points — available for admin; manager with view_analytics permission
-    ...(isAdmin || access.canViewAnalytics ? [{
+    ...(canViewAnalytics ? [{
       value: 'points', label: t('dashboard.tabs.points', 'Points & Récompenses'), icon: <Trophy className="h-4 w-4" />, content: (
         <ErrorBoundary>
           <div className="space-y-6">
@@ -395,8 +422,7 @@ export const AdminManagerDashboard: React.FC = memo(() => {
       ),
     }] : []),
 
-    // Fees — admin only or manager with view_analytics
-    ...(isAdmin || access.canViewAnalytics ? [{
+    ...(canViewAnalytics ? [{
       value: 'fees', label: t('dashboard.tabs.fees', 'Frais & Marges'), icon: <DollarSign className="h-4 w-4" />, content: (
         <ErrorBoundary>
           <div className="space-y-6">
@@ -407,29 +433,25 @@ export const AdminManagerDashboard: React.FC = memo(() => {
       ),
     }] : []),
 
-    // Fee Absorption — admin or manager with manage_fee_absorption
-    ...(access.canManageFeeAbsorption ? [{
+    ...(canManageFeeAbsorption ? [{
       value: 'fee-absorption', label: t('dashboard.tabs.absorption', 'Absorption frais'), icon: <Percent className="h-4 w-4" />, content: (
         <ErrorBoundary><HostFeeAbsorptionPage /></ErrorBoundary>
       ),
     }] : []),
 
-    // Cancellation Rules — admin or manager with manage_cancellation_rules
-    ...(access.canManageCancellationRules ? [{
+    ...(canManageCancellationRules ? [{
       value: 'cancellation', label: t('dashboard.tabs.cancellation', "Règles d'annulation"), icon: <ShieldX className="h-4 w-4" />, content: (
         <ErrorBoundary><CancellationRulesPage /></ErrorBoundary>
       ),
     }] : []),
 
-    // Payout Accounts — admin only
-    ...(isAdmin ? [{
+    ...(canViewPayoutAccounts ? [{
       value: 'payout-accounts', label: t('dashboard.tabs.payoutAccounts', 'Comptes de paiement'), icon: <Wallet className="h-4 w-4" />, content: (
         <ErrorBoundary><PayoutAccountsPage /></ErrorBoundary>
       ),
     }] : []),
 
-    // Email Analytics — admin or manager with view_email_analytics
-    ...(access.canViewEmailAnalytics ? [{
+    ...(canViewEmailAnalytics ? [{
       value: 'email-analytics', label: t('dashboard.tabs.emailAnalytics', 'Email Analytics'), icon: <Mail className="h-4 w-4" />, content: (
         <ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary>
       ),
@@ -442,8 +464,7 @@ export const AdminManagerDashboard: React.FC = memo(() => {
       ),
     },
 
-    // Groups — admin only
-    ...(isAdmin ? [{
+    ...(canManageGroups ? [{
       value: 'groups', label: t('dashboard.tabs.groups', 'Groupes'), icon: <FolderKanban className="h-4 w-4" />, badge: stats?.totalGroups, content: (
         <ErrorBoundary><GroupsManagement /></ErrorBoundary>
       ),
@@ -456,26 +477,53 @@ export const AdminManagerDashboard: React.FC = memo(() => {
       ),
     },
 
-    // Verifications — admin or manager with verify_documents
-    ...(access.canVerifyDocuments ? [{
+    ...(canVerifyDocuments ? [{
       value: 'verifications', label: t('dashboard.tabs.verifications', 'Vérifications'), icon: <FileCheck2 className="h-4 w-4" />, badge: stats?.pendingVerifications, content: (
         <ErrorBoundary><VerificationReview /></ErrorBoundary>
       ),
     }] : []),
 
-    // Roles — admin only (manages manager/guest roles)
-    ...(isAdmin ? [{
+    ...(canManageRoles ? [{
       value: 'roles', label: t('dashboard.tabs.roles', 'Rôles'), icon: <Users className="h-4 w-4" />, content: (
         <ErrorBoundary><RolesManagement excludeHyperAdmin /></ErrorBoundary>
       ),
     }] : []),
 
-    // Payment Validation — admin or manager with view_payments
-    ...(access.canViewPayments ? [{
+    ...(canViewPayments ? [{
       value: 'payment-validation', label: t('dashboard.tabs.paymentValidation', 'Validation paiements'), icon: <CreditCard className="h-4 w-4" />, content: (
         <ErrorBoundary><PaymentValidation /></ErrorBoundary>
       ),
     }] : []),
+
+    {
+      value: 'escrow', label: t('dashboard.tabs.escrow', 'Escrow'), icon: <Receipt className="h-4 w-4" />, content: (
+        <ErrorBoundary><EscrowAdminPage /></ErrorBoundary>
+      ),
+    },
+
+    {
+      value: 'my-disputes', label: t('dashboard.tabs.myDisputes', 'Disputes'), icon: <AlertTriangle className="h-4 w-4" />, content: (
+        <ErrorBoundary><MyDisputesPage /></ErrorBoundary>
+      ),
+    },
+
+    {
+      value: 'host-reactivation', label: t('dashboard.tabs.hostReactivation', 'Réactivation host'), icon: <RotateCcw className="h-4 w-4" />, content: (
+        <ErrorBoundary><HostReactivationPage /></ErrorBoundary>
+      ),
+    },
+
+    {
+      value: 'rbac-debug', label: t('dashboard.tabs.rbacDebug', 'RBAC Debug'), icon: <Bug className="h-4 w-4" />, content: (
+        <ErrorBoundary><RbacDebugPage /></ErrorBoundary>
+      ),
+    },
+
+    {
+      value: 'referrals', label: t('dashboard.tabs.referrals', 'Parrainages'), icon: <Gift className="h-4 w-4" />, content: (
+        <ErrorBoundary><MyReferralsPage scoped /></ErrorBoundary>
+      ),
+    },
   ];
 
   return (

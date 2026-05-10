@@ -17,6 +17,7 @@ import { RegisterDto } from 'src/dtos/login/register.dto';
 import { CreateUserRequestDto } from 'src/user/dtos/requests/create.user.request.dto';
 import { User } from 'src/user/entity/user.entity';
 import { UserService } from 'src/user/services/user.service';
+import { ReferralService } from 'src/user/services/referral.service';
 import { CreateUserResponseDto } from '../user/dtos/responses/create.user.response.dto';
 import { SessionService } from '../services/session/session.service';
 import { SessionDto } from '../dtos/login/session.dto';
@@ -53,6 +54,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly sessionService: SessionService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly referralService: ReferralService,
   ) { }
 
   private logger = new Logger(AuthService.name);
@@ -248,6 +250,8 @@ export class AuthService {
       };
 
       const passwordDto = this.userService.decodePassword(loginDto.password);
+      console.log('Decoded password:', `"${passwordDto}"`);
+      console.log('User password:', `"${userdb[0].password}"`); // Debug log to check user password
       const passwordOk = await this.userService.comparePasswords(
         passwordDto,
         userdb[0].password,
@@ -304,7 +308,17 @@ export class AuthService {
   }
 
   async registerUser(registerDto: CreateUserRequestDto, _scopeCtx?: ScopeContext): Promise<any> {
-    return this.userService.createUser(registerDto);
+    const result = await this.userService.createUser(registerDto);
+    // If a referral code was provided and signup succeeded, link it
+    const newUserId = (result as any)?.id;
+    if (registerDto.referralCode && newUserId) {
+      try {
+        await this.referralService.completeSignup(registerDto.referralCode, newUserId);
+      } catch (e) {
+        this.logger.warn?.(`Referral linking failed: ${(e as Error).message}`);
+      }
+    }
+    return result;
   }
 
   async activateUser(

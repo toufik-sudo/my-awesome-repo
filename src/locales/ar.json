@@ -226,50 +226,12 @@
     }
   },
   "common": {
-    "welcome": "مرحبا",
-    "search": "بحث",
-    "filter": "تصفية",
-    "reset": "إعادة تعيين",
-    "apply": "تطبيق",
-    "cancel": "إلغاء",
-    "save": "حفظ",
-    "delete": "حذف",
-    "edit": "تعديل",
-    "close": "إغلاق",
-    "loading": "جاري التحميل...",
-    "error": "حدث خطأ",
-    "success": "نجح",
-    "confirm": "تأكيد",
-    "ok": "موافق",
-    "yes": "نعم",
-    "no": "لا",
-    "appName": "التطبيق الديناميكي",
-    "openMenu": "فتح القائمة",
-    "collapse": "طي",
-    "user": "مستخدم",
-    "next": "التالي",
-    "previous": "السابق",
-    "skip": "تخطي",
-    "finish": "إنهاء",
-    "step": "خطوة",
-    "of": "من",
-    "back": "رجوع",
-    "continue": "متابعة",
-    "submit": "إرسال",
-    "required": "مطلوب",
-    "export": "تصدير",
-    "exportCSV": "تصدير كـ CSV",
-    "exportPDF": "تصدير كـ PDF",
-    "allTime": "كل الوقت",
-    "last7Days": "آخر 7 أيام",
-    "last30Days": "آخر 30 يوم",
-    "last90Days": "آخر 90 يوم",
-    "lastYear": "العام الماضي",
-    "newest": "الأحدث أولاً",
-    "oldest": "الأقدم أولاً",
-    "priceHigh": "السعر: الأعلى",
-    "priceLow": "السعر: الأقل",
-    "showing": "عرض"
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "pending": "قيد الانتظار",
+    "approved": "معتمدة",
+    "rejected": "مرفوضة",
+    "viewAll": "عرض الكل"
   },
   "layouts": {
     "classic": "كلاسيكي",
@@ -285,7 +247,8 @@
       "main": "الرئيسية",
       "demos": "العروض",
       "content": "المحتوى",
-      "admin": "الإدارة"
+      "admin": "الإدارة",
+      "payments": "المدفوعات"
     },
     "home": "الرئيسية",
     "dashboard": "لوحة التحكم",
@@ -316,7 +279,16 @@
     "onboarding": "الإعداد الأولي",
     "bookingCalendar": "تقويم الحجوزات",
     "cancellationRules": "قواعد الإلغاء",
-    "rbacSettings": "إعدادات RBAC"
+    "rbacSettings": "إعدادات RBAC",
+    "myDisputes": "نزاعاتي",
+    "paymentValidation": "التحقق من المدفوعات",
+    "payouts": "التحويلات",
+    "escrow": "الضمان والنزاعات",
+    "hostReactivation": "إعادة تفعيل المضيف",
+    "rbacDebug": "تصحيح RBAC",
+    "administration": "الإدارة",
+    "supportChat": "دردشة الدعم",
+    "myBookings": "حجوزاتي"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -461,7 +433,9 @@
     "guest": "الضيف",
     "guestMessage": "رسالة الضيف",
     "manageRequest": "إدارة",
-    "chat": "محادثة"
+    "chat": "محادثة",
+    "accepted": "مقبول (بانتظار الدفع)",
+    "archived": "مؤرشف"
   },
   "chat": {
     "conversationTitle": "محادثة الحجز",
@@ -944,14 +918,6 @@
   },
   "scope": {
     "all": "جميع العقارات"
-  },
-  "common": {
-    "active": "نشط",
-    "inactive": "غير نشط",
-    "pending": "قيد الانتظار",
-    "approved": "معتمدة",
-    "rejected": "مرفوضة",
-    "viewAll": "عرض الكل"
   },
   "onboarding": {
     "title": "مرحبًا بك في {{appName}}",
@@ -1478,5 +1444,88 @@
       "saveFailed": "خطأ في حفظ الإعدادات",
       "reloadFailed": "خطأ في إعادة تحميل الذاكرة"
     }
+  },
+  "disputes": {
+    "myTitle": "نزاعاتي",
+    "mySubtitle": "تابع حالة نزاعاتك واسترداداتك.",
+    "empty": "لا توجد نزاعات بعد.",
+    "loadError": "فشل تحميل النزاعات",
+    "severity": "الخطورة",
+    "refund": "الاسترداد",
+    "viewPayout": "عرض التحويل المرتبط",
+    "timeline": {
+      "opened": "مفتوح",
+      "review": "قيد المراجعة",
+      "decision": "القرار",
+      "refunded": "تمت معالجة الاسترداد",
+      "rejected": "مرفوض"
+    },
+    "status": {
+      "all": "الكل",
+      "open": "مفتوح",
+      "under_review": "قيد المراجعة",
+      "resolved_guest": "تم الحل (الضيف)",
+      "resolved_host": "تم الحل (المضيف)",
+      "dismissed": "مرفوض",
+      "pending": "قيد الانتظار",
+      "validated": "تم التحقق",
+      "partial": "جزئي"
+    },
+    "breakdown": {
+      "title": "التفاصيل المالية",
+      "gross": "المبلغ الإجمالي",
+      "platformFee": "رسوم المنصة",
+      "guestFee": "رسوم الضيف",
+      "refundedToGuest": "المسترد للضيف",
+      "remainingHost": "المتبقي للمضيف"
+    }
+  },
+  "payouts": {
+    "title": "تحويلات المضيفين",
+    "subtitle": "تتبع التحويلات المجدولة والمحررة (إجمالي / رسوم / صافي).",
+    "empty": "لا توجد تحويلات.",
+    "kpi": {
+      "gross": "الإجمالي",
+      "fee": "الرسوم",
+      "net": "الصافي",
+      "released": "المحرر"
+    },
+    "filter": {
+      "all": "الكل",
+      "scheduled": "مجدول",
+      "on_hold": "قيد الانتظار",
+      "released": "محرر",
+      "partially_released": "جزئي",
+      "forfeited": "ملغى"
+    },
+    "status": {
+      "scheduled": "مجدول",
+      "on_hold": "قيد الانتظار",
+      "released": "محرر",
+      "partially_released": "محرر جزئيًا",
+      "forfeited": "ملغى"
+    },
+    "col": {
+      "host": "المضيف",
+      "booking": "الحجز",
+      "gross": "الإجمالي",
+      "fee": "الرسوم",
+      "net": "الصافي",
+      "releaseAt": "تاريخ التحرير",
+      "releasedAt": "محرر في",
+      "status": "الحالة",
+      "disputes": "النزاعات"
+    },
+    "viewDispute": "عرض النزاع"
+  },
+  "blame": {
+    "nonSerious": "غير جاد",
+    "tooltip": "{{count}} إشارة موثوقية نشطة. اتصل بالدعم للاعتراض.",
+    "adminTitle": "شارات الثقة",
+    "activeOnly": "نشطة",
+    "removed": "مُزالة",
+    "remove": "إزالة الشارة",
+    "removeNotePrompt": "ملاحظة الإزالة (اختياري):",
+    "empty": "لا توجد شارات للعرض."
   }
 }

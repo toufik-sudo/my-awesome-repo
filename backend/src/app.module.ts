@@ -9,6 +9,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { UserModule } from './user/modules/user.module';
 import { RolesModule } from './user/modules/roles.module';
 import { RbacConfigModule } from './rbac/rbac-config.module';
+import { RbacDebugModule } from './rbac/rbac-debug.module';
 import { CsrfModule } from '@tekuconcept/nestjs-csrf';
 import { CustomCsrfInterceptor } from './services/interceptors/custom.csrf.interceptor';
 import typeorm from './config/typeorm';
@@ -37,6 +38,7 @@ import { WsModule } from './infrastructure/websocket';
 import { ObservabilityModule } from './infrastructure/observability';
 import { MailerModule } from './infrastructure/mailer';
 import { EmailTrackingModule } from './infrastructure/email-tracking';
+import { MaterializedViewModule } from './modules/materialized-view.module';
 
 @Module({
   imports: [
@@ -78,6 +80,7 @@ import { EmailTrackingModule } from './infrastructure/email-tracking';
     UserModule,
     RolesModule,
     RbacConfigModule,
+    RbacDebugModule,
     AuthModule,
     NotificationModule,
     SSOModule,
@@ -90,6 +93,7 @@ import { EmailTrackingModule } from './infrastructure/email-tracking';
     ProfilesModule,
     FavoritesModule,
     DashboardModule,
+    MaterializedViewModule,
     SettingsModule,
     PaymentsModule,
     SupportChatModule,

@@ -1,73 +1,85 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
+import { User } from './user.entity';
+import { Property } from '../../properties/entity/property.entity';
+import { TourismService } from '../../services/entity/tourism-service.entity';
+import { PropertyGroup } from '../../properties/entity/property-group.entity';
+import { ServiceGroup } from '../../services/entity/service-group.entity';
 
 export type FeeScope = 'global' | 'host' | 'property_group' | 'property' | 'service_group' | 'service';
 export type FeeCalculation = 'percentage' | 'fixed' | 'percentage_plus_fixed' | 'fixed_then_percentage';
 
 @Entity('service_fee_rules')
+@Index('IDX_service_fee_rules_createdByUserId', ['createdByUserId'])
 export class ServiceFeeRule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  /** Who created this rule (hyper_admin / hyper_manager) */
   @Column()
   createdByUserId: number;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'createdByUserId' })
+  createdByUser: User;
 
   @Column({ type: 'varchar', length: 30 })
   scope: FeeScope;
 
-  /** Target host userId – null when scope=global */
   @Column({ nullable: true })
   targetHostId: number;
 
-  /** Target property group – null unless scope=property_group */
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetHostId' })
+  targetHost: User;
+
   @Column({ type: 'uuid', nullable: true })
   targetPropertyGroupId: string;
 
-  /** Target property – null unless scope=property */
+  @ManyToOne(() => PropertyGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetPropertyGroupId' })
+  targetPropertyGroup: PropertyGroup;
+
   @Column({ type: 'uuid', nullable: true })
   targetPropertyId: string;
 
-  /** Target service group – null unless scope=service_group */
+  @ManyToOne(() => Property, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetPropertyId' })
+  targetProperty: Property;
+
   @Column({ type: 'uuid', nullable: true })
   targetServiceGroupId: string;
 
-  /** Target service – null unless scope=service */
+  @ManyToOne(() => ServiceGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetServiceGroupId' })
+  targetServiceGroup: ServiceGroup;
+
   @Column({ type: 'uuid', nullable: true })
   targetServiceId: string;
+
+  @ManyToOne(() => TourismService, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetServiceId' })
+  targetService: TourismService;
 
   @Column({ type: 'varchar', length: 30 })
   calculationType: FeeCalculation;
 
-  /** Percentage fee (e.g. 15 for 15%) */
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   percentageRate: number;
 
-  /** Fixed fee amount */
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   fixedAmount: number;
 
-  /**
-   * Threshold for fixed_then_percentage: fixed fee applies up to this amount,
-   * then percentage applies on the remainder up to maxFee
-   */
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   fixedThreshold: number;
 
-  /** Min fee cap */
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   minFee: number;
 
-  /** Max fee cap */
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   maxFee: number;
 
-  /** Is this the default rule (only one global default) */
   @Column({ default: false })
   isDefault: boolean;
 
@@ -77,13 +89,6 @@ export class ServiceFeeRule {
   @Column({ nullable: true })
   description: string;
 
-  /**
-   * Priority – lower number = higher priority.
-   * When multiple rules match (e.g. a property has both a host-level and property-level rule),
-   * the rule with the LOWEST priority number is applied first.
-   * Example: priority=1 beats priority=100.
-   * Use this to override global rules for specific hosts/properties.
-   */
   @Column({ default: 100 })
   priority: number;
 

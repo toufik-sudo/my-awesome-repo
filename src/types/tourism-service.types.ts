@@ -60,6 +60,9 @@ export interface TourismService {
   wilaya: string;
   country: string;
   images: string[];
+  videos?: string[];
+  previousStatus?: string | null;
+  hostCascade?: boolean;
   includes?: Record<string, string[]>;
   requirements?: Record<string, string[]>;
   schedule?: Record<string, any>;
@@ -86,6 +89,8 @@ export interface TourismServiceFilters {
   participants?: number;
   sort?: string;
   search?: string;
+  /** Privileged-only filter: 'published' | 'draft' | 'paused' | 'suspended' | 'archived'. Omit for default behavior. */
+  status?: string;
   page?: number;
   limit?: number;
 }

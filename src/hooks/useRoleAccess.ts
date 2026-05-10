@@ -1,89 +1,111 @@
-import { useMemo, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import type { AppRole, PermissionType } from '@/modules/admin/admin.types';
-import { ROLE_RESTRICTIONS, INVITATION_ALLOWED_ROLES, ADMIN_ASSIGNABLE_PERMISSIONS } from '@/modules/admin/admin.types';
+import { useCallback, useMemo } from 'react';
+import { usePermissions } from '@/hooks/usePermissions';
+import { generateUiPermissionKey } from '@/utils/rbac/generate-ui-permission-key';
+import { swalAlert } from '@/modules/shared/services/alert.service';
 
 /**
- * @deprecated Use usePermissions() instead for scope-aware permission checking.
- * This hook is kept for backward compatibility but does not fetch actual manager permissions.
+ * useRoleAccess — Dynamic RBAC hook for UI permission checks.
+ *
+ * @param componentName — Optional component scope (e.g. 'PropertyListPage').
+ *   When provided, the hook is "scoped" to that component and exposes:
+ *     • `canViewPage` — checks `ui.<componentName>.Page.View`
+ *     • `can(subView?, elementType?, actionName?)` — checks any sub-permission
+ *     • `guardAction(subView, elementType, actionName, fn)` — guarded execution
+ *
+ * @example
+ *   // Page-level guard
+ *   const { canViewPage } = useRoleAccess('PropertyListPage');
+ *   if (!canViewPage) return <Navigate to="/" />;
+ *
+ *   // Element-level check
+ *   const { can } = useRoleAccess('PropertyListPage');
+ *   {can('Header', 'Button', 'Add') && <Button>Add</Button>}
+ *
+ *   // Unscoped — access all base utilities
+ *   const { canUI, role, isAdmin } = useRoleAccess();
  */
-export function useRoleAccess() {
-  const { user } = useAuth();
-  const role: AppRole = (user?.role as AppRole) || 'user';
+export function useRoleAccess(componentName?: string) {
+  const perms = usePermissions();
 
-  return useMemo(() => {
-    const restrictions = ROLE_RESTRICTIONS[role] || [];
+  /**
+   * Check page-level view permission: ui.<componentName>.Page.View
+   */
+  const canViewPage = useMemo(() => {
+    if (!componentName) return true;
+    const key = generateUiPermissionKey(componentName, undefined, 'Page', 'View');
+    return perms.canUI(key);
+  }, [componentName, perms]);
 
-    const isRestricted = (action: string) => restrictions.includes(action);
-    const isHyperAdmin = role === 'hyper_admin';
-    const isHyperManager = role === 'hyper_manager';
-    const isHyper = isHyperAdmin || isHyperManager;
-    const isAdmin = role === 'admin';
-    const isManager = role === 'manager';
-    const isUser = role === 'user';
-    const isGuest = role === 'guest';
+  /**
+   * Check any sub-permission within the scoped component.
+   * `can('Header', 'Button', 'Add')` → checks `ui.<componentName>.Header.Button.Add`
+   * `can(undefined, 'Tab', 'View')` → checks `ui.<componentName>.Tab.View`
+   */
+  const can = useCallback(
+    (subView?: string, elementType?: string, actionName?: string): boolean => {
+      if (!componentName) return true;
+      const key = generateUiPermissionKey(componentName, subView, elementType, actionName);
+      return perms.canUI(key);
+    },
+    [componentName, perms],
+  );
 
-    // Admin has full control within own scope
-    const isHost = isAdmin || isManager;
+  /**
+   * Guarded execution: if the sub-permission is granted, execute callback.
+   * Otherwise show "access denied" alert.
+   */
+  const guardAction = useCallback(
+    async <T>(
+      subView: string | undefined,
+      elementType: string | undefined,
+      actionName: string | undefined,
+      fn: () => Promise<T>,
+    ): Promise<T | undefined> => {
+      if (can(subView, elementType, actionName)) {
+        return fn();
+      }
+      swalAlert.error("Accès refusé — Vous n'avez pas les droits pour cette action.");
+      return undefined;
+    },
+    [can],
+  );
 
-    return {
-      role,
-      isHyperAdmin,
-      isHyperManager,
-      isHyper,
-      isAdmin,
-      isManager,
-      isUser,
-      isGuest,
-      isHost,
+  /**
+   * Guard by raw permission key (for cross-component checks).
+   */
+  const guardByKey = useCallback(
+    async <T>(permKey: string, fn: () => Promise<T>): Promise<T | undefined> => {
+      if (perms.canUI(permKey)) {
+        return fn();
+      }
+      swalAlert.error("Accès refusé — Vous n'avez pas les droits pour cette action.");
+      return undefined;
+    },
+    [perms],
+  );
 
-      /** Check if an action is restricted for the current role */
-      isRestricted,
+  /**
+   * Guard API call: if the frontend API key is allowed, execute callback.
+   */
+  const guardApi = useCallback(
+    async <T>(frontendApiKey: string, fn: () => Promise<T>): Promise<T | undefined> => {
+      if (perms.canCallApi(frontendApiKey)) {
+        return fn();
+      }
+      swalAlert.error("Accès refusé — Vous n'avez pas les droits pour cette action.");
+      return undefined;
+    },
+    [perms],
+  );
 
-      // ─── Property & Service Management ────────────────────────────────
-      canCreateProperty: isAdmin || (isManager && !isRestricted('create_property')),
-      canModifyProperty: isAdmin || (isManager && !isRestricted('modify_property')),
-      canDeleteProperty: isAdmin,
-      canCreateService: isAdmin || (isManager && !isRestricted('create_service')),
-      canModifyService: isAdmin || (isManager && !isRestricted('modify_service')),
-
-      // ─── Booking ──────────────────────────────────────────────────────
-      canMakeBooking: !isRestricted('make_booking'),
-      canAcceptBookings: isAdmin || (isManager && !isRestricted('accept_bookings')),
-      canViewBookings: isAdmin || isManager || isHyper,
-
-      // ─── User Management ─────────────────────────────────────────────
-      canInviteManager: isAdmin,
-      canInviteGuest: isAdmin || isManager,
-      canInviteHyperRoles: isHyper,
-
-      // ─── Groups ───────────────────────────────────────────────────────
-      canCreateGroups: isAdmin || isHyper,
-      canManageGroups: isAdmin || isHyper,
-
-      // ─── Fees & Rules ────────────────────────────────────────────────
-      canCreateAbsorptionFees: isAdmin,
-      canCreateCancellationRules: isAdmin,
-      canManageFees: isAdmin || isHyper,
-
-      // ─── Assignments & Permissions ───────────────────────────────────
-      canAssignManagers: isAdmin || isHyper,
-      canManagePermissions: isAdmin || isHyper,
-      canAssignToNonHyperManager: !isRestricted('assign_permissions_non_hypermanager'),
-
-      // ─── Verification & Analytics ────────────────────────────────────
-      canVerifyDocuments: isAdmin || isHyper,
-      canViewAnalytics: isAdmin || isHyper,
-
-      // ─── Payout & Payments ───────────────────────────────────────────
-      canManagePayoutAccounts: isAdmin,
-      canValidatePayments: isHyper,
-
-      /** Invitation roles available for current user */
-      allowedInvitationRoles: INVITATION_ALLOWED_ROLES[role] || [],
-
-      /** Assignable permissions for current user */
-      assignablePermissions: isAdmin ? ADMIN_ASSIGNABLE_PERMISSIONS : [],
-    };
-  }, [role]);
+  return {
+    // Base permissions (role flags, canUI, canCallApi, canAction, etc.)
+    ...perms,
+    // Scoped helpers
+    canViewPage,
+    can,
+    guardAction,
+    guardByKey,
+    guardApi,
+  };
 }

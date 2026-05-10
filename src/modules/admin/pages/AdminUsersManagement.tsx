@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { AppRole, UserWithRoles } from '../admin.types';
 import type { GridColumn } from '@/types/component.types';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { RefreshControl } from '@/components/shared/RefreshControl';
 
 const ROLE_COLORS: Record<AppRole, string> = {
   hyper_admin: 'destructive',
@@ -25,6 +27,7 @@ const ROLE_COLORS: Record<AppRole, string> = {
 export const AdminUsersManagement: React.FC = React.memo(() => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { can } = useRoleAccess('AdminUsersManagement');
   const { isAdmin, isManager, isHyper, canManageUsers, canManageManagers, allowedInvitationRoles } = usePermissions();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(false);
@@ -109,6 +112,9 @@ export const AdminUsersManagement: React.FC = React.memo(() => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <RefreshControl onRefresh={loadUsers} storageKey="admin-users" />
+      </div>
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">

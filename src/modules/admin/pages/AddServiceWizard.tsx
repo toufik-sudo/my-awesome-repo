@@ -22,6 +22,9 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
+import { reverseGeocode } from '@/utils/geocode';
+import { LocationPicker } from '@/components/maps/LocationPicker';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface ServiceFormData {
@@ -35,6 +38,8 @@ interface ServiceFormData {
   city: string;
   wilaya: string;
   address: string;
+  latitude: string;
+  longitude: string;
   minParticipants: string;
   maxParticipants: string;
   duration: string;
@@ -112,6 +117,7 @@ export const AddServiceWizard: React.FC = () => {
   const isDuplicateMode = !!duplicateFromId;
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { can } = useRoleAccess('AddServiceWizard');
 
   const draft = useMemo(() => !isDuplicateMode ? loadDraft() : null, []);
 
@@ -125,6 +131,7 @@ export const AddServiceWizard: React.FC = () => {
     titleFr: '', titleEn: '', titleAr: '',
     descriptionFr: '', descriptionEn: '', descriptionAr: '',
     category: '', city: '', wilaya: '', address: '',
+    latitude: '', longitude: '',
     minParticipants: '1', maxParticipants: '20',
     duration: '', durationUnit: 'hours',
     languages: ['fr'], tags: [],
@@ -155,6 +162,7 @@ export const AddServiceWizard: React.FC = () => {
         titleFr: `${s.title?.fr || ''} (Copy)`, titleEn: s.title?.en || '', titleAr: s.title?.ar || '',
         descriptionFr: s.description?.fr || '', descriptionEn: s.description?.en || '', descriptionAr: s.description?.ar || '',
         category: s.category || '', city: s.city || '', wilaya: s.wilaya || '', address: s.address || '',
+        latitude: String(s.latitude || ''), longitude: String(s.longitude || ''),
         minParticipants: String(s.minParticipants || 1), maxParticipants: String(s.maxParticipants || 20),
         duration: String(s.duration || ''), durationUnit: s.durationUnit || 'hours',
         languages: s.languages || ['fr'], tags: s.tags || [],
@@ -234,6 +242,8 @@ export const AddServiceWizard: React.FC = () => {
     city: formData.city,
     wilaya: formData.wilaya,
     address: formData.address,
+    latitude: parseFloat(formData.latitude) || null,
+    longitude: parseFloat(formData.longitude) || null,
     country: 'Algeria',
     minParticipants: parseInt(formData.minParticipants) || 1,
     maxParticipants: parseInt(formData.maxParticipants) || 20,
@@ -320,6 +330,75 @@ export const AddServiceWizard: React.FC = () => {
             <div><Label>City *</Label><Input value={formData.city} onChange={e => updateField('city', e.target.value)} /></div>
             <div><Label>Address</Label><Input value={formData.address} onChange={e => updateField('address', e.target.value)} /></div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Latitude</Label>
+              <Input type="number" step="any" value={formData.latitude} onChange={e => updateField('latitude', e.target.value)} placeholder="e.g. 36.7538" />
+            </div>
+            <div>
+              <Label>Longitude</Label>
+              <Input type="number" step="any" value={formData.longitude} onChange={e => updateField('longitude', e.target.value)} placeholder="e.g. 3.0588" />
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!navigator.geolocation) {
+                toast.error('Geolocation is not supported by your browser');
+                return;
+              }
+              navigator.geolocation.getCurrentPosition(
+                async pos => {
+                  const lat = pos.coords.latitude;
+                  const lng = pos.coords.longitude;
+                  updateField('latitude', String(lat));
+                  updateField('longitude', String(lng));
+                  toast.success('Location detected');
+                  const geo = await reverseGeocode(lat, lng);
+                  if (geo) {
+                    setFormData(prev => ({
+                      ...prev,
+                      address: prev.address || geo.address,
+                      city: prev.city || geo.city,
+                      wilaya: prev.wilaya || (WILAYAS.includes(geo.wilaya) ? geo.wilaya : prev.wilaya),
+                    }));
+                    toast.success('Address autofilled');
+                  }
+                },
+                err => toast.error(`Unable to get location: ${err.message}`),
+                { enableHighAccuracy: true, timeout: 10000 },
+              );
+            }}
+          >
+            📍 Detect my location
+          </Button>
+          {formData.latitude && formData.longitude && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                💡 Drag the pin or click on the map to fine-tune the exact location.
+              </p>
+              <LocationPicker
+                latitude={parseFloat(formData.latitude)}
+                longitude={parseFloat(formData.longitude)}
+                height={240}
+                onChange={async ({ lat, lng }) => {
+                  updateField('latitude', String(lat));
+                  updateField('longitude', String(lng));
+                  const geo = await reverseGeocode(lat, lng);
+                  if (geo) {
+                    setFormData(prev => ({
+                      ...prev,
+                      address: geo.address || prev.address,
+                      city: geo.city || prev.city,
+                      wilaya: WILAYAS.includes(geo.wilaya) ? geo.wilaya : prev.wilaya,
+                    }));
+                  }
+                }}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

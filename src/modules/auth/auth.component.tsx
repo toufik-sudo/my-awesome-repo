@@ -39,10 +39,8 @@ const Auth = () => {
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [signupIdentifier, setSignupIdentifier] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  // Signup form state removed: signup is now exclusively handled by /onboarding
+  // (unified flow with OTP verification + role-based Terms consent).
   const [isLoading, setIsLoading] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [phoneForOtp, setPhoneForOtp] = useState('');
@@ -92,7 +90,8 @@ const Auth = () => {
     try {
       await login(loginIdentifier, loginPassword);
       toast.success(t('auth.loginSuccess'));
-      navigate('/dashboard');
+      // Small delay to let AuthContext propagate user/role before redirect
+      setTimeout(() => navigate('/dashboard'), 100);
     } catch { toast.error(t('auth.loginError')); }
     finally { setIsLoading(false); }
   };
@@ -167,34 +166,11 @@ const Auth = () => {
     finally { setIsLoading(false); }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!signupIdentifier) { toast.error(getIdentifierRequiredError()); return; }
-    if (!validateIdentifier(signupIdentifier)) { toast.error(getIdentifierError()); return; }
-    if (!signupPassword) { toast.error(t('auth.passwordRequired')); return; }
-    if (signupPassword.length < 8) { toast.error(t('auth.passwordMinLength')); return; }
-    if (signupPassword !== confirmPassword) { toast.error(t('auth.passwordMismatch')); return; }
-
-    setIsLoading(true);
-    try {
-      const response: any = await signup(signupIdentifier, signupPassword);
-      const userId = response?.id || response?.userId || response?.user?.id;
-      if (userId) setPendingUserId(userId);
-
-      setVerificationIdentifier(signupIdentifier);
-      setVerificationMethod(selectedMethod);
-
-      if (selectedMethod === 'email') {
-        await authService.sendVerificationEmail(signupIdentifier);
-        toast.success(t('auth.verificationEmailSent'));
-      } else {
-        await authService.sendVerificationOtp(signupIdentifier);
-        toast.success(t('auth.verificationOtpSent'));
-      }
-      setView('verification');
-    } catch { toast.error(t('auth.signupError')); }
-    finally { setIsLoading(false); }
-  };
+  // NOTE: Self-signup is fully handled by the unified /onboarding flow,
+  // which runs OTP verification (email + phone) and role-based Terms consent.
+  // The login page no longer renders an inline signup form — clicking
+  // "Sign up" navigates to /onboarding so every new account follows the
+  // same professional, secure pipeline.
 
   const handleVerification = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,7 +218,7 @@ const Auth = () => {
           value={selectedMethod}
           onValueChange={(value) => {
             setSelectedMethod(value as SelectedAuthMethod);
-            setLoginIdentifier(''); setSignupIdentifier('');
+            setLoginIdentifier('');
           }}
           className="flex gap-4 justify-center"
         >
@@ -541,12 +517,13 @@ const Auth = () => {
             </button>
             <button
               type="button"
-              onClick={() => setView('signup')}
+              onClick={() => navigate('/onboarding')}
               className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200 ${
                 view === 'signup'
                   ? 'bg-background text-foreground shadow-md'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
+              aria-label={t('auth.signup')}
             >
               {t('auth.signup')}
             </button>
@@ -630,66 +607,28 @@ const Auth = () => {
                 </p>
               </div>
 
-              <form onSubmit={handleSignup} className="space-y-4">
-                {renderMethodSelector()}
-                {renderIdentifierInput('signup-identifier', signupIdentifier, setSignupIdentifier)}
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-password" className="text-sm font-medium">{t('auth.password')}</Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      <Lock className="h-4 w-4" />
-                    </div>
-                    <Input
-                      id="signup-password"
-                      type={showSignupPassword ? 'text' : 'password'}
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      disabled={isLoading}
-                      className="pl-10 pr-10 h-12 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all rounded-xl"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignupPassword(!showSignupPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+              <div className="rounded-xl border border-border/50 bg-muted/30 p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Shield className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-sm text-muted-foreground leading-relaxed">
+                    {t('auth.signupRedirectDescription', {
+                      defaultValue:
+                        'Account creation runs through our secure onboarding: identity, OTP verification (email & phone), avatar and role-based terms consent.',
+                    })}
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="confirm-password" className="text-sm font-medium">{t('auth.confirmPassword')}</Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      <Lock className="h-4 w-4" />
-                    </div>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      disabled={isLoading}
-                      className="pl-10 h-12 bg-muted/30 border-border/50 focus:bg-background focus:border-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)] transition-all rounded-xl"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full h-12 font-semibold text-sm group rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowRight className="mr-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                  )}
-                  {t('auth.signup')}
-                </Button>
-              </form>
+              <Button
+                type="button"
+                onClick={() => navigate('/onboarding')}
+                className="w-full h-12 font-semibold text-sm group rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200"
+              >
+                <ArrowRight className="mr-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                {t('auth.startOnboarding', { defaultValue: 'Start secure onboarding' })}
+              </Button>
 
               {renderSocialButtons()}
             </div>

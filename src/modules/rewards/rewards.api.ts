@@ -1,4 +1,6 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
+import type { Paginated, PaginationParams } from '@/modules/shared/types/pagination';
 
 const REWARDS_BASE = '/rewards';
 
@@ -65,47 +67,60 @@ export const REWARD_CATEGORIES: Record<string, { fr: string; en: string; ar: str
 };
 
 export const rewardsApi = {
-  /** Public shop */
   getShop: () =>
-    api.get<Reward[]>(`${REWARDS_BASE}/shop`).then(r => r.data),
+    api.get<Reward[]>(`${REWARDS_BASE}/shop`, rbac('rewardsApi.getShop.GET')).then(r => r.data),
 
-  /** Admin: all rewards */
+  getShopPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<Reward>>(`${REWARDS_BASE}/shop`, {
+      ...rbac('rewardsApi.getShop.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
+
   getAll: () =>
-    api.get<Reward[]>(REWARDS_BASE).then(r => r.data),
+    api.get<Reward[]>(REWARDS_BASE, rbac('rewardsApi.getAll.GET')).then(r => r.data),
 
-  /** Get single reward */
+  getAllPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<Reward>>(REWARDS_BASE, {
+      ...rbac('rewardsApi.getAll.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
+
   getById: (id: string) =>
-    api.get<Reward>(`${REWARDS_BASE}/${id}`).then(r => r.data),
+    api.get<Reward>(`${REWARDS_BASE}/${id}`, rbac('rewardsApi.getById.GET')).then(r => r.data),
 
-  /** Admin: create reward */
   create: (data: Partial<Reward>) =>
-    api.post<Reward>(REWARDS_BASE, data).then(r => r.data),
+    api.post<Reward>(REWARDS_BASE, data, rbac('rewardsApi.create.POST')).then(r => r.data),
 
-  /** Admin: update reward */
   update: (id: string, data: Partial<Reward>) =>
-    api.put<Reward>(`${REWARDS_BASE}/${id}`, data).then(r => r.data),
+    api.put<Reward>(`${REWARDS_BASE}/${id}`, data, rbac('rewardsApi.update.PUT')).then(r => r.data),
 
-  /** Admin: delete reward */
   remove: (id: string) =>
-    api.delete(`${REWARDS_BASE}/${id}`),
+    api.delete(`${REWARDS_BASE}/${id}`, rbac('rewardsApi.remove.DELETE')),
 
-  /** Redeem a reward */
   redeem: (rewardId: string) =>
-    api.post<RewardRedemption>(`${REWARDS_BASE}/${rewardId}/redeem`).then(r => r.data),
+    api.post<RewardRedemption>(`${REWARDS_BASE}/${rewardId}/redeem`, undefined, rbac('rewardsApi.redeem.POST')).then(r => r.data),
 
-  /** Get my redemptions */
   getMyRedemptions: () =>
-    api.get<RewardRedemption[]>(`${REWARDS_BASE}/me/redemptions`).then(r => r.data),
+    api.get<RewardRedemption[]>(`${REWARDS_BASE}/me/redemptions`, rbac('rewardsApi.getMyRedemptions.GET')).then(r => r.data),
 
-  /** Use a redemption code */
+  getMyRedemptionsPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<RewardRedemption>>(`${REWARDS_BASE}/me/redemptions`, {
+      ...rbac('rewardsApi.getMyRedemptions.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
+
   useRedemption: (code: string, data?: { referenceId?: string; referenceType?: string }) =>
-    api.post<RewardRedemption>(`${REWARDS_BASE}/redemptions/${code}/use`, data).then(r => r.data),
+    api.post<RewardRedemption>(`${REWARDS_BASE}/redemptions/${code}/use`, data, rbac('rewardsApi.useRedemption.POST')).then(r => r.data),
 
-  /** Cancel a redemption */
   cancelRedemption: (redemptionId: string) =>
-    api.delete(`${REWARDS_BASE}/redemptions/${redemptionId}/cancel`).then(r => r.data),
+    api.delete(`${REWARDS_BASE}/redemptions/${redemptionId}/cancel`, rbac('rewardsApi.cancelRedemption.DELETE')).then(r => r.data),
 
-  /** Admin: all redemptions */
   getAllRedemptions: () =>
-    api.get<RewardRedemption[]>(`${REWARDS_BASE}/admin/redemptions`).then(r => r.data),
+    api.get<RewardRedemption[]>(`${REWARDS_BASE}/admin/redemptions`, rbac('rewardsApi.getAllRedemptions.GET')).then(r => r.data),
+
+  getAllRedemptionsPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<RewardRedemption>>(`${REWARDS_BASE}/admin/redemptions`, {
+      ...rbac('rewardsApi.getAllRedemptions.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
 };

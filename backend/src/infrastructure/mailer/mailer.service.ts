@@ -15,6 +15,7 @@ export interface SendMailOptions {
   text?: string;
   template?: string;
   context?: Record<string, unknown>;
+  trackingMeta?: Record<string, unknown>;
   /** Skip tracking injection for system emails */
   skipTracking?: boolean;
 }
@@ -215,26 +216,42 @@ export class MailerService implements OnModuleInit {
     context: Record<string, unknown>,
   ): string {
     const template = this.compiledTemplates.get(templateName);
-
-    if (!template) {
-      this.logger.error(
-        `Template not found: ${templateName}`,
-      );
-      return '';
-    }
-
     const enrichedContext = {
       ...context,
       appName: this.fromName,
       appUrl: this.config.get<string>(
-        'FRONTEND_URL',
-        'http://localhost:5173',
+        'HOST_FRONTEND_URL',
+        'http://localhost:8080',
       ),
       supportEmail: this.fromAddress,
       currentYear: new Date().getFullYear(),
     };
 
-    const bodyHtml = template(enrichedContext);
+    let bodyHtml = '';
+
+    if (!template) {
+      this.logger.error(
+        `Template not found: "${templateName}". Available: [${Array.from(this.compiledTemplates.keys()).join(', ') || 'none'}]. Ensure .hbs files are bundled into dist/.`,
+      );
+      bodyHtml = this.buildFallbackHtml(templateName, enrichedContext);
+    } else {
+      try {
+        bodyHtml = template(enrichedContext);
+      } catch (err: any) {
+        this.logger.error(
+          `Template render failed for "${templateName}": ${err.message}`,
+          err.stack,
+        );
+        bodyHtml = this.buildFallbackHtml(templateName, enrichedContext);
+      }
+    }
+
+    if (!bodyHtml || !bodyHtml.trim()) {
+      this.logger.warn(
+        `Template "${templateName}" produced empty body; using fallback.`,
+      );
+      bodyHtml = this.buildFallbackHtml(templateName, enrichedContext);
+    }
 
     if (this.layoutTemplate) {
       return this.layoutTemplate({
@@ -244,6 +261,39 @@ export class MailerService implements OnModuleInit {
     }
 
     return bodyHtml;
+  }
+
+  /** Minimal HTML fallback so users never receive an empty email body. */
+  private buildFallbackHtml(
+    templateName: string,
+    context: Record<string, unknown>,
+  ): string {
+    const ctx = context as Record<string, any>;
+    const title = ctx.title || ctx.subject || 'Notification';
+    const intro = ctx.intro || '';
+    const personalMessage = ctx.personalMessage
+      ? `<blockquote style="border-left:3px solid #0891b2;padding:10px 14px;margin:18px 0;background:#f0f9ff;color:#334155;font-style:italic;border-radius:4px;">${this.escapeHtml(String(ctx.personalMessage))}</blockquote>`
+      : '';
+    const url = ctx.signupUrl || ctx.actionUrl || ctx.appUrl;
+    const cta = url
+      ? `<p style="margin:24px 0;"><a href="${url}" style="display:inline-block;padding:12px 26px;background:#0891b2;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;">${this.escapeHtml(String(ctx.actionLabel || 'Continuer'))}</a></p>
+         <p style="font-size:12px;color:#64748b;word-break:break-all;">Ou copiez ce lien dans votre navigateur :<br/><a href="${url}" style="color:#0891b2;">${url}</a></p>`
+      : '';
+    return `<div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.6;">
+      <h1 style="font-size:22px;margin:0 0 12px;color:#0f172a;">${this.escapeHtml(String(title))}</h1>
+      <p style="font-size:14px;color:#475569;margin:0 0 12px;">${this.escapeHtml(String(intro))}</p>
+      ${personalMessage}
+      ${cta}
+    </div>`;
+  }
+
+  private escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /** Send email with optional tracking injection */
@@ -302,6 +352,7 @@ export class MailerService implements OnModuleInit {
           options.to,
           options.subject,
           options.template,
+          options.trackingMeta,
         );
       } catch (err: any) {
         this.logger.warn(`Sent event recording failed: ${err.message}`);

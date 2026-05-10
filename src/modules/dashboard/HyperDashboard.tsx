@@ -32,11 +32,16 @@ import { HyperEntityManager } from '@/modules/admin/components/HyperEntityManage
 import { EmailAnalyticsPage } from '@/modules/admin/pages/EmailAnalyticsPage';
 import { HostFeeAbsorptionPage } from '@/modules/admin/pages/HostFeeAbsorptionPage';
 import { CancellationRulesPage } from '@/modules/admin/pages/CancellationRulesPage';
+import RbacDebugPage from '@/modules/admin/pages/RbacDebugPage';
+import EscrowAdminPage from '@/modules/admin/pages/EscrowAdminPage';
+import HostReactivationPage from '@/modules/payments/pages/HostReactivationPage';
+import MyDisputesPage from '@/modules/payments/pages/MyDisputesPage';
+import { MyReferralsPage } from '@/modules/referrals/MyReferralsPage';
 import { statsApi, invitationsApi, rolesApi, type AdminStats } from '@/modules/admin/admin.api';
 import { metricsApi } from '@/modules/admin/metrics.api';
 import type { Invitation } from '@/modules/admin/admin.types';
 import { useDashboard } from '@/modules/dashboard/useDashboard';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import type { GridColumn } from '@/types/component.types';
 import {
   Crown, Users, Shield, ShieldCheck, UserPlus,
@@ -44,7 +49,7 @@ import {
   Clock, CheckCircle2, XCircle, TrendingUp,
   Home, Calendar, Star, MapPin, ArrowRight,
   DollarSign, Trophy, CreditCard, Mail, ShieldX, Percent,
-  Loader2, Layers, Gift,
+  Loader2, Layers, Gift, Bug, Receipt, AlertTriangle, RotateCcw,
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<string, { color: string }> = {
@@ -73,7 +78,7 @@ export const HyperDashboard: React.FC = memo(() => {
   const [metricModal, setMetricModal] = useState<MetricDetail | null>(null);
 
   const { data: dashboardData } = useDashboard();
-  const rbac = usePermissions();
+  const { can, canViewPage, ...rbac } = useRoleAccess('HyperDashboard');
   const isHyperAdmin = rbac.isHyperAdmin;
 
   const loadData = useCallback(async () => {
@@ -252,11 +257,12 @@ export const HyperDashboard: React.FC = memo(() => {
     }))
     : [];
 
-  const tabs = [
+  const allTabs = [
     {
       value: 'overview',
       label: t('dashboard.tabs.overview', 'Vue d\'ensemble'),
       icon: <BarChart3 className="h-4 w-4" />,
+      visible: can('Overview', 'Tab', 'View'),
       content: (
         <ErrorBoundary>
           <div className="space-y-6">
@@ -514,12 +520,14 @@ export const HyperDashboard: React.FC = memo(() => {
       value: 'entities',
       label: t('dashboard.tabs.entities', 'Propriétés & Services'),
       icon: <Layers className="h-4 w-4" />,
+      visible: can('Entities', 'Tab', 'View'),
       content: <ErrorBoundary><HyperEntityManager canCreateProperty={rbac.canCreateProperty} canCreateService={rbac.canCreateService} canModifyProperty={rbac.canModifyProperty} canModifyService={rbac.canModifyService} /></ErrorBoundary>,
     },
     {
       value: 'points',
       label: t('dashboard.tabs.points', 'Points & Récompenses'),
       icon: <Trophy className="h-4 w-4" />,
+      visible: can('Points', 'Tab', 'View'),
       content: (
         <ErrorBoundary>
           <div className="space-y-6">
@@ -533,36 +541,70 @@ export const HyperDashboard: React.FC = memo(() => {
       value: 'rewards',
       label: t('dashboard.tabs.rewards', 'Récompenses'),
       icon: <Gift className="h-4 w-4" />,
+      visible: can('Rewards', 'Tab', 'View'),
       content: <ErrorBoundary><RewardsManager /></ErrorBoundary>,
     },
     {
       value: 'fees',
       label: t('dashboard.tabs.fees', 'Frais de service'),
       icon: <DollarSign className="h-4 w-4" />,
+      visible: can('Fees', 'Tab', 'View'),
       content: <ErrorBoundary><ServiceFeesManager /></ErrorBoundary>,
     },
     {
       value: 'payment-validation',
       label: t('dashboard.tabs.paymentValidation', 'Validation paiements'),
       icon: <CreditCard className="h-4 w-4" />,
+      visible: can('PaymentValidation', 'Tab', 'View'),
       content: <ErrorBoundary><PaymentValidation /></ErrorBoundary>,
+    },
+    {
+      value: 'escrow',
+      label: t('dashboard.tabs.escrow', 'Escrow'),
+      icon: <Receipt className="h-4 w-4" />,
+      visible: true,
+      content: <ErrorBoundary><EscrowAdminPage /></ErrorBoundary>,
+    },
+    {
+      value: 'my-disputes',
+      label: t('dashboard.tabs.myDisputes', 'Disputes'),
+      icon: <AlertTriangle className="h-4 w-4" />,
+      visible: true,
+      content: <ErrorBoundary><MyDisputesPage /></ErrorBoundary>,
+    },
+    {
+      value: 'host-reactivation',
+      label: t('dashboard.tabs.hostReactivation', 'Réactivation host'),
+      icon: <RotateCcw className="h-4 w-4" />,
+      visible: true,
+      content: <ErrorBoundary><HostReactivationPage /></ErrorBoundary>,
+    },
+    {
+      value: 'rbac-debug',
+      label: t('dashboard.tabs.rbacDebug', 'RBAC Debug'),
+      icon: <Bug className="h-4 w-4" />,
+      visible: true,
+      content: <ErrorBoundary><RbacDebugPage /></ErrorBoundary>,
     },
     {
       value: 'email-analytics',
       label: t('dashboard.tabs.emailAnalytics', 'Email Analytics'),
       icon: <Mail className="h-4 w-4" />,
+      visible: can('EmailAnalytics', 'Tab', 'View'),
       content: <ErrorBoundary><EmailAnalyticsPage /></ErrorBoundary>,
     },
     {
       value: 'fee-absorption',
       label: t('dashboard.tabs.feeAbsorption', 'Absorption frais'),
       icon: <Percent className="h-4 w-4" />,
+      visible: can('FeeAbsorption', 'Tab', 'View'),
       content: <ErrorBoundary><HostFeeAbsorptionPage viewOnly={!rbac.canCreateAbsorptionFees} /></ErrorBoundary>,
     },
     {
       value: 'cancellation',
       label: t('dashboard.tabs.cancellation', "Règles d'annulation"),
       icon: <ShieldX className="h-4 w-4" />,
+      visible: can('Cancellation', 'Tab', 'View'),
       content: <ErrorBoundary><CancellationRulesPage viewOnly={!rbac.canCreateCancellationRules} /></ErrorBoundary>,
     },
     {
@@ -570,6 +612,7 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.verifications', 'Vérifications'),
       icon: <FileCheck2 className="h-4 w-4" />,
       badge: stats?.pendingVerifications,
+      visible: can('Verifications', 'Tab', 'View'),
       content: <ErrorBoundary><VerificationReview /></ErrorBoundary>,
     },
     {
@@ -577,6 +620,7 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.users', 'Utilisateurs'),
       icon: <Users className="h-4 w-4" />,
       badge: stats?.totalUsers,
+      visible: can('Users', 'Tab', 'View'),
       content: <ErrorBoundary><RolesManagement excludeHyperAdmin /></ErrorBoundary>,
     },
     {
@@ -584,6 +628,7 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.groups', 'Groupes'),
       icon: <FolderKanban className="h-4 w-4" />,
       badge: stats?.totalGroups,
+      visible: can('Groups', 'Tab', 'View'),
       content: <ErrorBoundary><GroupsManagement readOnly={!rbac.canCreateGroups} /></ErrorBoundary>,
     },
     {
@@ -591,9 +636,19 @@ export const HyperDashboard: React.FC = memo(() => {
       label: t('dashboard.tabs.assignments', 'Assignations'),
       icon: <ShieldCheck className="h-4 w-4" />,
       badge: stats?.totalAssignments,
+      visible: can('Assignments', 'Tab', 'View'),
       content: <ErrorBoundary><ManagerAssignments isHyperContext /></ErrorBoundary>,
     },
+    {
+      value: 'referrals',
+      label: t('dashboard.tabs.referrals', 'Parrainages'),
+      icon: <Gift className="h-4 w-4" />,
+      visible: true,
+      content: <ErrorBoundary><MyReferralsPage scoped /></ErrorBoundary>,
+    },
   ];
+
+  const tabs = allTabs.filter(t => t.visible !== false);
 
   return (
     <div className="space-y-6">
@@ -614,9 +669,11 @@ export const HyperDashboard: React.FC = memo(() => {
               </p>
             </div>
           </div>
-          <Button onClick={() => setInviteOpen(true)} size="lg" className="gap-2 shadow-lg shadow-primary/20">
-            <UserPlus className="h-5 w-5" /> Inviter
-          </Button>
+      {can('Header', 'Button', 'Invite') && (
+            <Button onClick={() => setInviteOpen(true)} size="lg" className="gap-2 shadow-lg shadow-primary/20">
+              <UserPlus className="h-5 w-5" /> Inviter
+            </Button>
+          )}
         </div>
       </div>
 

@@ -79,9 +79,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
   };
 
+  /**
+   * Re-read the session from SecureStore and re-fetch the user.
+   * Used after SSO completes and writes the platform JWT to storage.
+   */
+  const refreshSession = async () => {
+    setLoading(true);
+    await checkAuth();
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, signup, logout, isAuthenticated: !!user }}
+      value={{ user, loading, login, signup, logout, refreshSession, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

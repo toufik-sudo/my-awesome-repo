@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { emailTrackingApi, type EmailAnalytics } from '../email-tracking.api';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const PERIOD_OPTIONS = [
   { value: '7', label: '7 jours' },
@@ -43,6 +44,7 @@ const PIE_COLORS = [
 ];
 
 export const EmailAnalyticsPage: React.FC = () => {
+  const { can } = useRoleAccess('EmailAnalyticsPage');
   const [days, setDays] = useState('30');
 
   const { data, isLoading, error } = useQuery({
@@ -232,6 +234,9 @@ const TemplatesTab: React.FC<{ data: EmailAnalytics }> = ({ data }) => (
           <TableHeader>
             <TableRow className="border-border">
               <TableHead>Template</TableHead>
+              <TableHead>Rôle</TableHead>
+              <TableHead>Langue</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead className="text-right">Envoyés</TableHead>
               <TableHead className="text-right">Ouverts</TableHead>
               <TableHead className="text-right">Cliqués</TableHead>
@@ -243,6 +248,9 @@ const TemplatesTab: React.FC<{ data: EmailAnalytics }> = ({ data }) => (
             {data.byTemplate.map((t) => (
               <TableRow key={t.templateName} className="border-border">
                 <TableCell className="font-medium">{t.templateName}</TableCell>
+                <TableCell>{t.role || '—'}</TableCell>
+                <TableCell>{t.language?.toUpperCase() || '—'}</TableCell>
+                <TableCell>{t.invitationKind || '—'}</TableCell>
                 <TableCell className="text-right">{t.sent}</TableCell>
                 <TableCell className="text-right">{t.opened}</TableCell>
                 <TableCell className="text-right">{t.clicked}</TableCell>
@@ -345,6 +353,7 @@ const EventsTab: React.FC<{ data: EmailAnalytics }> = ({ data }) => {
                 <TableHead className="w-[140px]">Date</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Destinataire</TableHead>
+                <TableHead>Rôle / Langue</TableHead>
                 <TableHead>Sujet / URL</TableHead>
                 <TableHead>Bot ?</TableHead>
               </TableRow>
@@ -363,6 +372,9 @@ const EventsTab: React.FC<{ data: EmailAnalytics }> = ({ data }) => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs font-mono">{e.recipientEmail}</TableCell>
+                  <TableCell className="text-xs">
+                    {(e.metadata?.invitationRole || '—')} / {(e.metadata?.language?.toUpperCase() || '—')}
+                  </TableCell>
                   <TableCell className="text-xs max-w-[200px] truncate">
                     {e.clickedUrl || e.subject || e.templateName || '—'}
                   </TableCell>

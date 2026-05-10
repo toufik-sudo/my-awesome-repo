@@ -1,4 +1,6 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
+import type { Paginated, PaginationParams } from '@/modules/shared/types/pagination';
 
 const FEES_BASE = '/service-fees';
 
@@ -39,23 +41,29 @@ export interface ServiceFeeRule {
 
 export const serviceFeesApi = {
   getAll: () =>
-    api.get<ServiceFeeRule[]>(FEES_BASE).then(r => r.data),
+    api.get<ServiceFeeRule[]>(FEES_BASE, rbac('serviceFeesApi.getAll.GET')).then(r => r.data),
+
+  getAllPaginated: (params: PaginationParams = {}) =>
+    api.get<Paginated<ServiceFeeRule>>(FEES_BASE, {
+      ...rbac('serviceFeesApi.getAll.GET'),
+      params: { page: params.page ?? 1, limit: params.limit ?? 20 },
+    }).then(r => r.data),
 
   getDefault: () =>
-    api.get<ServiceFeeRule>(`${FEES_BASE}/default`).then(r => r.data),
+    api.get<ServiceFeeRule>(`${FEES_BASE}/default`, rbac('serviceFeesApi.getDefault.GET')).then(r => r.data),
 
   getForHost: (hostId: number) =>
-    api.get<ServiceFeeRule[]>(`${FEES_BASE}/host/${hostId}`).then(r => r.data),
+    api.get<ServiceFeeRule[]>(`${FEES_BASE}/host/${hostId}`, rbac('serviceFeesApi.getForHost.GET')).then(r => r.data),
 
   create: (data: Partial<ServiceFeeRule>) =>
-    api.post<ServiceFeeRule>(FEES_BASE, data).then(r => r.data),
+    api.post<ServiceFeeRule>(FEES_BASE, data, rbac('serviceFeesApi.create.POST')).then(r => r.data),
 
   update: (ruleId: string, data: Partial<ServiceFeeRule>) =>
-    api.put<ServiceFeeRule>(`${FEES_BASE}/${ruleId}`, data).then(r => r.data),
+    api.put<ServiceFeeRule>(`${FEES_BASE}/${ruleId}`, data, rbac('serviceFeesApi.update.PUT')).then(r => r.data),
 
   remove: (ruleId: string) =>
-    api.delete(`${FEES_BASE}/${ruleId}`),
+    api.delete(`${FEES_BASE}/${ruleId}`, rbac('serviceFeesApi.remove.DELETE')),
 
   calculate: (data: { hostId: number; propertyId: string; propertyGroupId?: string; amount: number; serviceId?: string; serviceGroupId?: string }) =>
-    api.post<{ fee: number; rule: ServiceFeeRule }>(`${FEES_BASE}/calculate`, data).then(r => r.data),
+    api.post<{ fee: number; rule: ServiceFeeRule }>(`${FEES_BASE}/calculate`, data, rbac('serviceFeesApi.calculate.POST')).then(r => r.data),
 };

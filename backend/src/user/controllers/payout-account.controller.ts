@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards, UseInterceptors,
+  Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { maybePaginate } from '../../common/pagination.util';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PayoutAccountService } from '../services/payout-account.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -32,8 +33,9 @@ export class PayoutAccountController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get all payout accounts (hyper admin)' })
-  async getAll() {
-    return this.service.getAll();
+  async getAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const items = await this.service.getAll();
+    return maybePaginate(items, page, limit);
   }
 
   @Post()

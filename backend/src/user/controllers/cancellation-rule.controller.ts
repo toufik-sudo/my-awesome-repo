@@ -1,7 +1,8 @@
 import {
   Controller, Get, Post, Put, Delete,
-  Body, Param, Request, UseGuards, UseInterceptors,
+  Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { maybePaginate } from '../../common/pagination.util';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
 import { JwtAuthGuard } from '../../auth/jwtAuth.guard';
@@ -27,6 +28,16 @@ export class CancellationRuleController {
   getMine(@Request() req: any): Promise<CancellationRule[]> {
     const scopeCtx = extractScopeContext(req);
     return this.ruleService.getForUser(req.user.id);
+  }
+
+  @Get('all')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Get all cancellation rules across all hosts (hyper admin)' })
+  async getAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const items = await this.ruleService.getAll();
+    return maybePaginate(items, page, limit);
   }
 
   @Get('host/:hostId')

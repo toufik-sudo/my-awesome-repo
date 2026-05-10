@@ -1,4 +1,49 @@
-import { AppRole } from '../entity/user.entity';
+import { AppRole, ROLE_HIERARCHY } from '../entity/user.entity';
+
+/**
+ * Roles that are IMMUTABLE — once assigned, the user cannot transition to a
+ * different role via invitation acceptance. Re-invitations to the same or any
+ * other role must be rejected.
+ *
+ * Rationale (per product rules):
+ * - hyper_admin / hyper_manager: top-level platform roles, must not be downgraded
+ *   nor sideways-changed.
+ * - admin: a Host owns properties/services. Switching them to anything else
+ *   would orphan their resources.
+ *
+ * Mutable roles (user, guest, manager) can be UPGRADED to a higher role via a
+ * fresh invitation, but never downgraded.
+ */
+export const IMMUTABLE_ROLES: AppRole[] = ['hyper_admin', 'hyper_manager', 'admin'];
+
+export function isImmutableRole(role: AppRole): boolean {
+  return IMMUTABLE_ROLES.includes(role);
+}
+
+/**
+ * Determine whether a user with `currentRole` can transition to `targetRole`
+ * through an invitation acceptance.
+ *
+ * Returns an object describing the outcome so callers can produce useful
+ * error messages.
+ */
+export function evaluateRoleTransition(
+  currentRole: AppRole,
+  targetRole: AppRole,
+): { allowed: boolean; reason?: 'IMMUTABLE' | 'DOWNGRADE' | 'SAME'; sameRole?: boolean } {
+  if (currentRole === targetRole) {
+    return { allowed: false, reason: 'SAME', sameRole: true };
+  }
+  if (isImmutableRole(currentRole)) {
+    return { allowed: false, reason: 'IMMUTABLE' };
+  }
+  const currentRank = ROLE_HIERARCHY[currentRole] ?? 0;
+  const targetRank = ROLE_HIERARCHY[targetRole] ?? 0;
+  if (targetRank < currentRank) {
+    return { allowed: false, reason: 'DOWNGRADE' };
+  }
+  return { allowed: true };
+}
 
 /**
  * Invitation rules matrix.

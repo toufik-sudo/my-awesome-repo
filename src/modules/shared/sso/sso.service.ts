@@ -5,7 +5,7 @@
 
 import { api } from '@/lib/axios';
 import { API_BASE } from '@/constants/api.constants';
-import { ssoConfig, isSSOConfigValid } from './sso.config';
+import { ssoConfig, isSSOConfigValid, ssoProviderClientIds, ssoProviderScopes } from './sso.config';
 import { SSO_OIDC_ENDPOINTS, SSO_STORAGE_KEYS, SSO_ERROR_CODES } from './sso.constants';
 import type {
   SSOTokens,
@@ -38,8 +38,8 @@ const getProviderConfig = (provider: SSOProviderName): SSOProviderConfig => {
   return {
     name: provider,
     ...endpoints,
-    clientId: ssoConfig.clientId,
-    scope: ssoConfig.scope,
+    clientId: ssoProviderClientIds[provider] || ssoConfig.clientId,
+    scope: ssoProviderScopes[provider] || ssoConfig.scope,
   };
 };
 
@@ -200,6 +200,19 @@ export const ssoService = {
     if (provider === 'google') {
       params.access_type = 'offline';
       params.prompt = 'consent';
+    } else if (provider === 'apple') {
+      // Apple requires form_post when scope includes name/email
+      params.response_mode = 'form_post';
+    } else if (provider === 'facebook') {
+      params.auth_type = 'rerequest';
+    } else if (provider === 'instagram') {
+      // Instagram Basic Display: token response_type, no PKCE/nonce
+      params.response_type = 'code';
+      delete params.nonce;
+    } else if (provider === 'tiktok') {
+      // TikTok uses client_key instead of client_id
+      params.client_key = params.client_id;
+      delete params.client_id;
     }
 
     const authUrl = buildAuthorizationUrl(

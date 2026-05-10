@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac, rbacMerge } from '@/lib/api-rbac';
 
 const POINTS_BASE = '/points';
 
@@ -38,24 +39,24 @@ export interface LeaderboardEntry {
 
 export const pointsApi = {
   getMySummary: () =>
-    api.get<PointsSummary>(`${POINTS_BASE}/me`).then(r => r.data),
+    api.get<PointsSummary>(`${POINTS_BASE}/me`, rbac('pointsApi.getMySummary.GET')).then(r => r.data),
 
   getMyTransactions: (page = 1, limit = 20) =>
     api.get<{ data: PointTransaction[]; total: number; page: number; totalPages: number }>(
-      `${POINTS_BASE}/me/transactions`, { params: { page, limit } }
+      `${POINTS_BASE}/me/transactions`, rbacMerge('pointsApi.getMyTransactions.GET', { params: { page, limit } })
     ).then(r => r.data),
 
   getLeaderboard: (limit = 20) =>
-    api.get<LeaderboardEntry[]>(`${POINTS_BASE}/leaderboard`, { params: { limit } }).then(r => r.data),
+    api.get<LeaderboardEntry[]>(`${POINTS_BASE}/leaderboard`, rbacMerge('pointsApi.getLeaderboard.GET', { params: { limit } })).then(r => r.data),
 
   adminAward: (userId: number, points: number, description: string) =>
-    api.post(`${POINTS_BASE}/admin/award`, { userId, points, description }).then(r => r.data),
+    api.post(`${POINTS_BASE}/admin/award`, { userId, points, description }, rbac('pointsApi.adminAward.POST')).then(r => r.data),
 
   adminDeduct: (userId: number, points: number, reason: string) =>
-    api.post(`${POINTS_BASE}/admin/deduct`, { userId, points, reason }).then(r => r.data),
+    api.post(`${POINTS_BASE}/admin/deduct`, { userId, points, reason }, rbac('pointsApi.adminDeduct.POST')).then(r => r.data),
 
   getUserPoints: (userId: number) =>
-    api.get<PointsSummary>(`${POINTS_BASE}/user/${userId}`).then(r => r.data),
+    api.get<PointsSummary>(`${POINTS_BASE}/user/${userId}`, rbac('pointsApi.getUserPoints.GET')).then(r => r.data),
 };
 
 export const TIER_CONFIG: Record<string, { label: string; color: string; icon: string; minPoints: number }> = {

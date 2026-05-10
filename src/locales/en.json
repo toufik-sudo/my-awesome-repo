@@ -226,50 +226,12 @@
     }
   },
   "common": {
-    "welcome": "Welcome",
-    "search": "Search",
-    "filter": "Filter",
-    "reset": "Reset",
-    "apply": "Apply",
-    "cancel": "Cancel",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit",
-    "close": "Close",
-    "loading": "Loading...",
-    "error": "An error occurred",
-    "success": "Success",
-    "confirm": "Confirm",
-    "ok": "OK",
-    "yes": "Yes",
-    "no": "No",
-    "appName": "Dynamic App",
-    "openMenu": "Open menu",
-    "collapse": "Collapse",
-    "user": "User",
-    "next": "Next",
-    "previous": "Previous",
-    "skip": "Skip",
-    "finish": "Finish",
-    "step": "Step",
-    "of": "of",
-    "back": "Back",
-    "continue": "Continue",
-    "submit": "Submit",
-    "required": "Required",
-    "export": "Export",
-    "exportCSV": "Export as CSV",
-    "exportPDF": "Export as PDF",
-    "allTime": "All Time",
-    "last7Days": "Last 7 days",
-    "last30Days": "Last 30 days",
-    "last90Days": "Last 90 days",
-    "lastYear": "Last year",
-    "newest": "Newest first",
-    "oldest": "Oldest first",
-    "priceHigh": "Price: High",
-    "priceLow": "Price: Low",
-    "showing": "Showing"
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "viewAll": "View All"
   },
   "layouts": {
     "classic": "Classic",
@@ -285,7 +247,8 @@
       "main": "Main",
       "demos": "Demos",
       "content": "Content",
-      "admin": "Administration"
+      "admin": "Administration",
+      "payments": "Payments"
     },
     "home": "Home",
     "dashboard": "Dashboard",
@@ -316,7 +279,16 @@
     "onboarding": "Onboarding",
     "bookingCalendar": "Booking Calendar",
     "cancellationRules": "Cancellation Rules",
-    "rbacSettings": "RBAC Settings"
+    "rbacSettings": "RBAC Settings",
+    "myDisputes": "My Disputes",
+    "paymentValidation": "Payment Validation",
+    "payouts": "Payouts",
+    "escrow": "Escrow & Disputes",
+    "hostReactivation": "Host Reactivation",
+    "rbacDebug": "RBAC Debug",
+    "administration": "Administration",
+    "supportChat": "Support Chat",
+    "myBookings": "My Bookings"
   },
   "auth": {
     "login": "Login",
@@ -461,7 +433,9 @@
     "guest": "Guest",
     "guestMessage": "Guest message",
     "manageRequest": "Manage",
-    "chat": "Chat"
+    "chat": "Chat",
+    "accepted": "Accepted (awaiting payment)",
+    "archived": "Archived"
   },
   "chat": {
     "conversationTitle": "Booking Conversation",
@@ -980,14 +954,6 @@
   },
   "scope": {
     "all": "All properties"
-  },
-  "common": {
-    "active": "Active",
-    "inactive": "Inactive",
-    "pending": "Pending",
-    "approved": "Approved",
-    "rejected": "Rejected",
-    "viewAll": "View All"
   },
   "onboarding": {
     "title": "Welcome to {{appName}}",
@@ -1522,5 +1488,88 @@
       "saveFailed": "Error saving configuration",
       "reloadFailed": "Error reloading cache"
     }
+  },
+  "disputes": {
+    "myTitle": "My Disputes",
+    "mySubtitle": "Track the status of your disputes and refunds.",
+    "empty": "No disputes yet.",
+    "loadError": "Failed to load disputes",
+    "severity": "Severity",
+    "refund": "Refund",
+    "viewPayout": "View related payout",
+    "timeline": {
+      "opened": "Opened",
+      "review": "Under review",
+      "decision": "Decision",
+      "refunded": "Refund processed",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "all": "All",
+      "open": "Open",
+      "under_review": "Under review",
+      "resolved_guest": "Resolved (guest)",
+      "resolved_host": "Resolved (host)",
+      "dismissed": "Dismissed",
+      "pending": "Pending",
+      "validated": "Validated",
+      "partial": "Partial"
+    },
+    "breakdown": {
+      "title": "Financial breakdown",
+      "gross": "Gross amount",
+      "platformFee": "Platform fee",
+      "guestFee": "Guest fee",
+      "refundedToGuest": "Refunded to guest",
+      "remainingHost": "Remaining for host"
+    }
+  },
+  "payouts": {
+    "title": "Host Payouts",
+    "subtitle": "Track scheduled and released payouts (gross / fee / net).",
+    "empty": "No payouts.",
+    "kpi": {
+      "gross": "Gross",
+      "fee": "Fee",
+      "net": "Net",
+      "released": "Released"
+    },
+    "filter": {
+      "all": "All",
+      "scheduled": "Scheduled",
+      "on_hold": "On hold",
+      "released": "Released",
+      "partially_released": "Partial",
+      "forfeited": "Forfeited"
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "on_hold": "On hold",
+      "released": "Released",
+      "partially_released": "Partially released",
+      "forfeited": "Forfeited"
+    },
+    "col": {
+      "host": "Host",
+      "booking": "Booking",
+      "gross": "Gross",
+      "fee": "Fee",
+      "net": "Net",
+      "releaseAt": "Release at",
+      "releasedAt": "Released at",
+      "status": "Status",
+      "disputes": "Disputes"
+    },
+    "viewDispute": "View dispute"
+  },
+  "blame": {
+    "nonSerious": "Non-serious",
+    "tooltip": "{{count}} active reliability flag(s). Contact support to dispute.",
+    "adminTitle": "User trust badges",
+    "activeOnly": "Active",
+    "removed": "Removed",
+    "remove": "Remove badge",
+    "removeNotePrompt": "Removal note (optional):",
+    "empty": "No badges to display."
   }
 }

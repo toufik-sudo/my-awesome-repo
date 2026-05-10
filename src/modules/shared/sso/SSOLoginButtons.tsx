@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useSSO } from './useSSO';
+import { ssoProviderClientIds } from './sso.config';
 import type { SSOProviderName, SSOModuleInput } from './sso.types';
 
 interface SSOLoginButtonsProps {
@@ -22,13 +23,16 @@ const PROVIDER_META: Record<SSOProviderName, { icon: string; label: string; hove
   apple: { icon: '🍎', label: 'Apple', hoverClass: 'hover:bg-gray-50 hover:border-gray-200 dark:hover:bg-gray-900' },
   facebook: { icon: '📘', label: 'Facebook', hoverClass: 'hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-950' },
   github: { icon: '🐙', label: 'GitHub', hoverClass: 'hover:bg-gray-50 hover:border-gray-300 dark:hover:bg-gray-900' },
+  instagram: { icon: '📷', label: 'Instagram', hoverClass: 'hover:bg-pink-50 hover:border-pink-300 dark:hover:bg-pink-950' },
+  tiktok: { icon: '🎵', label: 'TikTok', hoverClass: 'hover:bg-gray-50 hover:border-gray-300 dark:hover:bg-gray-900' },
 };
 
 export const SSOLoginButtons: React.FC<SSOLoginButtonsProps> = ({ ssoInput, className }) => {
   const { t } = useTranslation();
   const { isEnabled, providers, login, isLoading } = useSSO(ssoInput);
+  const visibleProviders = providers.filter(p => !!ssoProviderClientIds[p]);
 
-  if (!isEnabled || providers.length === 0) return null;
+  if (!isEnabled || visibleProviders.length === 0) return null;
 
   const handleProviderLogin = (provider: SSOProviderName) => {
     login(provider);
@@ -45,7 +49,7 @@ export const SSOLoginButtons: React.FC<SSOLoginButtonsProps> = ({ ssoInput, clas
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 mt-2">
-        {providers.map((provider) => {
+        {visibleProviders.map((provider) => {
           const meta = PROVIDER_META[provider];
           if (!meta) return null;
           return (

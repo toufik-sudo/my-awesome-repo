@@ -25,17 +25,18 @@ export class PermissionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // 1. Public endpoints bypass
+    // 1. Public endpoints bypass unless we have an authenticated user and need
+    // scope hydration for downstream services.
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
 
-    // 2. Authenticated user required
+    // 2. Authenticated user required for non-public endpoints
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     if (!user?.id) {
+      if (isPublic) return true;
       throw new UnauthorizedException('Authentication required.');
     }
 
@@ -53,38 +54,42 @@ export class PermissionGuard implements CanActivate {
     const endpointName = handler.name;
     const permissionKey = generateBackendPermissionKey(controllerName, endpointName, method);
 
-    // 4. RBAC lookup
-    if (this.rbacConfig.isLoaded()) {
-      const isAllowed = this.rbacConfig.can(userRole, permissionKey);
-      if (!isAllowed) {
-        this.logger.warn(`DENIED: ${userRole} → ${permissionKey}`);
-        throw new ForbiddenException(
-          `Permission denied: '${permissionKey}' is not allowed for role '${userRole}'.`,
-        );
+    // 4. RBAC lookup for protected endpoints only.
+    if (!isPublic) {
+      if (this.rbacConfig.isLoaded()) {
+        const isAllowed = this.rbacConfig.can(userRole, permissionKey);
+        if (!isAllowed) {
+          this.logger.warn(`DENIED: ${userRole} → ${permissionKey}`);
+          throw new ForbiddenException(
+            `Permission denied: '${permissionKey}' is not allowed for role '${userRole}'.`,
+          );
+        }
+      } else {
+        this.logger.error('RBAC cache not loaded — denying request');
+        throw new ForbiddenException('RBAC system not ready. Please try again.');
       }
-    } else {
-      this.logger.error('RBAC cache not loaded — denying request');
-      throw new ForbiddenException('RBAC system not ready. Please try again.');
     }
 
     // 5. Business rules
 
-    // 5a. Booking restriction
-    if (this.isBookingCreateEndpoint(controllerName, endpointName)) {
-      if (!canMakeBooking(userRole)) {
-        throw new ForbiddenException(`Role '${userRole}' cannot make bookings.`);
+    if (!isPublic) {
+      // 5a. Booking restriction
+      if (this.isBookingCreateEndpoint(controllerName, endpointName)) {
+        if (!canMakeBooking(userRole)) {
+          throw new ForbiddenException(`Role '${userRole}' cannot make bookings.`);
+        }
       }
-    }
 
-    // 5b. Invitation rules
-    if (path.includes('/invitations') && method === 'POST' && endpointName === 'create') {
-      const targetRole: AppRole = request.body?.role;
-      if (targetRole) {
-        const allowed = INVITATION_ALLOWED_ROLES[userRole] ?? [];
-        if (!allowed.includes(targetRole)) {
-          throw new ForbiddenException(
-            `'${userRole}' cannot invite role '${targetRole}'. Allowed: [${allowed.join(', ') || 'none'}].`,
-          );
+      // 5b. Invitation rules
+      if (path.includes('/invitations') && method === 'POST' && endpointName === 'create') {
+        const targetRole: AppRole = request.body?.role;
+        if (targetRole) {
+          const allowed = INVITATION_ALLOWED_ROLES[userRole] ?? [];
+          if (!allowed.includes(targetRole)) {
+            throw new ForbiddenException(
+              `'${userRole}' cannot invite role '${targetRole}'. Allowed: [${allowed.join(', ') || 'none'}].`,
+            );
+          }
         }
       }
     }
@@ -103,6 +108,8 @@ export class PermissionGuard implements CanActivate {
       request.managerPropertyScope = managerPropertyScope;
       // Attach scoped perms for downstream services
       request.managerScopedPerms = this.rbacConfig.getManagerScopedPerms(userId);
+      // Inviter admins for empty-perms / scope='all' inheritance fallback
+      request.inviterAdminIds = await this.rolesService.getInviterAdminIds(userId, 'manager');
     }
 
     // Hyper Manager: scoped permissions from hyper_manager_permissions table
@@ -114,6 +121,7 @@ export class PermissionGuard implements CanActivate {
     if (userRole === 'guest') {
       await this.enforceGuestScope(request, userId);
       request.guestScopedPerms = this.rbacConfig.getGuestScopedPerms(userId);
+      request.inviterAdminIds = await this.rolesService.getInviterAdminIds(userId, 'guest');
     }
 
     return true;

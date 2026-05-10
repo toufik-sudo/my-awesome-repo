@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { GlassCard, GlassStat } from '@/modules/admin/components/GlassCard';
 import { PointsDashboardWidget } from '@/modules/points/PointsDashboardWidget';
 import { useDashboard } from './useDashboard';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import {
   Home, Calendar, Star, MapPin, ArrowRight, Search, Heart,
   CreditCard, MessageSquare, Bell, Share2, Trophy, BarChart3,
@@ -35,6 +36,7 @@ export const GuestDashboard: React.FC = memo(() => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data, loading } = useDashboard();
+  const { can } = useRoleAccess('GuestDashboard');
 
   if (loading) {
     return (
@@ -87,24 +89,36 @@ export const GuestDashboard: React.FC = memo(() => {
                 {t('dashboard.quickActions', 'Actions rapides')}
               </h3>
               <div className="flex flex-wrap gap-2">
-                <Button onClick={() => navigate('/properties')} className="gap-2">
-                  <Search className="h-4 w-4" /> {t('dashboard.browseProperties', 'Parcourir')}
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/services')} className="gap-2">
-                  <Compass className="h-4 w-4" /> {t('dashboard.browseServices', 'Services')}
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/bookings')} className="gap-2">
-                  <Calendar className="h-4 w-4" /> {t('dashboard.myBookings', 'Mes réservations')}
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/booking-calendar')} className="gap-2">
-                  <Calendar className="h-4 w-4" /> {t('dashboard.calendar', 'Calendrier')}
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/support')} className="gap-2">
-                  <HelpCircle className="h-4 w-4" /> {t('dashboard.support', 'Support')}
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/settings')} className="gap-2">
-                  <Eye className="h-4 w-4" /> {t('dashboard.profile', 'Mon profil')}
-                </Button>
+                {can('QuickActions', 'Button', 'Browse') && (
+                  <Button onClick={() => navigate('/properties')} className="gap-2">
+                    <Search className="h-4 w-4" /> {t('dashboard.browseProperties', 'Parcourir')}
+                  </Button>
+                )}
+                {can('QuickActions', 'Button', 'Services') && (
+                  <Button variant="outline" onClick={() => navigate('/services')} className="gap-2">
+                    <Compass className="h-4 w-4" /> {t('dashboard.browseServices', 'Services')}
+                  </Button>
+                )}
+                {can('QuickActions', 'Button', 'Bookings') && (
+                  <Button variant="outline" onClick={() => navigate('/bookings')} className="gap-2">
+                    <Calendar className="h-4 w-4" /> {t('dashboard.myBookings', 'Mes réservations')}
+                  </Button>
+                )}
+                {can('QuickActions', 'Button', 'Calendar') && (
+                  <Button variant="outline" onClick={() => navigate('/booking-calendar')} className="gap-2">
+                    <Calendar className="h-4 w-4" /> {t('dashboard.calendar', 'Calendrier')}
+                  </Button>
+                )}
+                {can('QuickActions', 'Button', 'Support') && (
+                  <Button variant="outline" onClick={() => navigate('/support')} className="gap-2">
+                    <HelpCircle className="h-4 w-4" /> {t('dashboard.support', 'Support')}
+                  </Button>
+                )}
+                {can('QuickActions', 'Button', 'Profile') && (
+                  <Button variant="outline" onClick={() => navigate('/settings')} className="gap-2">
+                    <Eye className="h-4 w-4" /> {t('dashboard.profile', 'Mon profil')}
+                  </Button>
+                )}
               </div>
             </GlassCard>
 
@@ -165,7 +179,7 @@ export const GuestDashboard: React.FC = memo(() => {
         </ErrorBoundary>
       ),
     },
-    {
+    can('Points', 'Tab', 'View') && {
       value: 'points',
       label: t('dashboard.tabs.points', 'Points & Récompenses'),
       icon: <Trophy className="h-4 w-4" />,
@@ -175,7 +189,7 @@ export const GuestDashboard: React.FC = memo(() => {
         </ErrorBoundary>
       ),
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="space-y-6">
@@ -201,7 +215,7 @@ export const GuestDashboard: React.FC = memo(() => {
         </div>
       </div>
 
-      <DynamicTabs tabs={tabs} defaultValue="overview" variant="underline" />
+      <DynamicTabs tabs={tabs as any} defaultValue="overview" variant="underline" />
     </div>
   );
 });

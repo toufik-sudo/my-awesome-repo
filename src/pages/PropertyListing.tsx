@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useProperties } from '@/modules/properties/properties.hooks';
+import { usePropertiesInfinite } from '@/modules/properties/properties.hooks';
+import { useInfiniteScroll } from '@/modules/shared/hooks/useInfiniteScroll';
+import { Loader2 } from 'lucide-react';
 import type { MockProperty } from '@/modules/properties/properties.mock';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import {
   Search,
   MapPin,
@@ -73,6 +75,8 @@ import { DynamicFilter, FilterConfig, ActiveFilter } from '@/modules/shared/comp
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
 import { BackendImage } from '@/modules/shared/components/BackendImage';
 import { Property } from '@/types/property.types';
+import { AccessSourcePanel } from '@/modules/admin/components/AccessSourcePanel';
+import { StatusFilterChips, type ResourceStatus } from '@/modules/shared/components/StatusFilterChips';
 
 // Property type config
 const PROPERTY_TYPES = [
@@ -114,13 +118,30 @@ const PropertyListing = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { canCreateProperty: canAddProperty } = usePermissions();
+  const { can, canViewPage } = useRoleAccess('PropertyListPage');
+  const canAddProperty = can('Header', 'Button', 'Add');
+  const canDuplicate = can('Card', 'Button', 'Duplicate');
+  const canPause = can('Card', 'Button', 'Pause');
+  const canArchive = can('Card', 'Button', 'Archive');
+  const canDelete = can('Card', 'Button', 'Delete');
+  const canPublish = can('Card', 'Button', 'Publish');
 
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const { isFavorite, toggleFavorite } = useFavorites();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
-  const { data: allProperties = [], isLoading: propertiesLoading } = useProperties();
+  const [statusFilter, setStatusFilter] = useState<ResourceStatus | undefined>(undefined);
+  const {
+    items: allProperties,
+    isLoading: propertiesLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = usePropertiesInfinite({}, 20);
+  const sentinelRef = useInfiniteScroll<HTMLDivElement>(
+    () => { if (hasNextPage && !isFetchingNextPage) fetchNextPage(); },
+    { enabled: hasNextPage },
+  );
   const { data: servicesData } = useServices({ page: 1, limit: 100 });
   const mapServicesData = useMemo(() => servicesData?.data?.filter(s => s.latitude && s.longitude) || [], [servicesData]);
 
@@ -210,6 +231,12 @@ const PropertyListing = () => {
       result = result.filter(p => p.trustStars >= filters.minTrustStars);
     }
 
+    // Status filter (privileged-only chip). Items without a status field
+    // are treated as 'published' so the default chip still includes them.
+    if (statusFilter) {
+      result = result.filter(p => ((p as any).status ?? 'published') === statusFilter);
+    }
+
     // Sort: unverified (0 stars) always at end, then by trust stars desc + rating desc
     const sortWithTrust = (arr: MockProperty[]) => {
       return arr.sort((a, b) => {
@@ -232,7 +259,7 @@ const PropertyListing = () => {
     }
 
     return result;
-  }, [filters, allProperties]);
+  }, [filters, allProperties, statusFilter]);
 
   // Convert filtered properties to Property type for MapSearch
   const mapProperties: Property[] = useMemo(() => {
@@ -591,6 +618,11 @@ const PropertyListing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AccessSourcePanel
+        permissionKey="backend.PropertiesController.findAll.GET"
+        resourceKind="property"
+        className="m-3"
+      />
       {/* Category bar */}
       <div className="border-b border-border bg-card">
         <div className="px-4">
@@ -739,6 +771,11 @@ const PropertyListing = () => {
               </div>
             </div>
 
+            {/* Status filter chips (privileged roles only) */}
+            <div className="mb-3">
+              <StatusFilterChips value={statusFilter} onChange={setStatusFilter} />
+            </div>
+
             {/* DynamicFilter bar */}
             <div className="mb-4">
               <DynamicFilter
@@ -855,6 +892,13 @@ const PropertyListing = () => {
                         t={t}
                       />
                     ))}
+                  </div>
+                )}
+                {(hasNextPage || isFetchingNextPage) && (
+                  <div ref={sentinelRef} className="flex justify-center py-6">
+                    {isFetchingNextPage && (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    )}
                   </div>
                 )}
               </>

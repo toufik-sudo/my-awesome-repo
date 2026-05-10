@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { rbac } from '@/lib/api-rbac';
 
 export interface ChatMessage {
   id: string;
@@ -6,7 +7,7 @@ export interface ChatMessage {
   senderId: string;
   senderRole: 'host' | 'guest';
   content: string;
-  originalContent?: string; // Before filtering
+  originalContent?: string;
   filtered: boolean;
   filterReason?: string;
   createdAt: string;
@@ -28,13 +29,14 @@ export interface SendMessageDto {
 
 export const chatApi = {
   getConversation: (bookingId: string) =>
-    api.get<ChatConversation>(`/chat/${bookingId}`).then(r => r.data),
+    api.get<ChatConversation>(`/chat/${bookingId}`, rbac('chatApi.getConversation.GET')).then(r => r.data),
 
   sendMessage: (data: SendMessageDto) =>
-    api.post<ChatMessage>(`/chat/${data.bookingId}/messages`, { content: data.content }).then(r => r.data),
+    api.post<ChatMessage>(`/chat/${data.bookingId}/messages`, { content: data.content }, rbac('chatApi.sendMessage.POST')).then(r => r.data),
 
   getMessages: (bookingId: string, page = 1, limit = 50) =>
     api.get<{ messages: ChatMessage[]; total: number }>(`/chat/${bookingId}/messages`, {
+      ...rbac('chatApi.getMessages.GET'),
       params: { page, limit },
     }).then(r => r.data),
 };

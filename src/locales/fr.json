@@ -226,50 +226,12 @@
     }
   },
   "common": {
-    "welcome": "Bienvenue",
-    "search": "Rechercher",
-    "filter": "Filtrer",
-    "reset": "Réinitialiser",
-    "apply": "Appliquer",
-    "cancel": "Annuler",
-    "save": "Enregistrer",
-    "delete": "Supprimer",
-    "edit": "Modifier",
-    "close": "Fermer",
-    "loading": "Chargement...",
-    "error": "Une erreur s'est produite",
-    "success": "Succès",
-    "confirm": "Confirmer",
-    "ok": "OK",
-    "yes": "Oui",
-    "no": "Non",
-    "appName": "Application Dynamique",
-    "openMenu": "Ouvrir le menu",
-    "collapse": "Réduire",
-    "user": "Utilisateur",
-    "next": "Suivant",
-    "previous": "Précédent",
-    "skip": "Passer",
-    "finish": "Terminer",
-    "step": "Étape",
-    "of": "sur",
-    "back": "Retour",
-    "continue": "Continuer",
-    "submit": "Soumettre",
-    "required": "Obligatoire",
-    "export": "Exporter",
-    "exportCSV": "Exporter en CSV",
-    "exportPDF": "Exporter en PDF",
-    "allTime": "Tout le temps",
-    "last7Days": "7 derniers jours",
-    "last30Days": "30 derniers jours",
-    "last90Days": "90 derniers jours",
-    "lastYear": "Dernière année",
-    "newest": "Plus récent",
-    "oldest": "Plus ancien",
-    "priceHigh": "Prix: Élevé",
-    "priceLow": "Prix: Bas",
-    "showing": "Affichage"
+    "active": "Actif",
+    "inactive": "Inactif",
+    "pending": "En attente",
+    "approved": "Approuvées",
+    "rejected": "Rejetées",
+    "viewAll": "Voir tout"
   },
   "layouts": {
     "classic": "Classique",
@@ -285,7 +247,8 @@
       "main": "Principal",
       "demos": "Démos",
       "content": "Contenu",
-      "admin": "Administration"
+      "admin": "Administration",
+      "payments": "Paiements"
     },
     "home": "Accueil",
     "dashboard": "Tableau de Bord",
@@ -316,7 +279,16 @@
     "onboarding": "Intégration",
     "bookingCalendar": "Calendrier réservations",
     "cancellationRules": "Règles d'annulation",
-    "rbacSettings": "Configuration RBAC"
+    "rbacSettings": "Configuration RBAC",
+    "myDisputes": "Mes réclamations",
+    "paymentValidation": "Validation des paiements",
+    "payouts": "Versements",
+    "escrow": "Séquestre & Litiges",
+    "hostReactivation": "Réactivation hôte",
+    "rbacDebug": "Débogage RBAC",
+    "administration": "Administration",
+    "supportChat": "Chat support",
+    "myBookings": "Mes réservations"
   },
   "auth": {
     "login": "Connexion",
@@ -461,7 +433,9 @@
     "guest": "Invité",
     "guestMessage": "Message de l'invité",
     "manageRequest": "Gérer",
-    "chat": "Discussion"
+    "chat": "Discussion",
+    "accepted": "Accepté (en attente de paiement)",
+    "archived": "Archivé"
   },
   "chat": {
     "conversationTitle": "Conversation de Réservation",
@@ -980,14 +954,6 @@
   },
   "scope": {
     "all": "Toutes les propriétés"
-  },
-  "common": {
-    "active": "Actif",
-    "inactive": "Inactif",
-    "pending": "En attente",
-    "approved": "Approuvées",
-    "rejected": "Rejetées",
-    "viewAll": "Voir tout"
   },
   "onboarding": {
     "title": "Bienvenue sur {{appName}}",
@@ -1522,5 +1488,88 @@
       "saveFailed": "Erreur lors de la sauvegarde",
       "reloadFailed": "Erreur lors du rechargement du cache"
     }
+  },
+  "disputes": {
+    "myTitle": "Mes réclamations",
+    "mySubtitle": "Suivez l’état de vos réclamations et remboursements.",
+    "empty": "Aucune réclamation pour le moment.",
+    "loadError": "Échec du chargement des réclamations",
+    "severity": "Gravité",
+    "refund": "Remboursement",
+    "viewPayout": "Voir le payout lié",
+    "timeline": {
+      "opened": "Ouverte",
+      "review": "En examen",
+      "decision": "Décision",
+      "refunded": "Remboursement traité",
+      "rejected": "Rejetée"
+    },
+    "status": {
+      "all": "Toutes",
+      "open": "Ouverte",
+      "under_review": "En examen",
+      "resolved_guest": "Résolue (invité)",
+      "resolved_host": "Résolue (hôte)",
+      "dismissed": "Rejetée",
+      "pending": "En attente",
+      "validated": "Validée",
+      "partial": "Partielle"
+    },
+    "breakdown": {
+      "title": "Détail financier",
+      "gross": "Montant brut",
+      "platformFee": "Frais plateforme",
+      "guestFee": "Frais invité",
+      "refundedToGuest": "Remboursé à l’invité",
+      "remainingHost": "Reste à l’hôte"
+    }
+  },
+  "payouts": {
+    "title": "Paiements aux hôtes",
+    "subtitle": "Suivi des payouts planifiés et libérés (brut / frais / net).",
+    "empty": "Aucun payout.",
+    "kpi": {
+      "gross": "Brut",
+      "fee": "Frais",
+      "net": "Net",
+      "released": "Libéré"
+    },
+    "filter": {
+      "all": "Tous",
+      "scheduled": "Planifié",
+      "on_hold": "En attente",
+      "released": "Libéré",
+      "partially_released": "Partiel",
+      "forfeited": "Annulé"
+    },
+    "status": {
+      "scheduled": "Planifié",
+      "on_hold": "En attente",
+      "released": "Libéré",
+      "partially_released": "Partiellement libéré",
+      "forfeited": "Annulé"
+    },
+    "col": {
+      "host": "Hôte",
+      "booking": "Réservation",
+      "gross": "Brut",
+      "fee": "Frais",
+      "net": "Net",
+      "releaseAt": "Libération",
+      "releasedAt": "Libéré le",
+      "status": "Statut",
+      "disputes": "Réclamations"
+    },
+    "viewDispute": "Voir la réclamation"
+  },
+  "blame": {
+    "nonSerious": "Non sérieux",
+    "tooltip": "{{count}} signalement(s) de fiabilité actif(s). Contactez le support pour contester.",
+    "adminTitle": "Badges de confiance",
+    "activeOnly": "Actifs",
+    "removed": "Retirés",
+    "remove": "Retirer le badge",
+    "removeNotePrompt": "Note de retrait (optionnelle) :",
+    "empty": "Aucun badge à afficher."
   }
 }

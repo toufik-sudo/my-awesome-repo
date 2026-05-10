@@ -11,7 +11,7 @@ import { swalAlert as toast } from '@/modules/shared/services/alert.service';
 import { invitationsApi } from '../admin.api';
 import type { AppRole } from '../admin.types';
 import { ROLE_LABELS } from '../admin.types';
-import { usePermissions } from '@/hooks/usePermissions';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { Send, Mail, Phone, UserPlus, Loader2, Info } from 'lucide-react';
 
 interface InvitationFormProps {
@@ -35,7 +35,7 @@ export const InvitationForm: React.FC<InvitationFormProps> = ({
   allowedRoles: propAllowedRoles,
   onSuccess,
 }) => {
-  const { allowedInvitableRoles, role: inviterRole } = usePermissions();
+  const { allowedInvitableRoles, role: inviterRole, can } = useRoleAccess('InvitationForm');
   const [method, setMethod] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -75,19 +75,51 @@ export const InvitationForm: React.FC<InvitationFormProps> = ({
 
     setLoading(true);
     try {
-      await invitationsApi.create({
+      const result = await invitationsApi.create({
         method,
         email: method === 'email' ? email : undefined,
         phone: method === 'phone' ? phone : undefined,
         role: role as AppRole,
         message: message || undefined,
       });
-      toast.success(`Invitation envoyée avec succès via ${method}`);
+      toast.success(result?.latestEmailSubject || `Invitation envoyée avec succès via ${method}`);
       onOpenChange(false);
       resetForm();
       onSuccess?.();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Échec de l\'envoi de l\'invitation');
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      const code = data?.code || data?.message?.code;
+      const errMessage = typeof data?.message === 'string' ? data.message : data?.message?.message;
+
+      // 409 → invitation already exists for same admin/contact/role → ask to resend
+      if (status === 409 && (code === 'INVITATION_ALREADY_EXISTS' || data?.message?.canResend)) {
+        const existingId = data?.existingInvitationId || data?.message?.existingInvitationId;
+        const confirmed = window.confirm(
+          (errMessage || 'Une invitation est déjà en attente pour ce contact.') +
+          '\n\nVoulez-vous renvoyer l\'invitation maintenant ?'
+        );
+        if (confirmed && existingId) {
+          try {
+            await invitationsApi.resend(existingId);
+            toast.success('Invitation renvoyée avec succès.');
+            onOpenChange(false);
+            resetForm();
+            onSuccess?.();
+          } catch (resendErr: any) {
+            toast.error(resendErr?.response?.data?.message || 'Échec du renvoi de l\'invitation');
+          }
+        }
+        return;
+      }
+
+      // 400 ROLE_CONFLICT → block, no resend option
+      if (status === 400 && (code === 'ROLE_CONFLICT' || data?.message?.code === 'ROLE_CONFLICT')) {
+        toast.error(errMessage || 'Conflit de rôle : un utilisateur ne peut pas avoir deux rôles distincts.');
+        return;
+      }
+
+      toast.error(errMessage || data?.message || 'Échec de l\'envoi de l\'invitation');
     } finally {
       setLoading(false);
     }

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const TIER_COLORS: Record<string, string> = {
   bronze: 'text-amber-700',
@@ -20,6 +21,7 @@ const TIER_COLORS: Record<string, string> = {
 
 const RewardsShop: React.FC = () => {
   const queryClient = useQueryClient();
+  const { can } = useRoleAccess('RewardsShop');
   const [activeCategory, setActiveCategory] = useState('all');
 
   const { data: rewards = [], isLoading: loadingRewards } = useQuery({
@@ -229,7 +231,7 @@ const RewardsShop: React.FC = () => {
                         <Button
                           className="w-full group-hover:bg-primary"
                           variant={affordable && !soldOut ? 'default' : 'secondary'}
-                          disabled={!affordable || !!soldOut || redeemMutation.isPending}
+                          disabled={!affordable || !!soldOut || redeemMutation.isPending || !can('Actions', 'Button', 'Redeem')}
                           onClick={() => handleRedeem(reward)}
                         >
                           {soldOut ? 'Épuisé' : !affordable ? 'Points insuffisants' : (

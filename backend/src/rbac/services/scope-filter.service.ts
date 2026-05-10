@@ -1,20 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { PropertyGroupMembership } from '../../properties/entity/property-group-membership.entity';
-import { ServiceGroupMembership } from '../../services/entity/service-group-membership.entity';
+import { PropertyGroup } from '../../properties/entity/property-group.entity';
+import { ServiceGroup } from '../../services/entity/service-group.entity';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
+import { ScopeContext, getScopedPerms } from '../scope-context';
+import { logScopeFallback } from '../utils/scope-fallback-logger';
 
-/**
- * Represents a single scoped permission entry (from manager_permissions,
- * hyper_manager_permissions, or guest_permissions).
- */
 export interface ScopedPerm {
   userId: number;
   backendPermissionKey: string;
   frontendPermissionKey: string | null;
-  scope: string; // 'all' | 'properties' | 'services' | 'property_groups' | 'service_groups' | 'admins'
+  scope: string;
   properties: string[] | null;
   services: string[] | null;
   propertyGroups: string[] | null;
@@ -24,11 +22,6 @@ export interface ScopedPerm {
   assignedById: number;
 }
 
-/**
- * The resolved IDs after scope resolution.
- * null means "no restriction" (global access).
- * empty array means "no access".
- */
 export interface ResolvedScope {
   propertyIds: string[] | null;
   serviceIds: string[] | null;
@@ -39,60 +32,89 @@ export class ScopeFilterService {
   private readonly logger = new Logger(ScopeFilterService.name);
 
   constructor(
-    @InjectRepository(PropertyGroupMembership)
-    private readonly propGroupMemberRepo: Repository<PropertyGroupMembership>,
-    @InjectRepository(ServiceGroupMembership)
-    private readonly svcGroupMemberRepo: Repository<ServiceGroupMembership>,
+    @InjectRepository(PropertyGroup)
+    private readonly propGroupRepo: Repository<PropertyGroup>,
+    @InjectRepository(ServiceGroup)
+    private readonly svcGroupRepo: Repository<ServiceGroup>,
     @InjectRepository(Property)
     private readonly propertyRepo: Repository<Property>,
     @InjectRepository(TourismService)
     private readonly serviceRepo: Repository<TourismService>,
   ) {}
 
-  /**
-   * Resolve property IDs from scoped permissions for a specific backend permission key.
-   * Returns null if scope is 'all' (no filtering needed).
-   * Returns a unique list of property IDs otherwise.
-   */
+  /** Whether a scoped perm carries a property-side scope target. */
+  private permTouchesProperties(p: ScopedPerm): boolean {
+    if (p.scope === 'properties' || p.scope === 'property_groups') return true;
+    if (p.scope === 'admins' || p.scope === 'all') return true; // inherits inviter inventory
+    return false;
+  }
+
+  /** Whether a scoped perm carries a service-side scope target. */
+  private permTouchesServices(p: ScopedPerm): boolean {
+    if (p.scope === 'services' || p.scope === 'service_groups') return true;
+    if (p.scope === 'admins' || p.scope === 'all') return true; // inherits inviter inventory
+    return false;
+  }
+
   async resolvePropertyIds(
     scopedPerms: ScopedPerm[],
     permissionKey: string,
+    role?: string,
+    userId?: number,
   ): Promise<string[] | null> {
-    const relevant = scopedPerms.filter(
+    let relevant = scopedPerms.filter(
       p => p.backendPermissionKey === permissionKey && p.isGranted,
     );
+    // Fallback: if no perm targets this exact endpoint, fall back to ALL
+    // granted scoped perms that touch property scope. A manager/guest who
+    // can manage/view properties X,Y,Z must see those in any property list,
+    // even when the listing endpoint key wasn't explicitly seeded.
+    if (relevant.length === 0) {
+      relevant = scopedPerms.filter(p => p.isGranted && this.permTouchesProperties(p));
+      if (relevant.length === 0) return [];
+      logScopeFallback({
+        source: 'ScopeFilterService.resolvePropertyIds',
+        role,
+        userId,
+        permissionKey,
+        inviterIds: [],
+        resolvedCount: relevant.length,
+        resourceKind: 'property',
+        reason: 'No perm matched the requested key — falling back to union of all granted property-scoped perms.',
+      });
+    }
 
-    if (relevant.length === 0) return [];
-
-    // If any perm has scope 'all', return null (no filtering)
-    if (relevant.some(p => p.scope === 'all')) return null;
+    // For hyper_manager, scope='all' truly means platform-wide.
+    // For manager/guest, scope='all' means "all resources owned by the inviter admin".
+    const isHyperManager = role === 'hyper_manager';
+    if (isHyperManager && relevant.some(p => p.scope === 'all')) return null;
 
     const ids = new Set<string>();
+    // Inviters whose full inventory should be inherited (no explicit target on the perm).
+    const inheritFromInviters = new Set<number>();
 
     for (const perm of relevant) {
       switch (perm.scope) {
         case 'properties':
-          if (perm.properties) perm.properties.forEach(id => ids.add(id));
-          break;
-
-        case 'property_groups':
-          if (perm.propertyGroups && perm.propertyGroups.length > 0) {
-            const memberships = await this.propGroupMemberRepo.find({
-              where: { groupId: In(perm.propertyGroups) },
-            });
-            memberships.forEach(m => ids.add(m.propertyId));
+          if (perm.properties && perm.properties.length > 0) {
+            perm.properties.forEach(id => ids.add(id));
+          } else if (perm.assignedById) {
+            inheritFromInviters.add(perm.assignedById);
           }
           break;
-
-        case 'services':
-          // For service-scoped perms, we might need to find properties
-          // linked to those services' providers
+        case 'property_groups':
+          if (perm.propertyGroups && perm.propertyGroups.length > 0) {
+            const groups = await this.propGroupRepo.find({
+              where: { id: In(perm.propertyGroups) },
+              relations: ['properties'],
+            });
+            for (const g of groups) {
+              if (g.properties) g.properties.forEach(p => ids.add(p.id));
+            }
+          } else if (perm.assignedById) {
+            inheritFromInviters.add(perm.assignedById);
+          }
           break;
-
-        case 'service_groups':
-          // Service groups don't directly map to properties
-          break;
-
         case 'admins':
           if (perm.admins && perm.admins.length > 0) {
             const props = await this.propertyRepo.find({
@@ -100,55 +122,95 @@ export class ScopeFilterService {
               select: ['id'],
             });
             props.forEach(p => ids.add(p.id));
+          } else if (perm.assignedById) {
+            inheritFromInviters.add(perm.assignedById);
           }
           break;
+        case 'all':
+          // For manager/guest (or unknown role): inherit inviter's full inventory.
+          if (perm.assignedById) inheritFromInviters.add(perm.assignedById);
+          break;
+        default:
+          if (perm.assignedById) inheritFromInviters.add(perm.assignedById);
+          break;
       }
+    }
+
+    if (inheritFromInviters.size > 0) {
+      const inviterIds = Array.from(inheritFromInviters);
+      const props = await this.propertyRepo.find({
+        where: { hostId: In(inviterIds) },
+        select: ['id'],
+      });
+      props.forEach(p => ids.add(p.id));
+      logScopeFallback({
+        source: 'ScopeFilterService.resolvePropertyIds',
+        role,
+        userId,
+        permissionKey,
+        inviterIds,
+        resolvedCount: props.length,
+        resourceKind: 'property',
+        reason:
+          'Permission granted with no explicit property/group/admin target — inheriting inviter admin\'s full property inventory.',
+      });
     }
 
     return Array.from(ids);
   }
 
-  /**
-   * Resolve service IDs from scoped permissions for a specific backend permission key.
-   * Returns null if scope is 'all' (no filtering needed).
-   */
   async resolveServiceIds(
     scopedPerms: ScopedPerm[],
     permissionKey: string,
+    role?: string,
+    userId?: number,
   ): Promise<string[] | null> {
-    const relevant = scopedPerms.filter(
+    let relevant = scopedPerms.filter(
       p => p.backendPermissionKey === permissionKey && p.isGranted,
     );
+    if (relevant.length === 0) {
+      relevant = scopedPerms.filter(p => p.isGranted && this.permTouchesServices(p));
+      if (relevant.length === 0) return [];
+      logScopeFallback({
+        source: 'ScopeFilterService.resolveServiceIds',
+        role,
+        userId,
+        permissionKey,
+        inviterIds: [],
+        resolvedCount: relevant.length,
+        resourceKind: 'service',
+        reason: 'No perm matched the requested key — falling back to union of all granted service-scoped perms.',
+      });
+    }
 
-    if (relevant.length === 0) return [];
-
-    if (relevant.some(p => p.scope === 'all')) return null;
+    const isHyperManager = role === 'hyper_manager';
+    if (isHyperManager && relevant.some(p => p.scope === 'all')) return null;
 
     const ids = new Set<string>();
+    const inheritFromInviters = new Set<number>();
 
     for (const perm of relevant) {
       switch (perm.scope) {
         case 'services':
-          if (perm.services) perm.services.forEach(id => ids.add(id));
-          break;
-
-        case 'service_groups':
-          if (perm.serviceGroups && perm.serviceGroups.length > 0) {
-            const memberships = await this.svcGroupMemberRepo.find({
-              where: { groupId: In(perm.serviceGroups) },
-            });
-            memberships.forEach(m => ids.add(m.serviceId));
+          if (perm.services && perm.services.length > 0) {
+            perm.services.forEach(id => ids.add(id));
+          } else if (perm.assignedById) {
+            inheritFromInviters.add(perm.assignedById);
           }
           break;
-
-        case 'properties':
-          // Properties don't directly map to services
+        case 'service_groups':
+          if (perm.serviceGroups && perm.serviceGroups.length > 0) {
+            const groups = await this.svcGroupRepo.find({
+              where: { id: In(perm.serviceGroups) },
+              relations: ['services'],
+            });
+            for (const g of groups) {
+              if (g.services) g.services.forEach(s => ids.add(s.id));
+            }
+          } else if (perm.assignedById) {
+            inheritFromInviters.add(perm.assignedById);
+          }
           break;
-
-        case 'property_groups':
-          // Property groups don't directly map to services
-          break;
-
         case 'admins':
           if (perm.admins && perm.admins.length > 0) {
             const svcs = await this.serviceRepo.find({
@@ -156,32 +218,55 @@ export class ScopeFilterService {
               select: ['id'],
             });
             svcs.forEach(s => ids.add(s.id));
+          } else if (perm.assignedById) {
+            inheritFromInviters.add(perm.assignedById);
           }
           break;
+        case 'all':
+          if (perm.assignedById) inheritFromInviters.add(perm.assignedById);
+          break;
+        default:
+          if (perm.assignedById) inheritFromInviters.add(perm.assignedById);
+          break;
       }
+    }
+
+    if (inheritFromInviters.size > 0) {
+      const inviterIds = Array.from(inheritFromInviters);
+      const svcs = await this.serviceRepo.find({
+        where: { providerId: In(inviterIds) },
+        select: ['id'],
+      });
+      svcs.forEach(s => ids.add(s.id));
+      logScopeFallback({
+        source: 'ScopeFilterService.resolveServiceIds',
+        role,
+        userId,
+        permissionKey,
+        inviterIds,
+        resolvedCount: svcs.length,
+        resourceKind: 'service',
+        reason:
+          'Permission granted with no explicit service/group/admin target — inheriting inviter admin\'s full service inventory.',
+      });
     }
 
     return Array.from(ids);
   }
 
-  /**
-   * Resolve both property and service IDs for a given permission key.
-   */
   async resolveScope(
     scopedPerms: ScopedPerm[],
     permissionKey: string,
+    role?: string,
+    userId?: number,
   ): Promise<ResolvedScope> {
     const [propertyIds, serviceIds] = await Promise.all([
-      this.resolvePropertyIds(scopedPerms, permissionKey),
-      this.resolveServiceIds(scopedPerms, permissionKey),
+      this.resolvePropertyIds(scopedPerms, permissionKey, role, userId),
+      this.resolveServiceIds(scopedPerms, permissionKey, role, userId),
     ]);
     return { propertyIds, serviceIds };
   }
 
-  /**
-   * Merge multiple resolved property ID lists (union, deduplicated).
-   * null in any list means "all" → result is null.
-   */
   mergePropertyIds(...lists: (string[] | null)[]): string[] | null {
     if (lists.some(l => l === null)) return null;
     const ids = new Set<string>();
@@ -191,9 +276,6 @@ export class ScopeFilterService {
     return Array.from(ids);
   }
 
-  /**
-   * Merge multiple resolved service ID lists (union, deduplicated).
-   */
   mergeServiceIds(...lists: (string[] | null)[]): string[] | null {
     if (lists.some(l => l === null)) return null;
     const ids = new Set<string>();
@@ -203,12 +285,161 @@ export class ScopeFilterService {
     return Array.from(ids);
   }
 
-  /**
-   * Check if a specific resource ID is allowed by the scoped permissions.
-   * Returns true if no restriction (null = all), or if the ID is in the list.
-   */
   isAllowed(resolvedIds: string[] | null, resourceId: string): boolean {
-    if (resolvedIds === null) return true; // No restriction
+    if (resolvedIds === null) return true;
     return resolvedIds.includes(resourceId);
+  }
+
+  // ─── EFFECTIVE SCOPE RESOLUTION ────────────────────────────────────────
+  // Returns the IDs the caller may access:
+  //   null  → no filter (full access: hyper_admin, anonymous, plain user)
+  //   []    → no access (role expects scoped perms but none granted)
+  //   [...] → restricted to these IDs
+  //
+  // hyper_admin   → full access (null).
+  // hyper_manager → all resources but bounded by hyper_manager_permissions
+  //                 assigned by hyper_admin (scope can target admins, groups,
+  //                 specific properties/services, or 'all').
+  // admin         → own resources only (hostId / providerId).
+  // manager       → assigned scoped permissions from manager_permissions.
+  // guest         → assigned scoped permissions from guest_permissions.
+  // Anonymous (no scopeCtx) → no filter; controllers still apply public
+  //                 visibility rules (e.g. status='published').
+
+  async effectivePropertyIds(
+    scopeCtx: ScopeContext | undefined,
+    permissionKey: string,
+  ): Promise<string[] | null> {
+    if (!scopeCtx) return null;
+    const { userRole, userId } = scopeCtx;
+
+    if (userRole === 'hyper_admin') return null;
+
+    if (userRole === 'admin') {
+      const rows = await this.propertyRepo.find({
+        where: { hostId: userId },
+        select: ['id'],
+      });
+      return rows.map(r => r.id);
+    }
+
+    if (userRole === 'hyper_manager') {
+      const scopedPerms = getScopedPerms(scopeCtx);
+      if (scopedPerms.length === 0) return null; // inherits hyper_admin scope
+      return this.resolvePropertyIds(scopedPerms, permissionKey, userRole, userId);
+    }
+
+    if (userRole === 'manager' || userRole === 'guest') {
+      const scopedPerms = getScopedPerms(scopeCtx);
+      const inviterIds = scopeCtx.inviterAdminIds ?? [];
+
+      if (scopedPerms.length === 0) {
+        if (inviterIds.length === 0) return [];
+        logScopeFallback({
+          source: 'ScopeFilterService.effectivePropertyIds',
+          role: userRole, userId, permissionKey,
+          inviterIds, resolvedCount: 0, resourceKind: 'property',
+          reason: 'No scoped perms seeded — inheriting inviter admin(s) full property inventory.',
+        });
+        return this.expandInviterPropertyInventory(inviterIds);
+      }
+
+      const ids = await this.resolvePropertyIds(scopedPerms, permissionKey, userRole, userId);
+      if (ids !== null && ids.length === 0 && inviterIds.length > 0) {
+        logScopeFallback({
+          source: 'ScopeFilterService.effectivePropertyIds',
+          role: userRole, userId, permissionKey,
+          inviterIds, resolvedCount: 0, resourceKind: 'property',
+          reason: 'Resolved scope was empty for this key — inheriting inviter admin(s) full property inventory.',
+        });
+        return this.expandInviterPropertyInventory(inviterIds);
+      }
+      return ids;
+    }
+
+    return null;
+  }
+
+  async effectiveServiceIds(
+    scopeCtx: ScopeContext | undefined,
+    permissionKey: string,
+  ): Promise<string[] | null> {
+    if (!scopeCtx) return null;
+    const { userRole, userId } = scopeCtx;
+
+    if (userRole === 'hyper_admin') return null;
+
+    if (userRole === 'admin') {
+      const rows = await this.serviceRepo.find({
+        where: { providerId: userId },
+        select: ['id'],
+      });
+      return rows.map(r => r.id);
+    }
+
+    if (userRole === 'hyper_manager') {
+      const scopedPerms = getScopedPerms(scopeCtx);
+      if (scopedPerms.length === 0) return null;
+      return this.resolveServiceIds(scopedPerms, permissionKey, userRole, userId);
+    }
+
+    if (userRole === 'manager' || userRole === 'guest') {
+      const scopedPerms = getScopedPerms(scopeCtx);
+      const inviterIds = scopeCtx.inviterAdminIds ?? [];
+
+      if (scopedPerms.length === 0) {
+        if (inviterIds.length === 0) return [];
+        logScopeFallback({
+          source: 'ScopeFilterService.effectiveServiceIds',
+          role: userRole, userId, permissionKey,
+          inviterIds, resolvedCount: 0, resourceKind: 'service',
+          reason: 'No scoped perms seeded — inheriting inviter admin(s) full service inventory.',
+        });
+        return this.expandInviterServiceInventory(inviterIds);
+      }
+
+      const ids = await this.resolveServiceIds(scopedPerms, permissionKey, userRole, userId);
+      if (ids !== null && ids.length === 0 && inviterIds.length > 0) {
+        logScopeFallback({
+          source: 'ScopeFilterService.effectiveServiceIds',
+          role: userRole, userId, permissionKey,
+          inviterIds, resolvedCount: 0, resourceKind: 'service',
+          reason: 'Resolved scope was empty for this key — inheriting inviter admin(s) full service inventory.',
+        });
+        return this.expandInviterServiceInventory(inviterIds);
+      }
+      return ids;
+    }
+
+    return null;
+  }
+
+  private async expandInviterPropertyInventory(inviterIds: number[]): Promise<string[]> {
+    if (inviterIds.length === 0) return [];
+    const rows = await this.propertyRepo.find({
+      where: { hostId: In(inviterIds) },
+      select: ['id'],
+    });
+    return rows.map(r => r.id);
+  }
+
+  private async expandInviterServiceInventory(inviterIds: number[]): Promise<string[]> {
+    if (inviterIds.length === 0) return [];
+    const rows = await this.serviceRepo.find({
+      where: { providerId: In(inviterIds) },
+      select: ['id'],
+    });
+    return rows.map(r => r.id);
+  }
+
+  /**
+   * Whether the caller should bypass the public-only status filter
+   * (i.e. see drafts/archived/suspended for resources they manage).
+   */
+  canSeeAllStatuses(scopeCtx: ScopeContext | undefined): boolean {
+    if (!scopeCtx) return false;
+    return ['hyper_admin', 'hyper_manager', 'admin', 'manager'].includes(
+      scopeCtx.userRole,
+    );
   }
 }

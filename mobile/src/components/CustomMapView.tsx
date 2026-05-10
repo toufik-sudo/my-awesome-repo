@@ -9,6 +9,8 @@ export interface MapMarker {
   longitude: number;
   title?: string;
   description?: string;
+  /** When true, this marker can be dragged to a new position. */
+  draggable?: boolean;
 }
 
 interface CustomMapViewProps {
@@ -16,6 +18,8 @@ interface CustomMapViewProps {
   initialRegion?: Region;
   onMarkerPress?: (marker: MapMarker) => void;
   onMapPress?: (coordinate: { latitude: number; longitude: number }) => void;
+  /** Fired when a draggable marker is dropped at a new location. */
+  onMarkerDragEnd?: (markerId: string, coordinate: { latitude: number; longitude: number }) => void;
   showUserLocation?: boolean;
   height?: number;
 }
@@ -30,6 +34,7 @@ export const CustomMapView: React.FC<CustomMapViewProps> = ({
   },
   onMarkerPress,
   onMapPress,
+  onMarkerDragEnd,
   showUserLocation = true,
   height = 400,
 }) => {
@@ -64,7 +69,9 @@ export const CustomMapView: React.FC<CustomMapViewProps> = ({
             }}
             title={marker.title}
             description={marker.description}
+            draggable={marker.draggable}
             onPress={() => onMarkerPress?.(marker)}
+            onDragEnd={(e) => onMarkerDragEnd?.(marker.id, e.nativeEvent.coordinate)}
           />
         ))}
       </MapView>

@@ -31,6 +31,48 @@ export const setJWTExpiredCallback = (callback: () => void) => {
   onJWTExpired = callback;
 };
 
+// ─── RBAC Pre-flight Cache ─────────────────────────────────────────────────────
+/**
+ * Cached backend permissions for pre-flight checks.
+ * Set by usePermissions hook after loading RBAC config.
+ * Structure: { backendPermKey: { allowed, scope } }
+ */
+let cachedBackendPerms: Record<string, { allowed: boolean; scope: string }> = {};
+let cachedBindingMap: Record<string, Array<{ backendKey: string; roles: string[] }>> = {};
+let cachedUserRole: string = '';
+
+/** Called by usePermissions to inject RBAC caches into axios */
+export const setRbacCache = (
+  backendPerms: Record<string, { allowed: boolean; scope: string }>,
+  bindingMap: Record<string, Array<{ backendKey: string; roles: string[] }>>,
+  role: string,
+) => {
+  cachedBackendPerms = backendPerms;
+  cachedBindingMap = bindingMap;
+  cachedUserRole = role;
+};
+
+/**
+ * Pre-flight RBAC check: reads `_frontendApiKey` from the request config
+ * and checks the cached binding map to see if the current role is allowed.
+ * Returns false (block) if the role is explicitly denied.
+ */
+const checkRbacPreflight = (config: any): boolean => {
+  const frontendApiKey: string | undefined = config?._frontendApiKey;
+  if (!frontendApiKey || !cachedUserRole) return true;
+  if (Object.keys(cachedBindingMap).length === 0) return true;
+
+  const bindings = cachedBindingMap[frontendApiKey];
+  if (!bindings || bindings.length === 0) return true; // No binding → allow
+
+  // Every binding must include the current role
+  const allowed = bindings.every(b => b.roles.includes(cachedUserRole));
+  if (!allowed) {
+    console.warn(`[RBAC pre-flight] Blocked: ${frontendApiKey} for role "${cachedUserRole}"`);
+  }
+  return allowed;
+};
+
 // Track if a refresh is already in progress
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -54,6 +96,12 @@ api.interceptors.request.use(
     const token = getStoredJWT();
     if (token && !isJWTExpired(token)) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // RBAC pre-flight check (advisory — backend is authoritative)
+    if (!checkRbacPreflight(config)) {
+      loadingCallbacks?.stop();
+      return Promise.reject(new axios.Cancel('RBAC pre-flight: permission denied'));
     }
 
     return config;

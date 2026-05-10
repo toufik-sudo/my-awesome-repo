@@ -1,15 +1,18 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
+import { User } from './user.entity';
+import { Property } from '../../properties/entity/property.entity';
+import { TourismService } from '../../services/entity/tourism-service.entity';
+import { PropertyGroup } from '../../properties/entity/property-group.entity';
+import { ServiceGroup } from '../../services/entity/service-group.entity';
 
 export type PointsRuleType = 'earning' | 'conversion';
 export type PointsTargetRole = 'guest' | 'manager';
 
 @Entity('points_rules')
+@Index('IDX_points_rules_createdByUserId', ['createdByUserId'])
 export class PointsRule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -17,73 +20,84 @@ export class PointsRule {
   @Column()
   createdByUserId: number;
 
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'createdByUserId' })
+  createdBy: User;
+
   @Column({ type: 'varchar', length: 20 })
   ruleType: PointsRuleType;
 
-  /** Which role earns/converts: guest or manager */
   @Column({ type: 'varchar', length: 20 })
   targetRole: PointsTargetRole;
 
-  /** Scope: global, host, property_group, service_group, property, service */
   @Column({ type: 'varchar', length: 30, default: 'global' })
   scope: string;
 
   @Column({ nullable: true })
   targetHostId: number;
 
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetHostId' })
+  targetHost: User;
+
   @Column({ type: 'uuid', nullable: true })
   targetPropertyGroupId: string;
+
+  @ManyToOne(() => PropertyGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetPropertyGroupId' })
+  targetPropertyGroup: PropertyGroup;
 
   @Column({ type: 'uuid', nullable: true })
   targetServiceGroupId: string;
 
+  @ManyToOne(() => ServiceGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetServiceGroupId' })
+  targetServiceGroup: ServiceGroup;
+
   @Column({ type: 'uuid', nullable: true })
   targetPropertyId: string;
+
+  @ManyToOne(() => Property, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetPropertyId' })
+  targetProperty: Property;
 
   @Column({ type: 'uuid', nullable: true })
   targetServiceId: string;
 
-  /** Action that triggers points (booking_completed, review_submitted, referral_signup, property_shared, etc.) */
+  @ManyToOne(() => TourismService, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'targetServiceId' })
+  targetService: TourismService;
+
   @Column({ type: 'varchar', length: 50 })
   action: string;
 
-  /** Points earned per action (earning rules only, must be > 0) */
   @Column({ default: 0 })
   pointsAmount: number;
 
-  /** For conversion rules: how many points = 1 unit of currency */
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   conversionRate: number;
 
-  /** Currency code for conversion */
   @Column({ type: 'varchar', length: 5, default: 'MAD' })
   currency: string;
 
-  /** Min points for conversion (conversion rules only, required) */
   @Column({ nullable: true })
   minPointsForConversion: number;
 
-  /** Max points per period (earning rules only, 0 = unlimited) */
   @Column({ default: 0 })
   maxPointsPerPeriod: number;
 
-  /** Period for max points (daily, weekly, monthly) — earning rules only */
   @Column({ type: 'varchar', length: 20, nullable: true })
   period: string;
 
-  /** Multiplier for special events (earning rules only, must be > 0) */
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 1 })
   multiplier: number;
 
-  /** Minimum number of nights required to earn points (optional for earning) */
   @Column({ type: 'int', nullable: true })
   minNights: number;
 
-  /** Start date of the rule application period (optional for earning) */
   @Column({ type: 'date', nullable: true })
   validFrom: Date;
 
-  /** End date of the rule application period (optional for earning) */
   @Column({ type: 'date', nullable: true })
   validTo: Date;
 

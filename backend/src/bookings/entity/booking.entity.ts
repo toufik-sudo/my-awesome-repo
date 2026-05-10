@@ -11,7 +11,14 @@ import {
 import { User } from '../../user/entity/user.entity';
 import { Property } from '../../properties/entity/property.entity';
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'rejected';
+export type BookingStatus =
+  | 'pending'
+  | 'accepted'      // host accepted, awaiting guest payment
+  | 'confirmed'     // payment validated by hyper admin/manager
+  | 'cancelled'
+  | 'completed'
+  | 'rejected'
+  | 'archived';     // auto-archived (no payment within 24h after acceptance)
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded' | 'failed';
 export type PaymentMethod = 'cash' | 'ccp' | 'baridi_mob' | 'bank_transfer' | 'edahabia' | 'cib';
 
@@ -95,13 +102,45 @@ export class Booking {
   hostResponse: string;
 
   @Column({ nullable: true, type: 'datetime' })
+  acceptedAt: Date;
+
+  @Column({ nullable: true, type: 'datetime' })
   confirmedAt: Date;
+
+  @Column({ nullable: true, type: 'datetime' })
+  archivedAt: Date;
+
+  /** Deadline by which the guest must pay after host acceptance (acceptedAt + 24h). */
+  @Column({ nullable: true, type: 'datetime' })
+  paymentDeadlineAt: Date;
+
+  /** Deadline by which the host must accept (createdAt + 48h). */
+  @Column({ nullable: true, type: 'datetime' })
+  acceptDeadlineAt: Date;
+
+  /** Number of payment reminders sent to the guest after acceptance. */
+  @Column({ type: 'int', default: 0 })
+  paymentReminderCount: number;
+
+  /** Number of acceptance reminders sent to the host. */
+  @Column({ type: 'int', default: 0 })
+  acceptReminderCount: number;
 
   @Column({ nullable: true, type: 'datetime' })
   cancelledAt: Date;
 
   @Column({ type: 'text', nullable: true })
   cancellationReason: string;
+
+  // True when the host (admin) was paused/archived: guest is allowed to
+  // cancel this booking with no fees, and the cancel request is auto-approved
+  // without host validation. Set by HyperManagementService cascade.
+  @Column({ type: 'boolean', default: false })
+  hostCascadeFlag: boolean;
+
+  // Snapshot of who initiated the cancellation: 'guest' | 'host' | 'system_host_cascade'
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  cancelledBy: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

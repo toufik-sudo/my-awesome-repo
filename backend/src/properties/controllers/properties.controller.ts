@@ -18,6 +18,7 @@ export class PropertiesController {
 
   @Public()
   @Get()
+  @UseGuards(PermissionGuard)
   @ApiOperation({ summary: 'List all properties' })
   findAll(
     @Request() req: any,
@@ -31,18 +32,24 @@ export class PropertiesController {
     @Query('checkOut') checkOut?: string,
     @Query('minTrustStars') minTrustStars?: number,
     @Query('sort') sort?: string,
+    // Privileged roles can request any status (or "all"). Public callers
+    // are forced to "published" by the service regardless of this param.
+    @Query('status') status?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
     const scopeCtx = req.user ? extractScopeContext(req) : undefined;
     return this.propertiesService.findAll({
       city, type, minPrice, maxPrice, guests, bedrooms,
-      checkIn, checkOut, minTrustStars, sort, page: page || 1, limit: limit || 20,
+      checkIn, checkOut, minTrustStars, sort, status,
+      page: Math.max(1, Number(page) || 1),
+      limit: Math.min(100, Math.max(1, Number(limit) || 20)),
     }, scopeCtx);
   }
 
   @Public()
   @Get(':id')
+  @UseGuards(PermissionGuard)
   @ApiOperation({ summary: 'Get property by ID' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
   findOne(@Param('id') id: string, @Request() req: any) {

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserPoints, PointTransaction, PointAction, PointTier } from '../entity/user-points.entity';
@@ -59,8 +59,12 @@ export class PointsService {
     userId: number,
     action: PointAction,
     opts?: { customPoints?: number; description?: string; referenceId?: string; referenceType?: string },
-    _scopeCtx?: ScopeContext,
+    scopeCtx?: ScopeContext,
   ): Promise<PointTransaction> {
+    // Only hyper/admin can award points
+    if (scopeCtx && !['hyper_admin', 'hyper_manager', 'admin'].includes(scopeCtx.userRole)) {
+      throw new ForbiddenException('Only administrators can award points');
+    }
     const points = opts?.customPoints ?? POINT_VALUES[action];
     if (points <= 0 && action !== 'admin_bonus') return null as any;
 
@@ -115,7 +119,10 @@ export class PointsService {
   }
 
   /** Apply penalty */
-  async deductPoints(userId: number, points: number, reason: string, _scopeCtx?: ScopeContext): Promise<PointTransaction> {
+  async deductPoints(userId: number, points: number, reason: string, scopeCtx?: ScopeContext): Promise<PointTransaction> {
+    if (scopeCtx && !['hyper_admin', 'hyper_manager', 'admin'].includes(scopeCtx.userRole)) {
+      throw new ForbiddenException('Only administrators can deduct points');
+    }
     const userPoints = await this.getOrCreate(userId);
     userPoints.totalPoints = Math.max(0, userPoints.totalPoints - points);
     userPoints.availablePoints = Math.max(0, userPoints.availablePoints - points);

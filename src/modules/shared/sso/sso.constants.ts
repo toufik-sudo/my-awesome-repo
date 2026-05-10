@@ -68,6 +68,20 @@ export const SSO_OIDC_ENDPOINTS = {
     userinfoEndpoint: 'https://api.github.com/user',
     jwksUri: '',
   },
+  INSTAGRAM: {
+    authority: 'https://api.instagram.com',
+    authorizationEndpoint: 'https://api.instagram.com/oauth/authorize',
+    tokenEndpoint: 'https://api.instagram.com/oauth/access_token',
+    userinfoEndpoint: 'https://graph.instagram.com/me?fields=id,username,account_type',
+    jwksUri: '',
+  },
+  TIKTOK: {
+    authority: 'https://www.tiktok.com',
+    authorizationEndpoint: 'https://www.tiktok.com/v2/auth/authorize/',
+    tokenEndpoint: 'https://open.tiktokapis.com/v2/oauth/token/',
+    userinfoEndpoint: 'https://open.tiktokapis.com/v2/user/info/',
+    jwksUri: '',
+  },
 } as const;
 
 export const SSO_ERROR_CODES = {

@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { PropertiesStackParamList } from './types';
-import { PropertyListingScreen, PropertyDetailScreen } from '@/screens';
+import { PropertyListingScreen, PropertyDetailScreen, AddPropertyScreen } from '@/screens';
 
 const Stack = createNativeStackNavigator<PropertiesStackParamList>();
 
@@ -26,6 +26,16 @@ export const PropertiesStackNavigator: React.FC = () => {
         component={PropertyDetailScreen}
         options={{ 
           title: 'Property Details',
+          headerShown: true,
+          headerStyle: { backgroundColor: theme.card },
+          headerTintColor: theme.foreground,
+        }}
+      />
+      <Stack.Screen
+        name="AddProperty"
+        component={AddPropertyScreen}
+        options={{
+          title: 'Add property',
           headerShown: true,
           headerStyle: { backgroundColor: theme.card },
           headerTintColor: theme.foreground,

@@ -16,6 +16,7 @@ import { Plus, Edit, Trash2, ShieldX, Clock, AlertTriangle, Info } from 'lucide-
 import { cancellationRulesApi, CANCELLATION_PRESETS, type CancellationRule, type CancellationPolicyType } from '../cancellation-rules.api';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 const SCOPE_LABELS: Record<string, string> = {
   all: 'Toutes les propriétés/services',
@@ -59,6 +60,7 @@ interface CancellationRulesPageProps {
 
 export const CancellationRulesPage: React.FC<CancellationRulesPageProps> = ({ viewOnly = false }) => {
   const { t } = useTranslation();
+  const { can } = useRoleAccess('CancellationRulesPage');
   const [rules, setRules] = useState<CancellationRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

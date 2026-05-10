@@ -1,13 +1,9 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
 } from 'typeorm';
 import { Booking } from '../../bookings/entity/booking.entity';
+import { ServiceBooking } from '../../services/entity/service-booking.entity';
 import { User } from '../../user/entity/user.entity';
 import { TransferAccount } from './transfer-account.entity';
 
@@ -18,12 +14,21 @@ export class PaymentReceipt {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ nullable: true })
   bookingId: string;
 
-  @ManyToOne(() => Booking, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Booking, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'bookingId' })
   booking: Booking;
+
+  /** FK to service_bookings for service payment receipts */
+  @Index('IDX_payment_receipts_serviceBookingId', ['serviceBookingId'])
+  @Column({ type: 'uuid', nullable: true })
+  serviceBookingId: string;
+
+  @ManyToOne(() => ServiceBooking, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'serviceBookingId' })
+  serviceBooking: ServiceBooking;
 
   @Column()
   uploadedByUserId: number;

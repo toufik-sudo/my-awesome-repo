@@ -1,9 +1,20 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Index,
+} from 'typeorm';
+import { User } from './user.entity';
 
-@Entity('users_address') // This will map to the 'users' table in your database
+@Entity('users_address')
+@Index('IDX_users_address_userId', ['userId'])
 export class UserAddress {
   @PrimaryGeneratedColumn()
-  id: number; // Primary key
+  id: number;
+
+  @Column()
+  userId: number;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   @Column({ nullable: true })
   city: string;

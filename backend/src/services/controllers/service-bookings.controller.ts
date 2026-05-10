@@ -31,9 +31,16 @@ export class ServiceBookingsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get my bookings' })
-  getMyBookings(@Request() req: any) {
+  getMyBookings(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.bookingsService.getMyBookings(req.user.id, scopeCtx);
+    return this.bookingsService.getMyBookings(req.user.id, scopeCtx, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
   }
 
   @Get('provider')
@@ -41,9 +48,16 @@ export class ServiceBookingsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'Get provider bookings' })
-  getProviderBookings(@Request() req: any) {
+  getProviderBookings(
+    @Request() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const scopeCtx = extractScopeContext(req);
-    return this.bookingsService.getProviderBookings(req.user.id, scopeCtx);
+    return this.bookingsService.getProviderBookings(req.user.id, scopeCtx, {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
   }
 
   @Get(':id')

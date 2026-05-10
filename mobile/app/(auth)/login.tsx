@@ -9,9 +9,10 @@ import { useRTL } from '@/hooks/useRTL';
 import { Form, FormField } from '@/components/Form';
 import { Button } from '@/components/Button';
 import { spacing } from '@/constants/theme.constants';
+import { SSOLoginButtons } from '@/modules/sso';
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login, refreshSession } = useAuth();
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { isRTL, rtlStyles } = useRTL();
@@ -83,6 +84,16 @@ export default function LoginScreen() {
             fields={fields}
             onSubmit={handleSubmit}
             submitButtonText={t('auth.login')}
+          />
+
+          <SSOLoginButtons
+            ssoInput={{
+              onLoginSuccess: async () => {
+                await refreshSession();
+                router.replace('/(tabs)');
+              },
+              onLoginError: msg => setError(msg),
+            }}
           />
 
           <View style={[styles.footer, isRTL && rtlStyles.row]}>

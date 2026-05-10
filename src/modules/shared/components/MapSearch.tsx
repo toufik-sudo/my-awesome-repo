@@ -165,11 +165,10 @@ export const MapSearch: React.FC<MapSearchProps> = ({
     // Close active popup when clicking on the map & reverse geocode
     mapInstance.on('click', async (e) => {
       const target = e.originalEvent.target as HTMLElement;
-      if (!target.closest('.custom-marker')) {
-        // Remove all active popups
-        document.querySelectorAll('.maplibregl-popup').forEach(pop => {
-          pop.classList.add('hidden-marker');
-        });
+      if (!target.closest('.custom-marker') && !target.closest('.maplibregl-popup')) {
+        // Remove all active popups and markers
+        popups.current.forEach(p => p.remove());
+        document.querySelectorAll('.custom-marker.active-marker').forEach(m => m.classList.remove('active-marker'));
 
         // Reverse geocode the clicked location
         const { lng, lat } = e.lngLat;
@@ -324,38 +323,19 @@ export const MapSearch: React.FC<MapSearchProps> = ({
         .setLngLat([property.location.longitude, property.location.latitude])
         .addTo(map.current!);
 
-      // Open popup on click
-      markerEl.addEventListener('click', (e) => {
+      // Show popup on hover - keep it open until hovering another marker or clicking outside/close
+      const showPopup = (e: Event) => {
         e.stopPropagation();
-
-        document.querySelectorAll('.custom-marker.active-marker').forEach(activeMarker => {
-          activeMarker.classList.remove('active-marker');
-          document.querySelectorAll('.maplibregl-popup').forEach(pop => {
-            // pop.classList.remove('active-marker');
-            pop.classList.add('hidden-marker');
-          });
-        });
-
+        // Close other popups and deactivate other markers
+        popups.current.forEach(p => p.remove());
+        document.querySelectorAll('.custom-marker.active-marker').forEach(m => m.classList.remove('active-marker'));
+        // Show this popup
         popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
         markerEl.className = 'custom-marker active-marker';
-        // setActivePopup(popup);
-      });
+      };
 
-      markerEl.addEventListener('mouseenter', (e) => {
-        e.stopPropagation();
-
-        document.querySelectorAll('.custom-marker.active-marker').forEach(activeMarker => {
-          activeMarker.classList.remove('active-marker');
-          document.querySelectorAll('.maplibregl-popup').forEach(pop => {
-            // pop.classList.remove('active-marker');
-            pop.classList.add('hidden-marker');
-          });
-        });
-
-        popup.setLngLat([property.location.longitude, property.location.latitude]).addTo(map.current!);
-        markerEl.className = 'custom-marker active-marker';
-        // setActivePopup(popup);
-      });
+      markerEl.addEventListener('click', showPopup);
+      markerEl.addEventListener('mouseenter', showPopup);
 
       markers.current.push(marker);
     });

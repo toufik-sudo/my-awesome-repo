@@ -5,8 +5,15 @@ import { Booking } from '../entity/booking.entity';
 import { Property } from '../../properties/entity/property.entity';
 import { TourismService } from '../../services/entity/tourism-service.entity';
 import { AppRole, User } from '../../user/entity/user.entity';
-import { ScopeContext } from '../../rbac/scope-context';
+import { ScopeContext, getScopedPerms } from '../../rbac/scope-context';
+import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
 
+const PERM_KEY_DETAILED_USERS = 'backend.MetricsController.getDetailedUsers.GET';
+const PERM_KEY_DETAILED_BOOKINGS = 'backend.MetricsController.getDetailedBookings.GET';
+const PERM_KEY_DETAILED_PROPERTIES = 'backend.MetricsController.getDetailedProperties.GET';
+const PERM_KEY_DETAILED_SERVICES = 'backend.MetricsController.getDetailedServices.GET';
+const PERM_KEY_REVENUE = 'backend.MetricsController.getRevenueBreakdown.GET';
+const PERM_KEY_SUMMARY = 'backend.MetricsController.getPlatformSummary.GET';
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -29,18 +36,66 @@ export class MetricsService {
     private readonly serviceRepo: Repository<TourismService>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly scopeFilter: ScopeFilterService,
   ) {}
+
+  private async resolveAllowedPropertyIds(
+    scopeCtx: ScopeContext | undefined,
+    permissionKey: string,
+  ): Promise<string[] | null> {
+    if (!scopeCtx) return null;
+    const { userRole } = scopeCtx;
+    if (['hyper_admin', 'hyper_manager'].includes(userRole)) return null;
+    if (userRole === 'admin') {
+      // Admin sees only their own properties
+      const props = await this.propertyRepo.find({
+        where: { hostId: scopeCtx.userId },
+        select: ['id'],
+      });
+      return props.map(p => p.id);
+    }
+    const scopedPerms = getScopedPerms(scopeCtx);
+    if (scopedPerms.length === 0) return [];
+    return this.scopeFilter.resolvePropertyIds(scopedPerms, permissionKey);
+  }
+
+  private async resolveAllowedServiceIds(
+    scopeCtx: ScopeContext | undefined,
+    permissionKey: string,
+  ): Promise<string[] | null> {
+    if (!scopeCtx) return null;
+    const { userRole } = scopeCtx;
+    if (['hyper_admin', 'hyper_manager'].includes(userRole)) return null;
+    if (userRole === 'admin') {
+      const svcs = await this.serviceRepo.find({
+        where: { providerId: scopeCtx.userId },
+        select: ['id'],
+      });
+      return svcs.map(s => s.id);
+    }
+    const scopedPerms = getScopedPerms(scopeCtx);
+    if (scopedPerms.length === 0) return [];
+    return this.scopeFilter.resolveServiceIds(scopedPerms, permissionKey);
+  }
 
   async getDetailedUsers(filters: {
     role?: AppRole;
     status?: string;
     page: number;
     limit: number;
-  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
+  }, scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.userRepo.createQueryBuilder('u');
 
     if (filters.status === 'active') qb.andWhere('u.isActive = :active', { active: true });
     if (filters.status === 'inactive') qb.andWhere('u.isActive = :active', { active: false });
+
+    // Scope: admin sees only users they invited
+    if (scopeCtx && scopeCtx.userRole === 'admin') {
+      qb.andWhere('u.invitedBy = :inviterId', { inviterId: scopeCtx.userId });
+    } else if (scopeCtx && scopeCtx.userRole === 'manager') {
+      // Manager sees only guests they invited
+      qb.andWhere('u.invitedBy = :inviterId', { inviterId: scopeCtx.userId });
+    }
 
     const total = await qb.getCount();
     const users = await qb
@@ -82,7 +137,7 @@ export class MetricsService {
     to?: string;
     page: number;
     limit: number;
-  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
+  }, scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.bookingRepo.createQueryBuilder('b')
       .leftJoinAndSelect('b.property', 'p')
       .leftJoinAndSelect('b.guest', 'g');
@@ -92,6 +147,15 @@ export class MetricsService {
     if (filters.guestId) qb.andWhere('b.guestId = :gid', { gid: parseInt(filters.guestId, 10) });
     if (filters.from) qb.andWhere('b.createdAt >= :from', { from: filters.from });
     if (filters.to) qb.andWhere('b.createdAt <= :to', { to: filters.to });
+
+    // Scope filtering
+    const allowedPropertyIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_DETAILED_BOOKINGS);
+    if (allowedPropertyIds !== null) {
+      if (allowedPropertyIds.length === 0) {
+        return { data: [], total: 0, page: filters.page, limit: filters.limit, totalPages: 0 };
+      }
+      qb.andWhere('b.propertyId IN (:...allowedPropIds)', { allowedPropIds: allowedPropertyIds });
+    }
 
     const total = await qb.getCount();
     const bookings = await qb
@@ -133,13 +197,22 @@ export class MetricsService {
     city?: string;
     page: number;
     limit: number;
-  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
+  }, scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.propertyRepo.createQueryBuilder('p')
       .leftJoinAndSelect('p.host', 'h');
 
     if (filters.status) qb.andWhere('p.status = :status', { status: filters.status });
     if (filters.hostId) qb.andWhere('p.hostId = :hid', { hid: parseInt(filters.hostId, 10) });
     if (filters.city) qb.andWhere('p.city LIKE :city', { city: `%${filters.city}%` });
+
+    // Scope filtering
+    const allowedPropertyIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_DETAILED_PROPERTIES);
+    if (allowedPropertyIds !== null) {
+      if (allowedPropertyIds.length === 0) {
+        return { data: [], total: 0, page: filters.page, limit: filters.limit, totalPages: 0 };
+      }
+      qb.andWhere('p.id IN (:...allowedPropIds)', { allowedPropIds: allowedPropertyIds });
+    }
 
     const total = await qb.getCount();
     const properties = await qb
@@ -184,13 +257,22 @@ export class MetricsService {
     category?: string;
     page: number;
     limit: number;
-  }, _scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
+  }, scopeCtx?: ScopeContext): Promise<PaginatedResult<any>> {
     const qb = this.serviceRepo.createQueryBuilder('s')
       .leftJoinAndSelect('s.provider', 'p');
 
     if (filters.status) qb.andWhere('s.status = :status', { status: filters.status });
     if (filters.providerId) qb.andWhere('s.providerId = :pid', { pid: parseInt(filters.providerId, 10) });
     if (filters.category) qb.andWhere('s.category = :cat', { cat: filters.category });
+
+    // Scope filtering
+    const allowedServiceIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_DETAILED_SERVICES);
+    if (allowedServiceIds !== null) {
+      if (allowedServiceIds.length === 0) {
+        return { data: [], total: 0, page: filters.page, limit: filters.limit, totalPages: 0 };
+      }
+      qb.andWhere('s.id IN (:...allowedSvcIds)', { allowedSvcIds: allowedServiceIds });
+    }
 
     const total = await qb.getCount();
     const services = await qb
@@ -229,7 +311,7 @@ export class MetricsService {
     from?: string;
     to?: string;
     groupBy: string;
-  }, _scopeCtx?: ScopeContext) {
+  }, scopeCtx?: ScopeContext) {
     const qb = this.bookingRepo.createQueryBuilder('b')
       .select("DATE_FORMAT(b.createdAt, '%Y-%m')", 'month')
       .addSelect('SUM(b.totalPrice)', 'revenue')
@@ -238,6 +320,13 @@ export class MetricsService {
 
     if (filters.from) qb.andWhere('b.createdAt >= :from', { from: filters.from });
     if (filters.to) qb.andWhere('b.createdAt <= :to', { to: filters.to });
+
+    // Scope: admin sees only revenue from their properties
+    const allowedPropertyIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_REVENUE);
+    if (allowedPropertyIds !== null) {
+      if (allowedPropertyIds.length === 0) return [];
+      qb.andWhere('b.propertyId IN (:...allowedPropIds)', { allowedPropIds: allowedPropertyIds });
+    }
 
     const results = await qb.groupBy('month').orderBy('month', 'DESC').limit(12).getRawMany();
 
@@ -248,10 +337,37 @@ export class MetricsService {
     }));
   }
 
-  async getPlatformSummary(_scopeCtx?: ScopeContext) {
+  async getPlatformSummary(scopeCtx?: ScopeContext) {
+    // Scope filtering for the summary
+    const allowedPropertyIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_SUMMARY);
+    const allowedServiceIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_SUMMARY);
+
+    // Build property query
+    const propQb = this.propertyRepo.createQueryBuilder('p');
+    if (allowedPropertyIds !== null) {
+      if (allowedPropertyIds.length === 0) {
+        return this.emptySummary();
+      }
+      propQb.andWhere('p.id IN (:...ids)', { ids: allowedPropertyIds });
+    }
+
+    // Build service query
+    const svcQb = this.serviceRepo.createQueryBuilder('s');
+    if (allowedServiceIds !== null) {
+      if (allowedServiceIds.length === 0) {
+        // No services but may have properties
+      } else {
+        svcQb.andWhere('s.id IN (:...ids)', { ids: allowedServiceIds });
+      }
+    }
+
+    // Build booking query scoped to allowed properties
+    const bookQb = this.bookingRepo.createQueryBuilder('b');
+    if (allowedPropertyIds !== null) {
+      bookQb.andWhere('b.propertyId IN (:...ids)', { ids: allowedPropertyIds.length > 0 ? allowedPropertyIds : ['__none__'] });
+    }
+
     const [
-      totalUsers,
-      activeUsers,
       totalProperties,
       publishedProperties,
       pausedProperties,
@@ -264,26 +380,35 @@ export class MetricsService {
       completedBookings,
       cancelledBookings,
     ] = await Promise.all([
-      this.userRepo.count(),
-      this.userRepo.count({ where: { isActive: true } }),
-      this.propertyRepo.count(),
-      this.propertyRepo.count({ where: { status: 'published' } }),
-      this.propertyRepo.count({ where: { status: 'suspended' } }),
-      this.propertyRepo.count({ where: { status: 'archived' } }),
-      this.serviceRepo.count(),
-      this.serviceRepo.count({ where: { status: 'published' } }),
-      this.bookingRepo.count(),
-      this.bookingRepo.count({ where: { status: 'pending' } }),
-      this.bookingRepo.count({ where: { status: 'confirmed' } }),
-      this.bookingRepo.count({ where: { status: 'completed' } }),
-      this.bookingRepo.count({ where: { status: 'cancelled' } }),
+      propQb.clone().getCount(),
+      propQb.clone().andWhere('p.status = :s', { s: 'published' }).getCount(),
+      propQb.clone().andWhere('p.status = :s', { s: 'suspended' }).getCount(),
+      propQb.clone().andWhere('p.status = :s', { s: 'archived' }).getCount(),
+      svcQb.clone().getCount(),
+      svcQb.clone().andWhere('s.status = :s', { s: 'published' }).getCount(),
+      bookQb.clone().getCount(),
+      bookQb.clone().andWhere('b.status = :s', { s: 'pending' }).getCount(),
+      bookQb.clone().andWhere('b.status = :s', { s: 'confirmed' }).getCount(),
+      bookQb.clone().andWhere('b.status = :s', { s: 'completed' }).getCount(),
+      bookQb.clone().andWhere('b.status = :s', { s: 'cancelled' }).getCount(),
     ]);
 
-    const revenueResult = await this.bookingRepo
-      .createQueryBuilder('b')
+    // Users: hyper sees all, admin sees own invitees
+    let totalUsers = 0;
+    let activeUsers = 0;
+    if (!scopeCtx || ['hyper_admin', 'hyper_manager'].includes(scopeCtx.userRole)) {
+      totalUsers = await this.userRepo.count();
+      activeUsers = await this.userRepo.count({ where: { isActive: true } });
+    }
+
+    // Revenue scoped
+    const revQb = this.bookingRepo.createQueryBuilder('b')
       .select('SUM(b.totalPrice)', 'total')
-      .where('b.status IN (:...statuses)', { statuses: ['confirmed', 'completed'] })
-      .getRawOne();
+      .where('b.status IN (:...statuses)', { statuses: ['confirmed', 'completed'] });
+    if (allowedPropertyIds !== null) {
+      revQb.andWhere('b.propertyId IN (:...ids)', { ids: allowedPropertyIds.length > 0 ? allowedPropertyIds : ['__none__'] });
+    }
+    const revenueResult = await revQb.getRawOne();
 
     return {
       users: { total: totalUsers, active: activeUsers, inactive: totalUsers - activeUsers },
@@ -291,6 +416,16 @@ export class MetricsService {
       services: { total: totalServices, published: publishedServices },
       bookings: { total: totalBookings, pending: pendingBookings, confirmed: confirmedBookings, completed: completedBookings, cancelled: cancelledBookings },
       revenue: { total: parseFloat(revenueResult?.total) || 0 },
+    };
+  }
+
+  private emptySummary() {
+    return {
+      users: { total: 0, active: 0, inactive: 0 },
+      properties: { total: 0, published: 0, paused: 0, archived: 0, draft: 0 },
+      services: { total: 0, published: 0 },
+      bookings: { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 },
+      revenue: { total: 0 },
     };
   }
 }

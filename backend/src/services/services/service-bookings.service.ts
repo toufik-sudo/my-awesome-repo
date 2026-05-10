@@ -32,7 +32,11 @@ export class ServiceBookingsService {
     @Optional() private readonly rolesService?: RolesService,
   ) {}
 
-  async create(dto: CreateServiceBookingDto, customerId: number, _scopeCtx?: ScopeContext) {
+  async create(dto: CreateServiceBookingDto, customerId: number, scopeCtx?: ScopeContext) {
+    // Verify only allowed roles can book (manager, guest, user)
+    if (scopeCtx && ['hyper_admin', 'hyper_manager', 'admin'].includes(scopeCtx.userRole)) {
+      throw new ForbiddenException('Administrative roles cannot create bookings');
+    }
     const service = await this.serviceRepo.findOne({ where: { id: dto.serviceId } });
     if (!service) throw new NotFoundException('Service not found');
     if (!service.isAvailable) throw new BadRequestException('Service is not available');
@@ -131,15 +135,31 @@ export class ServiceBookingsService {
     };
   }
 
-  async getMyBookings(customerId: number, _scopeCtx?: ScopeContext) {
-    return this.bookingRepo.find({
+  async getMyBookings(
+    customerId: number,
+    _scopeCtx?: ScopeContext,
+    pagination?: { page?: number; limit?: number },
+  ) {
+    const page = Math.max(1, pagination?.page ?? 1);
+    const limit = Math.max(1, Math.min(100, pagination?.limit ?? 20));
+    const [data, total] = await this.bookingRepo.findAndCount({
       where: { customerId },
       relations: ['service'],
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async getProviderBookings(providerId: number, scopeCtx?: ScopeContext) {
+  async getProviderBookings(
+    providerId: number,
+    scopeCtx?: ScopeContext,
+    pagination?: { page?: number; limit?: number },
+  ) {
+    const page = Math.max(1, pagination?.page ?? 1);
+    const limit = Math.max(1, Math.min(100, pagination?.limit ?? 20));
+
     const query = this.bookingRepo
       .createQueryBuilder('sb')
       .leftJoinAndSelect('sb.service', 'service')
@@ -147,18 +167,23 @@ export class ServiceBookingsService {
       .where('service.providerId = :providerId', { providerId })
       .orderBy('sb.createdAt', 'DESC');
 
-    // Apply scope filtering for manager/hyper_manager/guest
     if (scopeCtx && this.scopeFilter && ['manager', 'hyper_manager', 'guest'].includes(scopeCtx.userRole)) {
       const scopedPerms = getScopedPerms(scopeCtx);
       const allowedServiceIds = await this.scopeFilter.resolveServiceIds(scopedPerms, PERM_KEY_PROVIDER_BOOKINGS);
 
       if (allowedServiceIds !== null) {
-        if (allowedServiceIds.length === 0) return [];
+        if (allowedServiceIds.length === 0) {
+          return { data: [], total: 0, page, limit, totalPages: 0 };
+        }
         query.andWhere('sb.serviceId IN (:...allowedServiceIds)', { allowedServiceIds });
       }
     }
 
-    return query.getMany();
+    const [data, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getOne(id: string) {
@@ -196,25 +221,34 @@ export class ServiceBookingsService {
     throw new ForbiddenException('You do not have access to this service booking');
   }
 
-  async accept(id: string, _scopeCtx?: ScopeContext) {
+  async accept(id: string, scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
     if (booking.status !== 'pending') throw new BadRequestException('Booking is not pending');
-    booking.status = 'confirmed';
-    booking.confirmedAt = new Date();
+    await this.assertServiceBookingAccess(booking, scopeCtx);
+    booking.status = 'accepted';
+    booking.acceptedAt = new Date();
+    booking.paymentDeadlineAt = new Date(Date.now() + 24 * 3600 * 1000);
     return this.bookingRepo.save(booking);
   }
 
-  async decline(id: string, reason?: string, _scopeCtx?: ScopeContext) {
+  async decline(id: string, reason?: string, scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
     if (booking.status !== 'pending') throw new BadRequestException('Booking is not pending');
+    await this.assertServiceBookingAccess(booking, scopeCtx);
     booking.status = 'rejected';
     booking.cancellationReason = reason;
     return this.bookingRepo.save(booking);
   }
 
-  async cancel(id: string, reason?: string, _scopeCtx?: ScopeContext) {
+  async cancel(id: string, reason?: string, scopeCtx?: ScopeContext) {
     const booking = await this.getOne(id);
     if (!['pending', 'confirmed'].includes(booking.status)) throw new BadRequestException('Cannot cancel');
+    // Customer can cancel their own booking
+    if (scopeCtx && booking.customerId === scopeCtx.userId) {
+      // allowed
+    } else {
+      await this.assertServiceBookingAccess(booking, scopeCtx);
+    }
     booking.status = 'cancelled';
     booking.cancelledAt = new Date();
     booking.cancellationReason = reason;
@@ -231,7 +265,8 @@ export class ServiceBookingsService {
     });
   }
 
-  async setAvailability(serviceId: string, dto: ServiceAvailabilityDto, _scopeCtx?: ScopeContext) {
+  async setAvailability(serviceId: string, dto: ServiceAvailabilityDto, scopeCtx?: ScopeContext) {
+    await this.assertServiceAccess(serviceId, scopeCtx);
     let avail = await this.availRepo.findOne({
       where: { serviceId, date: new Date(dto.date) as any },
     });
@@ -246,7 +281,60 @@ export class ServiceBookingsService {
     }));
   }
 
-  async bulkSetAvailability(serviceId: string, dates: ServiceAvailabilityDto[], _scopeCtx?: ScopeContext) {
+  async bulkSetAvailability(serviceId: string, dates: ServiceAvailabilityDto[], scopeCtx?: ScopeContext) {
+    await this.assertServiceAccess(serviceId, scopeCtx);
     return Promise.all(dates.map(d => this.setAvailability(serviceId, d)));
+  }
+
+  /**
+   * Assert the caller can manage this service booking (accept/decline).
+   */
+  private async assertServiceBookingAccess(booking: ServiceBooking, scopeCtx?: ScopeContext): Promise<void> {
+    if (!scopeCtx) return;
+    const { userRole, userId } = scopeCtx;
+
+    if (['hyper_admin', 'hyper_manager'].includes(userRole)) return;
+
+    if (userRole === 'admin' && this.rolesService) {
+      const isOwner = await this.rolesService.isServiceOwner(userId, booking.serviceId);
+      if (isOwner) return;
+      throw new ForbiddenException('You do not own this service');
+    }
+
+    if (userRole === 'manager' && this.rolesService) {
+      const hasAccess = await this.rolesService.hasPermissionForProperty(
+        userId, booking.serviceId, 'manage_service_bookings',
+      );
+      if (hasAccess) return;
+      throw new ForbiddenException('No permission to manage this service booking');
+    }
+
+    throw new ForbiddenException('Insufficient permissions');
+  }
+
+  /**
+   * Assert the caller can manage availability for this service.
+   */
+  private async assertServiceAccess(serviceId: string, scopeCtx?: ScopeContext): Promise<void> {
+    if (!scopeCtx) return;
+    const { userRole, userId } = scopeCtx;
+
+    if (['hyper_admin', 'hyper_manager'].includes(userRole)) return;
+
+    if (userRole === 'admin' && this.rolesService) {
+      const service = await this.serviceRepo.findOne({ where: { id: serviceId } });
+      if (service && service.providerId === userId) return;
+      throw new ForbiddenException('You do not own this service');
+    }
+
+    if (['manager', 'guest'].includes(userRole) && this.scopeFilter) {
+      const allowedIds = await this.scopeFilter.resolveServiceIds(
+        getScopedPerms(scopeCtx), 'backend.ServiceBookingsController.setAvailability.POST',
+      );
+      if (allowedIds === null || allowedIds.includes(serviceId)) return;
+      throw new ForbiddenException('No permission to manage this service availability');
+    }
+
+    throw new ForbiddenException('Insufficient permissions');
   }
 }

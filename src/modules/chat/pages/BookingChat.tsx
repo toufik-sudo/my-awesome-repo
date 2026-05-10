@@ -19,12 +19,14 @@ import { useChatConversation, useSendMessage } from '../chat.hooks';
 import { filterMessageContent, getFilterWarningMessage } from '../utils/contentFilter';
 import type { ChatMessage } from '../chat.api';
 import { cn } from '@/lib/utils';
+import { useRoleAccess } from '@/hooks/useRoleAccess';
 
 export const BookingChat: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { can } = useRoleAccess('BookingChat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messageInput, setMessageInput] = useState('');

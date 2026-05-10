@@ -1,5 +1,5 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn,
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, JoinTable,
 } from 'typeorm';
 import { User } from '../../../user/entity/user.entity';
 
@@ -45,29 +45,49 @@ export class Badge {
   @Column({ default: true })
   isActive: boolean;
 
+  /**
+   * Direct M2M with users — replaces user_badges join table.
+   * Join table 'badge_users' has extra column unlockedAt managed via QueryBuilder.
+   */
+  @ManyToMany(() => User, { eager: false })
+  @JoinTable({
+    name: 'badge_users',
+    joinColumn: { name: 'badgeId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  users: User[];
+
   @CreateDateColumn()
   createdAt: Date;
 }
 
-@Entity('user_badges')
-export class UserBadge {
-  @PrimaryGeneratedColumn('uuid')
+/**
+ * Explicit join entity for badge↔user with unlockedAt column.
+ * Use raw queries or QueryBuilder for insert/select with unlockedAt.
+ */
+import { Entity as E2, Column as C2, PrimaryGeneratedColumn as PG2, CreateDateColumn as CD2, ManyToOne, JoinColumn, Index } from 'typeorm';
+
+@E2('badge_users')
+@Index('IDX_badge_users_userId', ['userId'])
+@Index('IDX_badge_users_badgeId', ['badgeId'])
+export class BadgeUser {
+  @PG2('uuid')
   id: string;
 
-  @Column()
+  @C2()
   userId: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column({ type: 'uuid' })
+  @C2({ type: 'uuid' })
   badgeId: string;
 
   @ManyToOne(() => Badge, { onDelete: 'CASCADE', eager: true })
   @JoinColumn({ name: 'badgeId' })
   badge: Badge;
 
-  @CreateDateColumn()
+  @CD2()
   unlockedAt: Date;
 }

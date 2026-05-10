@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards, UseInterceptors,
+  Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards, UseInterceptors,
 } from '@nestjs/common';
+import { maybePaginate } from '../../common/pagination.util';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { PropertyGroupsService } from '../services/property-groups.service';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -22,9 +23,10 @@ export class PropertyGroupsController {
   @CsrfGenAuth()
   @CsrfCheck(true)
   @ApiOperation({ summary: 'List property groups' })
-  async findAll(@Request() req) {
+  async findAll(@Request() req, @Query('page') page?: string, @Query('limit') limit?: string) {
     const scopeCtx = extractScopeContext(req);
-    return this.groupsService.findAll(req.user.id, scopeCtx);
+    const items = await this.groupsService.findAll(req.user.id, scopeCtx);
+    return maybePaginate(items, page, limit);
   }
 
   @Get(':id')

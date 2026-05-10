@@ -1,4 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import {
+  Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,
+  ManyToOne, JoinColumn, Index,
+} from 'typeorm';
+import { User } from '../../user/entity/user.entity';
 
 @Entity('rankings')
 export class Ranking {
@@ -9,6 +13,10 @@ export class Ranking {
   @Column({ nullable: false })
   userId: number;
 
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
   @Column({ default: 0 })
   score: number;
 
@@ -16,7 +24,7 @@ export class Ranking {
   previousRank: number;
 
   @Column({ nullable: true })
-  category: string; // 'global', 'monthly', 'weekly', etc.
+  category: string;
 
   @Column({ type: 'simple-json', nullable: true })
   metadata: Record<string, any>;
