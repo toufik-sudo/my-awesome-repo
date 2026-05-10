@@ -512,10 +512,8 @@ async function seedManagerAndHyperPermissions(ds: DataSource, userIds: number[],
 
   for (const key of hyperPerms) {
     await qr.query(
-      `INSERT INTO hyper_manager_permissions (id, "hyperManagerId", "assignedById", "backendPermissionKey", scope, "isGranted", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, 'all', true, NOW(), NOW())
-       ON CONFLICT DO NOTHING`,
-      [uuidv4(), userIds[1], userIds[0], key]
+      'INSERT IGNORE INTO hyper_manager_permissions (id, `hyperManagerId`, `assignedById`, `backendPermissionKey`, scope, `isGranted`, `createdAt`, `updatedAt`) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())',
+      [uuidv4(), userIds[1], userIds[0], key, 'all', true]
     );
     count++;
   }
