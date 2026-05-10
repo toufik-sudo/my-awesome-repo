@@ -584,10 +584,18 @@ export class RolesService {
   }
 
   async getGuestAccessibleProperties(guestId: number): Promise<string[] | null> {
-    const perms = await this.guestPermRepo.find({
+    const allPerms = await this.guestPermRepo.find({
       where: { guestId, isGranted: true },
     });
-    if (perms.length === 0) return [];
+    if (allPerms.length === 0) return [];
+
+    // RESTRICTIVE precedence (see getManagerProperties).
+    const narrow = allPerms.filter(
+      p =>
+        (p.scope === 'properties' && p.properties && p.properties.length > 0) ||
+        (p.scope === 'property_groups' && p.propertyGroups && p.propertyGroups.length > 0),
+    );
+    const perms = narrow.length > 0 ? narrow : allPerms;
 
     const propertyIds = new Set<string>();
     const inheritFromInviters = new Set<number>();
