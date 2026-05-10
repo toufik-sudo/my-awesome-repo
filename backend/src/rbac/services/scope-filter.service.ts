@@ -56,6 +56,24 @@ export class ScopeFilterService {
     return false;
   }
 
+  /**
+   * A "narrow" property perm explicitly targets specific properties or property groups
+   * (non-empty target arrays). When any narrow property perm exists for a manager/guest,
+   * it MUST take precedence over broader 'all' / 'admins' / empty-target perms which
+   * would otherwise inherit the inviter admin's full inventory.
+   */
+  private isNarrowPropertyPerm(p: ScopedPerm): boolean {
+    if (p.scope === 'properties' && p.properties && p.properties.length > 0) return true;
+    if (p.scope === 'property_groups' && p.propertyGroups && p.propertyGroups.length > 0) return true;
+    return false;
+  }
+
+  private isNarrowServicePerm(p: ScopedPerm): boolean {
+    if (p.scope === 'services' && p.services && p.services.length > 0) return true;
+    if (p.scope === 'service_groups' && p.serviceGroups && p.serviceGroups.length > 0) return true;
+    return false;
+  }
+
   async resolvePropertyIds(
     scopedPerms: ScopedPerm[],
     permissionKey: string,
