@@ -261,10 +261,7 @@ export async function seedRbac(dataSource: DataSource): Promise<void> {
     // Seed backend permissions
     for (const perm of BACKEND_PERMISSIONS) {
       await queryRunner.query(
-        `INSERT INTO rbac_backend_permissions (id, role, resource, action, permission_key, scope, allowed, conditions)
-         VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (role, permission_key)
-         DO UPDATE SET resource = $2, action = $3, scope = $5, allowed = $6, conditions = $7, updated_at = NOW()`,
+        'INSERT INTO rbac_backend_permissions (id, role, resource, action, permission_key, scope, allowed, conditions) VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE resource = VALUES(resource), action = VALUES(action), scope = VALUES(scope), allowed = VALUES(allowed), conditions = VALUES(conditions), updated_at = NOW()',
         [
           perm.role,
           perm.resource,
@@ -280,10 +277,7 @@ export async function seedRbac(dataSource: DataSource): Promise<void> {
     // Seed frontend permissions
     for (const perm of FRONTEND_PERMISSIONS) {
       await queryRunner.query(
-        `INSERT INTO rbac_frontend_permissions (id, role, ui_key, permission_key, allowed, conditions)
-         VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5)
-         ON CONFLICT (role, ui_key)
-         DO UPDATE SET permission_key = $3, allowed = $4, conditions = $5, updated_at = NOW()`,
+        'INSERT INTO rbac_frontend_permissions (id, role, ui_key, permission_key, allowed, conditions) VALUES (UUID(), ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE permission_key = VALUES(permission_key), allowed = VALUES(allowed), conditions = VALUES(conditions), updated_at = NOW()',
         [
           perm.role,
           perm.ui_key,
