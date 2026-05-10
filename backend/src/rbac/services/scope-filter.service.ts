@@ -215,6 +215,13 @@ export class ScopeFilterService {
     const isHyperManager = role === 'hyper_manager';
     if (isHyperManager && relevant.some(p => p.scope === 'all')) return null;
 
+    // RESTRICTIVE precedence (services): narrow service/service_group perms
+    // override broader 'all'/'admins'/empty-target perms for manager/guest.
+    if (!isHyperManager) {
+      const narrow = relevant.filter(p => this.isNarrowServicePerm(p));
+      if (narrow.length > 0) relevant = narrow;
+    }
+
     const ids = new Set<string>();
     const inheritFromInviters = new Set<number>();
 
