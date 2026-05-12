@@ -156,31 +156,26 @@ const MyBookings: React.FC = () => {
               filteredBookings.map(booking => {
                 const statusCfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
                 const StatusIcon = statusCfg.icon;
-                const nights = booking.numberOfNights || differenceInDays(parseISO(booking.checkOutDate), parseISO(booking.checkInDate));
-                const isUpcoming = !isPast(parseISO(booking.checkInDate));
+                const isService = booking.type === 'service';
+                const isUpcoming = !isPast(parseISO(booking.startDate));
                 const canCancel = (booking.status === 'pending' || booking.status === 'accepted' || booking.status === 'confirmed') && isUpcoming;
                 const needsPayment = booking.status === 'accepted';
                 const paymentCountdown = needsPayment ? formatCountdown(booking.paymentDeadlineAt) : null;
-                // Host took >48h to accept: guest may cancel without penalty
                 const hostUnresponsive = booking.status === 'pending'
                   && booking.acceptDeadlineAt
                   && new Date(booking.acceptDeadlineAt).getTime() < Date.now();
+                const detailHref = isService ? `/services/${booking.refId}` : `/property/${booking.refId}`;
 
                 return (
                   <Card key={booking.id} className="overflow-hidden border-border/60 hover:shadow-md transition-shadow">
                     <CardContent className="p-0">
                       <div className="flex flex-col sm:flex-row">
-                        {/* Image */}
                         <div
                           className="sm:w-48 h-40 sm:h-auto relative cursor-pointer flex-shrink-0"
-                          onClick={() => navigate(`/property/${booking.propertyId}`)}
+                          onClick={() => navigate(detailHref)}
                         >
-                          {booking.property?.images?.[0] ? (
-                            <img
-                              src={booking.property.images[0]}
-                              alt={booking.property.title}
-                              className="w-full h-full object-cover"
-                            />
+                          {booking.image ? (
+                            <img src={booking.image} alt={booking.title} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center">
                               <Calendar className="h-8 w-8 text-muted-foreground" />
@@ -190,29 +185,31 @@ const MyBookings: React.FC = () => {
                             <StatusIcon className="h-3.5 w-3.5" />
                             {statusCfg.label}
                           </div>
+                          <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">
+                            {isService ? 'Service' : 'Property'}
+                          </Badge>
                         </div>
 
-                        {/* Details */}
                         <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between">
                           <div>
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <h3
                                   className="font-semibold text-foreground text-base hover:text-primary transition-colors cursor-pointer"
-                                  onClick={() => navigate(`/property/${booking.propertyId}`)}
+                                  onClick={() => navigate(detailHref)}
                                 >
-                                  {booking.property?.title || 'Property'}
+                                  {booking.title}
                                 </h3>
                                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                                   <MapPin className="h-3.5 w-3.5" />
-                                  {booking.property?.city || 'Unknown'}
+                                  {booking.city || 'Unknown'}
                                 </div>
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <p className="text-lg font-bold text-foreground">
-                                  {Number(booking.totalPrice).toLocaleString()} DA
+                                  {Number(booking.totalPrice).toLocaleString()} {booking.currency}
                                 </p>
-                                <p className="text-xs text-muted-foreground">{nights} nights</p>
+                                <p className="text-xs text-muted-foreground">{booking.durationLabel}</p>
                               </div>
                             </div>
 
@@ -222,26 +219,24 @@ const MyBookings: React.FC = () => {
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Calendar className="h-4 w-4 flex-shrink-0" />
                                 <div>
-                                  <p className="text-[11px] uppercase tracking-wider font-medium">Check-in</p>
-                                  <p className="text-foreground font-medium text-xs">
-                                    {format(parseISO(booking.checkInDate), 'dd MMM yyyy')}
-                                  </p>
+                                  <p className="text-[11px] uppercase tracking-wider font-medium">{isService ? 'Date' : 'Check-in'}</p>
+                                  <p className="text-foreground font-medium text-xs">{format(parseISO(booking.startDate), 'dd MMM yyyy')}</p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Calendar className="h-4 w-4 flex-shrink-0" />
-                                <div>
-                                  <p className="text-[11px] uppercase tracking-wider font-medium">Check-out</p>
-                                  <p className="text-foreground font-medium text-xs">
-                                    {format(parseISO(booking.checkOutDate), 'dd MMM yyyy')}
-                                  </p>
+                              {!isService && (
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                                  <div>
+                                    <p className="text-[11px] uppercase tracking-wider font-medium">Check-out</p>
+                                    <p className="text-foreground font-medium text-xs">{format(parseISO(booking.endDate), 'dd MMM yyyy')}</p>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Users className="h-4 w-4 flex-shrink-0" />
                                 <div>
-                                  <p className="text-[11px] uppercase tracking-wider font-medium">Guests</p>
-                                  <p className="text-foreground font-medium text-xs">{booking.numberOfGuests}</p>
+                                  <p className="text-[11px] uppercase tracking-wider font-medium">{isService ? 'Participants' : 'Guests'}</p>
+                                  <p className="text-foreground font-medium text-xs">{booking.partySize}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
@@ -254,7 +249,6 @@ const MyBookings: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Payment Status */}
                           <BookingPaymentStatus
                             bookingId={booking.id}
                             totalPrice={Number(booking.totalPrice)}
@@ -262,7 +256,6 @@ const MyBookings: React.FC = () => {
                             paymentStatus={booking.paymentStatus}
                           />
 
-                          {/* Lifecycle banners */}
                           {needsPayment && (
                             <div className="mt-3 flex items-center gap-2 rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
                               <Timer className="h-3.5 w-3.5 flex-shrink-0" />
@@ -285,16 +278,15 @@ const MyBookings: React.FC = () => {
                             </div>
                           )}
 
-                          {/* Actions */}
                           <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
                             <p className="text-xs text-muted-foreground">
                               Booked {format(parseISO(booking.createdAt), 'dd MMM yyyy')}
                             </p>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm" onClick={() => navigate(`/property/${booking.propertyId}`)}>
+                              <Button variant="outline" size="sm" onClick={() => navigate(detailHref)}>
                                 <Eye className="h-3.5 w-3.5 mr-1" /> View
                               </Button>
-                              {needsPayment && (
+                              {needsPayment && !isService && (
                                 <Button size="sm" onClick={() => navigate(`/bookings/${booking.id}/pay`)}>
                                   <CreditCard className="h-3.5 w-3.5 mr-1" /> Pay Now
                                 </Button>
