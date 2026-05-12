@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useMyBookings, useCancelBooking } from '@/modules/bookings/bookings.hooks';
+import { useMyServiceBookings, useCancelServiceBooking } from '@/modules/services/service-bookings.hooks';
+import { mergeBookings, type UnifiedBooking } from '@/modules/bookings/utils/normalize-booking';
 import type { BookingResponse } from '@/modules/bookings/bookings.api';
 import { BookingPaymentStatus } from '@/modules/bookings/components/BookingPaymentStatus';
 import { CancellationPolicyInfo } from '@/modules/shared/components/CancellationPolicyInfo';
@@ -53,29 +55,44 @@ const MyBookings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const { data: bookings = [], isLoading, refetch } = useMyBookings();
+  const { data: propertyBookings = [], isLoading: loadingP, refetch: refetchP } = useMyBookings();
+  const { data: serviceBookings = [], isLoading: loadingS, refetch: refetchS } = useMyServiceBookings();
   const cancelMutation = useCancelBooking();
+  const cancelServiceMutation = useCancelServiceBooking();
+  const isLoading = loadingP || loadingS;
+  const refetch = useCallback(async () => { await Promise.all([refetchP(), refetchS()]); }, [refetchP, refetchS]);
+
+  const allBookings: UnifiedBooking[] = useMemo(
+    () => mergeBookings(propertyBookings, serviceBookings),
+    [propertyBookings, serviceBookings],
+  );
+  const bookings = propertyBookings; // legacy alias for downstream property-only sections (cancel dialog policy lookup)
 
   const tabs = useMemo(() => [
-    { value: 'all', label: 'All', count: bookings.length },
-    { value: 'pending', label: 'Pending', count: bookings.filter(b => b.status === 'pending').length },
-    { value: 'accepted', label: 'To Pay', count: bookings.filter(b => b.status === 'accepted').length },
-    { value: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length },
-    { value: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length },
-    { value: 'cancelled', label: 'Cancelled', count: bookings.filter(b => b.status === 'cancelled' || b.status === 'refunded' || b.status === 'rejected' || b.status === 'archived').length },
-  ], [bookings]);
+    { value: 'all', label: 'All', count: allBookings.length },
+    { value: 'pending', label: 'Pending', count: allBookings.filter(b => b.status === 'pending').length },
+    { value: 'accepted', label: 'To Pay', count: allBookings.filter(b => b.status === 'accepted').length },
+    { value: 'confirmed', label: 'Confirmed', count: allBookings.filter(b => b.status === 'confirmed').length },
+    { value: 'completed', label: 'Completed', count: allBookings.filter(b => b.status === 'completed').length },
+    { value: 'cancelled', label: 'Cancelled', count: allBookings.filter(b => ['cancelled','refunded','rejected','archived'].includes(b.status)).length },
+  ], [allBookings]);
 
   const filteredBookings = useMemo(() => {
-    if (activeTab === 'all') return bookings;
-    if (activeTab === 'cancelled') return bookings.filter(b => ['cancelled','refunded','rejected','archived'].includes(b.status));
-    return bookings.filter(b => b.status === activeTab);
-  }, [bookings, activeTab]);
+    if (activeTab === 'all') return allBookings;
+    if (activeTab === 'cancelled') return allBookings.filter(b => ['cancelled','refunded','rejected','archived'].includes(b.status));
+    return allBookings.filter(b => b.status === activeTab);
+  }, [allBookings, activeTab]);
 
   const handleCancel = useCallback(() => {
     if (!cancellingId) return;
-    cancelMutation.mutate(cancellingId);
+    const target = allBookings.find(b => b.id === cancellingId);
+    if (target?.type === 'service') {
+      cancelServiceMutation.mutate({ id: cancellingId });
+    } else {
+      cancelMutation.mutate(cancellingId);
+    }
     setCancellingId(null);
-  }, [cancellingId, cancelMutation]);
+  }, [cancellingId, allBookings, cancelMutation, cancelServiceMutation]);
 
   if (isLoading) {
     return (
