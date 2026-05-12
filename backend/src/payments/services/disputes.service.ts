@@ -75,6 +75,7 @@ export class DisputesService {
     }
 
     const dispute = this.disputeRepo.create({
+      bookingType: data.bookingId ? 'property' : 'service',
       bookingId: data.bookingId || null,
       serviceBookingId: data.serviceBookingId || null,
       guestUserId: data.guestUserId,
