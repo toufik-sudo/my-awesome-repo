@@ -97,6 +97,14 @@ export const serviceBookingsApi = {
   decline: (id: string, reason?: string) =>
     api.put<ServiceBookingResponse>(`/service-bookings/${id}/decline`, { reason }, rbac('serviceBookingsApi.decline.PUT')).then(r => r.data),
 
+  counterOffer: (data: { id: string; newPrice?: number; newDate?: string; newTime?: string; message?: string }) =>
+    api.put<ServiceBookingResponse>(`/service-bookings/${data.id}/counter-offer`, {
+      newPrice: data.newPrice,
+      newDate: data.newDate,
+      newTime: data.newTime,
+      message: data.message,
+    }, rbac('serviceBookingsApi.counterOffer.PUT')).then(r => r.data),
+
   cancel: (id: string, reason?: string) =>
     api.put<ServiceBookingResponse>(`/service-bookings/${id}/cancel`, { reason }, rbac('serviceBookingsApi.cancel.PUT')).then(r => r.data),
 
