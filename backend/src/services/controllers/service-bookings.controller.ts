@@ -91,6 +91,20 @@ export class ServiceBookingsController {
     return this.bookingsService.decline(id, reason, scopeCtx);
   }
 
+  @Put(':id/counter-offer')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Counter-offer on a pending service booking' })
+  counterOffer(
+    @Param('id') id: string,
+    @Body() body: { newPrice?: number; newDate?: string; newTime?: string; message?: string },
+    @Request() req: any,
+  ) {
+    const scopeCtx = extractScopeContext(req);
+    return this.bookingsService.createCounterOffer(id, body, scopeCtx);
+  }
+
   @Put(':id/cancel')
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()

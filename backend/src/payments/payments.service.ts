@@ -18,6 +18,8 @@ import { ScopeContext, getScopedPerms } from '../rbac/scope-context';
 import { ScopeFilterService } from '../rbac/services/scope-filter.service';
 import { EscrowService } from './services/escrow.service';
 import { HyperNotifierService } from '../user/services/hyper-notifier.service';
+import { PointsService } from '../modules/points/services/points.service';
+import { ReferralService } from '../user/services/referral.service';
 
 const PERM_KEY_PENDING_RECEIPTS = 'backend.PaymentsController.getPendingReceipts.GET';
 const PERM_KEY_APPROVE_RECEIPT = 'backend.PaymentsController.approveReceipt.PUT';
@@ -44,6 +46,8 @@ export class PaymentsService {
     private readonly scopeFilter: ScopeFilterService,
     private readonly escrow: EscrowService,
     private readonly hyperNotifier: HyperNotifierService,
+    private readonly pointsService: PointsService,
+    private readonly referralService: ReferralService,
   ) {}
 
   // ─── Transfer Accounts ───────────────────────────────────────────────
@@ -208,6 +212,41 @@ export class PaymentsService {
       }
     } catch (e) {
       this.logger.error(`[Payments] Booking confirmation update failed for receipt ${id}: ${(e as Error).message}`);
+    }
+
+    // Award loyalty points + referral commission to the booking customer.
+    // Same logic for property and service bookings — fires once on payment approval.
+    try {
+      let customerId: number | null = null;
+      let bookingRefId: string | null = null;
+      let bookingRefType: 'booking' | 'service_booking' = 'booking';
+      if (receipt.bookingId) {
+        customerId = receipt.booking?.guestId ?? null;
+        bookingRefId = receipt.bookingId;
+        bookingRefType = 'booking';
+      } else if (receipt.serviceBookingId) {
+        const sb = await this.serviceBookingRepo.findOne({ where: { id: receipt.serviceBookingId } });
+        customerId = sb?.customerId ?? null;
+        bookingRefId = receipt.serviceBookingId;
+        bookingRefType = 'service_booking';
+      }
+      if (customerId) {
+        await this.pointsService
+          .awardPoints(customerId, 'booking_completed', {
+            description: bookingRefType === 'service_booking'
+              ? 'Service booking paid'
+              : 'Booking paid',
+            referenceId: bookingRefId,
+            referenceType: bookingRefType,
+          })
+          .catch((e) => this.logger.warn(`[Payments] awardPoints failed: ${e.message}`));
+
+        await this.referralService
+          .onReferredUserBooking(customerId, bookingRefId)
+          .catch((e) => this.logger.warn(`[Payments] referral commission failed: ${e.message}`));
+      }
+    } catch (e) {
+      this.logger.warn(`[Payments] Points/referral accrual skipped: ${(e as Error).message}`);
     }
 
     await this.notifyGuest(receipt, 'approved');

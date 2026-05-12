@@ -107,6 +107,10 @@ export class ServiceBookingsService {
       childPrice,
       discountPercent: discount,
       totalPrice,
+      subtotalAmount: Math.round(amountAfterPoints * 100) / 100,
+      serviceFeeAmount: serviceFee,
+      hostAbsorptionAmount,
+      pointsDiscount,
       currency: service.currency,
       paymentMethod: dto.paymentMethod as any,
       customerMessage: dto.message,
@@ -133,6 +137,29 @@ export class ServiceBookingsService {
         totalPrice,
       },
     };
+  }
+
+  /**
+   * Provider/host counter-offer on a pending service booking.
+   * Mirrors BookingsService.createCounterOffer for property bookings.
+   */
+  async createCounterOffer(
+    id: string,
+    data: { newPrice?: number; newDate?: string; newTime?: string; message?: string },
+    scopeCtx?: ScopeContext,
+  ) {
+    const booking = await this.getOne(id);
+    if (booking.status !== 'pending') {
+      throw new BadRequestException('Can only counter-offer pending bookings');
+    }
+    await this.assertServiceBookingAccess(booking, scopeCtx);
+
+    booking.status = 'counter_offer';
+    booking.hostResponse = data.message || null;
+    if (data.newPrice != null) booking.counterOfferPrice = data.newPrice;
+    if (data.newDate) booking.counterOfferDate = new Date(data.newDate);
+    if (data.newTime) booking.counterOfferTime = data.newTime;
+    return this.bookingRepo.save(booking);
   }
 
   async getMyBookings(

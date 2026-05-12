@@ -102,6 +102,7 @@ export class EscrowService {
     const netAmount = Math.max(0, Math.round((grossAmount - hostPlatformFee) * 100) / 100);
 
     const payout = this.payoutRepo.create({
+      bookingType: receipt.bookingId ? 'property' : 'service',
       bookingId: receipt.bookingId || null,
       serviceBookingId: receipt.serviceBookingId || null,
       receiptId: receipt.id,

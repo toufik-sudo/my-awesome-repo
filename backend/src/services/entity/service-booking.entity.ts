@@ -18,7 +18,8 @@ export type ServiceBookingStatus =
   | 'cancelled'
   | 'completed'
   | 'rejected'
-  | 'archived';
+  | 'archived'
+  | 'counter_offer';
 export type ServicePaymentMethod = 'cash' | 'ccp' | 'baridi_mob' | 'bank_transfer' | 'edahabia' | 'cib';
 
 @Entity('service_bookings')
@@ -65,6 +66,39 @@ export class ServiceBooking {
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   totalPrice: number;
+
+  /** Pre-fee subtotal (after group/points discount, before service fee) */
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  subtotalAmount: number;
+
+  /** Total platform service fee computed via FeeRules */
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  serviceFeeAmount: number;
+
+  /** Portion of the fee absorbed by the host (deducted from the guest total) */
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  hostAbsorptionAmount: number;
+
+  /** Discount applied via loyalty points */
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  pointsDiscount: number;
+
+  /** Discount applied via referral commission */
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  referralDiscount: number;
+
+  /** Provider response when sending a counter-offer */
+  @Column({ type: 'text', nullable: true })
+  hostResponse: string;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  counterOfferPrice: number | null;
+
+  @Column({ type: 'date', nullable: true })
+  counterOfferDate: Date | null;
+
+  @Column({ type: 'varchar', length: 5, nullable: true })
+  counterOfferTime: string | null;
 
   @Column({ type: 'varchar', length: 3, default: 'DZD' })
   currency: string;

@@ -21,6 +21,11 @@ export class BookingDispute {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Discriminator: 'property' | 'service' (backfilled from FKs for legacy rows) */
+  @Index('IDX_booking_disputes_bookingType')
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  bookingType: 'property' | 'service' | null;
+
   @Index()
   @Column({ type: 'uuid', nullable: true })
   bookingId: string;

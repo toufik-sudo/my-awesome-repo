@@ -27,6 +27,7 @@ import { WsModule } from 'src/infrastructure/websocket/ws.module';
 import { RbacConfigModule } from '../rbac/rbac-config.module';
 import { RbacScopeModule } from 'src/rbac/rbac-scope.module';
 import { UserModule } from '../user/modules/user.module';
+import { PointsModule } from '../modules/points/points.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UserModule } from '../user/modules/user.module';
     RbacScopeModule,
     RolesModule,
     UserModule,
+    PointsModule,
   ],
   controllers: [PaymentsController, EscrowController],
   providers: [

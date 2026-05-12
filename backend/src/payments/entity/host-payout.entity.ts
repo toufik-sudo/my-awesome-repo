@@ -21,6 +21,11 @@ export class HostPayout {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Discriminator: 'property' | 'service' (backfilled from FKs for legacy rows) */
+  @Index('IDX_host_payouts_bookingType')
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  bookingType: 'property' | 'service' | null;
+
   /** Property booking (mutually exclusive with serviceBookingId) */
   @Index()
   @Column({ type: 'uuid', nullable: true })
