@@ -148,6 +148,33 @@ export class TourismServicesService {
     return this.serviceRepo.save(service);
   }
 
+  async deleteImage(id: string, url: string, scopeCtx?: ScopeContext) {
+    if (!url) throw new NotFoundException('Image URL is required');
+    const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_UPDATE);
+    if (allowedIds !== null && !allowedIds.includes(id)) {
+      throw new ForbiddenException('You do not have access to update this service');
+    }
+    const service = await this.serviceRepo.findOne({ where: { id } });
+    if (!service) throw new NotFoundException('Service not found');
+    const images = (service.images || []).filter((u) => u !== url);
+    await this.serviceRepo.update(id, { images });
+
+    try {
+      if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const rel = url.replace(/^\//, '');
+        await fs.unlink(path.join(process.cwd(), rel));
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to remove service image file: ${url} (${(err as Error).message})`);
+    }
+
+    await this.cache.del(this.cache.key('service', id));
+    await this.cache.invalidatePattern('app:search:services:*');
+    return { success: true, images };
+  }
+
   async update(id: string, updateDto: UpdateServiceDto, scopeCtx?: ScopeContext) {
     const allowedIds = await this.resolveAllowedServiceIds(scopeCtx, PERM_KEY_UPDATE);
     if (allowedIds !== null && !allowedIds.includes(id)) {

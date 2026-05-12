@@ -58,7 +58,22 @@ export class TourismServicesController {
   @ApiOperation({ summary: 'Create service' })
   create(@Request() req: any, @Body() createDto: CreateServiceDto) {
     const scopeCtx = extractScopeContext(req);
-    return this.servicesService.create(createDto, req.user.id);
+    const role = req.userRole;
+    const inviterAdminIds: number[] = req.inviterAdminIds || [];
+    const providerId =
+      role === 'manager' && inviterAdminIds.length > 0 ? inviterAdminIds[0] : req.user.id;
+    return this.servicesService.create(createDto, providerId);
+  }
+
+  @Delete(':id/images')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Delete a single service image (removes from server)' })
+  @ApiParam({ name: 'id' })
+  deleteImage(@Param('id') id: string, @Body() body: { url: string }, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.servicesService.deleteImage(id, body?.url, scopeCtx);
   }
 
   @Put(':id')

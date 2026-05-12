@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useServiceDetail } from '@/modules/services/services.hooks';
@@ -7,7 +7,7 @@ import { tourismServicesApi } from '@/modules/services/services.api';
 import { SERVICE_CATEGORIES, CATEGORY_ICONS } from '@/modules/services/services.constants';
 import {
   ArrowLeft, ArrowRight, Check, Upload, Camera, X, Plus,
-  FileText, Clock, Image as ImageIcon, Banknote,
+  FileText, Clock, Image as ImageIcon, Banknote, Star, Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,6 +97,7 @@ interface WizardDraft {
   requirementsFr: string;
   currentStep: number;
   existingImages: string[];
+  existingVideos?: string[];
 }
 
 const loadDraft = (): WizardDraft | null => {
@@ -113,15 +114,18 @@ const clearDraft = () => {
 export const AddServiceWizard: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { id: editId } = useParams<{ id: string }>();
+  const isEditMode = !!editId;
   const duplicateFromId = searchParams.get('duplicateFrom');
-  const isDuplicateMode = !!duplicateFromId;
+  const isDuplicateMode = !!duplicateFromId && !isEditMode;
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { can } = useRoleAccess('AddServiceWizard');
 
-  const draft = useMemo(() => !isDuplicateMode ? loadDraft() : null, []);
+  const draft = useMemo(() => (!isDuplicateMode && !isEditMode) ? loadDraft() : null, []);
 
-  const { data: sourceService, isLoading: isLoadingSource } = useServiceDetail(duplicateFromId || '');
+  const sourceId = editId || duplicateFromId || '';
+  const { data: sourceService, isLoading: isLoadingSource } = useServiceDetail(sourceId);
 
   const [currentStep, setCurrentStep] = useState(draft?.currentStep || 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -152,14 +156,17 @@ export const AddServiceWizard: React.FC = () => {
   const [requirementsFr, setRequirementsFr] = useState(draft?.requirementsFr || '');
   const [photos, setPhotos] = useState<UploadedFile[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>(draft?.existingImages || []);
+  const [existingVideos, setExistingVideos] = useState<string[]>(draft?.existingVideos || []);
+  const [videoUrlInput, setVideoUrlInput] = useState('');
   const [tagInput, setTagInput] = useState('');
 
-  // Populate from duplicate source
+  // Populate from source (duplicate or edit)
   useEffect(() => {
-    if (sourceService && isDuplicateMode) {
+    if (sourceService && (isDuplicateMode || isEditMode)) {
       const s = sourceService as any;
       setFormData({
-        titleFr: `${s.title?.fr || ''} (Copy)`, titleEn: s.title?.en || '', titleAr: s.title?.ar || '',
+        titleFr: isDuplicateMode ? `${s.title?.fr || ''} (Copy)` : (s.title?.fr || ''),
+        titleEn: s.title?.en || '', titleAr: s.title?.ar || '',
         descriptionFr: s.description?.fr || '', descriptionEn: s.description?.en || '', descriptionAr: s.description?.ar || '',
         category: s.category || '', city: s.city || '', wilaya: s.wilaya || '', address: s.address || '',
         latitude: String(s.latitude || ''), longitude: String(s.longitude || ''),
@@ -176,18 +183,21 @@ export const AddServiceWizard: React.FC = () => {
       if (s.schedule) {
         setScheduleData({ days: s.schedule.days || DAYS, startTime: s.schedule.startTime || '09:00', endTime: s.schedule.endTime || '17:00' });
       }
+      if (Array.isArray(s.includes?.fr)) setIncludesFr(s.includes.fr.join('\n'));
+      if (Array.isArray(s.requirements?.fr)) setRequirementsFr(s.requirements.fr.join('\n'));
       if (s.images?.length) setExistingImages(s.images);
+      if (s.videos?.length) setExistingVideos(s.videos);
     }
-  }, [sourceService, isDuplicateMode]);
+  }, [sourceService, isDuplicateMode, isEditMode]);
 
   // Auto-save draft
   useEffect(() => {
-    if (isDuplicateMode) return;
+    if (isDuplicateMode || isEditMode) return;
     const timeout = setTimeout(() => {
-      saveDraft({ formData, pricingData, scheduleData, includesFr, requirementsFr, currentStep, existingImages });
+      saveDraft({ formData, pricingData, scheduleData, includesFr, requirementsFr, currentStep, existingImages, existingVideos });
     }, 500);
     return () => clearTimeout(timeout);
-  }, [formData, pricingData, scheduleData, includesFr, requirementsFr, currentStep, existingImages, isDuplicateMode]);
+  }, [formData, pricingData, scheduleData, includesFr, requirementsFr, currentStep, existingImages, existingVideos, isDuplicateMode, isEditMode]);
 
   // Mutations
   const createMutation = useMutation({
@@ -199,6 +209,17 @@ export const AddServiceWizard: React.FC = () => {
       navigate('/services');
     },
     onError: () => toast.error('Failed to create service'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: any) => tourismServicesApi.update(editId!, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tourism-services'] });
+      queryClient.invalidateQueries({ queryKey: ['tourism-service', editId] });
+      toast.success('Service updated successfully!');
+      navigate(`/services/${editId}`);
+    },
+    onError: () => toast.error('Failed to update service'),
   });
 
   const updateField = useCallback(<K extends keyof ServiceFormData>(key: K, value: ServiceFormData[K]) => {
@@ -218,6 +239,18 @@ export const AddServiceWizard: React.FC = () => {
       const photo = prev.find(p => p.id === id);
       if (photo) URL.revokeObjectURL(photo.preview);
       return prev.filter(p => p.id !== id);
+    });
+  }, []);
+
+  const setExistingAsCover = useCallback((url: string) => {
+    setExistingImages(prev => [url, ...prev.filter(img => img !== url)]);
+  }, []);
+
+  const setNewPhotoAsCover = useCallback((id: string) => {
+    setPhotos(prev => {
+      const target = prev.find(p => p.id === id);
+      if (!target) return prev;
+      return [target, ...prev.filter(p => p.id !== id)];
     });
   }, []);
 
@@ -263,15 +296,20 @@ export const AddServiceWizard: React.FC = () => {
     includes: { fr: includesFr.split('\n').filter(Boolean) },
     requirements: { fr: requirementsFr.split('\n').filter(Boolean) },
     images: existingImages,
+    videos: existingVideos,
     status: 'draft',
-  }), [formData, pricingData, scheduleData, includesFr, requirementsFr, existingImages]);
+  }), [formData, pricingData, scheduleData, includesFr, requirementsFr, existingImages, existingVideos]);
 
   const handleSubmit = () => {
     setIsSubmitting(true);
-    createMutation.mutate(buildPayload());
+    if (isEditMode) {
+      updateMutation.mutate(buildPayload());
+    } else {
+      createMutation.mutate(buildPayload());
+    }
   };
 
-  if (isDuplicateMode && isLoadingSource) {
+  if ((isDuplicateMode || isEditMode) && isLoadingSource) {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" /></div>;
   }
 
@@ -549,28 +587,72 @@ export const AddServiceWizard: React.FC = () => {
           </Button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {existingImages.map((url, i) => (
-            <div key={`existing-${i}`} className="relative aspect-[4/3] rounded-lg overflow-hidden group">
-              <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-              <button
-                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => setExistingImages(prev => prev.filter(img => img !== url))}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          {photos.map(photo => (
-            <div key={photo.id} className="relative aspect-[4/3] rounded-lg overflow-hidden group">
-              <img src={photo.preview} alt="Upload" className="w-full h-full object-cover" />
-              <button
-                className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => removePhoto(photo.id)}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
+          {existingImages.map((url, i) => {
+            const isCover = i === 0;
+            return (
+              <div key={`existing-${i}`} className="relative aspect-[4/3] rounded-lg overflow-hidden group border border-border">
+                <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                {isCover && (
+                  <Badge className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] gap-1 px-1.5">
+                    <Star className="h-2.5 w-2.5 fill-current" /> Cover
+                  </Badge>
+                )}
+                <div className="absolute top-1 right-1 flex gap-1">
+                  {!isCover && (
+                    <button
+                      type="button"
+                      title="Set as cover"
+                      className="bg-secondary text-secondary-foreground rounded-full p-1 shadow"
+                      onClick={() => setExistingAsCover(url)}
+                    >
+                      <Star className="h-3 w-3" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    title="Remove"
+                    className="bg-destructive text-destructive-foreground rounded-full p-1 shadow"
+                    onClick={() => setExistingImages(prev => prev.filter(img => img !== url))}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {photos.map((photo, i) => {
+            const isCover = i === 0 && existingImages.length === 0;
+            return (
+              <div key={photo.id} className="relative aspect-[4/3] rounded-lg overflow-hidden group border border-border">
+                <img src={photo.preview} alt="Upload" className="w-full h-full object-cover" />
+                {isCover && (
+                  <Badge className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] gap-1 px-1.5">
+                    <Star className="h-2.5 w-2.5 fill-current" /> Cover
+                  </Badge>
+                )}
+                <div className="absolute top-1 right-1 flex gap-1">
+                  {existingImages.length === 0 && i !== 0 && (
+                    <button
+                      type="button"
+                      title="Set as cover"
+                      className="bg-secondary text-secondary-foreground rounded-full p-1 shadow"
+                      onClick={() => setNewPhotoAsCover(photo.id)}
+                    >
+                      <Star className="h-3 w-3" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    title="Remove"
+                    className="bg-destructive text-destructive-foreground rounded-full p-1 shadow"
+                    onClick={() => removePhoto(photo.id)}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
         {photos.length === 0 && existingImages.length === 0 && (
           <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
@@ -578,6 +660,57 @@ export const AddServiceWizard: React.FC = () => {
             <p>Upload at least 1 photo</p>
           </div>
         )}
+
+        {/* Videos */}
+        <Separator />
+        <div className="space-y-3">
+          <Label className="flex items-center gap-2"><Video className="h-4 w-4" /> Videos (URLs)</Label>
+          <div className="flex gap-2">
+            <Input
+              value={videoUrlInput}
+              placeholder="https://...mp4 or YouTube/Vimeo URL"
+              onChange={e => setVideoUrlInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const v = videoUrlInput.trim();
+                  if (v && !existingVideos.includes(v)) setExistingVideos(prev => [...prev, v]);
+                  setVideoUrlInput('');
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const v = videoUrlInput.trim();
+                if (v && !existingVideos.includes(v)) setExistingVideos(prev => [...prev, v]);
+                setVideoUrlInput('');
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add
+            </Button>
+          </div>
+          {existingVideos.length > 0 ? (
+            <ul className="space-y-2">
+              {existingVideos.map((url, i) => (
+                <li key={`vid-${i}`} className="flex items-center justify-between gap-2 p-2 rounded-md border border-border bg-muted/30">
+                  <span className="truncate text-xs text-foreground" title={url}>{url}</span>
+                  <button
+                    type="button"
+                    title="Remove video"
+                    className="bg-destructive text-destructive-foreground rounded-full p-1 shrink-0"
+                    onClick={() => setExistingVideos(prev => prev.filter(u => u !== url))}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-muted-foreground">No videos linked.</p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -593,7 +726,7 @@ export const AddServiceWizard: React.FC = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-bold text-foreground">
-              {isDuplicateMode ? 'Duplicate Service' : 'Add New Service'}
+              {isEditMode ? 'Edit Service' : isDuplicateMode ? 'Duplicate Service' : 'Add New Service'}
             </h1>
           </div>
           <Badge variant="outline" className="text-xs">
@@ -643,7 +776,7 @@ export const AddServiceWizard: React.FC = () => {
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={isSubmitting || !stepValid.every(Boolean)}>
-              {isSubmitting ? 'Creating...' : 'Create Service'}
+              {isSubmitting ? (isEditMode ? 'Saving...' : 'Creating...') : (isEditMode ? 'Save Changes' : 'Create Service')}
             </Button>
           )}
         </div>

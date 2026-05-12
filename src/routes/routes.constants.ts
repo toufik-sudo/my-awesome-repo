@@ -25,6 +25,7 @@ export const SERVICE_ROUTES = {
   LIST: '/services',
   DETAIL: '/services/:id',
   NEW: '/services/new',
+  EDIT: '/services/:id/edit',
 } as const;
 
 // ─── Booking Routes ─────────────────────────────────────────────────────────

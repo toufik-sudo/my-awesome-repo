@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SearchableSelect } from '@/modules/onboarding/components/SearchableSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
@@ -31,7 +32,10 @@ import {
   Link2,
   Trash2,
   Search,
+  ArrowRight,
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { rbacConfigApi, type RbacBackendPermission, type RbacFrontendPermission, type RbacScope, type BackendCatalogController } from '../rbac-config.api';
 import { CreatePermissionModal } from '../components/CreatePermissionModal';
 import { RbacCatalogDiffPanel } from '../components/RbacCatalogDiffPanel';
@@ -62,6 +66,71 @@ const ROLE_COLORS: Record<string, string> = {
   guest: 'bg-purple-500/10 text-purple-600 border-purple-200',
 };
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
+const BindingsAutocomplete: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  bindings: PermissionBinding[];
+  placeholder?: string;
+}> = ({ value, onChange, bindings, placeholder }) => {
+  const [open, setOpen] = useState(false);
+  const suggestions = useMemo(() => {
+    const q = value.trim().toLowerCase();
+    const pool = new Set<string>();
+    bindings.forEach((b) => {
+      pool.add(b.frontendPermissionApi);
+      pool.add(b.backendPermissionKey);
+      if (b.module) pool.add(b.module);
+      if (b.endpoint_url) pool.add(b.endpoint_url);
+    });
+    const all = Array.from(pool);
+    if (!q) return all.slice(0, 8);
+    const starts = all.filter((s) => s.toLowerCase().startsWith(q));
+    const contains = all.filter((s) => !s.toLowerCase().startsWith(q) && s.toLowerCase().includes(q));
+    return [...starts, ...contains].slice(0, 12);
+  }, [bindings, value]);
+
+  return (
+    <Popover open={open && suggestions.length > 0} onOpenChange={setOpen}>
+      <PopoverAnchor asChild>
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={value}
+            onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 150)}
+            placeholder={placeholder}
+            className="pl-9"
+          />
+        </div>
+      </PopoverAnchor>
+      <PopoverContent
+        align="end"
+        className="w-[380px] p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <Command shouldFilter={false}>
+          <CommandList>
+            <CommandEmpty>—</CommandEmpty>
+            <CommandGroup>
+              {suggestions.map((s) => (
+                <CommandItem
+                  key={s}
+                  value={s}
+                  onSelect={() => { onChange(s); setOpen(false); }}
+                  className="font-mono text-xs"
+                >
+                  {s}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 export const RbacSettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -344,13 +413,18 @@ export const RbacSettingsPage: React.FC = () => {
     searchValue: string; setSearchValue: (v: string) => void;
   }> = ({ moduleValue, setModuleValue, modules, searchValue, setSearchValue }) => (
     <div className="flex items-center gap-2 p-3 border-b border-border">
-      <Select value={moduleValue || '__all__'} onValueChange={(v) => setModuleValue(v === '__all__' ? '' : v)}>
-        <SelectTrigger className="h-9 w-[200px] text-sm"><SelectValue placeholder={t('rbac.filters.module', 'Module')} /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">{t('rbac.filters.allModules', 'All modules')}</SelectItem>
-          {modules.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <div className="w-[220px]">
+        <SearchableSelect
+          options={[
+            { value: '__all__', label: t('rbac.filters.allModules', 'All modules') },
+            ...modules.map((m) => ({ value: m, label: m })),
+          ]}
+          value={moduleValue || '__all__'}
+          onChange={(v) => setModuleValue(v === '__all__' ? '' : v)}
+          placeholder={t('rbac.filters.module', 'Module')}
+          searchPlaceholder={t('rbac.filters.searchModule', 'Search module…')}
+        />
+      </div>
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input value={searchValue} onChange={(e) => setSearchValue(e.target.value)} placeholder={t('rbac.filters.searchPlaceholder', 'Search…')} className="pl-9 h-9" />
@@ -424,9 +498,8 @@ export const RbacSettingsPage: React.FC = () => {
                 moduleValue={backendModule} setModuleValue={setBackendModule} modules={backendModules}
                 searchValue={backendSearch} setSearchValue={setBackendSearch}
               />
-              <ScrollArea className="h-[500px]">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <div className="h-[500px] overflow-auto relative">
+                  <table className="w-full text-sm border-separate border-spacing-0">
                     <thead className="sticky top-0 bg-background z-10 border-b">
                       <tr>
                         <th className="text-left p-3 font-medium text-muted-foreground min-w-[360px]">{t('rbac.columns.permission')}</th>
@@ -459,8 +532,7 @@ export const RbacSettingsPage: React.FC = () => {
                       })}
                     </tbody>
                   </table>
-                </div>
-              </ScrollArea>
+              </div>
               <PaginationControls currentPage={backendPage} pageSize={backendPageSize} setPageSize={setBackendPageSize} totalPages={backendTotalPages} totalItems={backendTotal} onPageChange={setBackendPage} />
             </CardContent>
           </Card>
@@ -474,14 +546,13 @@ export const RbacSettingsPage: React.FC = () => {
                 moduleValue={frontendModule} setModuleValue={setFrontendModule} modules={frontendModules}
                 searchValue={frontendSearch} setSearchValue={setFrontendSearch}
               />
-              <ScrollArea className="h-[500px]">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <div className="h-[500px] overflow-auto relative">
+                  <table className="w-full text-sm border-separate border-spacing-0">
                     <thead className="sticky top-0 bg-background z-10 border-b">
                       <tr>
-                        <th className="text-left p-3 font-medium text-muted-foreground min-w-[280px]">{t('rbac.columns.uiKey')}</th>
+                        <th className="text-left p-3 font-medium text-muted-foreground min-w-[280px] bg-background border-b">{t('rbac.columns.uiKey')}</th>
                         {visibleRoles.map((role) => (
-                          <th key={role} className="text-center p-3 min-w-[90px]"><Badge variant="outline" className={`text-xs ${ROLE_COLORS[role] || ''}`}>{ROLE_LABELS[role]}</Badge></th>
+                          <th key={role} className="text-center p-3 min-w-[90px] bg-background border-b"><Badge variant="outline" className={`text-xs ${ROLE_COLORS[role] || ''}`}>{ROLE_LABELS[role]}</Badge></th>
                         ))}
                       </tr>
                     </thead>
@@ -494,12 +565,12 @@ export const RbacSettingsPage: React.FC = () => {
                         const isChanged = pendingFrontendChanges.has(perm.id);
                         return (
                           <tr key={perm.id} className={`border-b hover:bg-muted/30 transition-colors ${isChanged ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}`}>
-                            <td className="p-3">
+                            <td className="p-3 border-b">
                               <div className="font-medium text-foreground text-xs">{perm.permission_key}</div>
                               <div className="text-[10px] text-muted-foreground">{perm.component}{perm.sub_view ? `.${perm.sub_view}` : ''}{perm.element_type ? `.${perm.element_type}` : ''}{perm.action_name ? `.${perm.action_name}` : ''} · {perm.module}</div>
                             </td>
                             {visibleRoles.map((role) => (
-                              <td key={role} className="text-center p-2">
+                              <td key={role} className="text-center p-2 border-b">
                                 <Checkbox checked={effectiveRoles.includes(role)} onCheckedChange={() => toggleFrontendRole(perm, role)} disabled={!canEditRbac} />
                               </td>
                             ))}
@@ -508,8 +579,7 @@ export const RbacSettingsPage: React.FC = () => {
                       })}
                     </tbody>
                   </table>
-                </div>
-              </ScrollArea>
+              </div>
               <PaginationControls currentPage={frontendPage} pageSize={frontendPageSize} setPageSize={setFrontendPageSize} totalPages={frontendTotalPages} totalItems={frontendTotal} onPageChange={setFrontendPage} />
             </CardContent>
           </Card>
@@ -520,54 +590,78 @@ export const RbacSettingsPage: React.FC = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="text-lg">{t('rbac.tabs.bindings', 'Bindings')}</CardTitle>
-                <div className="relative w-full max-w-sm">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={bindingsSearch} onChange={(e) => setBindingsSearch(e.target.value)} placeholder={t('rbac.bindings.search', 'Search bindings')} className="pl-9" />
-                </div>
+                <BindingsAutocomplete
+                  value={bindingsSearch}
+                  onChange={setBindingsSearch}
+                  bindings={bindings}
+                  placeholder={t('rbac.bindings.search', 'Search bindings')}
+                />
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('rbac.bindings.frontendApi', 'Frontend API')}</TableHead>
-                    <TableHead>{t('rbac.bindings.backendPermission', 'Backend Permission')}</TableHead>
-                    <TableHead>{t('rbac.bindings.endpointUrl', 'API URL')}</TableHead>
-                    <TableHead>{t('rbac.bindings.module', 'Module')}</TableHead>
-                    <TableHead>{t('rbac.bindings.roles', 'Roles')}</TableHead>
-                    <TableHead className="text-right">{t('rbac.bindings.actions', 'Actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredBindings.map((binding) => (
-                    <TableRow key={binding.id}>
-                      <TableCell className="font-mono text-xs">{binding.frontendPermissionApi}</TableCell>
-                      <TableCell className="font-mono text-xs">{binding.backendPermissionKey}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{binding.endpoint_url || '—'}</TableCell>
-                      <TableCell className="text-xs">{binding.module}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {binding.backendUserRoles.map((role) => (
-                            <Badge key={role} variant="outline" className="text-[10px] px-1 py-0">{ROLE_LABELS[role] || role}</Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!canEditRbac || bindingsLoading} onClick={() => handleBindingDelete(binding.id)}>
-                          {bindingsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                        </Button>
-                      </TableCell>
+              <div className="max-h-[600px] overflow-auto rounded-b-lg">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="bg-background">{t('rbac.bindings.frontendApi', 'Frontend API')}</TableHead>
+                      <TableHead className="bg-background">{t('rbac.bindings.backendPermission', 'Backend Permission')}</TableHead>
+                      <TableHead className="bg-background">{t('rbac.bindings.endpointUrl', 'API URL')}</TableHead>
+                      <TableHead className="bg-background w-[120px]">{t('rbac.bindings.module', 'Module')}</TableHead>
+                      <TableHead className="bg-background">{t('rbac.bindings.roles', 'Roles')}</TableHead>
+                      <TableHead className="bg-background w-[140px]">{t('rbac.bindings.backend', 'Backend')}</TableHead>
+                      <TableHead className="bg-background text-right w-[80px]">{t('rbac.bindings.actions', 'Actions')}</TableHead>
                     </TableRow>
-                  ))}
-                  {filteredBindings.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        {t('rbac.bindings.empty', 'No bindings found')}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBindings.map((binding, idx) => (
+                      <TableRow
+                        key={binding.id}
+                        className={idx % 2 === 0 ? 'bg-muted/20 hover:bg-muted/40' : 'hover:bg-muted/40'}
+                      >
+                        <TableCell className="font-mono text-xs whitespace-nowrap">{binding.frontendPermissionApi}</TableCell>
+                        <TableCell className="font-mono text-xs whitespace-nowrap">{binding.backendPermissionKey}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-[260px] truncate" title={binding.endpoint_url || ''}>{binding.endpoint_url || '—'}</TableCell>
+                        <TableCell className="text-xs"><Badge variant="outline" className="text-[10px]">{binding.module}</Badge></TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-[220px]">
+                            {binding.backendUserRoles.map((role) => (
+                              <Badge key={role} variant="outline" className={`text-[10px] px-1.5 py-0 ${ROLE_COLORS[role] || ''}`}>{ROLE_LABELS[role] || role}</Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1 text-xs"
+                            onClick={() => {
+                              setBackendModule('');
+                              setBackendSearch(binding.backendPermissionKey);
+                              setBackendPage(1);
+                              setActiveTab('backend');
+                            }}
+                          >
+                            {t('rbac.bindings.goToBackend', 'Go to backend')}
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={!canEditRbac || bindingsLoading} onClick={() => handleBindingDelete(binding.id)}>
+                            {bindingsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredBindings.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                          {t('rbac.bindings.empty', 'No bindings found')}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -14,6 +14,9 @@ import { ScopeContext, getScopedPerms } from '../../rbac/scope-context';
 import { HyperNotifierService } from '../../user/services/hyper-notifier.service';
 import { UserBlameService } from '../../user/services/user-blame.service';
 import { ReferralService } from '../../user/services/referral.service';
+import { ServiceFeeService } from '../../user/services/service-fee.service';
+import { HostFeeAbsorptionService } from '../../user/services/host-fee-absorption.service';
+import { NotificationContent } from '../../notification/constants/notification-content.constant';
 
 const ACCEPT_DEADLINE_HOURS = 48;
 const PAYMENT_DEADLINE_HOURS = 24;
@@ -43,6 +46,8 @@ export class BookingsService {
     private readonly hyperNotifier: HyperNotifierService,
     private readonly blameService: UserBlameService,
     private readonly referralService: ReferralService,
+    private readonly serviceFeeService: ServiceFeeService,
+    private readonly hostFeeAbsorptionService: HostFeeAbsorptionService,
   ) {}
 
   async findAll(
@@ -151,10 +156,27 @@ export class BookingsService {
   }
 
   async create(dto: CreateBookingDto, guestId: number, scopeCtx?: ScopeContext) {
-    // Only manager, guest, user roles can book — admin/hyper cannot
-    if (scopeCtx && ['hyper_admin', 'hyper_manager', 'admin'].includes(scopeCtx.userRole)) {
+    // Detect admin/manager booking-on-behalf-of-guest flow.
+    const callerRole = scopeCtx?.userRole;
+    const isAdminCaller = !!callerRole && ['hyper_admin', 'hyper_manager', 'admin', 'manager'].includes(callerRole);
+    const onBehalfRaw = (dto as any).onBehalfOfGuestId;
+    const onBehalfId = onBehalfRaw != null && onBehalfRaw !== '' ? Number(onBehalfRaw) : undefined;
+    const isOnBehalf = isAdminCaller && Number.isFinite(onBehalfId);
+
+    if (!isOnBehalf && isAdminCaller && callerRole !== 'manager') {
+      // Pure admin/hyper roles cannot self-book — only on behalf of a guest.
       throw new ForbiddenException('Administrative roles cannot create bookings');
     }
+
+    let effectiveGuestId = guestId;
+    if (isOnBehalf) {
+      const targetRole = await this.rolesService.getUserRole(onBehalfId!).catch(() => null);
+      if (!targetRole || !['user', 'guest'].includes(targetRole)) {
+        throw new BadRequestException('Target user is not a guest/user');
+      }
+      effectiveGuestId = onBehalfId!;
+    }
+
     const property = await this.propertyRepository.findOne({ where: { id: dto.propertyId } });
     if (!property) throw new NotFoundException('Property not found');
 
@@ -169,24 +191,65 @@ export class BookingsService {
 
     const pricing = this.calculatePricing(property, nights);
     const subtotal = Math.round(nights * pricing.effectiveRate);
-    const serviceFeeRate = dto.paymentMethod === 'cash' ? 2.5 : Number(property.serviceFeePercent || 5);
-    const serviceFee = Math.round(subtotal * (serviceFeeRate / 100));
+
+    // Dynamic service fee via hyper-admin configured rules + host absorption
+    let serviceFee = 0;
+    let hostAbsorptionAmount = 0;
+    let serviceFeeRateLog = 'dynamic-rule';
+    try {
+      const feeResult = await this.serviceFeeService.calculateFee(
+        property.hostId,
+        property.id,
+        null,
+        subtotal,
+      );
+      serviceFee = feeResult?.fee ?? 0;
+
+      const absorption = await this.hostFeeAbsorptionService.getAbsorptionForBooking(
+        property.hostId,
+        property.id,
+        undefined,
+        undefined,
+        undefined,
+        checkIn,
+      );
+      if (absorption?.absorptionPercent > 0) {
+        hostAbsorptionAmount = Math.round((serviceFee * absorption.absorptionPercent) / 100 * 100) / 100;
+      }
+    } catch (e) {
+      this.logger.warn(`Fee rule lookup failed for property ${property.id}: ${(e as Error).message}`);
+    }
+
+    if (!serviceFee) {
+      const fallbackRate = dto.paymentMethod === 'cash' ? 2.5 : Number(property.serviceFeePercent || 5);
+      serviceFee = Math.round(subtotal * (fallbackRate / 100));
+      serviceFeeRateLog = `${fallbackRate}%-fallback`;
+    }
+
+    const guestServiceFee = Math.max(0, serviceFee - hostAbsorptionAmount);
     const cleaningFee = Number(property.cleaningFee || 0);
-    const totalPrice = subtotal + serviceFee + cleaningFee;
+    const totalPrice = subtotal + guestServiceFee + cleaningFee;
 
     this.logger.log(
-      `Booking created: property=${dto.propertyId}, guest=${guestId}, ` +
+      `Booking created: property=${dto.propertyId}, guest=${effectiveGuestId}` +
+      `${isOnBehalf ? ` (on-behalf by ${guestId} as ${callerRole})` : ''}, ` +
       `nights=${nights}, paymentMethod=${dto.paymentMethod}, ` +
       `effectiveRate=${pricing.effectiveRate}, discount=${pricing.discount.toFixed(1)}% (${pricing.discountType}), ` +
-      `subtotal=${subtotal}, serviceFee=${serviceFee} (${serviceFeeRate}%), ` +
+      `subtotal=${subtotal}, serviceFee=${serviceFee} (${serviceFeeRateLog}), ` +
+      `hostAbsorption=${hostAbsorptionAmount}, guestServiceFee=${guestServiceFee}, ` +
       `cleaningFee=${cleaningFee}, total=${totalPrice} DZD`,
     );
+
+    // On-behalf bookings are auto-validated (skip host pending acceptance).
+    const initialStatus = isOnBehalf
+      ? 'accepted'
+      : (property.instantBooking ? 'confirmed' : 'pending');
 
     const booking = this.bookingRepository.create({
       propertyId: dto.propertyId,
       property: { id: dto.propertyId } as any,
-      guestId,
-      guest: { id: guestId } as any,
+      guestId: effectiveGuestId,
+      guest: { id: effectiveGuestId } as any,
       checkInDate: checkIn,
       checkOutDate: checkOut,
       numberOfGuests: dto.guests,
@@ -197,14 +260,18 @@ export class BookingsService {
       discountType: pricing.discountType || null,
       subtotal,
       cleaningFee,
-      serviceFee,
+      serviceFee: guestServiceFee,
       totalPrice,
       currency: property.currency || 'DZD',
       paymentMethod: dto.paymentMethod as any,
       guestMessage: dto.message || null,
-      status: property.instantBooking ? 'confirmed' : 'pending',
+      status: initialStatus as any,
       paymentStatus: 'pending',
-      acceptDeadlineAt: property.instantBooking
+      acceptedAt: isOnBehalf ? new Date() : null,
+      paymentDeadlineAt: isOnBehalf
+        ? new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 3600 * 1000)
+        : null,
+      acceptDeadlineAt: (isOnBehalf || property.instantBooking)
         ? null
         : new Date(Date.now() + ACCEPT_DEADLINE_HOURS * 3600 * 1000),
     });
@@ -212,26 +279,71 @@ export class BookingsService {
     const saved = await this.bookingRepository.save(booking);
     const fullBooking = await this.findOne(saved.id);
 
+    // Invalidate availability cache so the requested dates are immediately
+    // marked as blocked for other guests.
+    try {
+      await this.cache.invalidatePattern(`app:avail:${dto.propertyId}:*`);
+    } catch {}
+
     if (property.hostId) {
       this.eventsGateway.emitBookingUpdate(String(property.hostId), fullBooking);
     }
+    if (isOnBehalf) {
+      this.eventsGateway.emitBookingUpdate(String(effectiveGuestId), fullBooking);
+    }
 
-    this.jobProducer.queueNotification({
-      userId: property.hostId as any,
-      type: 'booking_request',
-      title: 'New Booking Request',
-      message: `New booking for ${property.title || property.id} (${nights} nights)`,
-      channel: 'both',
-      actionUrl: `/bookings/${saved.id}`,
-      metadata: { bookingId: saved.id, propertyId: property.id },
-    });
+    if (isOnBehalf) {
+      // Mandatory notification to the target guest.
+      this.jobProducer.queueNotification({
+        userId: effectiveGuestId as any,
+        type: 'booking_created_for_you',
+        ...NotificationContent.bookingCreatedForGuest({
+          propertyName: property.title,
+          bookingId: saved.id,
+          nights,
+          paymentDeadlineHours: PAYMENT_DEADLINE_HOURS,
+        }),
+        channel: 'both',
+        actionUrl: `/bookings/${saved.id}/payment`,
+        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, autoValidated: true },
+      });
+      // Inform host that an admin pre-validated a booking.
+      this.jobProducer.queueNotification({
+        userId: property.hostId as any,
+        type: 'booking_admin_created',
+        ...NotificationContent.bookingAdminPreValidated({
+          propertyName: property.title,
+          bookingId: saved.id,
+          nights,
+        }),
+        channel: 'in_app',
+        actionUrl: `/bookings/${saved.id}`,
+        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId },
+      });
+    } else {
+      this.jobProducer.queueNotification({
+        userId: property.hostId as any,
+        type: 'booking_request',
+        ...NotificationContent.newBookingRequest({
+          propertyName: property.title,
+          bookingId: saved.id,
+          nights,
+        }),
+        channel: 'both',
+        actionUrl: `/bookings/${saved.id}`,
+        metadata: { bookingId: saved.id, propertyId: property.id },
+      });
+    }
 
     await this.hyperNotifier.notifyHypers({
-      type: 'booking_request',
-      title: 'New booking request (pending host acceptance)',
-      message: `Booking ${saved.id.slice(0, 8)} for ${property.title || property.id}`,
+      type: isOnBehalf ? 'booking_admin_created' : 'booking_request',
+      ...NotificationContent.hyperBookingCreated({
+        bookingId: saved.id,
+        propertyName: property.title,
+        onBehalf: isOnBehalf,
+      }),
       actionUrl: `/admin/bookings/${saved.id}`,
-      metadata: { bookingId: saved.id, propertyId: property.id, status: 'pending' },
+      metadata: { bookingId: saved.id, propertyId: property.id, status: initialStatus, onBehalf: isOnBehalf, createdByAdminId: isOnBehalf ? guestId : undefined },
       socketEvent: 'booking:created',
       socketPayload: { bookingId: saved.id },
     });
@@ -258,6 +370,12 @@ export class BookingsService {
     await this.bookingRepository.update(id, updateData);
     const updated = await this.findOne(id);
 
+    // Invalidate availability cache for this property so blocked dates reflect
+    // the new status immediately (active vs released).
+    try {
+      await this.cache.invalidatePattern(`app:avail:${booking.propertyId}:*`);
+    } catch {}
+
     this.eventsGateway.emitBookingUpdate(String(booking.guestId), updated);
     if (booking.property?.hostId) {
       this.eventsGateway.emitBookingUpdate(String(booking.property.hostId), updated);
@@ -267,21 +385,22 @@ export class BookingsService {
       this.jobProducer.sendBookingConfirmation(updated, booking.guest.email);
     }
 
-    let guestTitle = `Booking ${status}`;
-    let guestMessage = `Your booking has been ${status}`;
+    const propName = booking.property?.title;
+    let guestCopy = { title: `Booking ${status}`, message: `Your booking has been ${status}` };
     if (status === 'accepted') {
-      guestTitle = 'Your booking was accepted — please proceed to payment';
-      guestMessage = `The host accepted your booking. You have ${PAYMENT_DEADLINE_HOURS}h to upload your payment receipt; otherwise your booking will be archived.`;
+      guestCopy = NotificationContent.bookingAccepted({
+        propertyName: propName,
+        bookingId: id,
+        paymentDeadlineHours: PAYMENT_DEADLINE_HOURS,
+      });
     } else if (status === 'confirmed') {
-      guestTitle = 'Booking confirmed';
-      guestMessage = 'Your payment has been validated. Your booking is fully confirmed.';
+      guestCopy = NotificationContent.bookingConfirmed({ propertyName: propName, bookingId: id });
     }
 
     this.jobProducer.queueNotification({
       userId: booking.guestId,
       type: 'booking_update',
-      title: guestTitle,
-      message: guestMessage,
+      ...guestCopy,
       channel: 'both',
       actionUrl: `/bookings/${id}`,
       metadata: { bookingId: id, status },
@@ -291,8 +410,7 @@ export class BookingsService {
       this.jobProducer.queueNotification({
         userId: booking.property.hostId as any,
         type: 'booking_update',
-        title: 'Guest payment validated — booking confirmed',
-        message: `Booking ${id.slice(0, 8)} is fully confirmed.`,
+        ...NotificationContent.bookingConfirmedForHost({ propertyName: propName, bookingId: id }),
         channel: 'both',
         actionUrl: `/bookings/${id}`,
         metadata: { bookingId: id, status },
@@ -301,8 +419,7 @@ export class BookingsService {
 
     await this.hyperNotifier.notifyHypers({
       type: 'booking_update',
-      title: `Booking ${status}`,
-      message: `Booking ${id.slice(0, 8)} is now ${status}`,
+      ...NotificationContent.hyperBookingStatus({ bookingId: id, status }),
       actionUrl: `/admin/bookings/${id}`,
       metadata: { bookingId: id, status },
       socketEvent: 'booking:status',
@@ -339,8 +456,11 @@ export class BookingsService {
     this.jobProducer.queueNotification({
       userId: booking.guestId,
       type: 'booking_update',
-      title: 'Booking Declined',
-      message: reason ? `Your booking was declined: ${reason}` : 'Your booking was declined by the host',
+      ...NotificationContent.bookingDeclined({
+        propertyName: booking.property?.title,
+        bookingId: id,
+        reason,
+      }),
       actionUrl: `/bookings/${id}`,
       metadata: { bookingId: id, status: 'rejected' },
     });
@@ -377,8 +497,11 @@ export class BookingsService {
     this.jobProducer.queueNotification({
       userId: booking.guestId,
       type: 'booking_update',
-      title: 'Counter-Offer Received',
-      message: `The host has sent a counter-offer for your booking${data.message ? ': ' + data.message : ''}`,
+      ...NotificationContent.bookingCounterOffer({
+        propertyName: booking.property?.title,
+        bookingId: id,
+        message: data.message,
+      }),
       actionUrl: `/bookings/${id}`,
       metadata: { bookingId: id, status: 'counter_offer' },
     });
@@ -446,12 +569,16 @@ export class BookingsService {
     this.jobProducer.queueNotification({
       userId: booking.guestId,
       type: 'booking_update',
-      title: 'Réservation annulée',
-      message: isHostCascade
-        ? isCash
-          ? 'Annulation validée automatiquement. Paiement en main propre — aucun remboursement.'
-          : 'Annulation validée automatiquement. Remboursement complet en cours.'
-        : 'Votre réservation a été annulée.',
+      ...(isHostCascade
+        ? NotificationContent.bookingCancelledHostCascade({
+            propertyName: booking.property?.title,
+            bookingId: id,
+            isCash,
+          })
+        : NotificationContent.bookingCancelledByGuest({
+            propertyName: booking.property?.title,
+            bookingId: id,
+          })),
       actionUrl: `/bookings/${id}`,
       metadata: { bookingId: id, status: 'cancelled', autoApproved: isHostCascade },
     });

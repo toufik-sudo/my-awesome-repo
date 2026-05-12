@@ -49,6 +49,7 @@ interface BookingWidgetProps {
   reviewCount: number;
   acceptedPaymentMethods?: PaymentMethodType[];
   allowPets?: boolean;
+  cleaningFee?: number;
 }
 
 // Payment method configuration with mapping to API values
@@ -128,6 +129,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
   reviewCount,
   acceptedPaymentMethods = ['dahabia', 'algiers_bank', 'postal_bank_transfer'],
   allowPets = false,
+  cleaningFee: cleaningFeeProp = 0,
 }) => {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -297,7 +299,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
   }, [nights, pricePerNight, pricePerWeek, pricePerMonth, weeklyDiscount, monthlyDiscount, customDiscount, customDiscountMinNights]);
 
   const subtotal = Math.round(nights * pricing.effectiveRate);
-  const cleaningFee = 0; // Could be set per property
+  const cleaningFee = Math.round(Number(cleaningFeeProp) || 0);
 
   // Use backend fee calculation if available, fallback to local calculation
   const { data: feeCalcData } = useQuery({
@@ -470,6 +472,14 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
                 </span>
                 <span>{serviceFee.toLocaleString()} DA</span>
               </div>
+              {cleaningFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="underline cursor-help">
+                    {t('propertyDetail.cleaningFee', 'Frais de ménage')}
+                  </span>
+                  <span>{cleaningFee.toLocaleString()} DA</span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between font-semibold">
                 <span>{t('propertyDetail.total')}</span>
@@ -538,6 +548,34 @@ export const BookingWidget: React.FC<BookingWidgetProps> = React.memo(({
                   <span className="text-muted-foreground">{t('propertyDetail.nights')}</span>
                   <span className="font-medium">{nights}</span>
                 </div>
+                <Separator />
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {pricing.effectiveRate.toFixed(0).toLocaleString()} DA × {nights} {t('propertyDetail.nights')}
+                  </span>
+                  <span className="font-medium">{subtotal.toLocaleString()} DA</span>
+                </div>
+                {pricing.discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>{pricing.discountType}</span>
+                    <span>-{pricing.discount.toFixed(0)}%</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {t('propertyDetail.serviceFee')}
+                    {paymentMethod === 'hand_to_hand' && ' (2.5%)'}
+                  </span>
+                  <span className="font-medium">{serviceFee.toLocaleString()} DA</span>
+                </div>
+                {cleaningFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {t('propertyDetail.cleaningFee', 'Frais de ménage')}
+                    </span>
+                    <span className="font-medium">{cleaningFee.toLocaleString()} DA</span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between font-semibold text-base">
                   <span>{t('propertyDetail.total')}</span>

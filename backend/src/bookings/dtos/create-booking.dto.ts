@@ -23,4 +23,12 @@ export class CreateBookingDto {
   @IsString()
   @MaxLength(500)
   message?: string;
+
+  /**
+   * When set by an admin/manager, the booking is created on behalf of this guest user.
+   * The booking is auto-validated (status = accepted) and the target guest is notified
+   * to complete payment.
+   */
+  @IsOptional()
+  onBehalfOfGuestId?: number | string;
 }

@@ -36,6 +36,12 @@ export const tourismServicesApi = {
   delete: (id: string) =>
     api.delete(`/services/${id}`, rbac('tourismServicesApi.delete.DELETE')).then(r => r.data),
 
+  deleteImage: (id: string, url: string) =>
+    api.delete<{ success: boolean; images: string[] }>(
+      `/services/${id}/images`,
+      rbacMerge('tourismServicesApi.deleteImage.DELETE', { data: { url } })
+    ).then(r => r.data),
+
   uploadDocument: (serviceId: string, formData: FormData) =>
     api.post(`/services/${serviceId}/documents`, formData, rbacMerge('tourismServicesApi.uploadDocument.POST', {
       headers: { 'Content-Type': 'multipart/form-data' },

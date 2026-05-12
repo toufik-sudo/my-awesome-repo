@@ -389,7 +389,9 @@
     "addProperty": "Add Property",
     "support": "Support",
     "services": "Services",
-    "demo": "Components"
+    "demo": "Components",
+    "bookingCalendar": "Booking Calendar",
+    "rbacSettings": "RBAC Settings"
   },
   "propertyWizard": {
     "addTitle": "Add New Property",

@@ -24,6 +24,7 @@ export interface MockProperty {
   isVerified: boolean;
   weeklyDiscount: number;
   monthlyDiscount: number;
+  status?: 'published' | 'draft' | 'paused' | 'suspended' | 'archived';
 }
 
 export const MOCK_PROPERTIES: MockProperty[] = [

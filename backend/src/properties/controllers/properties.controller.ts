@@ -73,10 +73,15 @@ export class PropertiesController {
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()
   @CsrfCheck(true)
-  @ApiOperation({ summary: 'Create property' })
+  @ApiOperation({ summary: 'Create property (managers create on behalf of their inviter admin)' })
   create(@Request() req, @Body() createDto: any) {
     const scopeCtx = extractScopeContext(req);
-    return this.propertiesService.create({ ...createDto, hostId: req.user.id });
+    const role = (req as any).userRole;
+    const inviterAdminIds: number[] = (req as any).inviterAdminIds || [];
+    // Managers don't own resources; attach to inviter admin (first one). Fall back to self for hyper roles.
+    const hostId =
+      role === 'manager' && inviterAdminIds.length > 0 ? inviterAdminIds[0] : req.user.id;
+    return this.propertiesService.create({ ...createDto, hostId });
   }
 
   @Put(':id')
@@ -110,6 +115,17 @@ export class PropertiesController {
   updatePhotos(@Param('id') id: string, @Body() photosDto: any, @Request() req: any) {
     const scopeCtx = extractScopeContext(req);
     return this.propertiesService.update(id, photosDto, scopeCtx);
+  }
+
+  @Delete(':id/images')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  @ApiOperation({ summary: 'Delete a single property image (removes from server)' })
+  @ApiParam({ name: 'id', description: 'Property UUID' })
+  deleteImage(@Param('id') id: string, @Body() body: { url: string }, @Request() req: any) {
+    const scopeCtx = extractScopeContext(req);
+    return this.propertiesService.deleteImage(id, body?.url, scopeCtx);
   }
 
   @Put(':id/availability')

@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, AppRole, ROLE_HIERARCHY } from '../entity/user.entity';
@@ -8,6 +8,7 @@ import { GuestPermission, GuestPermissionScope } from '../entity/guest-permissio
 import { PropertyGroup } from '../../properties/entity/property-group.entity';
 import { Invitation } from '../entity/invitation.entity';
 import { logScopeFallback } from '../../rbac/utils/scope-fallback-logger';
+import { RbacConfigService } from './rbac-config.service';
 
 const ASSIGNABLE_ROLES_BY_ROLE: Record<AppRole, AppRole[]> = {
   hyper_admin: ['admin', 'hyper_manager', 'guest'],
@@ -33,7 +34,22 @@ export class RolesService {
     private readonly propGroupRepo: Repository<PropertyGroup>,
     @InjectRepository(Invitation)
     private readonly invitationRepo: Repository<Invitation>,
+    @Inject(forwardRef(() => RbacConfigService))
+    private readonly rbacConfig: RbacConfigService,
   ) {}
+
+  /**
+   * Refresh the RBAC scoped-permission caches and broadcast the change so
+   * that newly-saved manager / hyper_manager / guest grants take effect on
+   * the very next request. Safe-fail: never blocks the calling mutation.
+   */
+  private async refreshScopedRbacCache(): Promise<void> {
+    try {
+      await this.rbacConfig.refreshScopedCaches();
+    } catch {
+      // Cache will reload on its own; do not fail the user-facing mutation.
+    }
+  }
 
   // ─── ROLE HELPERS ─────────────────────────────────────────────────────
 
@@ -295,7 +311,9 @@ export class RolesService {
       }),
     );
 
-    return this.managerPermRepo.save(newPerms);
+    const saved = await this.managerPermRepo.save(newPerms);
+    await this.refreshScopedRbacCache();
+    return saved;
   }
 
   // ─── HYPER MANAGER PERMISSION ASSIGNMENT ───────────────────────────────
@@ -343,7 +361,9 @@ export class RolesService {
       }),
     );
 
-    return this.hyperPermRepo.save(newPerms);
+    const saved = await this.hyperPermRepo.save(newPerms);
+    await this.refreshScopedRbacCache();
+    return saved;
   }
 
   // ─── GUEST PERMISSION ASSIGNMENT ──────────────────────────────────────
@@ -389,7 +409,9 @@ export class RolesService {
       }),
     );
 
-    return this.guestPermRepo.save(newPerms);
+    const saved = await this.guestPermRepo.save(newPerms);
+    await this.refreshScopedRbacCache();
+    return saved;
   }
 
   // ─── PERMISSION CHECKS ────────────────────────────────────────────────
@@ -519,15 +541,22 @@ export class RolesService {
     });
     if (allPerms.length === 0) return [];
 
-    // RESTRICTIVE precedence: when any narrow property perm (specific properties
-    // or property groups) exists, ignore broader 'all'/'admins'/empty-target
-    // perms which would otherwise inherit the inviter admin's full property set.
+    // Only property-side permissions may expand to property IDs. Service-only
+    // permissions must never make a manager inherit the admin's full property set.
+    const propertyPerms = allPerms.filter(
+      p => p.scope === 'all' || p.scope === 'properties' || p.scope === 'property_groups',
+    );
+    if (propertyPerms.length === 0) return [];
+
+    // RESTRICTIVE precedence: when any narrow property perm exists, ignore
+    // broader 'all'/empty-target perms which would otherwise inherit the
+    // inviter admin's full property set.
     const narrow = allPerms.filter(
       p =>
         (p.scope === 'properties' && p.properties && p.properties.length > 0) ||
         (p.scope === 'property_groups' && p.propertyGroups && p.propertyGroups.length > 0),
     );
-    const perms = narrow.length > 0 ? narrow : allPerms;
+    const perms = narrow.length > 0 ? narrow : propertyPerms;
 
     const propertyIds = new Set<string>();
     const inheritFromInviters = new Set<number>();
@@ -559,9 +588,6 @@ export class RolesService {
         }
         continue;
       }
-      // Scope refers to services-only — still inherit inviter's property scope
-      // so the manager can see the host's properties tied to those services.
-      if (perm.assignedById) inheritFromInviters.add(perm.assignedById);
     }
 
     if (inheritFromInviters.size > 0) {
@@ -879,6 +905,7 @@ export class RolesService {
       }
       await this.guestPermRepo.delete(permissionId);
     }
+    await this.refreshScopedRbacCache();
   }
 
   async updateUserStatus(adminId: number, userId: number, status: string): Promise<void> {
@@ -917,6 +944,7 @@ export class RolesService {
       this.hyperPermRepo.delete({ hyperManagerId: userId }),
       this.guestPermRepo.delete({ guestId: userId }),
     ]);
+    await this.refreshScopedRbacCache();
   }
 
   async setUserRoleDirect(userId: number, role: AppRole): Promise<void> {

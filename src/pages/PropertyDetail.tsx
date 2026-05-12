@@ -40,6 +40,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { BookingWidget } from '@/modules/bookings/components/BookingWidget';
+import { CancellationPolicyInfo } from '@/modules/shared/components/CancellationPolicyInfo';
 import { PricingBreakdownSection, PaymentMethodType } from '@/modules/shared/components/PricingBreakdownSection';
 import logoImage from '@/assets/byootdz-logo.png';
 import { TrustBadge } from '@/modules/shared/components/TrustBadge';
@@ -503,7 +504,10 @@ const PropertyDetail = () => {
                 <div className="flex items-center gap-3">
                   <Check className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">{t('propertyDetail.cancellation')}</p>
+                    <p className="font-medium flex items-center gap-1.5">
+                      {t('propertyDetail.cancellation')}
+                      <CancellationPolicyInfo policy={cancellationPolicy} />
+                    </p>
                     <p className="text-sm text-muted-foreground capitalize">{cancellationPolicy}</p>
                   </div>
                 </div>
@@ -539,6 +543,7 @@ const PropertyDetail = () => {
               maxGuests={maxGuests}
               rating={rating}
               reviewCount={reviewCount}
+              cleaningFee={Number((property as any).cleaningFee) || 0}
               allowPets={(property as any).allowPets ?? false}
             />
           </div>

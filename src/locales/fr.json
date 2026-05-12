@@ -389,7 +389,9 @@
     "addProperty": "Ajouter un bien",
     "support": "Support",
     "services": "Services",
-    "demo": "Composants"
+    "demo": "Composants",
+    "bookingCalendar": "Calendrier des réservations",
+    "rbacSettings": "Configuration RBAC"
   },
   "propertyWizard": {
     "addTitle": "Ajouter un nouveau bien",

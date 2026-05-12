@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { tourismServicesApi } from './services.api';
+import { serviceBookingsApi, type ServiceBookingDto } from './service-bookings.api';
 import type { TourismServiceFilters } from '@/types/tourism-service.types';
 import { MOCK_SERVICES } from './services.mock';
 import { SERVICE_CATEGORIES } from './services.constants';
@@ -92,6 +93,32 @@ export const useDeleteService = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tourism-services'] });
       queryClient.invalidateQueries({ queryKey: ['service-categories'] });
+    },
+  });
+};
+
+/** Fetch service availability for a date range. */
+export const useServiceAvailability = (
+  serviceId: string | undefined,
+  startDate: string,
+  endDate: string,
+) => {
+  return useQuery({
+    queryKey: ['service-availability', serviceId, startDate, endDate],
+    queryFn: () => serviceBookingsApi.getAvailability(serviceId!, startDate, endDate),
+    enabled: !!serviceId && !!startDate && !!endDate,
+    staleTime: 60_000,
+  });
+};
+
+/** Create a new service booking. */
+export const useCreateServiceBooking = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ServiceBookingDto) => serviceBookingsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['service-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['service-availability'] });
     },
   });
 };

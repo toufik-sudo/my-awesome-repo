@@ -329,9 +329,35 @@ export const AddPropertyWizard: React.FC = () => {
     });
   }, []);
 
-  const removeExistingImage = useCallback((url: string) => {
+  const removeExistingImage = useCallback(async (url: string) => {
+    // Optimistic UI removal
     setExistingImages(prev => prev.filter(img => img !== url));
-  }, []);
+    // If we're editing an existing property, also delete the file on the server
+    if (isEditMode && propertyId) {
+      try {
+        await propertiesApi.deleteImage(propertyId, url);
+        toast.success(t('propertyWizard.imageDeleted', 'Image removed from server'));
+      } catch (err: any) {
+        toast.error(t('propertyWizard.imageDeleteError', 'Failed to remove image from server'));
+        // Roll back UI on failure
+        setExistingImages(prev => (prev.includes(url) ? prev : [...prev, url]));
+      }
+    }
+  }, [isEditMode, propertyId, t]);
+
+  const setExistingAsCover = useCallback((url: string) => {
+    setExistingImages(prev => [url, ...prev.filter(img => img !== url)]);
+    toast.success(t('propertyWizard.coverUpdated', 'Cover image updated'));
+  }, [t]);
+
+  const setNewPhotoAsCover = useCallback((id: string) => {
+    setPhotos(prev => {
+      const target = prev.find(p => p.id === id);
+      if (!target) return prev;
+      return [target, ...prev.filter(p => p.id !== id)];
+    });
+    toast.success(t('propertyWizard.coverUpdated', 'Cover image updated'));
+  }, [t]);
 
   // Document handling
   const handleDocUpload = useCallback((docType: DocumentType, files: FileList | null) => {
@@ -999,22 +1025,43 @@ export const AddPropertyWizard: React.FC = () => {
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground">{t('propertyWizard.existingPhotos', 'Existing Photos')}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {existingImages.map((url, index) => (
-                        <div key={url} className="relative group rounded-lg overflow-hidden border border-border aspect-[4/3]">
-                          <img src={url} alt={`Existing ${index + 1}`} className="w-full h-full object-cover" />
-                          {index === 0 && photos.length === 0 && (
-                            <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px]">Cover</Badge>
-                          )}
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeExistingImage(url)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
+                      {existingImages.map((url, index) => {
+                        const isCover = index === 0;
+                        return (
+                          <div key={url} className="relative group rounded-lg overflow-hidden border border-border aspect-[4/3]">
+                            <img src={url} alt={`Existing ${index + 1}`} className="w-full h-full object-cover" />
+                            {isCover && (
+                              <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] gap-1">
+                                <Star className="h-3 w-3 fill-current" /> {t('propertyWizard.cover', 'Cover')}
+                              </Badge>
+                            )}
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {!isCover && (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="icon"
+                                  className="h-7 w-7 shadow"
+                                  title={t('propertyWizard.setAsCover', 'Set as cover')}
+                                  onClick={() => setExistingAsCover(url)}
+                                >
+                                  <Star className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="h-7 w-7 shadow"
+                                title={t('common.remove', 'Remove')}
+                                onClick={() => removeExistingImage(url)}
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1022,22 +1069,43 @@ export const AddPropertyWizard: React.FC = () => {
                 {/* New uploads */}
                 {photos.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {photos.map((photo, index) => (
-                      <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border aspect-[4/3]">
-                        <img src={photo.preview} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
-                        {index === 0 && existingImages.length === 0 && (
-                          <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px]">Cover</Badge>
-                        )}
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => removePhoto(photo.id)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
+                    {photos.map((photo, index) => {
+                      const isCover = index === 0 && existingImages.length === 0;
+                      return (
+                        <div key={photo.id} className="relative group rounded-lg overflow-hidden border border-border aspect-[4/3]">
+                          <img src={photo.preview} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+                          {isCover && (
+                            <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] gap-1">
+                              <Star className="h-3 w-3 fill-current" /> {t('propertyWizard.cover', 'Cover')}
+                            </Badge>
+                          )}
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            {existingImages.length === 0 && index !== 0 && (
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="icon"
+                                className="h-7 w-7 shadow"
+                                title={t('propertyWizard.setAsCover', 'Set as cover')}
+                                onClick={() => setNewPhotoAsCover(photo.id)}
+                              >
+                                <Star className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="h-7 w-7 shadow"
+                              title={t('common.remove', 'Remove')}
+                              onClick={() => removePhoto(photo.id)}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : existingImages.length === 0 ? (
                   <div className="border-2 border-dashed border-border rounded-xl p-12 text-center">
@@ -1222,9 +1290,9 @@ export const AddPropertyWizard: React.FC = () => {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmSubmit} disabled={isSubmitting}>
+          <AlertDialogFooter className="flex-row justify-end gap-2 sm:gap-3 space-x-0">
+            <AlertDialogCancel className="mt-0 min-w-[110px]">{t('common.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSubmit} disabled={isSubmitting} className="min-w-[110px]">
               {isSubmitting ? t('propertyWizard.submitting', 'Submitting...') : t('common.confirm', 'Confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>

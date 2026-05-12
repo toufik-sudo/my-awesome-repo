@@ -81,7 +81,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const navItems: NavItem[] = [
-    { path: PUBLIC_ROUTES.HOME, label: t('nav.home') || 'Home', icon: Home, sidebarSection: 'Home' },
+    // { path: PUBLIC_ROUTES.HOME, label: t('nav.home') || 'Home', icon: Home, sidebarSection: 'Home' },
     { path: DASHBOARD_ROUTES.ROOT, label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard, requireAuth: true, sidebarSection: 'Dashboard' },
     { path: PROPERTY_ROUTES.LIST, label: t('nav.properties') || 'Properties', icon: Building2, sidebarSection: 'Properties' },
     { path: SERVICE_ROUTES.LIST, label: t('nav.services') || 'Services', icon: Compass, sidebarSection: 'Services' },
@@ -97,7 +97,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     { path: ADMIN_ROUTES.ESCROW, label: t('nav.escrow', 'Escrow') || 'Escrow', icon: Receipt, requireAuth: true, sidebarSection: 'Escrow' },
     { path: ADMIN_ROUTES.HOST_REACTIVATION, label: t('nav.hostReactivation', 'Host Reactivation') || 'Host Reactivation', icon: RotateCcw, requireAuth: true, sidebarSection: 'HostReactivation' },
     { path: ADMIN_ROUTES.MY_DISPUTES, label: t('nav.myDisputes', 'My Disputes') || 'My Disputes', icon: AlertTriangle, requireAuth: true, sidebarSection: 'MyDisputes' },
-    { path: DEMO_ROUTES.ROOT, label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true, sidebarSection: 'Demo' },
+    // { path: DEMO_ROUTES.ROOT, label: t('nav.demo') || 'Components', icon: Palette, requireAuth: true, sidebarSection: 'Demo' },
   ];
 
   const filteredNavItems = navItems.filter((item) => {
@@ -151,8 +151,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   return (
     <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       {!headerProps.hidden && (
-        <Header 
-          {...headerProps} 
+        <Header
+          {...headerProps}
           onMenuToggle={toggleSidebar}
           showMenuButton={!sidebarProps.hidden}
         >
@@ -166,15 +166,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
       <div className="flex-1 flex overflow-hidden relative">
         {isMobile && sidebarOpen && !sidebarProps.hidden && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {!sidebarProps.hidden && (
-          <Sidebar 
-            {...sidebarProps} 
+          <Sidebar
+            {...sidebarProps}
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
             isMobile={isMobile}

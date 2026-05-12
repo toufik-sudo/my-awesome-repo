@@ -256,13 +256,46 @@ export class ServiceBookingsService {
   }
 
   async getAvailability(serviceId: string, startDate: string, endDate: string, _scopeCtx?: ScopeContext) {
-    return this.availRepo.find({
+    const records = await this.availRepo.find({
       where: {
         serviceId,
         date: Between(new Date(startDate), new Date(endDate)) as any,
       },
       order: { date: 'ASC' },
     });
+
+    // Merge active bookings as blocked dates
+    // (pending / accepted / confirmed block; rejected / cancelled / archived /
+    // completed do NOT block).
+    const activeBookings = await this.bookingRepo.find({
+      where: {
+        serviceId,
+        status: In(['pending', 'accepted', 'confirmed']) as any,
+      },
+      select: ['id', 'bookingDate'] as any,
+    });
+
+    const fromDate = new Date(startDate);
+    const toDate = new Date(endDate);
+    const map = new Map<string, any>();
+    for (const r of records) {
+      const key = typeof r.date === 'string' ? r.date : new Date(r.date).toISOString().slice(0, 10);
+      map.set(key, r);
+    }
+    for (const b of activeBookings) {
+      const d = new Date(b.bookingDate);
+      if (d < fromDate || d > toDate) continue;
+      const key = d.toISOString().slice(0, 10);
+      const existing = map.get(key);
+      if (existing) {
+        existing.isBlocked = true;
+      } else {
+        map.set(key, { serviceId, date: d, isBlocked: true, customPrice: null });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) =>
+      String(a.date).localeCompare(String(b.date)),
+    );
   }
 
   async setAvailability(serviceId: string, dto: ServiceAvailabilityDto, scopeCtx?: ScopeContext) {

@@ -54,6 +54,14 @@ export const propertiesApi = {
     await api.delete(PROPERTIES_API.DELETE(id));
   },
 
+  async deleteImage(id: string, url: string): Promise<{ success: boolean; images: string[] }> {
+    const response = await api.delete<{ success: boolean; images: string[] }>(
+      `/properties/${id}/images`,
+      { data: { url } } as any,
+    );
+    return response.data;
+  },
+
   async recalculateTrust(id: string): Promise<TrustRecalculationResponse> {
     const response = await api.put<TrustRecalculationResponse>(PROPERTIES_API.RECALCULATE_TRUST(id));
     return response.data;

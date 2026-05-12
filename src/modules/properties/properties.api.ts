@@ -118,6 +118,12 @@ export const propertiesApi = {
   delete: (id: string) =>
     api.delete(`/properties/${id}`, rbac('propertiesApi.delete.DELETE')).then(r => r.data),
 
+  deleteImage: (id: string, url: string) =>
+    api.delete<{ success: boolean; images: string[] }>(
+      `/properties/${id}/images`,
+      rbacMerge('propertiesApi.deleteImage.DELETE', { data: { url } })
+    ).then(r => r.data),
+
   getAvailability: (id: string, from: string, to: string) =>
     api.get<AvailabilityEntry[]>(
       `/properties/${id}/availability`,

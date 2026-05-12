@@ -7,6 +7,7 @@ import { PropertyPromo } from '../entity/property-promo.entity';
 import { PromoAlert } from '../entity/promo-alert.entity';
 import { SavedSearchAlert } from '../entity/saved-search-alert.entity';
 import { VerificationDocument } from '../entity/verification-document.entity';
+import { Booking } from '../../bookings/entity/booking.entity';
 import { RedisCacheService } from '../../infrastructure/redis';
 import { RedisLockService } from '../../infrastructure/redis';
 import { ScopeFilterService } from '../../rbac/services/scope-filter.service';
@@ -40,6 +41,8 @@ export class PropertiesService {
     private readonly savedSearchAlertRepository: Repository<SavedSearchAlert>,
     @InjectRepository(VerificationDocument)
     private readonly verificationDocRepository: Repository<VerificationDocument>,
+    @InjectRepository(Booking)
+    private readonly bookingRepository: Repository<Booking>,
     private readonly cache: RedisCacheService,
     private readonly lock: RedisLockService,
     private readonly scopeFilter: ScopeFilterService,
@@ -199,6 +202,34 @@ export class PropertiesService {
     return this.findOne(id);
   }
 
+  async deleteImage(id: string, url: string, scopeCtx?: ScopeContext) {
+    if (!url) throw new NotFoundException('Image URL is required');
+    const allowedIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_UPDATE);
+    if (allowedIds !== null && !allowedIds.includes(id)) {
+      throw new ForbiddenException('You do not have access to update this property');
+    }
+    const property = await this.propertyRepository.findOne({ where: { id } });
+    if (!property) throw new NotFoundException('Property not found');
+    const images = (property.images || []).filter((u) => u !== url);
+    await this.propertyRepository.update(id, { images });
+
+    // Best-effort delete the file on disk if it's a local upload
+    try {
+      if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+        const fs = await import('fs/promises');
+        const path = await import('path');
+        const rel = url.replace(/^\//, '');
+        await fs.unlink(path.join(process.cwd(), rel));
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to remove image file from disk: ${url} (${(err as Error).message})`);
+    }
+
+    await this.cache.del(this.cache.key('property', id));
+    await this.cache.invalidatePattern('app:search:properties:*');
+    return { success: true, images };
+  }
+
   async remove(id: string, scopeCtx?: ScopeContext) {
     const allowedIds = await this.resolveAllowedPropertyIds(scopeCtx, PERM_KEY_DELETE);
     if (allowedIds !== null && !allowedIds.includes(id)) {
@@ -256,7 +287,45 @@ export class PropertiesService {
         },
         order: { date: 'ASC' },
       });
-      return records.map(r => ({
+      const map = new Map<string, { date: any; isBlocked: boolean; customPrice: number | null }>();
+      for (const r of records) {
+        const key = typeof r.date === 'string' ? r.date : new Date(r.date).toISOString().slice(0, 10);
+        map.set(key, { date: r.date, isBlocked: r.isBlocked, customPrice: r.customPrice });
+      }
+
+      // Merge active booking ranges as blocked dates.
+      // Active = pending | accepted | confirmed (rejected / cancelled / archived /
+      // completed / refunded do NOT block).
+      const activeBookings = await this.bookingRepository.find({
+        where: {
+          propertyId,
+          status: In(['pending', 'accepted', 'confirmed']),
+        },
+        select: ['id', 'checkInDate', 'checkOutDate'],
+      });
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      for (const b of activeBookings) {
+        const start = new Date(b.checkInDate);
+        const end = new Date(b.checkOutDate);
+        for (
+          let d = new Date(Math.max(start.getTime(), fromDate.getTime()));
+          d < end && d <= toDate;
+          d.setDate(d.getDate() + 1)
+        ) {
+          const key = d.toISOString().slice(0, 10);
+          const existing = map.get(key);
+          if (existing) {
+            existing.isBlocked = true;
+          } else {
+            map.set(key, { date: key, isBlocked: true, customPrice: null });
+          }
+        }
+      }
+
+      return Array.from(map.values())
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+        .map(r => ({
         date: r.date,
         isBlocked: r.isBlocked,
         customPrice: r.customPrice,

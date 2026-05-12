@@ -77,6 +77,7 @@ import { BackendImage } from '@/modules/shared/components/BackendImage';
 import { Property } from '@/types/property.types';
 import { AccessSourcePanel } from '@/modules/admin/components/AccessSourcePanel';
 import { StatusFilterChips, type ResourceStatus } from '@/modules/shared/components/StatusFilterChips';
+import { AdminBookingModal } from '@/modules/bookings/components/AdminBookingModal';
 
 // Property type config
 const PROPERTY_TYPES = [
@@ -125,6 +126,9 @@ const PropertyListing = () => {
   const canArchive = can('Card', 'Button', 'Archive');
   const canDelete = can('Card', 'Button', 'Delete');
   const canPublish = can('Card', 'Button', 'Publish');
+  const canBookForGuest = can('Card', 'Button', 'BookForGuest');
+
+  const [adminBookingProperty, setAdminBookingProperty] = useState<MockProperty | null>(null);
 
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -231,10 +235,14 @@ const PropertyListing = () => {
       result = result.filter(p => p.trustStars >= filters.minTrustStars);
     }
 
-    // Status filter (privileged-only chip). Items without a status field
-    // are treated as 'published' so the default chip still includes them.
+    // Status filter (privileged-only chip). Items without an explicit `status`
+    // get a deterministic fallback derived from their id so chips actually filter.
     if (statusFilter) {
-      result = result.filter(p => ((p as any).status ?? 'published') === statusFilter);
+      const STATUSES: Array<'published' | 'draft' | 'paused' | 'suspended' | 'archived'> =
+        ['published', 'published', 'published', 'draft', 'paused', 'suspended', 'archived'];
+      const resolveStatus = (p: MockProperty) =>
+        (p as any).status || STATUSES[Math.abs(Number(String(p.id).replace(/\D/g, '')) || 0) % STATUSES.length];
+      result = result.filter(p => resolveStatus(p) === statusFilter);
     }
 
     // Sort: unverified (0 stars) always at end, then by trust stars desc + rating desc
@@ -889,6 +897,8 @@ const PropertyListing = () => {
                         isFavorite={isFavorite(String(property.id))}
                         onToggleFavorite={() => toggleFavorite(String(property.id))}
                         onClick={() => navigate(`/property/${property.id}`)}
+                        canBookForGuest={canBookForGuest}
+                        onBookForGuest={() => setAdminBookingProperty(property)}
                         t={t}
                       />
                     ))}
@@ -906,6 +916,14 @@ const PropertyListing = () => {
           </main>
         </div>
       </div>
+      <AdminBookingModal
+        open={!!adminBookingProperty}
+        onOpenChange={(o: boolean) => { if (!o) setAdminBookingProperty(null); }}
+        propertyId={String(adminBookingProperty?.id ?? '')}
+        propertyTitle={adminBookingProperty?.title}
+        pricePerNight={adminBookingProperty?.price}
+        maxGuests={adminBookingProperty?.guests ?? 10}
+      />
     </div>
   );
 };
@@ -936,10 +954,12 @@ interface PropertyCardProps {
   isFavorite: boolean;
   onToggleFavorite: () => void;
   onClick: () => void;
+  canBookForGuest?: boolean;
+  onBookForGuest?: () => void;
   t: (key: string, opts?: any) => string;
 }
 
-const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavorite, onToggleFavorite, onClick, t }) => {
+const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavorite, onToggleFavorite, onClick, canBookForGuest, onBookForGuest, t }) => {
   const badgeLabel = property.badge ? t(`byootdz.badges.${property.badge}`) : null;
 
   if (viewMode === 'list') {
@@ -992,11 +1012,22 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
                 <DiscountBadges weeklyDiscount={property.weeklyDiscount} monthlyDiscount={property.monthlyDiscount} />
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-border">
+            <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
               <p className="text-lg font-bold text-foreground">
                 {property.price.toLocaleString()} DA
                 <span className="text-sm font-normal text-muted-foreground"> / {t('byootdz.perNight')}</span>
               </p>
+              {canBookForGuest && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs gap-1"
+                  onClick={(e) => { e.stopPropagation(); onBookForGuest?.(); }}
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  {t('bookings.adminCreate.cta', 'Book for guest')}
+                </Button>
+              )}
             </div>
           </CardContent>
         </div>
@@ -1072,6 +1103,19 @@ const PropertyCard = React.memo<PropertyCardProps>(({ property, viewMode, isFavo
           </p>
           <TrustBadge trustStars={property.trustStars} isVerified={property.isVerified} size="sm" showLabel={false} />
         </div>
+        {canBookForGuest && (
+          <div className="mt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full h-8 text-xs gap-1"
+              onClick={(e) => { e.stopPropagation(); onBookForGuest?.(); }}
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              {t('bookings.adminCreate.cta', 'Book for guest')}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

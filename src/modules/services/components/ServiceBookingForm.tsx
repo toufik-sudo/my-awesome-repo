@@ -21,7 +21,7 @@ interface ServiceBookingFormProps {
   service: TourismService;
   availability?: ServiceAvailabilitySlot[];
   onSubmit: (data: {
-    bookingDate: string;
+    bookingDates: string[];
     startTime?: string;
     participants: number;
     childParticipants: number;
@@ -65,7 +65,8 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   const canMakeBooking = can('Actions', 'Button', 'Submit');
   const lang = i18n.language || 'fr';
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const primaryDate = selectedDates[0];
   const [startTime, setStartTime] = useState<string>('');
   const [participants, setParticipants] = useState(service.minParticipants);
   const [childParticipants, setChildParticipants] = useState(0);
@@ -80,9 +81,9 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   );
 
   const selectedAvail = useMemo(() => {
-    if (!selectedDate) return null;
-    return availability.find(a => isSameDay(new Date(a.date), selectedDate));
-  }, [selectedDate, availability]);
+    if (!primaryDate) return null;
+    return availability.find(a => isSameDay(new Date(a.date), primaryDate));
+  }, [primaryDate, availability]);
 
   const timeSlots = useMemo(() => {
     if (selectedAvail?.timeSlots?.length) return selectedAvail.timeSlots;
@@ -92,8 +93,9 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   const effectivePrice = selectedAvail?.customPrice || service.price;
   const childPrice = service.priceChild || effectivePrice;
   const totalParticipants = participants + childParticipants;
+  const dayCount = Math.max(1, selectedDates.length);
 
-  const subtotal = effectivePrice * participants + childPrice * childParticipants;
+  const subtotal = (effectivePrice * participants + childPrice * childParticipants) * dayCount;
   const discount = service.groupDiscount && totalParticipants >= 5 ? service.groupDiscount : 0;
   const discountedSubtotal = subtotal * (1 - discount / 100);
   
@@ -102,16 +104,19 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
   const pointsDiscount = usePoints ? Math.min(pointsToUse * (pointsValueDA || 1), discountedSubtotal) : 0;
   const total = discountedSubtotal + effectiveFee - pointsDiscount;
 
-  const canBook = selectedDate && participants >= service.minParticipants && totalParticipants <= service.maxParticipants;
+  const canBook = selectedDates.length > 0 && participants >= service.minParticipants && totalParticipants <= service.maxParticipants;
 
   const slotsAvailable = selectedAvail?.maxSlots 
     ? selectedAvail.maxSlots - selectedAvail.bookedSlots 
     : null;
 
   const handleSubmit = useCallback(() => {
-    if (!selectedDate) return;
+    if (selectedDates.length === 0) return;
+    const bookingDates = [...selectedDates]
+      .sort((a, b) => a.getTime() - b.getTime())
+      .map(d => format(d, 'yyyy-MM-dd'));
     onSubmit({
-      bookingDate: format(selectedDate, 'yyyy-MM-dd'),
+      bookingDates,
       startTime: startTime || undefined,
       participants,
       childParticipants,
@@ -120,7 +125,7 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
       usePoints: usePoints || undefined,
       pointsToUse: usePoints ? pointsToUse : undefined,
     });
-  }, [selectedDate, startTime, participants, childParticipants, paymentMethod, message, onSubmit, usePoints, pointsToUse]);
+  }, [selectedDates, startTime, participants, childParticipants, paymentMethod, message, onSubmit, usePoints, pointsToUse]);
 
   const isDateDisabled = useCallback((date: Date) => {
     if (isBefore(date, new Date())) return true;
@@ -138,16 +143,23 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
       <CardContent className="space-y-5">
         {/* Date Selection */}
         <div className="space-y-2">
-          <Label>Date de réservation</Label>
+          <Label>{t('serviceBooking.dates', 'Dates de réservation')}</Label>
           <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
+            mode="multiple"
+            selected={selectedDates}
+            onSelect={(dates) => setSelectedDates(dates ?? [])}
             disabled={isDateDisabled}
             locale={fr}
             className={cn("p-3 pointer-events-auto rounded-md border")}
           />
-          {selectedDate && slotsAvailable !== null && (
+          {selectedDates.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedDates.length} {selectedDates.length > 1
+                ? t('serviceBooking.daysSelected', 'jours sélectionnés')
+                : t('serviceBooking.daySelected', 'jour sélectionné')}
+            </p>
+          )}
+          {primaryDate && slotsAvailable !== null && (
             <div className="flex items-center gap-2 text-sm">
               <Badge variant={slotsAvailable > 0 ? 'secondary' : 'destructive'}>
                 {slotsAvailable > 0 ? `${slotsAvailable} places restantes` : 'Complet'}
@@ -218,13 +230,13 @@ export const ServiceBookingForm: React.FC<ServiceBookingFormProps> = ({
           <p className="text-sm font-semibold text-foreground mb-2">{t('serviceBooking.priceBreakdown', 'Récapitulatif du prix')}</p>
           
           <div className="flex justify-between text-sm">
-            <span>{effectivePrice.toLocaleString()} DA × {participants} {t('serviceBooking.adults', 'adulte(s)')}</span>
-            <span>{(effectivePrice * participants).toLocaleString()} DA</span>
+            <span>{effectivePrice.toLocaleString()} DA × {participants} {t('serviceBooking.adults', 'adulte(s)')} × {dayCount} {t('serviceBooking.days', 'jour(s)')}</span>
+            <span>{(effectivePrice * participants * dayCount).toLocaleString()} DA</span>
           </div>
           {childParticipants > 0 && (
             <div className="flex justify-between text-sm">
-              <span>{childPrice.toLocaleString()} DA × {childParticipants} {t('serviceBooking.children', 'enfant(s)')}</span>
-              <span>{(childPrice * childParticipants).toLocaleString()} DA</span>
+              <span>{childPrice.toLocaleString()} DA × {childParticipants} {t('serviceBooking.children', 'enfant(s)')} × {dayCount} {t('serviceBooking.days', 'jour(s)')}</span>
+              <span>{(childPrice * childParticipants * dayCount).toLocaleString()} DA</span>
             </div>
           )}
           

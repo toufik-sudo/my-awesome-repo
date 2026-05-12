@@ -66,14 +66,17 @@ async function bootstrap() {
       'Content-Type, Authorization, x-public-onboarding, x-no-loading, x-requested-with',
   });
 
-  // Rate limiting global
+  // Rate limiting global — skip /rbac-config (admin tool with bursty patterns)
   app.use(
     rateLimit({
       windowMs: 1 * 60 * 1000,
-      max: 1000,
+      max: 5000,
       standardHeaders: true,
       legacyHeaders: false,
       message: 'Too many requests from this IP, please try again later.',
+      skip: (req) =>
+        req.path.startsWith('/api/rbac-config') ||
+        req.path.startsWith('/api/permission-bindings'),
     }),
   );
 

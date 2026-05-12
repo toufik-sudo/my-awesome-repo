@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/modules/onboarding/components/SearchableSelect';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -403,30 +404,33 @@ export const CreatePermissionModal: React.FC<CreatePermissionModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Controller *</Label>
-                  <Select value={bindingController} onValueChange={(value) => {
-                    setBindingController(value);
-                    setBindingEndpoint('');
-                    setBindingMethod('GET');
-                    setBindingEndpointUrl('');
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="Select controller" /></SelectTrigger>
-                    <SelectContent>
-                      {bindingControllerOptions.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={bindingControllerOptions.map((item) => ({ value: item, label: item }))}
+                    value={bindingController}
+                    onChange={(value) => {
+                      setBindingController(value);
+                      setBindingEndpoint('');
+                      setBindingMethod('GET');
+                      setBindingEndpointUrl('');
+                    }}
+                    placeholder="Select controller"
+                    searchPlaceholder="Search controller…"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Endpoint *</Label>
-                  <Select value={bindingEndpoint} onValueChange={(value) => {
-                    setBindingEndpoint(value);
-                    setBindingMethod('GET');
-                    setBindingEndpointUrl('');
-                  }} disabled={!bindingController}>
-                    <SelectTrigger><SelectValue placeholder="Select endpoint" /></SelectTrigger>
-                    <SelectContent>
-                      {bindingEndpointOptions.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={bindingEndpointOptions.map((item) => ({ value: item, label: item }))}
+                    value={bindingEndpoint}
+                    onChange={(value) => {
+                      setBindingEndpoint(value);
+                      setBindingMethod('GET');
+                      setBindingEndpointUrl('');
+                    }}
+                    placeholder="Select endpoint"
+                    searchPlaceholder="Search endpoint…"
+                    disabled={!bindingController}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Method *</Label>
@@ -464,30 +468,33 @@ export const CreatePermissionModal: React.FC<CreatePermissionModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Frontend API Service *</Label>
-                  <Select value={bindingApiService} onValueChange={(value) => {
-                    setBindingApiService(value);
-                    setBindingApiAction('');
-                    setBindingApiMethod('GET');
-                    setBindingFrontendUrl('');
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
-                    <SelectContent>
-                      {frontendServiceOptions.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={frontendServiceOptions.map((item) => ({ value: item, label: item }))}
+                    value={bindingApiService}
+                    onChange={(value) => {
+                      setBindingApiService(value);
+                      setBindingApiAction('');
+                      setBindingApiMethod('GET');
+                      setBindingFrontendUrl('');
+                    }}
+                    placeholder="Select service"
+                    searchPlaceholder="Search service…"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Function *</Label>
-                  <Select value={bindingApiAction} onValueChange={(value) => {
-                    setBindingApiAction(value);
-                    setBindingApiMethod('GET');
-                    setBindingFrontendUrl('');
-                  }} disabled={!bindingApiService}>
-                    <SelectTrigger><SelectValue placeholder="Select function" /></SelectTrigger>
-                    <SelectContent>
-                      {frontendActionOptions.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={frontendActionOptions.map((item) => ({ value: item, label: item }))}
+                    value={bindingApiAction}
+                    onChange={(value) => {
+                      setBindingApiAction(value);
+                      setBindingApiMethod('GET');
+                      setBindingFrontendUrl('');
+                    }}
+                    placeholder="Select function"
+                    searchPlaceholder="Search function…"
+                    disabled={!bindingApiService}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">HTTP Method *</Label>
@@ -553,30 +560,33 @@ export const CreatePermissionModal: React.FC<CreatePermissionModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Controller *</Label>
-                  <Select value={controller} onValueChange={(value) => {
-                    setController(value);
-                    setEndpoint('');
-                    setMethod('GET');
-                    setEndpointUrl('');
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="Select controller" /></SelectTrigger>
-                    <SelectContent>
-                      {controllerOptions.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={controllerOptions.map((item) => ({ value: item, label: item }))}
+                    value={controller}
+                    onChange={(value) => {
+                      setController(value);
+                      setEndpoint('');
+                      setMethod('GET');
+                      setEndpointUrl('');
+                    }}
+                    placeholder="Select controller"
+                    searchPlaceholder="Search controller…"
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Endpoint *</Label>
-                  <Select value={endpoint} onValueChange={(value) => {
-                    setEndpoint(value);
-                    setMethod('GET');
-                    setEndpointUrl('');
-                  }} disabled={!controller}>
-                    <SelectTrigger><SelectValue placeholder="Select endpoint" /></SelectTrigger>
-                    <SelectContent>
-                      {endpointOptions.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={endpointOptions.map((item) => ({ value: item, label: item }))}
+                    value={endpoint}
+                    onChange={(value) => {
+                      setEndpoint(value);
+                      setMethod('GET');
+                      setEndpointUrl('');
+                    }}
+                    placeholder="Select endpoint"
+                    searchPlaceholder="Search endpoint…"
+                    disabled={!controller}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Method *</Label>

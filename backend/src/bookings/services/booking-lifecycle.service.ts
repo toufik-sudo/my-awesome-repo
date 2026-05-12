@@ -9,6 +9,7 @@ import { TourismService } from '../../services/entity/tourism-service.entity';
 import { JobProducerService } from '../../infrastructure/jobs';
 import { HyperNotifierService } from '../../user/services/hyper-notifier.service';
 import { UserBlameService } from '../../user/services/user-blame.service';
+import { NotificationContent } from '../../notification/constants/notification-content.constant';
 
 const ACCEPT_REMINDER_AFTER_HOURS = 24;
 const ACCEPT_HARD_DEADLINE_HOURS = 48;
@@ -72,16 +73,18 @@ export class BookingLifecycleService {
         await this.jobs.queueNotification({
           userId: b.guestId,
           type: 'booking_update',
-          title: 'Host did not respond',
-          message: `The host did not accept your booking within ${ACCEPT_HARD_DEADLINE_HOURS}h. You can cancel it now.`,
+          ...NotificationContent.hostDidNotRespond({
+            propertyName: b.property?.title,
+            bookingId: b.id,
+            deadlineHours: ACCEPT_HARD_DEADLINE_HOURS,
+          }),
           channel: 'both',
           actionUrl: `/bookings/${b.id}`,
           metadata: { bookingId: b.id, hostBlamed: true },
         });
         await this.hyperNotifier.notifyHypers({
           type: 'booking_update',
-          title: 'Booking pending too long',
-          message: `Host of booking ${b.id.slice(0, 8)} was blamed (no response).`,
+          ...NotificationContent.hyperBookingPendingTooLong({ bookingId: b.id }),
           actionUrl: `/admin/bookings/${b.id}`,
           metadata: { bookingId: b.id },
         });
@@ -89,8 +92,7 @@ export class BookingLifecycleService {
         await this.jobs.queueNotification({
           userId: b.property?.hostId as any,
           type: 'booking_request',
-          title: 'Reminder: pending booking request',
-          message: `Booking ${b.id.slice(0, 8)} is still awaiting your response.`,
+          ...NotificationContent.hostPendingReminder({ propertyName: b.property?.title, bookingId: b.id }),
           channel: 'both',
           actionUrl: `/bookings/${b.id}`,
           metadata: { bookingId: b.id },
@@ -122,8 +124,11 @@ export class BookingLifecycleService {
         await this.jobs.queueNotification({
           userId: b.guestId,
           type: 'booking_update',
-          title: 'Booking archived — payment not received',
-          message: `Your booking ${b.id.slice(0, 8)} was archived because the payment wasn't received within ${PAYMENT_HARD_DEADLINE_HOURS}h.`,
+          ...NotificationContent.bookingArchivedGuest({
+            propertyName: b.property?.title,
+            bookingId: b.id,
+            deadlineHours: PAYMENT_HARD_DEADLINE_HOURS,
+          }),
           channel: 'both',
           actionUrl: `/bookings/${b.id}`,
         });
@@ -131,16 +136,17 @@ export class BookingLifecycleService {
           await this.jobs.queueNotification({
             userId: b.property.hostId as any,
             type: 'booking_update',
-            title: 'Booking archived — guest did not pay',
-            message: `Booking ${b.id.slice(0, 8)} was archived after the payment deadline elapsed.`,
+            ...NotificationContent.bookingArchivedHost({
+              propertyName: b.property?.title,
+              bookingId: b.id,
+            }),
             channel: 'both',
             actionUrl: `/bookings/${b.id}`,
           });
         }
         await this.hyperNotifier.notifyHypers({
           type: 'booking_update',
-          title: 'Booking archived (no payment)',
-          message: `Booking ${b.id.slice(0, 8)} archived; guest blamed.`,
+          ...NotificationContent.hyperBookingArchivedNoPayment({ bookingId: b.id }),
           actionUrl: `/admin/bookings/${b.id}`,
           metadata: { bookingId: b.id },
         });
@@ -151,8 +157,12 @@ export class BookingLifecycleService {
           await this.jobs.queueNotification({
             userId: b.guestId,
             type: 'booking_update',
-            title: isLast ? 'Last reminder: complete your payment' : 'Reminder: complete your payment',
-            message: `Please upload your payment receipt for booking ${b.id.slice(0, 8)}. Deadline: 24h after acceptance.`,
+            ...NotificationContent.paymentReminder({
+              propertyName: b.property?.title,
+              bookingId: b.id,
+              isLast,
+              deadlineHours: PAYMENT_HARD_DEADLINE_HOURS,
+            }),
             channel: 'both',
             actionUrl: `/bookings/${b.id}`,
           });
@@ -184,8 +194,7 @@ export class BookingLifecycleService {
         await this.jobs.queueNotification({
           userId: b.customerId,
           type: 'booking_update',
-          title: 'Provider did not respond',
-          message: `The provider did not accept your service booking within ${ACCEPT_HARD_DEADLINE_HOURS}h. You can cancel it now.`,
+          ...NotificationContent.providerDidNotRespond({ bookingId: b.id, deadlineHours: ACCEPT_HARD_DEADLINE_HOURS }),
           channel: 'both',
           actionUrl: `/services/bookings/${b.id}`,
         });
@@ -193,8 +202,7 @@ export class BookingLifecycleService {
         await this.jobs.queueNotification({
           userId: b.service?.providerId as any,
           type: 'booking_request',
-          title: 'Reminder: pending service booking',
-          message: `Service booking ${b.id.slice(0, 8)} is still awaiting your response.`,
+          ...NotificationContent.providerPendingReminder({ bookingId: b.id }),
           channel: 'both',
           actionUrl: `/services/bookings/${b.id}`,
         });
@@ -223,8 +231,7 @@ export class BookingLifecycleService {
         await this.jobs.queueNotification({
           userId: b.customerId,
           type: 'booking_update',
-          title: 'Service booking archived — payment not received',
-          message: `Your service booking ${b.id.slice(0, 8)} was archived.`,
+          ...NotificationContent.serviceArchivedCustomer({ bookingId: b.id }),
           channel: 'both',
         });
       } else {
@@ -233,8 +240,7 @@ export class BookingLifecycleService {
           await this.jobs.queueNotification({
             userId: b.customerId,
             type: 'booking_update',
-            title: 'Reminder: complete your payment',
-            message: `Please upload your payment receipt for service booking ${b.id.slice(0, 8)}.`,
+            ...NotificationContent.servicePaymentReminder({ bookingId: b.id }),
             channel: 'both',
             actionUrl: `/services/bookings/${b.id}`,
           });

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, In } from 'typeorm';
 import { UserBlame, BlameType } from '../entity/user-blame.entity';
 import { JobProducerService } from '../../infrastructure/jobs';
+import { NotificationContent } from '../../notification/constants/notification-content.constant';
 
 const HYPER_ROLES = ['hyper_admin', 'hyper_manager'];
 
@@ -52,9 +53,7 @@ export class UserBlameService {
     await this.jobs.queueNotification({
       userId: args.userId,
       type: 'general',
-      title: 'A trust badge has been added to your profile',
-      message:
-        `Reason: ${args.reason}. If you believe this is unfair, please contact support to provide an explanation.`,
+      ...NotificationContent.blameAdded({ reason: args.reason }),
       channel: 'both',
       actionUrl: '/support',
       metadata: { blameId: saved.id, blameType: args.type, bookingRef: args.bookingRef },
@@ -117,8 +116,7 @@ export class UserBlameService {
     await this.jobs.queueNotification({
       userId: blame.userId,
       type: 'general',
-      title: 'A trust badge was removed from your profile',
-      message: note || 'A platform reviewer has cleared this badge.',
+      ...NotificationContent.blameRemoved({ note }),
       channel: 'both',
       actionUrl: '/profile',
       metadata: { blameId: saved.id },

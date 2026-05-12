@@ -547,6 +547,19 @@ export class RbacConfigService implements OnModuleInit {
     this.logger.log('RBAC cache reloaded (including scoped permissions)');
   }
 
+  /**
+   * Public hook for external services (e.g. RolesService) to refresh the
+   * RBAC scoped-permission caches and broadcast the change to all instances
+   * after mutating manager / hyper_manager / guest permission rows.
+   *
+   * Without this, freshly-saved scoped grants are NOT visible to the
+   * PermissionGuard until the next process restart, so a manager continues
+   * to see the inviter admin's full inventory (empty-perms fallback).
+   */
+  async refreshScopedCaches(): Promise<void> {
+    await this.syncAndBroadcast();
+  }
+
   isLoaded(): boolean { return this.loaded; }
   isRedisLoaded(): boolean { return this.loadedFromRedis; }
 

@@ -246,6 +246,32 @@ export class PaymentsService {
 
     await this.notifyGuest(receipt, 'rejected');
 
+    // Notify the host (and hyper team) so they know payment was rejected
+    try {
+      if (receipt.bookingId && receipt.booking?.property?.hostId) {
+        await this.jobProducer.queueNotification({
+          userId: receipt.booking.property.hostId as any,
+          type: 'payment_rejected',
+          title: 'Guest payment rejected',
+          message: `Booking ${receipt.bookingId.slice(0, 8)} payment receipt was rejected.${note ? ` Reason: ${note}` : ''}`,
+          channel: 'both',
+          actionUrl: `/bookings/${receipt.bookingId}`,
+          metadata: { bookingId: receipt.bookingId, receiptId: id, status: 'rejected' },
+        });
+      }
+      await this.hyperNotifier.notifyHypers({
+        type: 'payment_rejected',
+        title: 'Payment receipt rejected',
+        message: `Receipt ${id.slice(0, 8)} was rejected by reviewer.`,
+        actionUrl: `/admin/bookings/${receipt.bookingId || receipt.serviceBookingId}`,
+        metadata: { receiptId: id, bookingId: receipt.bookingId, status: 'rejected' },
+        socketEvent: 'payment:status',
+        socketPayload: { receiptId: id, status: 'rejected' },
+      });
+    } catch (e) {
+      this.logger.warn(`[Payments] Host/hyper rejection notify failed: ${(e as Error).message}`);
+    }
+
     return saved;
   }
 

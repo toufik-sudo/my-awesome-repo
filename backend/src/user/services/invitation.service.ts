@@ -18,6 +18,7 @@ import {
   getLocalizedRoleLabel,
   normalizeInvitationLanguage,
 } from '../constants/invitation-email-content.constant';
+import { NotificationContent } from '../../notification/constants/notification-content.constant';
 
 @Injectable()
 export class InvitationService {
@@ -198,8 +199,10 @@ export class InvitationService {
         await this.jobProducer.queueNotification({
           userId: invitation.invitedBy,
           type: 'invitation_accepted',
-          title: 'Invitation Accepted',
-          message: `${invitation.email || invitation.phone} has accepted your invitation and was upgraded to ${invitation.role}`,
+          ...NotificationContent.invitationAccepted({
+            contact: invitation.email || invitation.phone || 'A new member',
+            role: invitation.role,
+          }),
         });
       }
 
@@ -234,8 +237,10 @@ export class InvitationService {
       await this.jobProducer.queueNotification({
         userId: invitation.invitedBy,
         type: 'invitation_accepted',
-        title: 'Invitation Accepted',
-        message: `${invitation.email || invitation.phone} has accepted your invitation and joined as ${invitation.role}`,
+        ...NotificationContent.invitationAccepted({
+          contact: invitation.email || invitation.phone || 'A new member',
+          role: invitation.role,
+        }),
       });
     }
 
@@ -516,8 +521,10 @@ export class InvitationService {
     await this.jobProducer.queueNotification({
       userId: invitation.invitedBy,
       type: 'invitation_accepted',
-      title: 'Invitation Accepted',
-      message: `${invitation.email || invitation.phone} has accepted your invitation and joined as ${invitation.role}`,
+      ...NotificationContent.invitationAccepted({
+        contact: invitation.email || invitation.phone || 'A new member',
+        role: invitation.role,
+      }),
     });
   }
 

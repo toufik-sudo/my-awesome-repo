@@ -19,6 +19,7 @@ import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useMyBookings, useCancelBooking } from '@/modules/bookings/bookings.hooks';
 import type { BookingResponse } from '@/modules/bookings/bookings.api';
 import { BookingPaymentStatus } from '@/modules/bookings/components/BookingPaymentStatus';
+import { CancellationPolicyInfo } from '@/modules/shared/components/CancellationPolicyInfo';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { RefreshControl } from '@/components/shared/RefreshControl';
 
@@ -303,9 +304,14 @@ const MyBookings: React.FC = () => {
       <AlertDialog open={!!cancellingId} onOpenChange={(o) => { if (!o) setCancellingId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              Cancel this booking?
+              <CancellationPolicyInfo
+                policy={(bookings.find(b => b.id === cancellingId) as any)?.property?.cancellationPolicy ?? 'flexible'}
+              />
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The host will be notified.
+              This action cannot be undone. The host will be notified. The refund amount depends on the cancellation policy — hover the info icon for details.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

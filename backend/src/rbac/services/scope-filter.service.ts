@@ -82,11 +82,11 @@ export class ScopeFilterService {
   ): Promise<string[] | null> {
     let relevant = scopedPerms.filter(
       p => p.backendPermissionKey === permissionKey && p.isGranted,
-    );
-    // Fallback: if no perm targets this exact endpoint, fall back to ALL
-    // granted scoped perms that touch property scope. A manager/guest who
-    // can manage/view properties X,Y,Z must see those in any property list,
-    // even when the listing endpoint key wasn't explicitly seeded.
+    ).filter(p => this.permTouchesProperties(p));
+    // Fallback: if no property-scoped perm targets this exact endpoint, fall
+    // back to ALL granted scoped perms that touch property scope. This also
+    // ignores exact endpoint rows saved with service-only scope, preventing a
+    // service assignment from inheriting the inviter admin's full properties.
     if (relevant.length === 0) {
       relevant = scopedPerms.filter(p => p.isGranted && this.permTouchesProperties(p));
       if (relevant.length === 0) return [];
@@ -114,7 +114,7 @@ export class ScopeFilterService {
     // "scope=properties" assignment AND any "scope=all" permission would leak
     // every admin-owned property to the manager.
     if (!isHyperManager) {
-      const narrow = relevant.filter(p => this.isNarrowPropertyPerm(p));
+      const narrow = scopedPerms.filter(p => p.isGranted && this.isNarrowPropertyPerm(p));
       if (narrow.length > 0) relevant = narrow;
     }
 
@@ -196,7 +196,7 @@ export class ScopeFilterService {
   ): Promise<string[] | null> {
     let relevant = scopedPerms.filter(
       p => p.backendPermissionKey === permissionKey && p.isGranted,
-    );
+    ).filter(p => this.permTouchesServices(p));
     if (relevant.length === 0) {
       relevant = scopedPerms.filter(p => p.isGranted && this.permTouchesServices(p));
       if (relevant.length === 0) return [];
@@ -218,7 +218,7 @@ export class ScopeFilterService {
     // RESTRICTIVE precedence (services): narrow service/service_group perms
     // override broader 'all'/'admins'/empty-target perms for manager/guest.
     if (!isHyperManager) {
-      const narrow = relevant.filter(p => this.isNarrowServicePerm(p));
+      const narrow = scopedPerms.filter(p => p.isGranted && this.isNarrowServicePerm(p));
       if (narrow.length > 0) relevant = narrow;
     }
 
@@ -368,6 +368,8 @@ export class ScopeFilterService {
     if (userRole === 'manager' || userRole === 'guest') {
       const scopedPerms = getScopedPerms(scopeCtx);
       const inviterIds = scopeCtx.inviterAdminIds ?? [];
+      const hasAnyPropertyScope = scopedPerms.some(p => p.isGranted && this.permTouchesProperties(p));
+      const hasAnyExplicitScope = scopedPerms.some(p => p.isGranted);
 
       if (scopedPerms.length === 0) {
         if (inviterIds.length === 0) return [];
@@ -381,7 +383,7 @@ export class ScopeFilterService {
       }
 
       const ids = await this.resolvePropertyIds(scopedPerms, permissionKey, userRole, userId);
-      if (ids !== null && ids.length === 0 && inviterIds.length > 0) {
+      if (!hasAnyExplicitScope && ids !== null && ids.length === 0 && inviterIds.length > 0) {
         logScopeFallback({
           source: 'ScopeFilterService.effectivePropertyIds',
           role: userRole, userId, permissionKey,
@@ -390,6 +392,7 @@ export class ScopeFilterService {
         });
         return this.expandInviterPropertyInventory(inviterIds);
       }
+      if (!hasAnyPropertyScope) return [];
       return ids;
     }
 
@@ -422,6 +425,8 @@ export class ScopeFilterService {
     if (userRole === 'manager' || userRole === 'guest') {
       const scopedPerms = getScopedPerms(scopeCtx);
       const inviterIds = scopeCtx.inviterAdminIds ?? [];
+      const hasAnyServiceScope = scopedPerms.some(p => p.isGranted && this.permTouchesServices(p));
+      const hasAnyExplicitScope = scopedPerms.some(p => p.isGranted);
 
       if (scopedPerms.length === 0) {
         if (inviterIds.length === 0) return [];
@@ -435,7 +440,7 @@ export class ScopeFilterService {
       }
 
       const ids = await this.resolveServiceIds(scopedPerms, permissionKey, userRole, userId);
-      if (ids !== null && ids.length === 0 && inviterIds.length > 0) {
+      if (!hasAnyExplicitScope && ids !== null && ids.length === 0 && inviterIds.length > 0) {
         logScopeFallback({
           source: 'ScopeFilterService.effectiveServiceIds',
           role: userRole, userId, permissionKey,
@@ -444,6 +449,7 @@ export class ScopeFilterService {
         });
         return this.expandInviterServiceInventory(inviterIds);
       }
+      if (!hasAnyServiceScope) return [];
       return ids;
     }
 

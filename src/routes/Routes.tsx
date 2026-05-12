@@ -9,6 +9,7 @@ import Index from "@/pages/Index";
 import PropertyListing from "@/pages/PropertyListing";
 import PropertyDetail from "@/pages/PropertyDetail";
 import MyBookings from "@/pages/MyBookings";
+import BookingPayment from "@/pages/BookingPayment";
 import AddPropertyWizard from "@/modules/admin/pages/AddPropertyWizard";
 import Auth from "@/modules/auth/auth.component";
 import { OnboardingPage } from "@/modules/onboarding/OnboardingPage";
@@ -85,12 +86,14 @@ const PropertyRoutes = () => (
     <Route path={SERVICE_ROUTES.LIST} element={<PermissionRoute componentName="ServiceListPage"><MainLayout><ErrorBoundary><ServiceListing /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={SERVICE_ROUTES.DETAIL} element={<ProtectedRoute><MainLayout><ErrorBoundary><ServiceDetail /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={SERVICE_ROUTES.NEW} element={<PermissionRoute componentName="AddServiceWizard"><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path={SERVICE_ROUTES.EDIT} element={<PermissionRoute componentName="AddServiceWizard"><MainLayout><ErrorBoundary><AddServiceWizard /></ErrorBoundary></MainLayout></PermissionRoute>} />
   </>
 );
 
 const BookingRoutes = () => (
   <>
     <Route path={BOOKING_ROUTES.LIST} element={<PermissionRoute componentName="BookingsPage" elementType="Tab"><MainLayout><ErrorBoundary><MyBookings /></ErrorBoundary></MainLayout></PermissionRoute>} />
+    <Route path="/bookings/:id/pay" element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingPayment /></ErrorBoundary></MainLayout></ProtectedRoute>} />
     <Route path={BOOKING_ROUTES.HOST} element={<PermissionRoute componentName="HostBookings"><MainLayout><ErrorBoundary><HostBookings /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={BOOKING_ROUTES.HISTORY} element={<PermissionRoute componentName="BookingHistory"><MainLayout><ErrorBoundary><BookingHistory /></ErrorBoundary></MainLayout></PermissionRoute>} />
     <Route path={BOOKING_ROUTES.CHAT} element={<ProtectedRoute><MainLayout><ErrorBoundary><BookingChat /></ErrorBoundary></MainLayout></ProtectedRoute>} />
@@ -167,7 +170,7 @@ export const Routes = memo(() => {
       {BookingRoutes()}
       {AdminRoutes()}
       {DashboardRoutes()}
-      {DemoRoutes()}
+      {/* {DemoRoutes()} */}
     </RouterRoutes>
   );
 });

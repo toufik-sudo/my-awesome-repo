@@ -5,6 +5,7 @@ import { Referral, PropertyShare } from '../entity/referral.entity';
 import { PointsService } from '../../modules/points/services/points.service';
 import { JobProducerService } from '../../infrastructure/jobs';
 import * as crypto from 'crypto';
+import { NotificationContent } from '../../notification/constants/notification-content.constant';
 
 const REFERRER_SIGNUP_POINTS = 100;
 const REFERRED_SIGNUP_POINTS = 50;
@@ -111,8 +112,7 @@ export class ReferralService {
       await this.jobs.queueNotification({
         userId: referral.referrerId,
         type: 'system' as any,
-        title: 'Your invitation was accepted 🎉',
-        message: `Someone signed up using your referral code. You earned ${REFERRER_SIGNUP_POINTS} points.`,
+        ...NotificationContent.referralSignup({ points: REFERRER_SIGNUP_POINTS }),
         channel: 'both',
         actionUrl: '/referrals',
         metadata: { referralId: referral.id },
@@ -153,8 +153,7 @@ export class ReferralService {
       await this.jobs.queueNotification({
         userId: referral.referrerId,
         type: 'system' as any,
-        title: 'Referral completed 🎁',
-        message: `Your referred friend made their first booking. You earned ${REFERRER_FIRST_BOOKING_POINTS} bonus points.`,
+        ...NotificationContent.referralCompleted({ points: REFERRER_FIRST_BOOKING_POINTS }),
         channel: 'both',
         actionUrl: '/referrals',
         metadata: { referralId: referral.id, bookingId },

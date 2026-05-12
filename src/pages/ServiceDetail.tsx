@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useServiceDetail } from '@/modules/services/services.hooks';
+import {
+  useServiceDetail,
+  useServiceAvailability,
+  useCreateServiceBooking,
+} from '@/modules/services/services.hooks';
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { CATEGORY_ICONS } from '@/modules/services/services.constants';
 import { Button } from '@/components/ui/button';
@@ -12,8 +16,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import {
   ArrowLeft, Star, MapPin, Clock, Users, ChevronLeft, ChevronRight,
-  X, Calendar, Check, Copy, Share2, Heart, Globe, Shield,
+  X, Check, Copy, Share2, Heart, Globe, Shield, Pencil,
 } from 'lucide-react';
+import { ServiceBookingForm } from '@/modules/services/components/ServiceBookingForm';
+import { CancellationPolicyInfo } from '@/modules/shared/components/CancellationPolicyInfo';
+import { swalAlert as toast } from '@/modules/shared/services/alert.service';
+import { format, addMonths } from 'date-fns';
 
 const getLocalizedText = (obj: Record<string, string> | string | undefined, lang: string): string => {
   if (!obj) return '';
@@ -39,6 +47,39 @@ const ServiceDetail: React.FC = () => {
 
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+
+  const today = useMemo(() => new Date(), []);
+  const startDate = useMemo(() => format(today, 'yyyy-MM-dd'), [today]);
+  const endDate = useMemo(() => format(addMonths(today, 3), 'yyyy-MM-dd'), [today]);
+  const { data: availability = [] } = useServiceAvailability(id, startDate, endDate);
+  const createBooking = useCreateServiceBooking();
+
+  const handleBookingSubmit = async (data: any) => {
+    if (!id) return;
+    const { bookingDates, ...rest } = data || {};
+    const dates: string[] = Array.isArray(bookingDates) && bookingDates.length > 0
+      ? bookingDates
+      : (data?.bookingDate ? [data.bookingDate] : []);
+    if (dates.length === 0) {
+      toast.error(t('serviceBooking.selectDate', 'Veuillez sélectionner une date'));
+      return;
+    }
+    try {
+      // Create one booking per selected date (services are per-day).
+      for (const bookingDate of dates) {
+        await createBooking.mutateAsync({ serviceId: id, bookingDate, ...rest });
+      }
+      toast.success(
+        dates.length > 1
+          ? t('serviceBooking.multiSuccess', `${dates.length} réservations envoyées avec succès !`)
+          : t('serviceBooking.success', 'Demande de réservation envoyée !')
+      );
+      // Redirect to My Bookings to track status & complete payment (same flow as properties).
+      navigate('/bookings');
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || t('serviceBooking.error', 'Erreur lors de la réservation'));
+    }
+  };
 
   if (isLoading) return <LoadingSpinner />;
   if (!service) {
@@ -74,6 +115,11 @@ const ServiceDetail: React.FC = () => {
             <Button variant="ghost" size="icon"><Share2 className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon"><Heart className="h-4 w-4" /></Button>
             {canModifyService && (
+              <Button variant="outline" size="sm" onClick={() => navigate(`/services/${id}/edit`)}>
+                <Pencil className="h-4 w-4 mr-1" /> Edit
+              </Button>
+            )}
+            {canDuplicateService && (
               <Button variant="outline" size="sm" onClick={() => navigate(`/services/new?duplicateFrom=${id}`)}>
                 <Copy className="h-4 w-4 mr-1" /> Duplicate
               </Button>
@@ -255,18 +301,26 @@ const ServiceDetail: React.FC = () => {
                     <span className="font-medium text-foreground">{service.minAge}+</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Cancellation</span>
+                    <span className="flex items-center gap-1.5">
+                      Cancellation
+                      <CancellationPolicyInfo policy={service.cancellationPolicy} />
+                    </span>
                     <span className="font-medium text-foreground capitalize">{service.cancellationPolicy}</span>
                   </div>
                 </div>
                 <Separator />
-                <Button className="w-full" size="lg">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {service.instantBooking ? 'Book Now' : 'Request Booking'}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  {service.instantBooking ? 'Instant confirmation' : 'Host will review your request'}
-                </p>
+                {canMakeBooking ? (
+                  <ServiceBookingForm
+                    service={service as any}
+                    availability={availability}
+                    loading={createBooking.isPending}
+                    onSubmit={handleBookingSubmit}
+                  />
+                ) : (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Sign in to book this service.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

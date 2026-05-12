@@ -30,7 +30,7 @@ const JWT_REFRESH_TOKEN_KEY = 'auth_refresh_token';
 
 const DEFAULT_RENEWAL_CONFIG: JWTRenewalConfig = {
   renewThresholdSeconds: 300,
-  renewEndpoint: '/api/auth/refresh',
+  renewEndpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:8095/api'}/auth/refresh`,
 };
 
 let renewalTimer: ReturnType<typeof setTimeout> | null = null;
@@ -216,7 +216,8 @@ export const renewToken = async (): Promise<string | null> => {
   }
   
   try {
-    const response = await fetch(renewalConfig.renewEndpoint || '/api/auth/refresh', {
+    const defaultEndpoint = `${import.meta.env.VITE_API_URL || 'http://localhost:8095/api'}/auth/refresh`;
+    const response = await fetch(renewalConfig.renewEndpoint || defaultEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

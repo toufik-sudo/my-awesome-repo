@@ -8,6 +8,8 @@ export interface CreateBookingDto {
   guests: number;
   paymentMethod: 'ccp' | 'baridi_mob' | 'edahabia' | 'cib' | 'cash' | 'bank_transfer';
   message?: string;
+  /** When set by admin/manager: create booking on behalf of this guest user (auto-validated). */
+  onBehalfOfGuestId?: number | string;
 }
 
 export interface BookingResponse {

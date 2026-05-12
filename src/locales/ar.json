@@ -389,7 +389,9 @@
     "addProperty": "إضافة عقار",
     "support": "الدعم",
     "services": "الخدمات",
-    "demo": "المكونات"
+    "demo": "المكونات",
+    "bookingCalendar": "تقويم الحجوزات",
+    "rbacSettings": "إعدادات RBAC"
   },
   "propertyWizard": {
     "addTitle": "إضافة عقار جديد",
