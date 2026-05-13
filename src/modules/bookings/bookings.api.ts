@@ -86,6 +86,10 @@ export const bookingsApi = {
   cancel: (id: string) =>
     api.put(`/bookings/${id}/status`, { status: 'cancelled' }, rbac('bookingsApi.cancel.PUT')).then(r => r.data),
 
+  /** Target guest validates an admin-on-behalf booking → 'accepted' + payment deadline. */
+  guestConfirm: (id: string) =>
+    api.put<BookingResponse>(`/bookings/${id}/guest-confirm`, {}, rbac('bookingsApi.guestConfirm.PUT')).then(r => r.data),
+
   checkAvailability: (propertyId: string, checkIn: string, checkOut: string) =>
     api.get<{ available: boolean }>(`/bookings/availability/${propertyId}`, rbacMerge('bookingsApi.checkAvailability.GET', {
       params: { checkIn, checkOut },
