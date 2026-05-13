@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle2, Clock, RefreshCcw, XCircle, Wallet } from 'lucide-react';
-import { ADMIN_ROUTES } from '@/routes/routes.constants';
+import { CheckCircle2, Clock, RefreshCcw, XCircle, Wallet, ExternalLink } from 'lucide-react';
+import { ADMIN_ROUTES, PROPERTY_ROUTES, SERVICE_ROUTES } from '@/routes/routes.constants';
 
 function getServiceTitle(service?: { title?: any }): string {
   if (!service) return '';
