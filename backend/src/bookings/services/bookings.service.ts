@@ -356,6 +356,12 @@ export class BookingsService {
     const booking = await this.findOne(id);
     if (!booking) throw new NotFoundException('Booking not found');
 
+    // Block host-side status changes while the target guest still has to validate
+    // an admin-on-behalf booking.
+    if (booking.awaitingGuestConfirmation && ['accepted', 'confirmed'].includes(status)) {
+      throw new ForbiddenException('Booking is awaiting guest confirmation');
+    }
+
     await this.assertBookingAccess(booking, scopeCtx);
 
     const updateData: Partial<Booking> = { status: status as any };
