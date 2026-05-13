@@ -439,6 +439,66 @@ export class BookingsService {
     return updated;
   }
 
+  /**
+   * Called by the target guest of an admin-on-behalf booking to validate it.
+   * Transitions the booking from awaiting-guest-confirmation → 'accepted',
+   * starts the payment deadline, and notifies the host.
+   */
+  async confirmByGuest(id: string, callerId: number) {
+    const booking = await this.findOne(id);
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.guestId !== callerId) {
+      throw new ForbiddenException('Only the target guest can confirm this booking');
+    }
+    if (!booking.awaitingGuestConfirmation) {
+      throw new BadRequestException('Booking does not require guest confirmation');
+    }
+
+    const now = new Date();
+    await this.bookingRepository.update(id, {
+      status: 'accepted' as any,
+      awaitingGuestConfirmation: false,
+      guestConfirmedAt: now,
+      acceptedAt: now,
+      paymentDeadlineAt: new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 3600 * 1000),
+      acceptDeadlineAt: null,
+    });
+    const updated = await this.findOne(id);
+
+    try { await this.cache.invalidatePattern(`app:avail:${booking.propertyId}:*`); } catch {}
+
+    this.eventsGateway.emitBookingUpdate(String(booking.guestId), updated);
+    if (booking.property?.hostId) {
+      this.eventsGateway.emitBookingUpdate(String(booking.property.hostId), updated);
+    }
+
+    this.jobProducer.queueNotification({
+      userId: booking.guestId,
+      type: 'booking_update',
+      ...NotificationContent.bookingAccepted({
+        propertyName: booking.property?.title,
+        bookingId: id,
+        paymentDeadlineHours: PAYMENT_DEADLINE_HOURS,
+      }),
+      channel: 'both',
+      actionUrl: `/bookings/${id}/payment`,
+      metadata: { bookingId: id, status: 'accepted', confirmedByGuest: true },
+    });
+    if (booking.property?.hostId) {
+      this.jobProducer.queueNotification({
+        userId: booking.property.hostId as any,
+        type: 'booking_guest_confirmed',
+        title: 'Réservation validée par le guest',
+        message: `Le guest a validé la réservation pour « ${booking.property?.title || ''} ». Paiement en attente.`,
+        channel: 'in_app',
+        actionUrl: `/bookings/${id}`,
+        metadata: { bookingId: id },
+      });
+    }
+
+    return updated;
+  }
+
   async declineBooking(id: string, reason?: string, scopeCtx?: ScopeContext) {
     const booking = await this.findOne(id);
     if (!booking) throw new NotFoundException('Booking not found');
