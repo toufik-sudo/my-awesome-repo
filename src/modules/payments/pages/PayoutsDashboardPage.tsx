@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { escrowApi, HostPayout } from '@/modules/payments/escrow.api';
@@ -8,9 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Wallet, Clock, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { Wallet, Clock, CheckCircle2, AlertCircle, XCircle, Home, Sparkles } from 'lucide-react';
 import { RefreshControl } from '@/components/shared/RefreshControl';
 import { usePersistedQueryState } from '@/hooks/usePersistedQueryState';
+import { PROPERTY_ROUTES, SERVICE_ROUTES } from '@/routes/routes.constants';
 
 const STATUSES: Array<{ key: HostPayout['status'] | 'all'; label: string; icon: any; tone: string }> = [
   { key: 'all',        label: 'Tous',          icon: Wallet,        tone: 'bg-muted text-foreground' },
@@ -21,19 +23,35 @@ const STATUSES: Array<{ key: HostPayout['status'] | 'all'; label: string; icon: 
   { key: 'forfeited',  label: 'Annulé',        icon: XCircle,       tone: 'bg-destructive/10 text-destructive' },
 ];
 
+const TYPE_KEYS = ['all', 'property', 'service'] as const;
+type PayoutTypeFilter = typeof TYPE_KEYS[number];
+
 const fmt = (n: number | string) =>
   Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
+function getServiceTitle(service?: { title?: any }): string {
+  if (!service) return '';
+  if (typeof service.title === 'string' && service.title.trim()) return service.title;
+  if (service.title?.fr) return service.title.fr;
+  if (service.title?.en) return service.title.en;
+  return '';
+}
+
+function getPropertyTitle(property?: { title?: string }): string {
+  return property?.title?.trim() || '';
+}
+
 export default function PayoutsDashboardPage() {
   const { t } = useTranslation();
-  const [filter, setFilter] = usePersistedQueryState<HostPayout['status'] | 'all'>('status', 'all', 'payouts-dashboard');
+  const [statusFilter, setStatusFilter] = usePersistedQueryState<HostPayout['status'] | 'all'>('status', 'all', 'payouts-dashboard');
+  const [typeFilter, setTypeFilter] = usePersistedQueryState<PayoutTypeFilter>('type', 'all', 'payouts-dashboard');
   const [items, setItems] = useState<HostPayout[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = async () => {
     setLoading(true);
     try {
-      setItems(await escrowApi.listPayouts(filter === 'all' ? undefined : filter));
+      setItems(await escrowApi.listPayouts(statusFilter === 'all' ? undefined : statusFilter));
     } catch (e: any) {
       toast.error(e?.message || 'Failed to load');
     } finally {
@@ -41,17 +59,24 @@ export default function PayoutsDashboardPage() {
     }
   };
 
-  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [filter]);
+  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [statusFilter]);
+
+  const filteredItems = useMemo(() => {
+    if (typeFilter === 'all') return items;
+    return items.filter((p) =>
+      typeFilter === 'service' ? !!p.serviceBookingId : !!p.bookingId,
+    );
+  }, [items, typeFilter]);
 
   const totals = useMemo(() => {
-    return items.reduce((acc, p) => {
+    return filteredItems.reduce((acc, p) => {
       acc.gross += Number(p.grossAmount || 0);
       acc.fee += Number(p.platformFee || 0);
       acc.net += Number(p.netAmount || 0);
       acc.released += Number(p.releasedAmount || 0);
       return acc;
     }, { gross: 0, fee: 0, net: 0, released: 0 });
-  }, [items]);
+  }, [filteredItems]);
 
   return (
     <div className="container mx-auto p-6 space-y-4">
@@ -80,21 +105,52 @@ export default function PayoutsDashboardPage() {
         ))}
       </div>
 
-      {/* Filter chips */}
+      {/* Status filter chips */}
       <div className="flex flex-wrap gap-2">
         {STATUSES.map((s) => {
           const Icon = s.icon;
-          const active = filter === s.key;
+          const active = statusFilter === s.key;
           return (
             <button
               key={s.key}
-              onClick={() => setFilter(s.key)}
+              onClick={() => setStatusFilter(s.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
               {t(`payouts.filter.${s.key}`, s.label)}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Type filter chips */}
+      <div className="flex flex-wrap gap-2">
+        {TYPE_KEYS.map((key) => {
+          const active = typeFilter === key;
+          const isService = key === 'service';
+          const tone = key === 'all'
+            ? 'bg-muted text-foreground'
+            : isService
+              ? 'bg-sky-500/10 text-sky-700 border-sky-500/30'
+              : 'bg-violet-500/10 text-violet-700 border-violet-500/30';
+          return (
+            <button
+              key={key}
+              onClick={() => setTypeFilter(key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                active ? 'bg-primary text-primary-foreground border-primary' : `${tone} hover:opacity-80`
+              }`}
+            >
+              {key === 'all' ? (
+                <Wallet className="h-3.5 w-3.5" />
+              ) : isService ? (
+                <Sparkles className="h-3.5 w-3.5" />
+              ) : (
+                <Home className="h-3.5 w-3.5" />
+              )}
+              {t(`payouts.typeFilter.${key}`, key === 'all' ? 'Tous' : key === 'service' ? 'Service' : 'Propriété')}
             </button>
           );
         })}
@@ -107,13 +163,14 @@ export default function PayoutsDashboardPage() {
             <div className="p-4 space-y-2">
               {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <p className="p-6 text-muted-foreground text-sm">{t('payouts.empty', 'Aucun payout.')}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('payouts.col.host', 'Hôte')}</TableHead>
+                  <TableHead>{t('payouts.col.type', 'Type')}</TableHead>
                   <TableHead>{t('payouts.col.booking', 'Réservation')}</TableHead>
                   <TableHead className="text-right">{t('payouts.col.gross', 'Brut')}</TableHead>
                   <TableHead className="text-right">{t('payouts.col.fee', 'Frais')}</TableHead>
@@ -124,8 +181,17 @@ export default function PayoutsDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((p) => {
+                {filteredItems.map((p) => {
                   const tone = STATUSES.find((s) => s.key === p.status)?.tone || 'bg-muted';
+                  const isService = !!p.serviceBookingId;
+                  const title = isService
+                    ? getServiceTitle(p.serviceBooking?.service)
+                    : getPropertyTitle(p.booking?.property);
+                  const serviceId = (p.serviceBooking?.service as any)?.id;
+                  const propertyId = (p.booking?.property as any)?.id;
+                  const detailPath = isService
+                    ? (serviceId ? SERVICE_ROUTES.DETAIL.replace(':id', serviceId) : undefined)
+                    : (propertyId ? PROPERTY_ROUTES.DETAIL.replace(':id', propertyId) : undefined);
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="text-sm">
@@ -134,8 +200,52 @@ export default function PayoutsDashboardPage() {
                         </div>
                         <div className="text-xs text-muted-foreground">{p.host?.email}</div>
                       </TableCell>
-                      <TableCell className="text-xs font-mono">
-                        {(p.bookingId || p.serviceBookingId || '').slice(0, 8)}
+                      <TableCell>
+                        {detailPath ? (
+                          <Link to={detailPath} className="hover:opacity-80 transition-opacity">
+                            <Badge
+                              variant="outline"
+                              className={isService
+                                ? 'bg-sky-500/10 text-sky-700 border-sky-500/30 cursor-pointer'
+                                : 'bg-violet-500/10 text-violet-700 border-violet-500/30 cursor-pointer'}
+                            >
+                              {isService
+                                ? <><Sparkles className="h-3 w-3 mr-1 inline" />{t('payouts.type.service', 'Service')}</>
+                                : <><Home className="h-3 w-3 mr-1 inline" />{t('payouts.type.property', 'Propriété')}</>}
+                            </Badge>
+                          </Link>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className={isService
+                              ? 'bg-sky-500/10 text-sky-700 border-sky-500/30'
+                              : 'bg-violet-500/10 text-violet-700 border-violet-500/30'}
+                          >
+                            {isService
+                              ? <><Sparkles className="h-3 w-3 mr-1 inline" />{t('payouts.type.service', 'Service')}</>
+                              : <><Home className="h-3 w-3 mr-1 inline" />{t('payouts.type.property', 'Propriété')}</>}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <div className="truncate max-w-[180px] font-medium text-foreground">
+                          {title || (isService
+                            ? t('payouts.fallback.service', 'Service sans nom')
+                            : t('payouts.fallback.property', 'Propriété sans nom'))}
+                        </div>
+                        {detailPath ? (
+                          <Link
+                            to={detailPath}
+                            className="font-mono text-muted-foreground hover:text-primary hover:underline transition-colors"
+                            title={(p.bookingId || p.serviceBookingId || '')}
+                          >
+                            #{(p.bookingId || p.serviceBookingId || '').slice(0, 8)}
+                          </Link>
+                        ) : (
+                          <div className="font-mono text-muted-foreground" title={(p.bookingId || p.serviceBookingId || '')}>
+                            #{(p.bookingId || p.serviceBookingId || '').slice(0, 8)}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{fmt(p.grossAmount)} {p.currency}</TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">{fmt(p.platformFee)}</TableCell>

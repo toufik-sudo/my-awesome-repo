@@ -21,8 +21,10 @@ import { resolveImageUrl } from '@/modules/shared/components/BackendImage';
 
 import { useRoleAccess } from '@/hooks/useRoleAccess';
 import { useHostBookings } from '../bookings.hooks';
+import { useProviderServiceBookings } from '@/modules/services/service-bookings.hooks';
 import type { BookingResponse } from '../bookings.api';
 import { exportBookingsToCSV, exportBookingsToPDF } from '../utils/exportBookings';
+import { mergeBookings, type UnifiedBooking } from '../utils/normalize-booking';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -39,12 +41,15 @@ const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg
 
 type DateRange = 'all' | '7d' | '30d' | '90d' | '365d';
 
+type TypeFilter = 'all' | 'property' | 'service';
+
 export const BookingHistory: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { can } = useRoleAccess('BookingHistory');
 
   const [activeTab, setActiveTab] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'price_high' | 'price_low'>('newest');
@@ -54,10 +59,20 @@ export const BookingHistory: React.FC = () => {
   const canManageRequest = can('Actions', 'Button', 'Manage');
   const isHyperAdmin = can('Header', 'Badge', 'AllProperties');
 
-  // Fetch all bookings (backend handles role-based filtering)
-  const { data: bookings = [], isLoading } = useHostBookings(
+  // Fetch property + service bookings (backend handles role-based filtering)
+  const { data: propertyBookings = [], isLoading } = useHostBookings(
     activeTab !== 'all' ? { status: activeTab } : {}
   );
+  const { data: serviceBookings = [], isLoading: loadingServices } = useProviderServiceBookings();
+
+  // Unified base list (apply tab status to services client-side)
+  const bookings: UnifiedBooking[] = useMemo(() => {
+    const merged = mergeBookings(
+      typeFilter === 'service' ? [] : propertyBookings,
+      typeFilter === 'property' ? [] : serviceBookings,
+    );
+    return activeTab === 'all' ? merged : merged.filter(b => b.status === activeTab);
+  }, [propertyBookings, serviceBookings, typeFilter, activeTab]);
 
   // Client-side filtering & sorting
   const filteredBookings = useMemo(() => {
@@ -67,11 +82,10 @@ export const BookingHistory: React.FC = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(b =>
-        b.property?.title?.toLowerCase().includes(q) ||
-        b.property?.city?.toLowerCase().includes(q) ||
-        b.guest?.firstName?.toLowerCase().includes(q) ||
-        b.guest?.lastName?.toLowerCase().includes(q) ||
-        b.guest?.email?.toLowerCase().includes(q) ||
+        b.title?.toLowerCase().includes(q) ||
+        b.city?.toLowerCase().includes(q) ||
+        b.guestName?.toLowerCase().includes(q) ||
+        b.guestEmail?.toLowerCase().includes(q) ||
         b.id?.toLowerCase().includes(q)
       );
     }
@@ -117,7 +131,7 @@ export const BookingHistory: React.FC = () => {
     { value: 'rejected', label: t('bookings.rejected') || 'Rejected' },
   ];
 
-  if (isLoading) {
+  if (isLoading || loadingServices) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <LoadingSpinner size="lg" />
@@ -161,11 +175,11 @@ export const BookingHistory: React.FC = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => exportBookingsToCSV(filteredBookings)} className="gap-2">
+                <DropdownMenuItem onClick={() => exportBookingsToCSV(filteredBookings.filter(b => b.type === 'property').map(b => b.raw as BookingResponse))} className="gap-2">
                   <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
                   {t('common.exportCSV') || 'Export as CSV'}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => exportBookingsToPDF(filteredBookings, t('bookings.history') || 'Booking History')} className="gap-2">
+                <DropdownMenuItem onClick={() => exportBookingsToPDF(filteredBookings.filter(b => b.type === 'property').map(b => b.raw as BookingResponse), t('bookings.history') || 'Booking History')} className="gap-2">
                   <FileText className="h-4 w-4 text-red-600" />
                   {t('common.exportPDF') || 'Export as PDF'}
                 </DropdownMenuItem>
@@ -222,6 +236,16 @@ export const BookingHistory: React.FC = () => {
               <SelectItem value="365d">{t('common.lastYear') || 'Last year'}</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
+            <SelectTrigger className="w-[140px] h-10 rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="property">Properties</SelectItem>
+              <SelectItem value="service">Services</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
             <SelectTrigger className="w-[150px] h-10 rounded-xl">
               <SelectValue />
@@ -274,24 +298,30 @@ export const BookingHistory: React.FC = () => {
             {filteredBookings.map(booking => {
               const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
               const StatusIcon = cfg.icon;
-              const nights = booking.numberOfNights || differenceInDays(parseISO(booking.checkOutDate), parseISO(booking.checkInDate));
+              const isService = booking.type === 'service';
+              const guestMessage = isService
+                ? (booking.raw as any).customerMessage
+                : (booking.raw as BookingResponse).guestMessage;
 
               return (
                 <Card key={booking.id} className="overflow-hidden border-border/50 hover:shadow-md transition-all group">
                   <CardContent className="p-0">
                     <div className="flex flex-col sm:flex-row">
                       {/* Image */}
-                      {booking.property?.images?.[0] && (
+                      {booking.image && (
                         <div className="sm:w-44 h-36 sm:h-auto relative flex-shrink-0 overflow-hidden">
                           <img
-                            src={resolveImageUrl(booking.property.images[0])}
-                            alt={booking.property.title}
+                            src={resolveImageUrl(booking.image)}
+                            alt={booking.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <div className={`absolute top-2.5 left-2.5 flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.bgColor} ${cfg.color}`}>
                             <StatusIcon className="h-3 w-3" />
                             {cfg.label}
                           </div>
+                          <Badge variant="secondary" className="absolute top-2.5 right-2.5 text-[10px]">
+                            {isService ? 'Service' : 'Property'}
+                          </Badge>
                         </div>
                       )}
 
@@ -300,18 +330,18 @@ export const BookingHistory: React.FC = () => {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <h3 className="font-semibold text-foreground text-base truncate">
-                              {booking.property?.title || 'Property'}
+                              {booking.title}
                             </h3>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
                               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                              <span className="truncate">{booking.property?.city || 'Unknown'}</span>
+                              <span className="truncate">{booking.city || 'Unknown'}</span>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <p className="text-lg font-bold text-foreground">
-                              {Number(booking.totalPrice).toLocaleString()} DA
+                              {Number(booking.totalPrice).toLocaleString()} {booking.currency}
                             </p>
-                            <p className="text-xs text-muted-foreground">{nights} {t('bookings.nights') || 'nights'}</p>
+                            <p className="text-xs text-muted-foreground">{booking.durationLabel}</p>
                           </div>
                         </div>
 
@@ -321,26 +351,28 @@ export const BookingHistory: React.FC = () => {
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider font-medium">Check-in</p>
+                              <p className="text-[10px] uppercase tracking-wider font-medium">{isService ? 'Date' : 'Check-in'}</p>
                               <p className="text-foreground font-medium text-xs">
-                                {format(parseISO(booking.checkInDate), 'dd MMM yyyy')}
+                                {format(parseISO(booking.startDate), 'dd MMM yyyy')}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-                            <div>
-                              <p className="text-[10px] uppercase tracking-wider font-medium">Check-out</p>
-                              <p className="text-foreground font-medium text-xs">
-                                {format(parseISO(booking.checkOutDate), 'dd MMM yyyy')}
-                              </p>
+                          {!isService && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wider font-medium">Check-out</p>
+                                <p className="text-foreground font-medium text-xs">
+                                  {format(parseISO(booking.endDate), 'dd MMM yyyy')}
+                                </p>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Users className="h-3.5 w-3.5 flex-shrink-0" />
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider font-medium">Guests</p>
-                              <p className="text-foreground font-medium text-xs">{booking.numberOfGuests}</p>
+                              <p className="text-[10px] uppercase tracking-wider font-medium">{isService ? 'Participants' : 'Guests'}</p>
+                              <p className="text-foreground font-medium text-xs">{booking.partySize}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
@@ -353,11 +385,11 @@ export const BookingHistory: React.FC = () => {
                         </div>
 
                         {/* Guest info */}
-                        {booking.guest && (
+                        {booking.guestName && (
                           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
                             <p className="text-xs text-muted-foreground">
                               {t('bookings.guest') || 'Guest'}: <span className="font-medium text-foreground">
-                                {booking.guest.firstName} {booking.guest.lastName}
+                                {booking.guestName}
                               </span>
                             </p>
                             <p className="text-[10px] text-muted-foreground">
@@ -366,13 +398,13 @@ export const BookingHistory: React.FC = () => {
                           </div>
                         )}
 
-                        {booking.guestMessage && (
+                        {guestMessage && (
                           <div className="mt-2 p-2.5 bg-muted/40 rounded-lg">
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground mb-0.5">
                               <MessageSquare className="h-3 w-3" />
                               {t('bookings.guestMessage') || 'Guest message'}
                             </div>
-                            <p className="text-xs text-foreground line-clamp-2">{booking.guestMessage}</p>
+                            <p className="text-xs text-foreground line-clamp-2">{guestMessage}</p>
                           </div>
                         )}
 

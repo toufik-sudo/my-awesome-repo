@@ -14,6 +14,7 @@ import {
 import { DynamicEventCalendar } from '@/modules/shared/components/calendar/DynamicEventCalendar';
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { bookingsApi, type BookingResponse } from '@/modules/bookings/bookings.api';
+import { serviceBookingsApi, type ServiceBookingResponse } from '@/modules/services/service-bookings.api';
 import {
   useAcceptBooking, useDeclineBooking, useCancelBooking,
 } from '@/modules/bookings/bookings.hooks';
@@ -66,6 +67,7 @@ export const BookingCalendarPage: React.FC = () => {
   const canCancel = can('Actions', 'Button', 'Cancel');
 
   const [bookings, setBookings] = useState<BookingResponse[]>([]);
+  const [serviceBookings, setServiceBookings] = useState<ServiceBookingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<BookingResponse | null>(null);
   const [declineOpen, setDeclineOpen] = useState(false);
@@ -79,8 +81,12 @@ export const BookingCalendarPage: React.FC = () => {
   const loadBookings = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await bookingsApi.getHostBookings();
-      setBookings(data);
+      const [props, svcs] = await Promise.all([
+        bookingsApi.getHostBookings(),
+        serviceBookingsApi.getProviderBookings().catch(() => []),
+      ]);
+      setBookings(props);
+      setServiceBookings(svcs);
     } catch {
       // silent
     } finally {
@@ -90,8 +96,8 @@ export const BookingCalendarPage: React.FC = () => {
 
   useEffect(() => { loadBookings(); }, [loadBookings]);
 
-  const events: CalendarEvent[] = useMemo(() =>
-    bookings.map(b => ({
+  const events: CalendarEvent[] = useMemo(() => {
+    const propEvents: CalendarEvent[] = bookings.map(b => ({
       id: b.id,
       title: b.property?.title || `Réservation #${b.id.slice(0, 8)}`,
       description: [
@@ -108,6 +114,7 @@ export const BookingCalendarPage: React.FC = () => {
       category: b.status,
       location: b.property?.city || '',
       metadata: {
+        type: 'property',
         status: b.status,
         totalPrice: b.totalPrice,
         currency: b.currency,
@@ -115,13 +122,44 @@ export const BookingCalendarPage: React.FC = () => {
         guestName: `${b.guest?.firstName || ''} ${b.guest?.lastName || ''}`.trim(),
         propertyTitle: b.property?.title,
       },
-    })),
-    [bookings, t]
-  );
+    }));
+    const svcEvents: CalendarEvent[] = serviceBookings.map(b => {
+      const title = typeof b.service?.title === 'string'
+        ? b.service.title
+        : (b.service?.title?.fr || b.service?.title?.en || `Service #${b.id.slice(0, 8)}`);
+      const day = new Date(b.bookingDate);
+      return {
+        id: b.id,
+        title: `🎯 ${title}`,
+        description: [
+          `${t('bookingCalendar.customer', 'Customer')}: ${b.customer?.firstName || ''} ${b.customer?.lastName || b.customer?.email || ''}`,
+          `${t('bookingCalendar.participants', 'Participants')}: ${b.participants}`,
+          `${t('bookingCalendar.total', 'Total')}: ${Number(b.totalPrice).toLocaleString()} ${b.currency || 'DA'}`,
+          `${t('bookingCalendar.payment', 'Payment')}: ${b.paymentMethod} (${b.paymentStatus})`,
+          `${t('bookingCalendar.status', 'Status')}: ${STATUS_LABELS[b.status] || b.status}`,
+        ].join('\n'),
+        startDate: day,
+        endDate: day,
+        color: '#0ea5e9', // distinct service color
+        category: `service:${b.status}`,
+        location: b.service?.city || '',
+        metadata: {
+          type: 'service',
+          status: b.status,
+          totalPrice: b.totalPrice,
+          currency: b.currency,
+          participants: b.participants,
+          serviceTitle: title,
+        },
+      };
+    });
+    return [...propEvents, ...svcEvents];
+  }, [bookings, serviceBookings, t]);
 
   const handleEventClick = useCallback((event: CalendarEvent) => {
     const b = bookings.find(x => x.id === event.id);
     if (b) setSelected(b);
+    // Service bookings open detail in another flow — keep silent for now
   }, [bookings]);
 
   const closeAll = () => {
@@ -177,6 +215,10 @@ export const BookingCalendarPage: React.FC = () => {
               {STATUS_LABELS[key]}
             </Badge>
           ))}
+          <Badge variant="outline" className="text-xs gap-1">
+            <span className="h-2 w-2 rounded-full inline-block" style={{ backgroundColor: '#0ea5e9' }} />
+            {t('bookingCalendar.service', 'Service')}
+          </Badge>
           <RefreshControl onRefresh={loadBookings} storageKey="booking-calendar" compact />
         </div>
       </div>

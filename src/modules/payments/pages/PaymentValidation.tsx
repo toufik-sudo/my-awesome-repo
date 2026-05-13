@@ -21,7 +21,74 @@ import {
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi, type PaymentReceipt, type TransferAccount } from '../payments.api';
+import { serviceBookingsApi } from '@/modules/services/service-bookings.api';
 import { swalAlert as toast } from '@/modules/shared/services/alert.service';
+
+/**
+ * Renders the booking summary for a receipt, falling back to a service-booking
+ * lookup when the property booking metadata is missing.
+ */
+const ReceiptBookingTitle: React.FC<{ receipt: PaymentReceipt }> = ({ receipt }) => {
+  const { data: serviceBooking } = useQuery({
+    queryKey: ['service-booking', receipt.bookingId],
+    queryFn: () => serviceBookingsApi.getOne(receipt.bookingId),
+    enabled: !receipt.booking,
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  if (receipt.booking) {
+    return (
+      <>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-semibold truncate">
+            {receipt.booking.property?.title || 'Propriété'}
+          </p>
+          <p className="text-base font-bold text-primary whitespace-nowrap">
+            {Number(receipt.booking.totalPrice || 0).toLocaleString()} {receipt.currency || 'DA'}
+          </p>
+        </div>
+        {receipt.booking.guest && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {receipt.booking.guest.firstName} {receipt.booking.guest.lastName}
+          </p>
+        )}
+      </>
+    );
+  }
+
+  if (serviceBooking) {
+    const title = typeof serviceBooking.service?.title === 'string'
+      ? serviceBooking.service.title
+      : (serviceBooking.service?.title?.fr || serviceBooking.service?.title?.en || 'Service');
+    return (
+      <>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-semibold truncate flex items-center gap-1">
+            <Badge variant="secondary" className="text-[10px]">Service</Badge>
+            {title}
+          </p>
+          <p className="text-base font-bold text-primary whitespace-nowrap">
+            {Number(serviceBooking.totalPrice || 0).toLocaleString()} {serviceBooking.currency || 'DA'}
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {new Date(serviceBooking.bookingDate).toLocaleDateString('fr-FR')} · {serviceBooking.participants} part.
+          {serviceBooking.customer ? ` · ${serviceBooking.customer.firstName || ''} ${serviceBooking.customer.lastName || ''}` : ''}
+        </p>
+      </>
+    );
+  }
+
+  return (
+    <div className="flex items-start justify-between gap-2">
+      <p className="text-sm font-semibold truncate">Réservation</p>
+      <p className="text-base font-bold text-primary whitespace-nowrap">
+        {Number(receipt.amount || 0).toLocaleString()} {receipt.currency || 'DA'}
+      </p>
+    </div>
+  );
+};
 
 export const PaymentValidation: React.FC = () => {
   const { can } = useRoleAccess('PaymentValidation');
@@ -236,22 +303,10 @@ export const PaymentValidation: React.FC = () => {
                       {/* Receipt details */}
                       <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
                         <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-semibold truncate">
-                              {receipt.booking?.property?.title || 'Propriété'}
-                            </p>
-                            <p className="text-base font-bold text-primary whitespace-nowrap">
-                              {Number(receipt.booking?.totalPrice || 0).toLocaleString()} DA
-                            </p>
-                          </div>
+                          <ReceiptBookingTitle receipt={receipt} />
                           <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
                             #{receipt.bookingId.slice(0, 8).toUpperCase()}
                           </p>
-                          {receipt.booking?.guest && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {receipt.booking.guest.firstName} {receipt.booking.guest.lastName}
-                            </p>
-                          )}
                           <p className="text-[10px] text-muted-foreground/60 mt-1">
                             {new Date(receipt.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>

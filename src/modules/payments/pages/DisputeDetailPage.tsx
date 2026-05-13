@@ -10,6 +10,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle2, Clock, RefreshCcw, XCircle, Wallet } from 'lucide-react';
 import { ADMIN_ROUTES } from '@/routes/routes.constants';
 
+function getServiceTitle(service?: { title?: any }): string {
+  if (!service) return '';
+  if (typeof service.title === 'string' && service.title.trim()) return service.title;
+  if (service.title?.fr) return service.title.fr;
+  if (service.title?.en) return service.title.en;
+  return '';
+}
+
+function getPropertyTitle(property?: { title?: string }): string {
+  return property?.title?.trim() || '';
+}
+
 type RefundStage = 'pending' | 'validated' | 'refunded' | 'partial' | 'rejected';
 
 const STAGES: { key: RefundStage; icon: any }[] = [
@@ -73,9 +85,37 @@ export default function DisputeDetailPage() {
             <CardTitle>{dispute.subject}</CardTitle>
             <Badge variant="outline">{t(`disputes.status.${dispute.status}`, dispute.status)}</Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {t('disputes.opened', 'Ouverte le')} {new Date(dispute.createdAt).toLocaleString()}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
+            <Badge
+              variant="outline"
+              className={dispute.serviceBookingId
+                ? 'bg-sky-500/10 text-sky-700 border-sky-500/30'
+                : 'bg-violet-500/10 text-violet-700 border-violet-500/30'}
+            >
+              {dispute.serviceBookingId
+                ? t('disputes.type.service', 'Service')
+                : t('disputes.type.property', 'Propriété')}
+            </Badge>
+            {(() => {
+              const title = dispute.serviceBookingId
+                ? getServiceTitle(dispute.serviceBooking?.service)
+                : getPropertyTitle(dispute.booking?.property);
+              return (
+                <span className="font-medium text-foreground">
+                  {title || (dispute.serviceBookingId
+                    ? t('disputes.fallback.service', 'Service sans nom')
+                    : t('disputes.fallback.property', 'Propriété sans nom'))}
+                </span>
+              );
+            })()}
+            <span className="font-mono">
+              #{(dispute.bookingId || dispute.serviceBookingId || '').slice(0, 8)}
+            </span>
+            <span>·</span>
+            <span>
+              {t('disputes.opened', 'Ouverte le')} {new Date(dispute.createdAt).toLocaleString()}
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm whitespace-pre-wrap">{dispute.description}</p>

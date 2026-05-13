@@ -25,6 +25,14 @@ import {
 import { LoadingSpinner } from '@/modules/shared/components/LoadingSpinner';
 
 import { useHostBookingsPaginated, useAcceptBooking, useDeclineBooking, useCounterOfferBooking, useCancelBooking } from '../bookings.hooks';
+import {
+  useProviderServiceBookings,
+  useAcceptServiceBooking,
+  useDeclineServiceBooking,
+  useCounterOfferServiceBooking,
+  useCancelServiceBooking,
+} from '@/modules/services/service-bookings.hooks';
+import { mergeBookings, type UnifiedBooking } from '../utils/normalize-booking';
 import { ServerPagination } from '@/modules/shared/components/ServerPagination';
 import type { BookingResponse } from '../bookings.api';
 
@@ -58,63 +66,94 @@ export const HostBookings: React.FC = () => {
   const canRejectBookings = can('Actions', 'Button', 'Reject');
   const canCounterOffer = can('Actions', 'Button', 'CounterOffer');
   const [activeTab, setActiveTab] = useState('pending');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'property' | 'service'>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [declineDialog, setDeclineDialog] = useState<BookingResponse | null>(null);
+  const [declineDialog, setDeclineDialog] = useState<UnifiedBooking | null>(null);
   const [declineReason, setDeclineReason] = useState('');
-  const [counterDialog, setCounterDialog] = useState<BookingResponse | null>(null);
+  const [counterDialog, setCounterDialog] = useState<UnifiedBooking | null>(null);
   const [counterPrice, setCounterPrice] = useState('');
   const [counterMessage, setCounterMessage] = useState('');
 
-  const [cancelDialog, setCancelDialog] = useState<BookingResponse | null>(null);
+  const [cancelDialog, setCancelDialog] = useState<UnifiedBooking | null>(null);
 
   // Reset to page 1 when changing tab/page-size
-  React.useEffect(() => { setPage(1); }, [activeTab, pageSize]);
+  React.useEffect(() => { setPage(1); }, [activeTab, pageSize, typeFilter]);
 
   const { data: bookingsPage, isLoading, isFetching } = useHostBookingsPaginated({
     ...(activeTab !== 'all' ? { status: activeTab } : {}),
     page,
     limit: pageSize,
   });
-  const bookings: BookingResponse[] = bookingsPage?.data ?? [];
+  const propertyBookings: BookingResponse[] = bookingsPage?.data ?? [];
+  const { data: serviceBookings = [], isLoading: loadingServices } = useProviderServiceBookings();
+
   const acceptMutation = useAcceptBooking();
   const declineMutation = useDeclineBooking();
   const counterMutation = useCounterOfferBooking();
   const cancelMutation = useCancelBooking();
+  const acceptServiceMutation = useAcceptServiceBooking();
+  const declineServiceMutation = useDeclineServiceBooking();
+  const counterServiceMutation = useCounterOfferServiceBooking();
+  const cancelServiceMutation = useCancelServiceBooking();
 
-  const handleAccept = useCallback((booking: BookingResponse) => {
-    acceptMutation.mutate({ id: booking.id, propertyId: booking.propertyId });
-  }, [acceptMutation]);
+  const bookings: UnifiedBooking[] = React.useMemo(() => {
+    const merged = mergeBookings(
+      typeFilter === 'service' ? [] : propertyBookings,
+      typeFilter === 'property' ? [] : serviceBookings,
+    );
+    return activeTab === 'all' ? merged : merged.filter(b => b.status === activeTab);
+  }, [propertyBookings, serviceBookings, typeFilter, activeTab]);
+
+  const handleAccept = useCallback((booking: UnifiedBooking) => {
+    if (booking.type === 'service') {
+      acceptServiceMutation.mutate(booking.id);
+    } else {
+      acceptMutation.mutate({ id: booking.id, propertyId: booking.refId });
+    }
+  }, [acceptMutation, acceptServiceMutation]);
 
   const handleDecline = useCallback(() => {
     if (!declineDialog) return;
-    declineMutation.mutate({
-      id: declineDialog.id,
-      propertyId: declineDialog.propertyId,
-      reason: declineReason,
-    });
+    if (declineDialog.type === 'service') {
+      declineServiceMutation.mutate({ id: declineDialog.id, reason: declineReason });
+    } else {
+      declineMutation.mutate({ id: declineDialog.id, propertyId: declineDialog.refId, reason: declineReason });
+    }
     setDeclineDialog(null);
     setDeclineReason('');
-  }, [declineDialog, declineReason, declineMutation]);
+  }, [declineDialog, declineReason, declineMutation, declineServiceMutation]);
 
   const handleCounterOffer = useCallback(() => {
     if (!counterDialog || !counterPrice) return;
-    counterMutation.mutate({
-      id: counterDialog.id,
-      propertyId: counterDialog.propertyId,
-      newPrice: Number(counterPrice),
-      message: counterMessage,
-    });
+    if (counterDialog.type === 'service') {
+      counterServiceMutation.mutate({
+        id: counterDialog.id,
+        newPrice: Number(counterPrice),
+        message: counterMessage,
+      });
+    } else {
+      counterMutation.mutate({
+        id: counterDialog.id,
+        propertyId: counterDialog.refId,
+        newPrice: Number(counterPrice),
+        message: counterMessage,
+      });
+    }
     setCounterDialog(null);
     setCounterPrice('');
     setCounterMessage('');
-  }, [counterDialog, counterPrice, counterMessage, counterMutation]);
+  }, [counterDialog, counterPrice, counterMessage, counterMutation, counterServiceMutation]);
 
   const handleCancel = useCallback(() => {
     if (!cancelDialog) return;
-    cancelMutation.mutate(cancelDialog.id);
+    if (cancelDialog.type === 'service') {
+      cancelServiceMutation.mutate({ id: cancelDialog.id });
+    } else {
+      cancelMutation.mutate(cancelDialog.id);
+    }
     setCancelDialog(null);
-  }, [cancelDialog, cancelMutation]);
+  }, [cancelDialog, cancelMutation, cancelServiceMutation]);
 
   const tabs = [
     { value: 'all', label: 'All' },
@@ -126,7 +165,7 @@ export const HostBookings: React.FC = () => {
     { value: 'cancelled', label: 'Cancelled' },
   ];
 
-  if (isLoading) {
+  if (isLoading || loadingServices) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <LoadingSpinner size="lg" />
@@ -147,6 +186,22 @@ export const HostBookings: React.FC = () => {
               Manage booking requests for your properties
             </p>
           </div>
+        </div>
+
+        {/* Type filter */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-sm text-muted-foreground">Type:</span>
+          {(['all', 'property', 'service'] as const).map(opt => (
+            <Button
+              key={opt}
+              size="sm"
+              variant={typeFilter === opt ? 'default' : 'outline'}
+              onClick={() => setTypeFilter(opt)}
+              className="capitalize"
+            >
+              {opt === 'all' ? 'All' : opt + 's'}
+            </Button>
+          ))}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -176,31 +231,36 @@ export const HostBookings: React.FC = () => {
             {bookings.map(booking => {
               const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
               const StatusIcon = cfg.icon;
-              const nights = booking.numberOfNights || differenceInDays(parseISO(booking.checkOutDate), parseISO(booking.checkInDate));
+              const isService = booking.type === 'service';
               const isPending = booking.status === 'pending';
               const isAccepted = booking.status === 'accepted';
               const acceptCountdown = isPending ? formatCountdown(booking.acceptDeadlineAt) : null;
               const paymentCountdown = isAccepted ? formatCountdown(booking.paymentDeadlineAt) : null;
               const acceptDeadlinePassed = isPending && booking.acceptDeadlineAt && new Date(booking.acceptDeadlineAt).getTime() < Date.now();
-              // Host can cancel a confirmed booking before check-in
-              const canHostCancel = booking.status === 'confirmed' && new Date(booking.checkInDate).getTime() > Date.now();
+              const canHostCancel = booking.status === 'confirmed' && new Date(booking.startDate).getTime() > Date.now();
+              const guestMessage = isService
+                ? (booking.raw as any).customerMessage
+                : (booking.raw as BookingResponse).guestMessage;
 
               return (
                 <Card key={booking.id} className="overflow-hidden border-border/60 hover:shadow-md transition-shadow">
                   <CardContent className="p-0">
                     <div className="flex flex-col sm:flex-row">
                       {/* Image */}
-                      {booking.property?.images?.[0] && (
+                      {booking.image && (
                         <div className="sm:w-48 h-40 sm:h-auto relative flex-shrink-0">
                           <img
-                            src={booking.property.images[0]}
-                            alt={booking.property.title}
+                            src={booking.image}
+                            alt={booking.title}
                             className="w-full h-full object-cover"
                           />
                           <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.bgColor} ${cfg.color}`}>
                             <StatusIcon className="h-3.5 w-3.5" />
                             {cfg.label}
                           </div>
+                          <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">
+                            {isService ? 'Service' : 'Property'}
+                          </Badge>
                         </div>
                       )}
 
@@ -209,18 +269,18 @@ export const HostBookings: React.FC = () => {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <h3 className="font-semibold text-foreground text-base">
-                              {booking.property?.title || 'Property'}
+                              {booking.title}
                             </h3>
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                               <MapPin className="h-3.5 w-3.5" />
-                              {booking.property?.city || 'Unknown'}
+                              {booking.city || 'Unknown'}
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <p className="text-lg font-bold text-foreground">
-                              {Number(booking.totalPrice).toLocaleString()} DA
+                              {Number(booking.totalPrice).toLocaleString()} {booking.currency}
                             </p>
-                            <p className="text-xs text-muted-foreground">{nights} nights</p>
+                            <p className="text-xs text-muted-foreground">{booking.durationLabel}</p>
                           </div>
                         </div>
 
@@ -230,26 +290,28 @@ export const HostBookings: React.FC = () => {
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="h-4 w-4 flex-shrink-0" />
                             <div>
-                              <p className="text-[11px] uppercase tracking-wider font-medium">Check-in</p>
+                              <p className="text-[11px] uppercase tracking-wider font-medium">{isService ? 'Date' : 'Check-in'}</p>
                               <p className="text-foreground font-medium text-xs">
-                                {format(parseISO(booking.checkInDate), 'dd MMM yyyy')}
+                                {format(parseISO(booking.startDate), 'dd MMM yyyy')}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Calendar className="h-4 w-4 flex-shrink-0" />
-                            <div>
-                              <p className="text-[11px] uppercase tracking-wider font-medium">Check-out</p>
-                              <p className="text-foreground font-medium text-xs">
-                                {format(parseISO(booking.checkOutDate), 'dd MMM yyyy')}
-                              </p>
+                          {!isService && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-4 w-4 flex-shrink-0" />
+                              <div>
+                                <p className="text-[11px] uppercase tracking-wider font-medium">Check-out</p>
+                                <p className="text-foreground font-medium text-xs">
+                                  {format(parseISO(booking.endDate), 'dd MMM yyyy')}
+                                </p>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Users className="h-4 w-4 flex-shrink-0" />
                             <div>
-                              <p className="text-[11px] uppercase tracking-wider font-medium">Guests</p>
-                              <p className="text-foreground font-medium text-xs">{booking.numberOfGuests}</p>
+                              <p className="text-[11px] uppercase tracking-wider font-medium">{isService ? 'Participants' : 'Guests'}</p>
+                              <p className="text-foreground font-medium text-xs">{booking.partySize}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
@@ -261,22 +323,21 @@ export const HostBookings: React.FC = () => {
                           </div>
                         </div>
 
-                        {booking.guestMessage && (
+                        {guestMessage && (
                           <div className="mt-3 p-3 bg-muted/50 rounded-lg">
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                               <MessageSquare className="h-3 w-3" />
                               Guest message
                             </div>
-                            <p className="text-sm text-foreground">{booking.guestMessage}</p>
+                            <p className="text-sm text-foreground">{guestMessage}</p>
                           </div>
                         )}
 
-                        {/* Guest info */}
-                        {booking.guest && (
+                        {booking.guestName && (
                           <p className="text-xs text-muted-foreground mt-3">
                             Guest: <span className="font-medium text-foreground">
-                              {booking.guest.firstName} {booking.guest.lastName}
-                            </span> ({booking.guest.email})
+                              {booking.guestName}
+                            </span>{booking.guestEmail ? ` (${booking.guestEmail})` : ''}
                           </p>
                         )}
 
@@ -367,7 +428,7 @@ export const HostBookings: React.FC = () => {
           </div>
         )}
 
-        {bookingsPage && bookingsPage.total > 0 && (
+        {typeFilter !== 'service' && bookingsPage && bookingsPage.total > 0 && (
           <ServerPagination
             page={bookingsPage.page}
             limit={bookingsPage.limit}
