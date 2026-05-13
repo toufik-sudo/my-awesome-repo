@@ -293,10 +293,11 @@ export class BookingsService {
     }
 
     if (isOnBehalf) {
-      // Mandatory notification to the target guest.
+      // Mandatory notification to the target guest — must validate the booking
+      // before payment can proceed.
       this.jobProducer.queueNotification({
         userId: effectiveGuestId as any,
-        type: 'booking_created_for_you',
+        type: 'booking_awaiting_guest_confirmation',
         ...NotificationContent.bookingCreatedForGuest({
           propertyName: property.title,
           bookingId: saved.id,
@@ -304,10 +305,10 @@ export class BookingsService {
           paymentDeadlineHours: PAYMENT_DEADLINE_HOURS,
         }),
         channel: 'both',
-        actionUrl: `/bookings/${saved.id}/payment`,
-        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, autoValidated: true },
+        actionUrl: `/bookings/${saved.id}`,
+        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, awaitingGuestConfirmation: true },
       });
-      // Inform host that an admin pre-validated a booking.
+      // Inform host that an admin pre-created a booking awaiting guest validation.
       this.jobProducer.queueNotification({
         userId: property.hostId as any,
         type: 'booking_admin_created',
@@ -318,7 +319,7 @@ export class BookingsService {
         }),
         channel: 'in_app',
         actionUrl: `/bookings/${saved.id}`,
-        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId },
+        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, awaitingGuestConfirmation: true },
       });
     } else {
       this.jobProducer.queueNotification({
