@@ -26,6 +26,8 @@ import {
 import { DynamicDatePicker } from '@/modules/shared/components/DynamicDatePicker';
 import { UserGuestPicker, type GuestPickerValue } from './UserGuestPicker';
 import { bookingsApi, type CreateBookingDto } from '../bookings.api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Switch } from '@/components/ui/switch';
 
 interface AdminBookingModalProps {
   open: boolean;
