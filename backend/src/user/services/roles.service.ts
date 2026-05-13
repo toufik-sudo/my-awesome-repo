@@ -801,15 +801,30 @@ export class RolesService {
       users = users.filter(u => !(callerRole === 'hyper_manager' && u.getRole() === 'hyper_admin'));
     } else {
       const invitedIds = await this.getInvitedUserIds(callerId);
-      if (invitedIds.length === 0) {
-        return pagination?.page ? { data: [], total: 0, page: pagination.page, pageSize: pagination.pageSize ?? 20 } : [];
-      }
-      users = await this.userRepo.find({ where: invitedIds.map(id => ({ id })) });
-      users = users.filter(u => {
+      const invitedUsers = invitedIds.length
+        ? await this.userRepo.find({ where: invitedIds.map(id => ({ id })) })
+        : [];
+      let scopedUsers = invitedUsers.filter(u => {
         if (callerRole === 'admin') return ['manager', 'guest'].includes(u.getRole());
         if (callerRole === 'manager') return u.getRole() === 'guest';
         return true;
       });
+
+      // Platform users with role 'user' are accessible to every host
+      // (admin/manager) when explicitly requested — they have no inviter scope
+      // and represent guests-promoted-to-user / unscoped users.
+      if (pagination?.role === 'user') {
+        const platformUsers = await this.userRepo.find({ where: { isActive: true } });
+        const platformUserRole = platformUsers.filter(u => u.getRole() === 'user');
+        const seen = new Set(scopedUsers.map(u => u.id));
+        for (const u of platformUserRole) {
+          if (!seen.has(u.id)) { scopedUsers.push(u); seen.add(u.id); }
+        }
+      }
+      users = scopedUsers;
+      if (users.length === 0) {
+        return pagination?.page ? { data: [], total: 0, page: pagination.page, pageSize: pagination.pageSize ?? 20 } : [];
+      }
     }
 
     let mapped = users.map(u => ({

@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle2, Clock, RefreshCcw, XCircle, Wallet } from 'lucide-react';
-import { ADMIN_ROUTES } from '@/routes/routes.constants';
+import { CheckCircle2, Clock, RefreshCcw, XCircle, Wallet, ExternalLink } from 'lucide-react';
+import { ADMIN_ROUTES, PROPERTY_ROUTES, SERVICE_ROUTES } from '@/routes/routes.constants';
 
 function getServiceTitle(service?: { title?: any }): string {
   if (!service) return '';
@@ -97,16 +97,35 @@ export default function DisputeDetailPage() {
                 : t('disputes.type.property', 'Propriété')}
             </Badge>
             {(() => {
-              const title = dispute.serviceBookingId
+              const isService = !!dispute.serviceBookingId;
+              const title = isService
                 ? getServiceTitle(dispute.serviceBooking?.service)
                 : getPropertyTitle(dispute.booking?.property);
-              return (
-                <span className="font-medium text-foreground">
-                  {title || (dispute.serviceBookingId
-                    ? t('disputes.fallback.service', 'Service sans nom')
-                    : t('disputes.fallback.property', 'Propriété sans nom'))}
-                </span>
-              );
+              const targetId = isService
+                ? (dispute.serviceBooking?.service?.id || dispute.serviceBooking?.serviceId)
+                : (dispute.booking?.property?.id || dispute.booking?.propertyId);
+              const href = targetId
+                ? (isService
+                    ? SERVICE_ROUTES.DETAIL.replace(':id', String(targetId))
+                    : PROPERTY_ROUTES.DETAIL.replace(':id', String(targetId)))
+                : null;
+              const fallback = isService
+                ? t('disputes.fallback.service', 'Service sans nom')
+                : t('disputes.fallback.property', 'Propriété sans nom');
+              const label = title || fallback;
+              if (href) {
+                return (
+                  <Link
+                    to={href}
+                    className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary hover:underline"
+                    title={t('disputes.openTarget', 'Ouvrir la fiche')}
+                  >
+                    {label}
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                );
+              }
+              return <span className="font-medium text-foreground">{label}</span>;
             })()}
             <span className="font-mono">
               #{(dispute.bookingId || dispute.serviceBookingId || '').slice(0, 8)}

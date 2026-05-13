@@ -101,6 +101,14 @@ export class BookingsController {
     return this.bookingsService.cancelByGuest(id, req.user.id, reason);
   }
 
+  @Put(':id/guest-confirm')
+  @UseGuards(PermissionGuard)
+  @CsrfGenAuth()
+  @CsrfCheck(true)
+  guestConfirm(@Param('id') id: string, @Request() req: any) {
+    return this.bookingsService.confirmByGuest(id, req.user.id);
+  }
+
   @Put(':id/refund')
   @UseGuards(PermissionGuard)
   @CsrfGenAuth()

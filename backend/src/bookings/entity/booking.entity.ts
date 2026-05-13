@@ -126,6 +126,18 @@ export class Booking {
   @Column({ type: 'int', default: 0 })
   acceptReminderCount: number;
 
+  /** Set to true when an admin/manager booked on behalf of this guest and the
+   *  guest has not yet validated the booking. */
+  @Column({ type: 'boolean', default: false })
+  awaitingGuestConfirmation: boolean;
+
+  @Column({ nullable: true, type: 'datetime' })
+  guestConfirmedAt: Date | null;
+
+  /** Admin/manager who created the booking on behalf of the guest, if any. */
+  @Column({ type: 'int', nullable: true })
+  createdByAdminId: number | null;
+
   @Column({ nullable: true, type: 'datetime' })
   cancelledAt: Date;
 

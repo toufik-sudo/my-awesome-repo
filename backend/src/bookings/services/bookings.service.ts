@@ -293,10 +293,11 @@ export class BookingsService {
     }
 
     if (isOnBehalf) {
-      // Mandatory notification to the target guest.
+      // Mandatory notification to the target guest — must validate the booking
+      // before payment can proceed.
       this.jobProducer.queueNotification({
         userId: effectiveGuestId as any,
-        type: 'booking_created_for_you',
+        type: 'booking_awaiting_guest_confirmation',
         ...NotificationContent.bookingCreatedForGuest({
           propertyName: property.title,
           bookingId: saved.id,
@@ -304,10 +305,10 @@ export class BookingsService {
           paymentDeadlineHours: PAYMENT_DEADLINE_HOURS,
         }),
         channel: 'both',
-        actionUrl: `/bookings/${saved.id}/payment`,
-        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, autoValidated: true },
+        actionUrl: `/bookings/${saved.id}`,
+        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, awaitingGuestConfirmation: true },
       });
-      // Inform host that an admin pre-validated a booking.
+      // Inform host that an admin pre-created a booking awaiting guest validation.
       this.jobProducer.queueNotification({
         userId: property.hostId as any,
         type: 'booking_admin_created',
@@ -318,7 +319,7 @@ export class BookingsService {
         }),
         channel: 'in_app',
         actionUrl: `/bookings/${saved.id}`,
-        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId },
+        metadata: { bookingId: saved.id, propertyId: property.id, createdByAdminId: guestId, awaitingGuestConfirmation: true },
       });
     } else {
       this.jobProducer.queueNotification({
@@ -354,6 +355,12 @@ export class BookingsService {
   async updateStatus(id: string, status: string, scopeCtx?: ScopeContext) {
     const booking = await this.findOne(id);
     if (!booking) throw new NotFoundException('Booking not found');
+
+    // Block host-side status changes while the target guest still has to validate
+    // an admin-on-behalf booking.
+    if (booking.awaitingGuestConfirmation && ['accepted', 'confirmed'].includes(status)) {
+      throw new ForbiddenException('Booking is awaiting guest confirmation');
+    }
 
     await this.assertBookingAccess(booking, scopeCtx);
 
@@ -433,6 +440,66 @@ export class BookingsService {
       } catch (e) {
         this.logger.warn(`Referral first-booking hook failed: ${(e as Error).message}`);
       }
+    }
+
+    return updated;
+  }
+
+  /**
+   * Called by the target guest of an admin-on-behalf booking to validate it.
+   * Transitions the booking from awaiting-guest-confirmation → 'accepted',
+   * starts the payment deadline, and notifies the host.
+   */
+  async confirmByGuest(id: string, callerId: number) {
+    const booking = await this.findOne(id);
+    if (!booking) throw new NotFoundException('Booking not found');
+    if (booking.guestId !== callerId) {
+      throw new ForbiddenException('Only the target guest can confirm this booking');
+    }
+    if (!booking.awaitingGuestConfirmation) {
+      throw new BadRequestException('Booking does not require guest confirmation');
+    }
+
+    const now = new Date();
+    await this.bookingRepository.update(id, {
+      status: 'accepted' as any,
+      awaitingGuestConfirmation: false,
+      guestConfirmedAt: now,
+      acceptedAt: now,
+      paymentDeadlineAt: new Date(Date.now() + PAYMENT_DEADLINE_HOURS * 3600 * 1000),
+      acceptDeadlineAt: null,
+    });
+    const updated = await this.findOne(id);
+
+    try { await this.cache.invalidatePattern(`app:avail:${booking.propertyId}:*`); } catch {}
+
+    this.eventsGateway.emitBookingUpdate(String(booking.guestId), updated);
+    if (booking.property?.hostId) {
+      this.eventsGateway.emitBookingUpdate(String(booking.property.hostId), updated);
+    }
+
+    this.jobProducer.queueNotification({
+      userId: booking.guestId,
+      type: 'booking_update',
+      ...NotificationContent.bookingAccepted({
+        propertyName: booking.property?.title,
+        bookingId: id,
+        paymentDeadlineHours: PAYMENT_DEADLINE_HOURS,
+      }),
+      channel: 'both',
+      actionUrl: `/bookings/${id}/payment`,
+      metadata: { bookingId: id, status: 'accepted', confirmedByGuest: true },
+    });
+    if (booking.property?.hostId) {
+      this.jobProducer.queueNotification({
+        userId: booking.property.hostId as any,
+        type: 'booking_guest_confirmed',
+        title: 'Réservation validée par le guest',
+        message: `Le guest a validé la réservation pour « ${booking.property?.title || ''} ». Paiement en attente.`,
+        channel: 'in_app',
+        actionUrl: `/bookings/${id}`,
+        metadata: { bookingId: id },
+      });
     }
 
     return updated;

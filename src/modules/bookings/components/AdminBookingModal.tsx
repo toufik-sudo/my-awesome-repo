@@ -26,6 +26,8 @@ import {
 import { DynamicDatePicker } from '@/modules/shared/components/DynamicDatePicker';
 import { UserGuestPicker, type GuestPickerValue } from './UserGuestPicker';
 import { bookingsApi, type CreateBookingDto } from '../bookings.api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Switch } from '@/components/ui/switch';
 
 interface AdminBookingModalProps {
   open: boolean;
@@ -65,6 +67,9 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<CreateBookingDto['paymentMethod']>('cib');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
+  const isManager = (user as any)?.role === 'manager';
+  const [bookForSelf, setBookForSelf] = useState(false);
 
   const nights = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return 0;
@@ -75,11 +80,12 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
   const reset = () => {
     setGuest(null);
     setMessage('');
+    setBookForSelf(false);
     setSubmitting(false);
   };
 
   const handleSubmit = async () => {
-    if (!guest) {
+    if (!bookForSelf && !guest) {
       toast.error(t('bookings.adminCreate.errorPickGuest', 'Please pick a guest user.'));
       return;
     }
@@ -96,9 +102,13 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
         guests,
         paymentMethod,
         message: message || undefined,
-        onBehalfOfGuestId: guest.id,
+        ...(bookForSelf ? {} : { onBehalfOfGuestId: guest!.id }),
       });
-      toast.success(t('bookings.adminCreate.success', 'Booking validated. The guest will be notified to complete payment.'));
+      toast.success(
+        bookForSelf
+          ? t('bookings.adminCreate.successSelf', 'Booking created. Awaiting host acceptance and payment.')
+          : t('bookings.adminCreate.success', 'Booking created. The guest will be notified to validate it before payment.'),
+      );
       onCreated?.(created.id);
       reset();
       onOpenChange(false);
@@ -125,10 +135,27 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('bookings.adminCreate.guest', 'Guest')}</Label>
-            <UserGuestPicker value={guest} onChange={setGuest} disabled={submitting} />
-          </div>
+          {isManager && (
+            <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+              <div className="text-sm">
+                <p className="font-medium">{t('bookings.adminCreate.selfToggle', 'Réserver pour moi-même')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('bookings.adminCreate.selfToggleHelp', 'Crée la réservation à votre nom (manager uniquement).')}
+                </p>
+              </div>
+              <Switch checked={bookForSelf} onCheckedChange={(v) => { setBookForSelf(v); if (v) setGuest(null); }} disabled={submitting} />
+            </div>
+          )}
+
+          {!bookForSelf && (
+            <div className="space-y-2">
+              <Label>{t('bookings.adminCreate.guest', 'Guest')}</Label>
+              <UserGuestPicker value={guest} onChange={setGuest} disabled={submitting} />
+              <p className="text-[11px] text-muted-foreground">
+                {t('bookings.adminCreate.guestHelp', 'Guests invités par vous + utilisateurs avec rôle « user » de la plateforme.')}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>{t('bookings.adminCreate.dates', 'Dates')}</Label>
