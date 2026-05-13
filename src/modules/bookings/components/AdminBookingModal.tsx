@@ -67,6 +67,9 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<CreateBookingDto['paymentMethod']>('cib');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
+  const isManager = (user as any)?.role === 'manager';
+  const [bookForSelf, setBookForSelf] = useState(false);
 
   const nights = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return 0;
@@ -77,11 +80,12 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
   const reset = () => {
     setGuest(null);
     setMessage('');
+    setBookForSelf(false);
     setSubmitting(false);
   };
 
   const handleSubmit = async () => {
-    if (!guest) {
+    if (!bookForSelf && !guest) {
       toast.error(t('bookings.adminCreate.errorPickGuest', 'Please pick a guest user.'));
       return;
     }
@@ -98,9 +102,13 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({
         guests,
         paymentMethod,
         message: message || undefined,
-        onBehalfOfGuestId: guest.id,
+        ...(bookForSelf ? {} : { onBehalfOfGuestId: guest!.id }),
       });
-      toast.success(t('bookings.adminCreate.success', 'Booking validated. The guest will be notified to complete payment.'));
+      toast.success(
+        bookForSelf
+          ? t('bookings.adminCreate.successSelf', 'Booking created. Awaiting host acceptance and payment.')
+          : t('bookings.adminCreate.success', 'Booking created. The guest will be notified to validate it before payment.'),
+      );
       onCreated?.(created.id);
       reset();
       onOpenChange(false);
