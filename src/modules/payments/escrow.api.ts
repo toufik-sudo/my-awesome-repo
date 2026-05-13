@@ -58,8 +58,8 @@ export interface BookingDispute {
   resolutionNote?: string;
   createdAt: string;
   guest?: { id: number; email: string; firstName?: string; lastName?: string };
-  booking?: { id: string; property?: { title: string; hostId: number } };
-  serviceBooking?: { id: string; service?: { title: any; providerId: number } };
+  booking?: { id: string; propertyId?: string; property?: { id?: string; title: string; hostId: number } };
+  serviceBooking?: { id: string; serviceId?: string; service?: { id?: string; title: any; providerId: number } };
 }
 
 export interface ReactivationQuote {
